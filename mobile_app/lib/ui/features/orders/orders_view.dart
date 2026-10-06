@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/app_theme.dart';
 import '../../core/formatters.dart';
 import '../../../data/models/order_model.dart';
+import '../branch/branch_view_model.dart';
 import 'orders_view_model.dart';
 
 class OrdersView extends StatefulWidget {
@@ -38,6 +39,11 @@ class _OrdersViewState extends State<OrdersView> with SingleTickerProviderStateM
       appBar: AppBar(
         title: const Text('Quản lý đơn hàng'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.storefront_outlined),
+            tooltip: 'Chọn chi nhánh',
+            onPressed: () => BranchViewModel.showBranchBottomSheet(context),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: vm.fetchOrders,
@@ -156,6 +162,20 @@ class _OrdersViewState extends State<OrdersView> with SingleTickerProviderStateM
                     Text(
                       Formatters.formatDateTime(o.ngayBan),
                       style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.storefront_outlined, size: 14, color: AppTheme.textMuted),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        o.chiNhanh,
+                        style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
