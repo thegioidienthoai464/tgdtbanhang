@@ -6,6 +6,7 @@ import '../pos/pos_view_model.dart';
 import '../orders/orders_view_model.dart';
 import '../inventory/inventory_view_model.dart';
 import '../cashbook/cashbook_view_model.dart';
+import '../settings/settings_view.dart';
 
 class DashboardView extends StatefulWidget {
   final Function(int) onTabChange;
@@ -40,6 +41,13 @@ class _DashboardViewState extends State<DashboardView> {
       appBar: AppBar(
         title: const Text('Tổng quan kinh doanh'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Cài đặt hệ thống',
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsView()));
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
