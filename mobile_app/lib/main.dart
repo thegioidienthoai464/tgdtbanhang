@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'data/services/supabase_service.dart';
@@ -54,16 +55,20 @@ class MainNavigationShell extends StatefulWidget {
 class _MainNavigationShellState extends State<MainNavigationShell> with WidgetsBindingObserver {
   int _currentIndex = 0;
   bool _isCheckingUpdate = false;
+  Timer? _periodicUpdateTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkUpdate());
+    // Định kỳ tự động kiểm tra bản cập nhật mới mỗi 5 phút khi đang mở app
+    _periodicUpdateTimer = Timer.periodic(const Duration(minutes: 5), (_) => _checkUpdate());
   }
 
   @override
   void dispose() {
+    _periodicUpdateTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
