@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/models/branch_model.dart';
 import '../../../data/services/supabase_service.dart';
@@ -82,11 +83,12 @@ class BranchViewModel extends ChangeNotifier {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        final branchVm = ctx.watch<BranchViewModel>();
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            child: Column(
+        return Consumer<BranchViewModel>(
+          builder: (context, branchVm, _) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -196,5 +198,7 @@ class BranchViewModel extends ChangeNotifier {
         );
       },
     );
-  }
+  },
+);
+}
 }
