@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_theme.dart';
 import '../../core/formatters.dart';
+import '../branch/branch_view_model.dart';
 import 'inventory_view_model.dart';
 
 class InventoryView extends StatefulWidget {
@@ -23,6 +24,7 @@ class _InventoryViewState extends State<InventoryView> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<InventoryViewModel>();
+    final branchVm = context.watch<BranchViewModel>();
 
     return Scaffold(
       appBar: AppBar(
@@ -36,6 +38,44 @@ class _InventoryViewState extends State<InventoryView> {
       ),
       body: Column(
         children: [
+          // Thanh chi nhánh kho
+          InkWell(
+            onTap: () => BranchViewModel.showBranchBottomSheet(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryBlue.withOpacity(0.06),
+                border: Border(bottom: BorderSide(color: AppTheme.primaryBlue.withOpacity(0.12))),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.storefront_rounded, size: 16, color: AppTheme.primaryBlue),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Chi nhánh kho: ${branchVm.selectedBranch.displayName}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.primaryBlue),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryBlue.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Đổi', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue)),
+                        Icon(Icons.arrow_drop_down, size: 16, color: AppTheme.primaryBlue),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           // Thống kê nhanh tổng tồn
           Container(
             margin: const EdgeInsets.all(16),
