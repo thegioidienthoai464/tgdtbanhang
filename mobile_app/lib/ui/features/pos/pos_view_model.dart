@@ -123,7 +123,7 @@ class PosViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Map<String, dynamic>> checkout() async {
+  Future<Map<String, dynamic>> checkout({String? chiNhanh}) async {
     if (_cart.isEmpty) return {'success': false, 'message': 'Giỏ hàng đang trống'};
     _isLoading = true;
     notifyListeners();
@@ -134,6 +134,7 @@ class PosViewModel extends ChangeNotifier {
       final tongTien = subtotal;
       final daTra = _paymentMethod == 'CON_NO' ? 0.0 : tongTien;
       final khachPhaiTra = tongTien;
+      final branch = chiNhanh ?? 'CN01: Trụ sở chính';
 
       final order = OrderModel(
         maDonHang: maDon,
@@ -141,6 +142,7 @@ class PosViewModel extends ChangeNotifier {
         maKH: _selectedCustomer?.maDoiTac ?? 'KL',
         tenKH: _selectedCustomer?.tenDoiTac ?? 'Khách lẻ',
         soDienThoai: _selectedCustomer?.soDienThoai ?? '',
+        chiNhanh: branch,
         tongTien: tongTien,
         khachPhaiTra: khachPhaiTra,
         khachTra: daTra,
@@ -163,6 +165,7 @@ class PosViewModel extends ChangeNotifier {
         final maPT = "PT${now.millisecondsSinceEpoch.toString().substring(6)}";
         final phieuThu = CashbookModel(
           maPhieu: maPT,
+          chiNhanh: branch,
           loaiPhieu: 'THU',
           loaiQuy: _paymentMethod,
           ngayGD: now,
