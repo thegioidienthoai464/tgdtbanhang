@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build Android Release APK
@@ -67,3 +70,18 @@ jobs:
         with:
           name: SmartERP-Android-App
           path: '**/build/app/outputs/flutter-apk/app-release.apk'
+
+      - name: Tạo GitHub Release cho bản tải trực tiếp
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: v1.0.1
+          name: Smart ERP Mobile v1.0.1
+          body: |
+            Bản cập nhật v1.0.1:
+            - Thêm tính năng in bill qua máy in mạng LAN (ESC/POS).
+            - Tự động kiểm tra bản cập nhật phần mềm mới.
+            - Tối ưu hiệu năng bán hàng POS và kho hàng.
+          files: '**/build/app/outputs/flutter-apk/app-release.apk'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
