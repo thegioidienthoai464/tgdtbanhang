@@ -254,7 +254,7 @@ class _SettingsViewState extends State<SettingsView> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
-                      'v1.0.1 (Build 2)',
+                      'v1.0.2 (Build 3)',
                       style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
                     ),
                   ),
