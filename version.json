@@ -1,6 +1,6 @@
 {
-  "version": "1.0.1",
-  "build_number": 2,
-  "release_notes": "• Thêm tính năng in bill qua máy in mạng LAN (ESC/POS).\n• Tự động kiểm tra bản cập nhật phần mềm mới.\n• Tối ưu tốc độ bán hàng POS và quản lý đơn hàng.",
+  "version": "1.0.2",
+  "build_number": 3,
+  "release_notes": "• Cập nhật tên ứng dụng 'T&T POS' và Logo thương hiệu chính thức.\n• Tích hợp tính năng in bill qua máy in mạng LAN (ESC/POS).\n• Tự động kiểm tra bản cập nhật phần mềm mới.\n• Tối ưu hiệu năng bán hàng POS và kho hàng.",
   "download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/latest/download/app-release.apk"
 }
