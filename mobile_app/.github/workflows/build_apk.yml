@@ -40,7 +40,7 @@ jobs:
           
           # Xóa thư mục android cũ chưa đủ cấu hình để Flutter tự sinh mới 100% chuẩn
           rm -rf android
-          flutter create --org com.thegioidienthoai --project-name smart_erp_mobile --platforms=android .
+          flutter create --org com.thegioidienthoai --project-name tt_pos --platforms=android .
           
           # Cấu hình minSdkVersion 21 cho thư viện camera quét mã vạch
           if [ -f "android/app/build.gradle" ]; then
@@ -51,9 +51,19 @@ jobs:
             sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 21/g' android/app/build.gradle.kts 2>/dev/null || true
           fi
           
-          # Cấp quyền Camera, Bluetooth và Internet vào AndroidManifest
+          # Cập nhật tên App Android thành T&T POS và cấp quyền
           if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
+            sed -i 's/android:label="[^"]*"/android:label="T\&T POS"/g' android/app/src/main/AndroidManifest.xml 2>/dev/null || true
             sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.BLUETOOTH"/>\n    <application|' android/app/src/main/AndroidManifest.xml 2>/dev/null || true
+          fi
+
+          # Tự động thay icon ứng dụng bằng Logo T&T POS
+          if [ -f "assets/images/logo.png" ]; then
+            for dir in android/app/src/main/res/mipmap-*; do
+              if [ -d "$dir" ]; then
+                cp assets/images/logo.png "$dir/ic_launcher.png" 2>/dev/null || true
+              fi
+            done
           fi
           
           flutter pub get
@@ -68,17 +78,18 @@ jobs:
       - name: Tải file APK lên Artifacts để tải về
         uses: actions/upload-artifact@v4
         with:
-          name: SmartERP-Android-App
+          name: TT-POS-Android-App
           path: '**/build/app/outputs/flutter-apk/app-release.apk'
 
       - name: Tạo GitHub Release cho bản tải trực tiếp
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.1
-          name: Smart ERP Mobile v1.0.1
+          tag_name: v1.0.2
+          name: T&T POS v1.0.2
           body: |
-            Bản cập nhật v1.0.1:
+            Bản cập nhật v1.0.2:
+            - Cập nhật nhận diện thương hiệu T&T POS và Logo chính thức.
             - Thêm tính năng in bill qua máy in mạng LAN (ESC/POS).
             - Tự động kiểm tra bản cập nhật phần mềm mới.
             - Tối ưu hiệu năng bán hàng POS và kho hàng.
