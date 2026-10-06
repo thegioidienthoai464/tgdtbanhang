@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_theme.dart';
 import '../../core/formatters.dart';
+import '../branch/branch_view_model.dart';
 import 'cashbook_view_model.dart';
 
 class CashbookView extends StatefulWidget {
@@ -23,6 +24,7 @@ class _CashbookViewState extends State<CashbookView> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<CashbookViewModel>();
+    final branchVm = context.watch<BranchViewModel>();
 
     return Scaffold(
       appBar: AppBar(
@@ -39,7 +41,7 @@ class _CashbookViewState extends State<CashbookView> {
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Lập phiếu'),
-        onPressed: () => _showAddTransactionModal(context, vm),
+        onPressed: () => _showAddTransactionModal(context, vm, branchVm),
       ),
       body: Column(
         children: [
@@ -165,7 +167,7 @@ class _CashbookViewState extends State<CashbookView> {
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                               ),
                               subtitle: Text(
-                                '${t.maPhieu} • ${Formatters.formatDateTime(t.ngayGD)} • ${t.loaiQuy == 'TIEN_MAT' ? 'Tiền mặt' : 'Ngân hàng'}',
+                                '${t.maPhieu} • ${t.chiNhanh} • ${Formatters.formatDateTime(t.ngayGD)} • ${t.loaiQuy == 'TIEN_MAT' ? 'Tiền mặt' : 'Ngân hàng'}',
                                 style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
                               ),
                               trailing: Text(
@@ -195,7 +197,7 @@ class _CashbookViewState extends State<CashbookView> {
     );
   }
 
-  void _showAddTransactionModal(BuildContext context, CashbookViewModel vm) {
+  void _showAddTransactionModal(BuildContext context, CashbookViewModel vm, BranchViewModel branchVm) {
     final amountCtrl = TextEditingController();
     final descCtrl = TextEditingController();
     final partnerCtrl = TextEditingController();
@@ -224,6 +226,28 @@ class _CashbookViewState extends State<CashbookView> {
                 children: [
                   const Text('Lập phiếu thu / chi nhanh', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
+                  // Thông tin chi nhánh hạch toán
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryBlue.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.storefront_rounded, size: 16, color: AppTheme.primaryBlue),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Chi nhánh hạch toán: ${branchVm.selectedBranch.displayName}',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.primaryBlue),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   Row(
                     children: [
                       ChoiceChip(
@@ -279,6 +303,7 @@ class _CashbookViewState extends State<CashbookView> {
                           soTien: val,
                           doiTuong: partnerCtrl.text.trim(),
                           ghiChu: descCtrl.text.trim(),
+                          chiNhanh: branchVm.selectedBranch.displayName,
                         );
                         if (context.mounted) Navigator.pop(context);
                       },
