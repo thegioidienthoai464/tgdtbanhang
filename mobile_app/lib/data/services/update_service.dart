@@ -149,14 +149,34 @@ class UpdateService {
                   Navigator.pop(context);
                 }
                 final uri = Uri.parse(update.downloadUrl);
-                if (await canLaunchUrl(uri)) {
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                } else {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Không thể mở liên kết tải: ${update.downloadUrl}')),
-                    );
-                  }
+                bool success = false;
+                try {
+                  success = await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } catch (_) {}
+
+                if (!success) {
+                  try {
+                    success = await launchUrl(uri, mode: LaunchMode.platformDefault);
+                  } catch (_) {}
+                }
+
+                if (!success) {
+                  try {
+                    success = await launchUrl(uri);
+                  } catch (_) {}
+                }
+
+                if (!success && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      duration: const Duration(seconds: 8),
+                      content: Text('Vui lòng mở trình duyệt và tải tại: ${update.downloadUrl}'),
+                      action: SnackBarAction(
+                        label: 'Đóng',
+                        onPressed: () {},
+                      ),
+                    ),
+                  );
                 }
               },
             ),
