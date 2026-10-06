@@ -9,12 +9,14 @@ class UpdateInfo {
   final int buildNumber;
   final String releaseNotes;
   final String downloadUrl;
+  final bool forceUpdate;
 
   UpdateInfo({
     required this.version,
     required this.buildNumber,
     required this.releaseNotes,
     required this.downloadUrl,
+    this.forceUpdate = false,
   });
 
   factory UpdateInfo.fromJson(Map<String, dynamic> json) {
@@ -22,7 +24,8 @@ class UpdateInfo {
       version: json['version'] ?? '1.0.0',
       buildNumber: json['build_number'] ?? 1,
       releaseNotes: json['release_notes'] ?? 'Bản cập nhật tối ưu hệ thống.',
-      downloadUrl: json['download_url'] ?? '',
+      downloadUrl: json['download_url'] ?? 'https://tgdtbanhang.netlify.app/app-release.apk',
+      forceUpdate: json['force_update'] == true,
     );
   }
 }
@@ -32,28 +35,37 @@ class UpdateService {
   static const String currentVersion = '1.0.2';
   static const int currentBuildNumber = 3;
 
-  // Đường dẫn kiểm tra phiên bản trên GitHub
-  static const String versionCheckUrl =
-      'https://raw.githubusercontent.com/thegioidienthoai464/tgdtbanhang/main/version.json';
+  // Danh sách nguồn kiểm tra phiên bản (Ưu tiên Netlify tức thì, dự phòng GitHub)
+  static const List<String> versionCheckUrls = [
+    'https://tgdtbanhang.netlify.app/version.json',
+    'https://raw.githubusercontent.com/thegioidienthoai464/tgdtbanhang/main/version.json',
+  ];
 
   // Kiểm tra xem có bản cập nhật mới không
   static Future<UpdateInfo?> checkForUpdate() async {
-    try {
-      final response = await http
-          .get(Uri.parse(versionCheckUrl))
-          .timeout(const Duration(seconds: 5));
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    
+    for (final baseUrl in versionCheckUrls) {
+      try {
+        final urlWithCacheBuster = Uri.parse('$baseUrl?t=$timestamp');
+        final response = await http.get(
+          urlWithCacheBuster,
+          headers: {'Cache-Control': 'no-cache', 'Pragma': 'no-cache'},
+        ).timeout(const Duration(seconds: 4));
 
-      if (response.statusCode == 200) {
-        final data = json.decode(utf8.decode(response.bodyBytes));
-        final update = UpdateInfo.fromJson(data);
+        if (response.statusCode == 200) {
+          final data = json.decode(utf8.decode(response.bodyBytes));
+          final update = UpdateInfo.fromJson(data);
 
-        // So sánh mã build number
-        if (update.buildNumber > currentBuildNumber) {
-          return update;
+          // Nếu số build trên máy chủ lớn hơn mã build hiện tại của app
+          if (update.buildNumber > currentBuildNumber) {
+            return update;
+          }
+          return null; // Đã kiểm tra thành công và app đang ở bản mới nhất
         }
+      } catch (e) {
+        debugPrint("Lỗi kiểm tra cập nhật từ $baseUrl: $e");
       }
-    } catch (e) {
-      debugPrint("Lỗi kiểm tra cập nhật: $e");
     }
     return null;
   }
@@ -119,10 +131,11 @@ class UpdateService {
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Để sau', style: TextStyle(color: AppTheme.textMuted)),
-            ),
+            if (!update.forceUpdate)
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Để sau', style: TextStyle(color: AppTheme.textMuted)),
+              ),
             ElevatedButton.icon(
               icon: const Icon(Icons.download_rounded, size: 18),
               label: const Text('CẬP NHẬT NGAY'),
@@ -132,14 +145,16 @@ class UpdateService {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               onPressed: () async {
-                Navigator.pop(context);
+                if (!update.forceUpdate) {
+                  Navigator.pop(context);
+                }
                 final uri = Uri.parse(update.downloadUrl);
                 if (await canLaunchUrl(uri)) {
                   await launchUrl(uri, mode: LaunchMode.externalApplication);
                 } else {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Không thể mở liên kết: ${update.downloadUrl}')),
+                      SnackBar(content: Text('Không thể mở liên kết tải: ${update.downloadUrl}')),
                     );
                   }
                 }
