@@ -80,6 +80,7 @@ class OrderModel {
   bool get isPreOrder => maDonHang.startsWith('DDH');
   bool get isImportOrder => maDonHang.startsWith('PNH');
   bool get isPosSale => !isPreOrder && !isImportOrder;
+  double get conNo => (khachPhaiTra - khachTra).clamp(0.0, 999999999999.0);
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     DateTime parsedDate;
