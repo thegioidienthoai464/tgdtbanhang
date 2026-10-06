@@ -7,6 +7,7 @@ import '../../../data/repositories/product_repository.dart';
 import '../../../data/repositories/order_repository.dart';
 import '../../../data/repositories/partner_repository.dart';
 import '../../../data/repositories/cashbook_repository.dart';
+import '../../../data/services/lan_printer_service.dart';
 
 class PosViewModel extends ChangeNotifier {
   final ProductRepository _productRepo = ProductRepository();
@@ -122,8 +123,8 @@ class PosViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> checkout() async {
-    if (_cart.isEmpty) return false;
+  Future<Map<String, dynamic>> checkout() async {
+    if (_cart.isEmpty) return {'success': false, 'message': 'Giỏ hàng đang trống'};
     _isLoading = true;
     notifyListeners();
 
@@ -181,12 +182,23 @@ class PosViewModel extends ChangeNotifier {
         await _productRepo.updateStock(item.maHang, newStock);
       }
 
+      // 5. Tự động in hóa đơn qua máy in mạng LAN nếu được kích hoạt
+      String printStatus = '';
+      if (await LanPrinterService.isAutoPrintEnabled()) {
+        final printRes = await LanPrinterService.printOrderReceipt(order);
+        if (printRes['success'] == true) {
+          printStatus = ' • Đã in bill LAN thành công!';
+        } else {
+          printStatus = ' • Chưa in được: ${printRes['message']}';
+        }
+      }
+
       clearCart();
       await initData();
-      return true;
+      return {'success': true, 'message': 'Đơn hàng $maDon thành công!$printStatus'};
     } catch (e) {
       debugPrint("Lỗi thanh toán: $e");
-      return false;
+      return {'success': false, 'message': 'Lỗi thanh toán: $e'};
     } finally {
       _isLoading = false;
       notifyListeners();
