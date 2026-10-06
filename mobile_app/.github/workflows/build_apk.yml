@@ -54,7 +54,7 @@ jobs:
           # Cập nhật tên App Android thành T&T POS và cấp quyền
           if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
             sed -i 's/android:label="[^"]*"/android:label="T\&T POS"/g' android/app/src/main/AndroidManifest.xml 2>/dev/null || true
-            sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.BLUETOOTH"/>\n    <application|' android/app/src/main/AndroidManifest.xml 2>/dev/null || true
+            sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.BLUETOOTH"/>\n    <queries>\n        <intent><action android:name="android.intent.action.VIEW"/><data android:scheme="https"/></intent>\n        <intent><action android:name="android.intent.action.VIEW"/><data android:scheme="http"/></intent>\n    </queries>\n    <application|' android/app/src/main/AndroidManifest.xml 2>/dev/null || true
           fi
 
           # Tự động thay icon ứng dụng bằng Logo T&T POS
