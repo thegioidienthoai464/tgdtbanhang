@@ -118,7 +118,7 @@ class _InventoryViewState extends State<InventoryView> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.Border.all(color: AppTheme.borderSubtle),
+                              border: Border.all(color: AppTheme.borderSubtle),
                             ),
                             child: ListTile(
                               leading: CircleAvatar(
