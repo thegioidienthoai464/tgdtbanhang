@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../data/services/lan_printer_service.dart';
 import '../../../data/services/update_service.dart';
 import '../../core/app_theme.dart';
+import '../branch/branch_view_model.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -108,7 +110,7 @@ class _SettingsViewState extends State<SettingsView> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ Bạn đang sử dụng phiên bản mới nhất (v1.0.1)!'),
+          content: Text('✅ Bạn đang sử dụng phiên bản mới nhất!'),
           backgroundColor: AppTheme.successGreen,
         ),
       );
@@ -124,6 +126,86 @@ class _SettingsViewState extends State<SettingsView> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Mục Chi nhánh làm việc
+          _buildCard(
+            title: 'CHI NHÁNH LÀM VIỆC HIỆN TẠI',
+            icon: Icons.storefront_rounded,
+            children: [
+              Consumer<BranchViewModel>(
+                builder: (context, branchVm, _) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryBlue.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryBlue,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                branchVm.selectedBranch.maCN,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Chi nhánh đang hoạt động:',
+                                    style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                                  ),
+                                  Text(
+                                    branchVm.selectedBranch.tenCN,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      color: AppTheme.primaryBlue,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Các đơn hàng bán lẻ POS, trừ kho và phiếu thu chi sổ quỹ sẽ được đồng bộ và hạch toán trực tiếp theo chi nhánh này.',
+                        style: TextStyle(color: AppTheme.textMuted, fontSize: 12, height: 1.4),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.swap_horiz_rounded),
+                          label: const Text('CHUYỂN ĐỔI CHI NHÁNH LÀM VIỆC'),
+                          onPressed: () => BranchViewModel.showBranchBottomSheet(context),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
           // Mục Máy in LAN
           _buildCard(
             title: 'MÁY IN HÓA ĐƠN MẠNG LAN (WIFI)',
@@ -254,7 +336,7 @@ class _SettingsViewState extends State<SettingsView> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
-                      'v1.0.2 (Build 3)',
+                      'v${UpdateService.currentVersion} (Build ${UpdateService.currentBuildNumber})',
                       style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
                     ),
                   ),
