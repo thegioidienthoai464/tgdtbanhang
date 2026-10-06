@@ -11,6 +11,7 @@ import 'ui/features/inventory/inventory_view.dart';
 import 'ui/features/inventory/inventory_view_model.dart';
 import 'ui/features/cashbook/cashbook_view.dart';
 import 'ui/features/cashbook/cashbook_view_model.dart';
+import 'data/services/update_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,6 +53,17 @@ class MainNavigationShell extends StatefulWidget {
 
 class _MainNavigationShellState extends State<MainNavigationShell> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final update = await UpdateService.checkForUpdate();
+      if (mounted && update != null) {
+        UpdateService.showUpdateDialog(context, update);
+      }
+    });
+  }
 
   void _onTabChange(int index) {
     setState(() {
