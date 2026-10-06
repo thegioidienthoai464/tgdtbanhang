@@ -1,0 +1,153 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
+import '../../ui/core/app_theme.dart';
+
+class UpdateInfo {
+  final String version;
+  final int buildNumber;
+  final String releaseNotes;
+  final String downloadUrl;
+
+  UpdateInfo({
+    required this.version,
+    required this.buildNumber,
+    required this.releaseNotes,
+    required this.downloadUrl,
+  });
+
+  factory UpdateInfo.fromJson(Map<String, dynamic> json) {
+    return UpdateInfo(
+      version: json['version'] ?? '1.0.0',
+      buildNumber: json['build_number'] ?? 1,
+      releaseNotes: json['release_notes'] ?? 'Bản cập nhật tối ưu hệ thống.',
+      downloadUrl: json['download_url'] ?? '',
+    );
+  }
+}
+
+class UpdateService {
+  // Phiên bản hiện tại của App
+  static const String currentVersion = '1.0.1';
+  static const int currentBuildNumber = 2;
+
+  // Đường dẫn kiểm tra phiên bản trên GitHub
+  static const String versionCheckUrl =
+      'https://raw.githubusercontent.com/thegioidienthoai464/tgdtbanhang/main/version.json';
+
+  // Kiểm tra xem có bản cập nhật mới không
+  static Future<UpdateInfo?> checkForUpdate() async {
+    try {
+      final response = await http
+          .get(Uri.parse(versionCheckUrl))
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        final update = UpdateInfo.fromJson(data);
+
+        // So sánh mã build number
+        if (update.buildNumber > currentBuildNumber) {
+          return update;
+        }
+      }
+    } catch (e) {
+      debugPrint("Lỗi kiểm tra cập nhật: $e");
+    }
+    return null;
+  }
+
+  // Hiển thị hộp thoại thông báo cập nhật cho người dùng
+  static void showUpdateDialog(BuildContext context, UpdateInfo update, {bool isManualCheck = false}) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryBlue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.system_update_rounded, color: AppTheme.primaryBlue),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Bản cập nhật mới!',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'Phiên bản v${update.version}',
+                      style: const TextStyle(fontSize: 13, color: AppTheme.primaryBlue, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Tính năng mới & Nâng cấp:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppTheme.borderSubtle),
+                ),
+                child: Text(
+                  update.releaseNotes,
+                  style: const TextStyle(fontSize: 13, height: 1.4),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Để sau', style: TextStyle(color: AppTheme.textMuted)),
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.download_rounded, size: 18),
+              label: const Text('CẬP NHẬT NGAY'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryBlue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () async {
+                Navigator.pop(context);
+                final uri = Uri.parse(update.downloadUrl);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } else {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Không thể mở liên kết: ${update.downloadUrl}')),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
