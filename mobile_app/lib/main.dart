@@ -35,7 +35,7 @@ class SmartErpMobileApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CashbookViewModel()),
       ],
       child: MaterialApp(
-        title: 'Smart ERP Bán Hàng',
+        title: 'T&T POS',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: const MainNavigationShell(),
