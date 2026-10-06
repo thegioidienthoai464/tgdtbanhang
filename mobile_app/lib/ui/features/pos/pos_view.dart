@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_theme.dart';
 import '../../core/formatters.dart';
+import '../branch/branch_view_model.dart';
 import '../settings/settings_view.dart';
 import 'pos_view_model.dart';
 
@@ -32,6 +33,7 @@ class _PosViewState extends State<PosView> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<PosViewModel>();
+    final branchVm = context.watch<BranchViewModel>();
 
     return Scaffold(
       appBar: AppBar(
@@ -61,6 +63,52 @@ class _PosViewState extends State<PosView> {
       ),
       body: Column(
         children: [
+          // Thanh hiển thị & chuyển đổi chi nhánh POS
+          InkWell(
+            onTap: () => BranchViewModel.showBranchBottomSheet(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryBlue.withOpacity(0.06),
+                border: Border(bottom: BorderSide(color: AppTheme.primaryBlue.withOpacity(0.15))),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.storefront_rounded, size: 18, color: AppTheme.primaryBlue),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                        children: [
+                          const TextSpan(text: 'Chi nhánh: ', style: TextStyle(color: AppTheme.textMuted)),
+                          TextSpan(
+                            text: branchVm.selectedBranch.displayName,
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                          ),
+                        ],
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryBlue.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Đổi', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue)),
+                        Icon(Icons.arrow_drop_down, size: 16, color: AppTheme.primaryBlue),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           // Thanh tìm kiếm sản phẩm
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -200,7 +248,7 @@ class _PosViewState extends State<PosView> {
                     ElevatedButton.icon(
                       icon: const Icon(Icons.shopping_bag_outlined),
                       label: const Text('Thanh toán'),
-                      onPressed: () => _showCheckoutModal(context, vm),
+                      onPressed: () => _showCheckoutModal(context, vm, branchVm),
                     ),
                   ],
                 ),
@@ -211,7 +259,7 @@ class _PosViewState extends State<PosView> {
     );
   }
 
-  void _showCheckoutModal(BuildContext context, PosViewModel vm) {
+  void _showCheckoutModal(BuildContext context, PosViewModel vm, BranchViewModel branchVm) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -247,6 +295,29 @@ class _PosViewState extends State<PosView> {
                   ),
                   const Divider(),
                   
+                  // Thông tin chi nhánh bán hàng
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryBlue.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.storefront_rounded, size: 16, color: AppTheme.primaryBlue),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Chi nhánh xuất bán: ${branchVm.selectedBranch.displayName}',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.primaryBlue),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                   // Chi tiết giỏ hàng
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 180),
@@ -340,7 +411,7 @@ class _PosViewState extends State<PosView> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: vm.isLoading ? null : () async {
-                        final res = await vm.checkout();
+                        final res = await vm.checkout(chiNhanh: branchVm.selectedBranch.displayName);
                         if (context.mounted) {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
