@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_theme.dart';
 import '../../core/formatters.dart';
+import '../settings/settings_view.dart';
 import 'pos_view_model.dart';
 
 class PosView extends StatefulWidget {
@@ -36,6 +37,13 @@ class _PosViewState extends State<PosView> {
       appBar: AppBar(
         title: const Text('Thu ngân POS'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.print_outlined),
+            tooltip: 'Cài đặt máy in LAN',
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsView()));
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.qr_code_scanner, color: AppTheme.primaryBlue),
             tooltip: 'Quét Barcode / IMEI',
@@ -332,13 +340,14 @@ class _PosViewState extends State<PosView> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: vm.isLoading ? null : () async {
-                        final success = await vm.checkout();
+                        final res = await vm.checkout();
                         if (context.mounted) {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(success ? '✅ Thanh toán thành công!' : '❌ Có lỗi xảy ra'),
-                              backgroundColor: success ? AppTheme.successGreen : AppTheme.dangerRed,
+                              content: Text(res['message'] ?? (res['success'] == true ? '✅ Thanh toán thành công!' : '❌ Có lỗi xảy ra')),
+                              backgroundColor: res['success'] == true ? AppTheme.successGreen : AppTheme.dangerRed,
+                              duration: const Duration(seconds: 4),
                             ),
                           );
                         }
