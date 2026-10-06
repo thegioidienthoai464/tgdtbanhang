@@ -185,7 +185,7 @@ class _DashboardViewState extends State<DashboardView> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.Border.all(color: AppTheme.borderSubtle),
+          border: Border.all(color: AppTheme.borderSubtle),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,7 +224,7 @@ class _DashboardViewState extends State<DashboardView> {
         decoration: BoxDecoration(
           color: color.withOpacity(0.08),
           borderRadius: BorderRadius.circular(12),
-          border: Border.Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withOpacity(0.2)),
         ),
         child: Column(
           children: [
