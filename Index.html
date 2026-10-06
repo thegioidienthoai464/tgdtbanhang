@@ -4891,6 +4891,15 @@ function timKiemKhachHangPOS(kw) {
       if (!Array.isArray(rawHangHoa) || !rawHangHoa.length) return;
       if (!window.tonKhoChiNhanhMap) window.tonKhoChiNhanhMap = {};
 
+      // Tự động dọn sạch cache tồn kho cũ khi hệ thống vừa reset tồn kho
+      const RESET_INVENTORY_KEY = 'tt_pos_reset_inventory_v20261007';
+      try {
+        if (!localStorage.getItem(RESET_INVENTORY_KEY)) {
+          localStorage.removeItem('tt_pos_tonkho_chinhanh');
+          localStorage.setItem(RESET_INVENTORY_KEY, 'true');
+        }
+      } catch(e) {}
+
       let localCache = {};
       try {
         localCache = JSON.parse(localStorage.getItem('tt_pos_tonkho_chinhanh') || '{}');
