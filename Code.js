@@ -8,6 +8,11 @@ function doGet(e) {
       rows: rows
     }, null, 2)).setMimeType(ContentService.MimeType.JSON);
   }
+  if (e && e.parameter && e.parameter.action === 'resetDuLieuGiaoDichVaTonKho') {
+    const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
+    const result = thucHienResetGiaoDichVaTonKhoSheets(ss);
+    return ContentService.createTextOutput(JSON.stringify(result, null, 2)).setMimeType(ContentService.MimeType.JSON);
+  }
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     if (ss) {
@@ -30,6 +35,74 @@ function doGet(e) {
 
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+// Xóa trắng toàn bộ giao dịch và đưa tồn kho về 0 trên Google Sheets (Bảo tồn 100% Khách hàng, NCC, Nhóm hàng, Chi nhánh)
+function thucHienResetGiaoDichVaTonKhoSheets(ss) {
+  if (!ss) {
+    try {
+      ss = SpreadsheetApp.getActiveSpreadsheet();
+    } catch(e) {}
+  }
+  if (!ss) {
+    try {
+      ss = SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
+    } catch(e) {}
+  }
+  const log = [];
+  
+  // 1. Các sheet giao dịch cần xóa trắng dữ liệu (giữ nguyên dòng tiêu đề header số 1)
+  const transactionSheets = [
+    "DonHang", "Don_Hang", "GiaoDich_DonHang", "ChiTiet_DonHang",
+    "SoQuy", "Kho_IMEI", "KiemKho", "XuatHuy",
+    "NhapHang", "GiaoDich_NhapHang", "DonNhapHang", "TraHangNCC", "GiaoDich_TraNCC", "DonDatHang"
+  ];
+  
+  transactionSheets.forEach(sName => {
+    try {
+      const sh = ss.getSheetByName(sName);
+      if (sh) {
+        const lastRow = sh.getLastRow();
+        const lastCol = sh.getLastColumn();
+        if (lastRow > 1 && lastCol > 0) {
+          sh.getRange(2, 1, lastRow - 1, lastCol).clearContent();
+          log.push(`Đã xóa ${lastRow - 1} dòng trong sheet ${sName}`);
+        } else {
+          log.push(`Sheet ${sName} đã trống`);
+        }
+      }
+    } catch(err) {
+      log.push(`Lỗi xử lý sheet ${sName}: ${err.message}`);
+    }
+  });
+
+  // 2. Đưa cột Tồn kho về 0 trong DM_HangHoa và HangHoa
+  ["DM_HangHoa", "HangHoa"].forEach(sName => {
+    try {
+      const sh = ss.getSheetByName(sName);
+      if (sh) {
+        const lastRow = sh.getLastRow();
+        const lastCol = sh.getLastColumn();
+        if (lastRow > 1 && lastCol > 0) {
+          const headers = sh.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim().toLowerCase());
+          headers.forEach((h, colIdx) => {
+            if (h === "tonkho" || h === "tồn kho" || h === "ton_kho") {
+              const zeros = new Array(lastRow - 1).fill([0]);
+              sh.getRange(2, colIdx + 1, lastRow - 1, 1).setValues(zeros);
+              log.push(`Đã đưa tồn kho ${lastRow - 1} sản phẩm về 0 trong sheet ${sName}`);
+            }
+          });
+        }
+      }
+    } catch(err) {
+      log.push(`Lỗi reset tồn kho sheet ${sName}: ${err.message}`);
+    }
+  });
+
+  // BẢO VỆ NGUYÊN VẸN DM_DoiTac, DM_NhomHang, DM_ChiNhanh (TUYỆT ĐỐI KHÔNG CHẠM)
+  log.push("Bảo lưu 100% dữ liệu Khách hàng & Nhà cung cấp (DM_DoiTac), Nhóm hàng (DM_NhomHang), Chi nhánh (DM_ChiNhanh)");
+
+  return { success: true, timestamp: new Date().toISOString(), log: log };
 }
 // Đọc danh sách đối tác (Khách hàng hoặc Nhà cung cấp) từ Google Sheets
 function apiGetDanhSachDoiTac(loai) {
