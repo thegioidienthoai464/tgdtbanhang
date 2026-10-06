@@ -1,8 +1,8 @@
 {
-  "version": "1.0.7",
-  "build_number": 8,
+  "version": "1.0.8",
+  "build_number": 9,
   "force_update": false,
-  "release_notes": "• Quản lý danh mục hàng hóa chung toàn chuỗi; cấu hình tình trạng kinh doanh linh hoạt theo từng chi nhánh (Kinh doanh tất cả, Ngừng KD chọn lọc 1 hoặc nhiều chi nhánh, Ngừng KD toàn chuỗi).\n• Thêm tính năng Chuyển hàng giữa các chi nhánh (chọn kho xuất/nhận, quản lý chuyển IMEI, in phiếu điều chuyển nội bộ).\n• Tính giá vốn bình quân gia quyền tự động khi nhập kho (có công tắc Bật/Tắt trong Cài đặt tính năng phần mềm).\n• Kiểm soát và chặn bán hàng ngừng kinh doanh tại thu ngân POS.",
-  "download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.0.7/app-release.apk",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.0.7/app-release.apk"
+  "release_notes": "• Thêm mục chọn chi nhánh làm việc trực quan trên ứng dụng (Dashboard, Thu ngân POS, Cài đặt, Đơn hàng, Sổ quỹ, Kho).\n• Tự động đồng bộ danh sách chi nhánh từ Supabase & lưu nhớ chi nhánh đã chọn khi khởi động lại ứng dụng.\n• Tự động ghi nhận chi nhánh vào từng đơn bán hàng POS và phiếu thu chi sổ quỹ.\n• Hiển thị chi nhánh chi tiết trên từng hóa đơn bán hàng và lịch sử giao dịch.",
+  "download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.0.8/app-release.apk",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.0.8/app-release.apk"
 }
