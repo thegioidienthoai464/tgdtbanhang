@@ -39,7 +39,26 @@ class _DashboardViewState extends State<DashboardView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tổng quan kinh doanh'),
+        title: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.black,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Image.asset(
+                'assets/images/logo.png',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Icon(Icons.point_of_sale, color: Colors.amber, size: 18),
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text('T&T POS', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -82,19 +101,29 @@ class _DashboardViewState extends State<DashboardView> {
                 ),
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                      child: const Icon(Icons.storefront, color: Colors.white, size: 28),
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.amber, width: 2),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.storefront, color: Colors.amber, size: 28),
+                      ),
                     ),
                     const SizedBox(width: 14),
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('SMART ERP BÁN HÀNG', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text('T&T POS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: 0.5)),
                           SizedBox(height: 2),
-                          Text('CN01: Trụ sở chính Thanh Miện', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          Text('Hệ thống Quản lý Bán hàng & Kho ERP', style: TextStyle(color: Colors.white70, fontSize: 12)),
                         ],
                       ),
                     ),
