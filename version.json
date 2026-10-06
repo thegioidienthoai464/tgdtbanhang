@@ -1,8 +1,8 @@
 {
-  "version": "1.0.5",
-  "build_number": 6,
+  "version": "1.0.6",
+  "build_number": 7,
   "force_update": true,
-  "release_notes": "• Quản lý Tồn kho, Giao dịch (Bán hàng POS, Đơn nhập, Đơn đặt, Trả hàng, Kiểm kho) và Sổ quỹ độc lập, riêng biệt theo từng chi nhánh.\n• Dùng chung toàn hệ thống đối tác Khách hàng, Nhà cung cấp và Danh mục hàng hóa.\n• Bổ sung bảng phân bổ tồn kho đa chi nhánh và bộ lọc chi nhánh cho toàn bộ chứng từ.",
+  "release_notes": "• Đã reset toàn bộ dữ liệu giao dịch và tồn kho về 0 để cập nhật số liệu thực tế.\n• Bảo lưu 100% 33.126 khách hàng, nhà cung cấp và danh mục sản phẩm.\n• Hiển thị đầy đủ phân cấp Nhóm hàng cha > Nhóm hàng con và hỗ trợ file mẫu Excel mới.",
   "download_url": "https://tgdtbanhang.netlify.app/app-release.apk",
   "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/latest/download/app-release.apk"
 }
