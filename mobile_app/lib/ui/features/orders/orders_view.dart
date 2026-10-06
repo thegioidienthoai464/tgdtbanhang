@@ -107,7 +107,7 @@ class _OrdersViewState extends State<OrdersView> with SingleTickerProviderStateM
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.Border.all(color: AppTheme.borderSubtle),
+              border: Border.all(color: AppTheme.borderSubtle),
             ),
             padding: const EdgeInsets.all(16),
             child: Column(
