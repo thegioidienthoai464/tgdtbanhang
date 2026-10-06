@@ -1,0 +1,41 @@
+name: smart_erp_mobile
+description: "Hệ Thống Quản Lý Bán Hàng & Kho ERP - Mobile App (Android & iOS)"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Kết nối Supabase PostgreSQL Cloud chung với Web
+  supabase_flutter: ^2.8.0
+  
+  # Quản lý State & Kiến trúc MVVM
+  provider: ^6.1.2
+  
+  # Format Tiền Tệ & Ngày Tháng Việt Nam
+  intl: ^0.19.0
+  
+  # Giao diện & Font chữ hiện đại
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.10+1
+  
+  # Quét mã vạch Barcode / QR / IMEI qua Camera điện thoại
+  mobile_scanner: ^5.2.3
+  
+  # Tạo mã QR chuyển khoản VietQR tự động
+  qr_flutter: ^4.1.0
+  
+  # Lưu trữ cài đặt cục bộ (Chi nhánh, Tùy chọn)
+  shared_preferences: ^2.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
