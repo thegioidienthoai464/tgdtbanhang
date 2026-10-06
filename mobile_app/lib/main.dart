@@ -51,18 +51,41 @@ class MainNavigationShell extends StatefulWidget {
   State<MainNavigationShell> createState() => _MainNavigationShellState();
 }
 
-class _MainNavigationShellState extends State<MainNavigationShell> {
+class _MainNavigationShellState extends State<MainNavigationShell> with WidgetsBindingObserver {
   int _currentIndex = 0;
+  bool _isCheckingUpdate = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkUpdate());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkUpdate();
+    }
+  }
+
+  Future<void> _checkUpdate() async {
+    if (_isCheckingUpdate) return;
+    _isCheckingUpdate = true;
+    try {
       final update = await UpdateService.checkForUpdate();
       if (mounted && update != null) {
         UpdateService.showUpdateDialog(context, update);
       }
-    });
+    } finally {
+      _isCheckingUpdate = false;
+    }
   }
 
   void _onTabChange(int index) {
