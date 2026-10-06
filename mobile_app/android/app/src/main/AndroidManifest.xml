@@ -1,8 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.thegioidienthoai.smart_erp">
 
-    <!-- Quyền kết nối mạng Supabase Cloud -->
-    <uses-permission android:name="android.intent.action.INTERNET"/>
+    <!-- Quyền kết nối mạng Supabase Cloud & Máy in LAN -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <!-- Quyền Camera quét mã vạch Barcode / QR / IMEI -->
@@ -17,7 +17,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
 
     <application
-        android:label="Smart ERP Bán Hàng"
+        android:label="T&T POS"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
