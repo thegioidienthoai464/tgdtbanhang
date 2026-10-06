@@ -89,8 +89,8 @@ class _SettingsViewState extends State<SettingsView> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(res['message']),
-          backgroundColor: res['success'] ? AppTheme.successGreen : AppTheme.dangerRed,
+          content: Text(res['message']?.toString() ?? ''),
+          backgroundColor: res['success'] == true ? AppTheme.successGreen : AppTheme.dangerRed,
         ),
       );
     }
