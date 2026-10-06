@@ -106,6 +106,9 @@
   <button type="button" onclick="moModalQuanLyChiNhanh()" title="Quản lý chi nhánh" class="p-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl transition flex-shrink-0 shadow-md">
     <i class="fa-solid fa-gear text-xs"></i>
   </button>
+  <button type="button" onclick="moModalCaiDatHeThong()" title="Cài đặt tính năng phần mềm" class="p-2 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-xl transition flex-shrink-0 shadow-md border border-slate-700">
+    <i class="fa-solid fa-sliders text-xs"></i>
+  </button>
 </div>
 
     <!-- Danh sách Menu 7 mục -->
@@ -148,6 +151,10 @@
           <button type="button" onclick="switchTab('tab-thietlapgia')" id="nav-thietlapgia" class="nav-sub-item w-full text-left py-1.5 px-2.5 rounded-lg hover:text-white hover:bg-slate-800 transition">3.2 Thiết lập bảng giá</button>
           <button type="button" onclick="switchTab('tab-kiemkho')" id="nav-kiemkho" class="nav-sub-item w-full text-left py-1.5 px-2.5 rounded-lg hover:text-white hover:bg-slate-800 transition">3.3 Lịch sử kiểm kho</button>
           <button type="button" onclick="switchTab('tab-xuathuy')" id="nav-xuathuy" class="nav-sub-item w-full text-left py-1.5 px-2.5 rounded-lg hover:text-white hover:bg-slate-800 transition">3.4 Xuất hủy hàng hỏng</button>
+          <button type="button" onclick="switchTab('tab-chuyenkho')" id="nav-chuyenkho" class="nav-sub-item w-full text-left py-1.5 px-2.5 rounded-lg hover:text-white hover:bg-slate-800 transition flex items-center justify-between">
+            <span>3.5 Chuyển hàng chi nhánh</span>
+            <span class="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded-full font-bold">Mới</span>
+          </button>
         </div>
       </div>
 
@@ -259,6 +266,10 @@
           <i class="fa-brands fa-apple text-xs text-slate-800"></i>
           <span>App iPhone/iPad</span>
         </button>
+        <button type="button" onclick="moModalCaiDatHeThong()" title="Cài đặt tính năng phần mềm (Giá vốn bình quân, Chặn bán ngừng KD...)" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-full text-[11px] font-bold flex items-center space-x-1.5 transition shadow-xs">
+          <i class="fa-solid fa-sliders text-blue-600"></i>
+          <span>Cài đặt</span>
+        </button>
         <div class="h-6 w-[1px] bg-slate-200"></div>
         
         <!-- Khu vực hiển thị tên nhân viên, vai trò và nút Đăng xuất -->
@@ -365,6 +376,11 @@
               <option value="ALL">Tất cả tồn kho</option>
               <option value="CON_HANG">Còn tồn hàng</option>
               <option value="HET_HANG">Đã hết hàng</option>
+            </select>
+            <select id="filter-trang-thai-kd" onchange="locDanhSachHangHoa(true)" class="border border-slate-300 rounded-xl px-2 py-1 text-xs bg-slate-50 font-medium">
+              <option value="ALL">Tất cả trạng thái KD</option>
+              <option value="ACTIVE">Đang kinh doanh</option>
+              <option value="STOPPED">Ngừng kinh doanh</option>
             </select>
             <div class="flex items-center space-x-1 pl-1 border-l border-slate-200">
               <span class="text-[11px] text-slate-500 font-medium">Hiển thị:</span>
@@ -851,6 +867,168 @@
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+       * TAB 3.5: CHUYỂN HÀNG GIỮA CÁC CHI NHÁNH (INVENTORY TRANSFER)
+       * ==================================================================== -->
+      <section id="tab-chuyenkho" class="hidden space-y-3">
+        <!-- VIEW 1: DANH SÁCH LỊCH SỬ PHIẾU CHUYỂN HÀNG -->
+        <div id="view-chuyenkho-danhsach" class="space-y-3">
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap justify-between items-center gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" onclick="moLapPhieuChuyenKho()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition">
+                <i class="fa-solid fa-plus"></i><span>+ Lập phiếu chuyển hàng</span>
+              </button>
+              <button type="button" onclick="loadDanhSachChuyenKho()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-arrows-rotate text-indigo-600"></i><span>Làm mới</span>
+              </button>
+              <button type="button" onclick="xuatExcelPhieuChuyenKho()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-300 transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-file-excel"></i><span>Xuất Excel</span>
+              </button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="filter-chuyenkho-xuat" onchange="locDanhSachChuyenKho()" class="border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs bg-slate-50 font-medium">
+                <option value="ALL">📍 Kho xuất: Tất cả</option>
+              </select>
+              <select id="filter-chuyenkho-nhan" onchange="locDanhSachChuyenKho()" class="border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs bg-slate-50 font-medium">
+                <option value="ALL">🎯 Kho nhận: Tất cả</option>
+              </select>
+              <input type="text" id="search-chuyenkho" oninput="locDanhSachChuyenKho()" placeholder="Tìm mã phiếu, người chuyển, ghi chú..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs w-60 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500">
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-100/90 text-slate-600 uppercase font-semibold border-b">
+                <tr>
+                  <th class="p-3">Mã Phiếu</th>
+                  <th class="p-3">Ngày Chuyển</th>
+                  <th class="p-3">Chi Nhánh Xuất (Từ)</th>
+                  <th class="p-3">Chi Nhánh Nhận (Đến)</th>
+                  <th class="p-3 text-center">Số Mặt Hàng</th>
+                  <th class="p-3 text-right">Tổng SL Chuyển</th>
+                  <th class="p-3">Người Lập</th>
+                  <th class="p-3 text-center">Trạng Thái</th>
+                  <th class="p-3 text-center">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-chuyenkho-body" class="divide-y divide-slate-100 font-medium">
+                <tr><td colspan="9" class="p-8 text-center text-slate-400">Đang nạp danh sách phiếu chuyển hàng...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- VIEW 2: MÀN HÌNH LẬP PHIẾU CHUYỂN HÀNG (KIOTVIET STYLE) -->
+        <div id="view-chuyenkho-lap-phieu" class="hidden space-y-3">
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+              <button type="button" onclick="troVeDanhSachChuyenKho()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-arrow-left"></i><span>Quay lại</span>
+              </button>
+              <div class="border-l border-slate-300 pl-3">
+                <h3 class="font-bold text-sm text-slate-800 flex items-center space-x-1.5">
+                  <i class="fa-solid fa-truck-fast text-indigo-600"></i>
+                  <span>Lập Phiếu Chuyển Hàng Giữa Các Chi Nhánh</span>
+                </h3>
+              </div>
+            </div>
+            <span class="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-xl" id="display-maphieu-chuyenkho">CK...</span>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <!-- Cột trái (2/3): Tìm kiếm & Giỏ hàng chuyển -->
+            <div class="lg:col-span-2 space-y-3">
+              <!-- Ô tìm kiếm sản phẩm chuyển -->
+              <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs relative">
+                <div class="relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400"></i>
+                  <input type="text" id="search-hanghoa-chuyenkho" oninput="timKiemHangHoaChuyenKho(this.value)" placeholder="Quét mã vạch hoặc gõ mã / tên hàng hóa cần chuyển kho..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 font-medium">
+                  <div id="dropdown-hanghoa-chuyenkho" class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-64 overflow-y-auto z-50 hidden divide-y divide-slate-100"></div>
+                </div>
+              </div>
+
+              <!-- Bảng sản phẩm trong phiếu chuyển -->
+              <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                <div class="p-3 bg-slate-50/80 border-b border-slate-200 flex justify-between items-center">
+                  <span class="font-bold text-slate-700 text-xs flex items-center space-x-1.5">
+                    <i class="fa-solid fa-boxes-stacked text-indigo-600"></i>
+                    <span>Danh sách mặt hàng cần điều chuyển</span>
+                  </span>
+                  <span id="chuyenkho-cart-count" class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">0 mặt hàng</span>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-slate-100/70 text-slate-600 uppercase font-semibold border-b">
+                      <tr>
+                        <th class="p-2.5">Sản Phẩm</th>
+                        <th class="p-2.5 text-center w-14">ĐVT</th>
+                        <th class="p-2.5 text-center w-24">Tồn Kho Xuất</th>
+                        <th class="p-2.5 text-center w-24">Tồn Kho Nhận</th>
+                        <th class="p-2.5 text-center w-28">SL Chuyển</th>
+                        <th class="p-2.5">Mã Serial / IMEI</th>
+                        <th class="p-2.5 text-center w-12">Xóa</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbl-chuyenkho-cart-body" class="divide-y divide-slate-100 font-medium">
+                      <tr><td colspan="7" class="p-8 text-center text-slate-400">Chưa có sản phẩm nào trong phiếu chuyển kho. Hãy tìm kiếm ở trên để thêm vào.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cột phải (1/3): Thông tin phiếu chuyển -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3.5 h-fit">
+              <h4 class="font-bold text-slate-800 text-xs border-b pb-2 flex items-center space-x-1.5">
+                <i class="fa-solid fa-route text-indigo-600"></i>
+                <span>Tuyến Điều Chuyển Kho</span>
+              </h4>
+
+              <div>
+                <label class="text-[11px] font-bold text-amber-700 block mb-1">📍 Chi nhánh Xuất (Từ kho):</label>
+                <select id="select-chuyenkho-xuat" onchange="thayDoiChiNhanhXuatChuyenKho(this.value)" class="w-full border border-amber-300 rounded-xl p-2 text-xs bg-amber-50 font-bold text-amber-900 shadow-2xs focus:outline-none"></select>
+              </div>
+
+              <div>
+                <label class="text-[11px] font-bold text-indigo-700 block mb-1">🎯 Chi nhánh Nhận (Đến kho):</label>
+                <select id="select-chuyenkho-nhan" onchange="thayDoiChiNhanhNhanChuyenKho(this.value)" class="w-full border border-indigo-300 rounded-xl p-2 text-xs bg-indigo-50 font-bold text-indigo-900 shadow-2xs focus:outline-none"></select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-600 block mb-1">Ngày chuyển:</label>
+                  <input type="datetime-local" id="input-chuyenkho-ngay" class="w-full border rounded-xl p-2 text-xs bg-slate-50">
+                </div>
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-600 block mb-1">Người lập phiếu:</label>
+                  <input type="text" id="input-chuyenkho-nguoilap" class="w-full border rounded-xl p-2 text-xs bg-slate-50 font-medium">
+                </div>
+              </div>
+
+              <div>
+                <label class="text-[11px] font-semibold text-slate-600 block mb-1">Ghi chú điều chuyển:</label>
+                <textarea id="input-chuyenkho-ghichu" rows="2" placeholder="Ví dụ: Điều phối hàng bán cuối tuần, nhân viên chuyển..." class="w-full border rounded-xl p-2 text-xs bg-slate-50 focus:bg-white"></textarea>
+              </div>
+
+              <div class="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-100 space-y-1.5 text-xs">
+                <div class="flex justify-between items-center text-slate-600">
+                  <span>Tổng số mặt hàng:</span>
+                  <b id="summary-chuyenkho-somathang" class="font-mono text-slate-800">0</b>
+                </div>
+                <div class="flex justify-between items-center text-indigo-900 text-sm font-bold border-t border-indigo-200/60 pt-1.5">
+                  <span>Tổng số lượng chuyển:</span>
+                  <span id="summary-chuyenkho-tongsl" class="font-mono text-base text-indigo-700">0</span>
+                </div>
+              </div>
+
+              <button type="button" id="btn-xacnhan-chuyenkho" onclick="xacNhanThucHienChuyenKho()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-md transition flex items-center justify-center space-x-1.5">
+                <i class="fa-solid fa-check"></i><span>XÁC NHẬN CHUYỂN KHO</span>
+              </button>
             </div>
           </div>
         </div>
@@ -2622,12 +2800,39 @@
           <label class="font-semibold text-slate-600">Đơn vị tính:</label>
           <input type="text" id="form-dvt" value="Cái" class="w-full border rounded-xl p-2 bg-slate-50 mt-1">
         </div>
-        <div>
-          <label class="font-semibold text-slate-600">Trạng thái:</label>
-          <select id="form-trangthai" class="w-full border rounded-xl p-2 bg-slate-50 mt-1">
-            <option value="Kinh doanh">Kinh doanh</option>
-            <option value="Ngừng kinh doanh">Ngừng kinh doanh</option>
-          </select>
+        <div class="col-span-2 p-3 bg-slate-50/90 rounded-2xl border border-slate-200 space-y-2.5">
+          <div class="flex justify-between items-center">
+            <label class="font-bold text-slate-700 flex items-center space-x-1.5">
+              <i class="fa-solid fa-store text-blue-600"></i>
+              <span>Tình trạng kinh doanh tại các chi nhánh:</span>
+            </label>
+            <span id="form-trangthai-summary" class="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">Kinh doanh tất cả</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <label class="flex items-center space-x-2 p-2 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400">
+              <input type="radio" name="form-chedo-trangthai" id="radio-kd-tatca" value="ALL_ACTIVE" checked onchange="thayDoiCheDoTrangThai(this.value)" class="text-blue-600">
+              <span class="text-xs font-semibold text-emerald-700">Kinh doanh tất cả</span>
+            </label>
+            <label class="flex items-center space-x-2 p-2 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400">
+              <input type="radio" name="form-chedo-trangthai" id="radio-kd-chonloc" value="CUSTOM" onchange="thayDoiCheDoTrangThai(this.value)" class="text-blue-600">
+              <span class="text-xs font-semibold text-amber-700">Ngừng KD chọn lọc</span>
+            </label>
+            <label class="flex items-center space-x-2 p-2 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400">
+              <input type="radio" name="form-chedo-trangthai" id="radio-kd-ngungtatca" value="ALL_STOP" onchange="thayDoiCheDoTrangThai(this.value)" class="text-blue-600">
+              <span class="text-xs font-semibold text-rose-700">Ngừng KD tất cả</span>
+            </label>
+          </div>
+          <div id="box-chon-chinhanh-ngung-kd" class="hidden pt-2 border-t border-slate-200 space-y-1.5">
+            <div class="flex justify-between items-center text-[11px]">
+              <span class="font-semibold text-rose-700">Chọn chi nhánh NGỪNG KINH DOANH sản phẩm này:</span>
+              <div class="space-x-2">
+                <button type="button" onclick="chonTatCaChiNhanhNgungKD(true)" class="text-blue-600 hover:underline font-bold">Chọn tất cả</button>
+                <button type="button" onclick="chonTatCaChiNhanhNgungKD(false)" class="text-slate-500 hover:underline">Bỏ chọn hết</button>
+              </div>
+            </div>
+            <div id="list-checkbox-chinhanh-ngungkd" class="grid grid-cols-2 gap-2"></div>
+          </div>
+          <input type="hidden" id="form-trangthai" value="Kinh doanh">
         </div>
         <div>
           <label class="font-semibold text-slate-600">Giá vốn (VNĐ):</label>
@@ -5714,6 +5919,7 @@ function timKiemKhachHangPOS(kw) {
           'tab-thietlapgia': '3.2 Thiết lập bảng giá',
           'tab-kiemkho': '3.3 Lịch sử kiểm kho',
           'tab-xuathuy': '3.4 Xuất hủy hàng hỏng',
+          'tab-chuyenkho': '3.5 Chuyển hàng giữa các chi nhánh',
           'tab-ncc': '4.1 Quản lý Nhà cung cấp',
           'tab-nhaphang': '4.2 Đơn nhập hàng NCC',
           'tab-tranhap': '4.3 Trả hàng Nhà cung cấp',
@@ -5750,6 +5956,8 @@ function timKiemKhachHangPOS(kw) {
           if (typeof loadLichSuKiemKho === 'function') loadLichSuKiemKho();
         } else if (tabId === 'tab-xuathuy') {
           if (typeof loadDanhSachXuatHuy === 'function') loadDanhSachXuatHuy();
+        } else if (tabId === 'tab-chuyenkho') {
+          if (typeof loadDanhSachChuyenKho === 'function') loadDanhSachChuyenKho();
         } else if (tabId === 'tab-ncc') {
           if (typeof loadNCC === 'function') loadNCC();
           else if (typeof locDanhSachNCC === 'function') locDanhSachNCC(true);
@@ -7094,6 +7302,7 @@ function timKiemKhachHangPOS(kw) {
       const kw = (document.getElementById('filter-search-hang')?.value || '').toLowerCase().trim();
       const nhom = document.getElementById('filter-nhom-hang')?.value || '';
       const ton = document.getElementById('filter-ton-kho')?.value || 'ALL';
+      const trangThaiFilter = document.getElementById('filter-trang-thai-kd')?.value || 'ALL';
 
       return (rawHangHoa || []).filter(h => {
         const fullNhom = layTenDayDuNhomHang(h.maNhom).toLowerCase();
@@ -7109,7 +7318,15 @@ function timKiemKhachHangPOS(kw) {
           }
         }
         const mTon = (ton === 'ALL') || (ton === 'CON_HANG' && h.tonKho > 0) || (ton === 'HET_HANG' && h.tonKho <= 0);
-        return mKey && mNhom && mTon;
+
+        let mTrangThai = true;
+        if (trangThaiFilter === 'ACTIVE') {
+          mTrangThai = (typeof kiemTraSanPhamNgungKinhDoanh === 'function') ? !kiemTraSanPhamNgungKinhDoanh(h, currentChiNhanh) : (h.trangThai !== 'Ngừng kinh doanh');
+        } else if (trangThaiFilter === 'STOPPED') {
+          mTrangThai = (typeof kiemTraSanPhamNgungKinhDoanh === 'function') ? kiemTraSanPhamNgungKinhDoanh(h, currentChiNhanh) : (h.trangThai === 'Ngừng kinh doanh');
+        }
+
+        return mKey && mNhom && mTon && mTrangThai;
       });
     }
 
@@ -7373,7 +7590,7 @@ function timKiemKhachHangPOS(kw) {
           <td class="p-3 text-right font-bold text-slate-800 font-mono">${(Number(h.giaBan) || 0).toLocaleString()} đ</td>
           <td class="p-3 text-center">${h.coQuanLyIMEI ? `<span class="bg-indigo-50 text-indigo-700 text-[10px] px-2 py-0.5 rounded-full font-mono font-semibold">IMEI (${h.tonIMEI || 0})</span>` : '-'}</td>
           <td class="p-3 text-right font-bold font-mono ${Number(h.tonKho) > 0 ? 'text-emerald-600' : 'text-rose-500'}">${(Number(h.tonKho) || 0).toLocaleString()}</td>
-          <td class="p-3 text-center"><span class="text-[10px] px-2 py-0.5 rounded-full ${h.trangThai === 'Kinh doanh' ? 'bg-emerald-100 text-emerald-700 font-semibold' : 'bg-slate-100 text-slate-500'}">${h.trangThai || 'Kinh doanh'}</span></td>
+          <td class="p-3 text-center">${(typeof layHtmlBadgeTrangThaiHangHoa === 'function') ? layHtmlBadgeTrangThaiHangHoa(h) : `<span class="text-[10px] px-2 py-0.5 rounded-full ${h.trangThai === 'Kinh doanh' ? 'bg-emerald-100 text-emerald-700 font-semibold' : 'bg-slate-100 text-slate-500'}">${h.trangThai || 'Kinh doanh'}</span>`}</td>
           <td class="p-3 text-center space-x-1 whitespace-nowrap">
             <button type="button" onclick="xemChiTietHangHoa('${h.maHang}')" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-semibold transition" title="Xem chi tiết & Thẻ kho"><i class="fa-solid fa-rectangle-list mr-1"></i>Thẻ kho</button>
             <button type="button" onclick="suaHangHoa('${h.maHang}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition">Sửa</button>
@@ -7395,6 +7612,7 @@ function timKiemKhachHangPOS(kw) {
       document.getElementById('form-coimei').checked = false;
       document.getElementById('form-danhsach-imei').value = "";
       document.getElementById('form-tonkho').value = 0;
+      if (typeof thayDoiCheDoTrangThai === 'function') thayDoiCheDoTrangThai('ALL_ACTIVE');
       toggleBoxIMEI();
       moModal('modal-hanghoa');
     }
@@ -7412,7 +7630,11 @@ function timKiemKhachHangPOS(kw) {
       document.getElementById('form-giaban').value = h.giaBan || 0;
       document.getElementById('form-coimei').checked = h.coQuanLyIMEI;
       document.getElementById('form-tonkho').value = h.tonKho || 0;
-      document.getElementById('form-trangthai').value = h.trangThai || "Kinh doanh";
+      if (typeof cauHinhGiaoDienTrangThaiSuaHang === 'function') {
+        cauHinhGiaoDienTrangThaiSuaHang(h.trangThai);
+      } else {
+        document.getElementById('form-trangthai').value = h.trangThai || "Kinh doanh";
+      }
       toggleBoxIMEI();
       moModal('modal-hanghoa');
     }
@@ -10456,15 +10678,22 @@ function timKiemKhachHangPOS(kw) {
         return;
       }
 
-      box.innerHTML = matched.map(h => `
-        <div onclick="themHangVaoPOS('${h.maHang}')" class="p-2.5 hover:bg-blue-50 cursor-pointer flex justify-between items-center">
+      box.innerHTML = matched.map(h => {
+        const daNgungKD = (typeof kiemTraSanPhamNgungKinhDoanh === 'function') && kiemTraSanPhamNgungKinhDoanh(h, currentChiNhanh);
+        return `
+        <div onclick="themHangVaoPOS('${h.maHang}')" class="p-2.5 hover:bg-blue-50 cursor-pointer flex justify-between items-center ${daNgungKD ? 'bg-rose-50/50' : ''}">
           <div>
-            <p class="font-bold text-slate-800">${h.tenHang} <span class="font-mono text-blue-600 font-semibold text-[11px]">(${h.maHang})</span></p>
+            <p class="font-bold text-slate-800 flex items-center space-x-1.5">
+              <span>${h.tenHang}</span>
+              <span class="font-mono text-blue-600 font-semibold text-[11px]">(${h.maHang})</span>
+              ${daNgungKD ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 font-bold ml-1">Ngừng KD</span>' : ''}
+            </p>
             <p class="text-[10px] text-slate-400">Tồn kho: <b class="${h.tonKho > 0 ? 'text-emerald-600' : 'text-rose-600'} font-mono">${h.tonKho}</b> | Đơn vị: ${h.donViTinh || 'Cái'}</p>
           </div>
           <span class="font-mono font-bold text-blue-700 text-xs">${h.giaBan.toLocaleString()} đ</span>
         </div>
-      `).join('');
+      `;
+      }).join('');
       box.classList.remove('hidden');
     }
 
@@ -10472,6 +10701,17 @@ function timKiemKhachHangPOS(kw) {
       const cleanTarget = String(maHang || "").trim().toUpperCase();
       const sp = rawHangHoa.find(h => String(h.maHang || "").trim().toUpperCase() === cleanTarget);
       if (!sp) return showNotification("Không tìm thấy thông tin sản phẩm!", true);
+
+      // Chặn bán hàng ngừng kinh doanh nếu cài đặt BẬT
+      const daNgungKD = (typeof kiemTraSanPhamNgungKinhDoanh === 'function') && kiemTraSanPhamNgungKinhDoanh(sp, currentChiNhanh);
+      if (daNgungKD) {
+        const canBlock = (typeof layCaiDatChanBanNgungKD === 'function') ? layCaiDatChanBanNgungKD() : true;
+        if (canBlock) {
+          const cnCode = (typeof layMaChiNhanh === 'function') ? layMaChiNhanh(currentChiNhanh) : currentChiNhanh;
+          return showNotification(`Sản phẩm [${sp.tenHang}] đã NGỪNG KINH DOANH tại chi nhánh [${cnCode}]!`, true);
+        }
+      }
+
       if (sp.tonKho <= 0) return showNotification("Sản phẩm này đã hết hàng trong kho!", true);
 
       // KÍCH HOẠT THÔNG MINH: Chỉ cần tồn IMEI > 0 hoặc có danh sách IMEI trong kho là tự động bật quản lý IMEI
@@ -14079,6 +14319,12 @@ function loadSoQuy(filter) {
       try {
         const targetCNNhap = layMaChiNhanh(payload.chiNhanh);
         cartCopy.forEach(item => {
+          // Tính giá vốn bình quân gia quyền các lần nhập nếu tính năng BẬT
+          if (typeof layCaiDatTinhGiaVonTB === 'function' && layCaiDatTinhGiaVonTB()) {
+            if (typeof tinhVaCapNhatGiaVonBinhQuan === 'function') {
+              tinhVaCapNhatGiaVonBinhQuan(item.maHang, item.soLuong, item.donGia || item.giaNhap);
+            }
+          }
           dieuChinhTonKhoChiNhanh(item.maHang, targetCNNhap, item.soLuong);
         });
         if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
@@ -16673,6 +16919,1161 @@ function loadSoQuy(filter) {
     window.dienToanBoSoNoKH = dienToanBoSoNoKH;
     window.thayDoiLoaiQuyThuNoKH = thayDoiLoaiQuyThuNoKH;
     window.xacNhanThuNoKH = xacNhanThuNoKH;
+
+    /* ====================================================================
+     * PHẦN 1: CÀI ĐẶT TÍNH NĂNG PHẦN MỀM & TÍNH GIÁ VỐN BÌNH QUÂN GIA QUYỀN
+     * ==================================================================== */
+    function layCaiDatTinhGiaVonTB() {
+      const v = localStorage.getItem('tt_pos_setting_tinh_gia_von_tb');
+      return v === null ? true : (v === 'true' || v === '1');
+    }
+
+    function layCaiDatChanBanNgungKD() {
+      const v = localStorage.getItem('tt_pos_setting_chan_ban_ngungkd');
+      return v === null ? true : (v === 'true' || v === '1');
+    }
+
+    function layCaiDatInPhieuChuyenKho() {
+      const v = localStorage.getItem('tt_pos_setting_in_phieu_chuyenkho');
+      return v === null ? true : (v === 'true' || v === '1');
+    }
+
+    function moModalCaiDatHeThong() {
+      const chkGV = document.getElementById('setting-giavon-binhquan');
+      if (chkGV) chkGV.checked = layCaiDatTinhGiaVonTB();
+
+      const chkChan = document.getElementById('setting-chan-ban-ngungkd');
+      if (chkChan) chkChan.checked = layCaiDatChanBanNgungKD();
+
+      const chkIn = document.getElementById('setting-in-phieu-chuyenkho');
+      if (chkIn) chkIn.checked = layCaiDatInPhieuChuyenKho();
+
+      moModal('modal-cai-dat-he-thong');
+    }
+
+    function luuCaiDatHeThong() {
+      const chkGV = document.getElementById('setting-giavon-binhquan');
+      const chkChan = document.getElementById('setting-chan-ban-ngungkd');
+      const chkIn = document.getElementById('setting-in-phieu-chuyenkho');
+
+      if (chkGV) localStorage.setItem('tt_pos_setting_tinh_gia_von_tb', chkGV.checked ? 'true' : 'false');
+      if (chkChan) localStorage.setItem('tt_pos_setting_chan_ban_ngungkd', chkChan.checked ? 'true' : 'false');
+      if (chkIn) localStorage.setItem('tt_pos_setting_in_phieu_chuyenkho', chkIn.checked ? 'true' : 'false');
+
+      dongModal('modal-cai-dat-he-thong');
+      showNotification("Đã lưu cài đặt tính năng phần mềm thành công!");
+    }
+
+    // Tính và cập nhật giá vốn bình quân gia quyền khi nhập kho
+    function tinhVaCapNhatGiaVonBinhQuan(maHang, slNhap, giaNhap) {
+      const cleanMa = String(maHang || '').trim().toUpperCase();
+      const sp = (rawHangHoa || []).find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa);
+      if (!sp) return;
+
+      const sl = Number(slNhap) || 0;
+      const gn = Number(giaNhap) || 0;
+      if (sl <= 0) return;
+
+      // Lấy tổng tồn kho hiện tại trên toàn hệ thống trước khi cộng lần nhập này
+      let tonCu = 0;
+      if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) {
+        tonCu = Object.values(window.tonKhoChiNhanhMap[cleanMa]).reduce((sum, v) => sum + (Number(v) || 0), 0);
+      } else {
+        tonCu = Number(sp.tonKho) || 0;
+      }
+      tonCu = Math.max(0, tonCu);
+
+      const giaVonCu = Math.max(0, Number(sp.giaVon) || 0);
+      let giaVonMoi = gn;
+
+      if (tonCu > 0) {
+        // Công thức bình quân gia quyền: (Tồn cũ * Giá cũ + Nhập * Giá nhập) / (Tồn cũ + Nhập)
+        giaVonMoi = Math.round(((tonCu * giaVonCu) + (sl * gn)) / (tonCu + sl));
+      } else {
+        // Tồn kho trước đó <= 0: Lấy giá nhập lần này làm giá vốn
+        giaVonMoi = gn;
+      }
+
+      sp.giaVon = giaVonMoi;
+
+      // Đồng bộ Supabase nếu có
+      try {
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          supabaseClient.from('dm_hanghoa').update({ gia_von: giaVonMoi }).eq('ma_hang', cleanMa).then(() => {
+            console.log(`Đã cập nhật giá vốn bình quân gia quyền cho [${cleanMa}] lên Supabase: ${giaVonMoi}`);
+          }).catch(e => console.warn(e));
+        }
+      } catch(e) {}
+    }
+
+    /* ====================================================================
+     * PHẦN 2: QUẢN LÝ TÌNH TRẠNG KINH DOANH THEO CHI NHÁNH
+     * ==================================================================== */
+    function kiemTraSanPhamNgungKinhDoanh(h, maCN) {
+      if (!h) return false;
+      const st = String(h.trangThai || 'Kinh doanh').trim();
+      if (!st || st === 'Kinh doanh') return false;
+      if (st === 'Ngừng kinh doanh') return true;
+
+      const targetCN = layMaChiNhanh(maCN || currentChiNhanh || 'CN01').toUpperCase();
+      if (st.startsWith('Ngừng KD:')) {
+        const branches = st.replace('Ngừng KD:', '').split(',').map(s => layMaChiNhanh(s).toUpperCase());
+        return branches.includes(targetCN);
+      }
+      return false;
+    }
+
+    function layHtmlBadgeTrangThaiHangHoa(h) {
+      if (!h) return '';
+      const st = String(h.trangThai || 'Kinh doanh').trim();
+      const targetCN = layMaChiNhanh(currentChiNhanh || 'CN01');
+
+      if (!st || st === 'Kinh doanh') {
+        return `<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-semibold">Kinh doanh</span>`;
+      }
+      if (st === 'Ngừng kinh doanh') {
+        return `<span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 font-bold" title="Ngừng kinh doanh toàn chuỗi">Ngừng KD (Tất cả)</span>`;
+      }
+      if (st.startsWith('Ngừng KD:')) {
+        const branches = st.replace('Ngừng KD:', '').split(',').map(s => layMaChiNhanh(s).toUpperCase());
+        const isStoppedHere = branches.includes(targetCN.toUpperCase());
+        if (isStoppedHere) {
+          return `<span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold" title="${st}">Ngừng KD (${targetCN})</span>`;
+        } else {
+          return `<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 font-semibold" title="${st}">Kinh doanh (${branches.length} CN ngừng)</span>`;
+        }
+      }
+      return `<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">${st}</span>`;
+    }
+
+    function renderCheckboxChiNhanhNgungKD(selectedBranches = []) {
+      const container = document.getElementById('list-checkbox-chinhanh-ngungkd');
+      if (!container) return;
+
+      const branches = (rawChiNhanhList && rawChiNhanhList.length > 0) ? rawChiNhanhList : [
+        { ma: 'CN01', ten: 'Trụ sở chính Thanh Miện' },
+        { ma: 'CN02', ten: 'Chi nhánh Hải Dương' },
+        { ma: 'CN03', ten: 'Chi nhánh Hà Nội' },
+        { ma: 'CN04', ten: 'Kho Tổng Trung Tâm' }
+      ];
+
+      const selUpper = (selectedBranches || []).map(s => layMaChiNhanh(s).toUpperCase());
+
+      container.innerHTML = branches.map(cn => {
+        const isChecked = selUpper.includes(cn.ma.toUpperCase());
+        return `
+          <label class="flex items-center space-x-2 p-2 bg-white rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 text-xs">
+            <input type="checkbox" class="chk-chinhanh-ngungkd w-4 h-4 text-rose-600 accent-rose-600 rounded" value="${cn.ma}" ${isChecked ? 'checked' : ''} onchange="capNhatChuoiTrangThaiTuCheckbox()">
+            <span class="font-bold text-slate-800">${cn.ma}:</span>
+            <span class="text-slate-600 truncate">${cn.ten}</span>
+          </label>
+        `;
+      }).join('');
+    }
+
+    function thayDoiCheDoTrangThai(mode, preselectBranches = []) {
+      const boxCustom = document.getElementById('box-chon-chinhanh-ngung-kd');
+      const inpHidden = document.getElementById('form-trangthai');
+      const txtSummary = document.getElementById('form-trangthai-summary');
+
+      if (mode === 'ALL_ACTIVE') {
+        if (boxCustom) boxCustom.classList.add('hidden');
+        if (inpHidden) inpHidden.value = "Kinh doanh";
+        if (txtSummary) {
+          txtSummary.textContent = "Kinh doanh tất cả";
+          txtSummary.className = "text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full";
+        }
+      } else if (mode === 'ALL_STOP') {
+        if (boxCustom) boxCustom.classList.add('hidden');
+        if (inpHidden) inpHidden.value = "Ngừng kinh doanh";
+        if (txtSummary) {
+          txtSummary.textContent = "Ngừng kinh doanh tất cả";
+          txtSummary.className = "text-[11px] font-bold text-rose-700 bg-rose-100 px-2.5 py-0.5 rounded-full";
+        }
+      } else if (mode === 'CUSTOM') {
+        if (boxCustom) boxCustom.classList.remove('hidden');
+        renderCheckboxChiNhanhNgungKD(preselectBranches);
+        capNhatChuoiTrangThaiTuCheckbox();
+      }
+    }
+
+    function capNhatChuoiTrangThaiTuCheckbox() {
+      const chks = document.querySelectorAll('.chk-chinhanh-ngungkd:checked');
+      const allChks = document.querySelectorAll('.chk-chinhanh-ngungkd');
+      const inpHidden = document.getElementById('form-trangthai');
+      const txtSummary = document.getElementById('form-trangthai-summary');
+
+      const selected = Array.from(chks).map(c => c.value);
+
+      if (selected.length === 0) {
+        if (inpHidden) inpHidden.value = "Kinh doanh";
+        if (txtSummary) {
+          txtSummary.textContent = "Kinh doanh tất cả";
+          txtSummary.className = "text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full";
+        }
+      } else if (allChks.length > 0 && selected.length === allChks.length) {
+        if (inpHidden) inpHidden.value = "Ngừng kinh doanh";
+        if (txtSummary) {
+          txtSummary.textContent = "Ngừng kinh doanh tất cả";
+          txtSummary.className = "text-[11px] font-bold text-rose-700 bg-rose-100 px-2.5 py-0.5 rounded-full";
+        }
+      } else {
+        const valStr = "Ngừng KD: " + selected.join(', ');
+        if (inpHidden) inpHidden.value = valStr;
+        if (txtSummary) {
+          txtSummary.textContent = valStr;
+          txtSummary.className = "text-[11px] font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full";
+        }
+      }
+    }
+
+    function chonTatCaChiNhanhNgungKD(selectOrDeselect) {
+      const chks = document.querySelectorAll('.chk-chinhanh-ngungkd');
+      chks.forEach(c => { c.checked = Boolean(selectOrDeselect); });
+      capNhatChuoiTrangThaiTuCheckbox();
+    }
+
+    function cauHinhGiaoDienTrangThaiSuaHang(trangThaiStr) {
+      const st = String(trangThaiStr || 'Kinh doanh').trim();
+      const inpHidden = document.getElementById('form-trangthai');
+      if (inpHidden) inpHidden.value = st;
+
+      const radAll = document.getElementById('radio-kd-tatca');
+      const radCustom = document.getElementById('radio-kd-chonloc');
+      const radStop = document.getElementById('radio-kd-ngungtatca');
+
+      if (st === 'Ngừng kinh doanh') {
+        if (radStop) radStop.checked = true;
+        thayDoiCheDoTrangThai('ALL_STOP');
+      } else if (st.startsWith('Ngừng KD:')) {
+        if (radCustom) radCustom.checked = true;
+        const branches = st.replace('Ngừng KD:', '').split(',').map(s => s.trim().toUpperCase());
+        thayDoiCheDoTrangThai('CUSTOM', branches);
+      } else {
+        if (radAll) radAll.checked = true;
+        thayDoiCheDoTrangThai('ALL_ACTIVE');
+      }
+    }
+
+    /* ====================================================================
+     * PHẦN 3: TÍNH NĂNG CHUYỂN HÀNG GIỮA CÁC CHI NHÁNH (INVENTORY TRANSFER)
+     * ==================================================================== */
+    var rawChuyenKhoList = [];
+    var danhSachChuyenKhoCart = [];
+    var ckCurrentMaHangIMEI = null;
+    var chiTietPhieuCKDangXem = null;
+
+    async function loadDanhSachChuyenKho() {
+      const tbody = document.getElementById('tbl-chuyenkho-body');
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải dữ liệu phiếu chuyển kho...</td></tr>`;
+      }
+
+      // 1. Tải danh sách chi nhánh vào bộ lọc
+      capNhatDropdownChiNhanhChuyenKho();
+
+      // 2. Tải từ localStorage trước
+      try {
+        const localData = JSON.parse(localStorage.getItem('tt_pos_chuyen_kho_list') || '[]');
+        if (Array.isArray(localData) && localData.length > 0) {
+          rawChuyenKhoList = localData;
+        }
+      } catch(e) {}
+
+      // 3. Tải từ Supabase bảng don_hang (hinh_thuc_tt = 'CHUYEN_KHO')
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('don_hang')
+            .select('*')
+            .eq('hinh_thuc_tt', 'CHUYEN_KHO')
+            .order('ngay_tao', { ascending: false });
+
+          if (!error && data && data.length > 0) {
+            const mapped = data.map(d => {
+              const chiTiet = Array.isArray(d.chi_tiet) ? d.chi_tiet : (typeof d.chi_tiet === 'string' ? JSON.parse(d.chi_tiet || '[]') : []);
+              const cnArr = String(d.chi_nhanh || '').split('->').map(s => s.trim());
+              const cnXuat = cnArr[0] || 'CN01';
+              const cnNhan = cnArr[1] || 'CN02';
+              const tongSL = chiTiet.reduce((sum, it) => sum + (Number(it.soLuong) || 0), 0);
+
+              return {
+                maPhieu: d.ma_don_hang,
+                ngayChuyen: d.ngay_tao,
+                cnXuat: cnXuat,
+                tenCnXuat: layTenChiNhanhDayDu(cnXuat),
+                cnNhan: cnNhan,
+                tenCnNhan: layTenChiNhanhDayDu(cnNhan),
+                nguoiLap: d.nhan_vien || 'Quản trị viên',
+                ghiChu: d.ghi_chu || '',
+                tongSoMatHang: chiTiet.length,
+                tongSoLuong: tongSL,
+                trangThai: d.trang_thai || 'Hoàn thành',
+                chiTietSanPham: chiTiet
+              };
+            });
+
+            // Hợp nhất dữ liệu
+            const mapById = new Map();
+            mapped.forEach(p => mapById.set(p.maPhieu, p));
+            rawChuyenKhoList.forEach(p => { if (!mapById.has(p.maPhieu)) mapById.set(p.maPhieu, p); });
+            rawChuyenKhoList = Array.from(mapById.values());
+            localStorage.setItem('tt_pos_chuyen_kho_list', JSON.stringify(rawChuyenKhoList));
+          }
+        } catch(e) {
+          console.warn("Lỗi tải phiếu chuyển kho từ Supabase:", e);
+        }
+      }
+
+      locDanhSachChuyenKho();
+    }
+
+    function capNhatDropdownChiNhanhChuyenKho() {
+      const branches = (rawChiNhanhList && rawChiNhanhList.length > 0) ? rawChiNhanhList : [
+        { ma: 'CN01', ten: 'Trụ sở chính Thanh Miện' },
+        { ma: 'CN02', ten: 'Chi nhánh Hải Dương' },
+        { ma: 'CN03', ten: 'Chi nhánh Hà Nội' },
+        { ma: 'CN04', ten: 'Kho Tổng Trung Tâm' }
+      ];
+
+      // Dropdown lọc
+      const fXuat = document.getElementById('filter-chuyenkho-xuat');
+      const fNhan = document.getElementById('filter-chuyenkho-nhan');
+      if (fXuat) {
+        const curX = fXuat.value || 'ALL';
+        fXuat.innerHTML = `<option value="ALL">📍 Kho xuất: Tất cả</option>` + branches.map(c => `<option value="${c.ma}">${c.ma}: ${c.ten}</option>`).join('');
+        fXuat.value = curX;
+      }
+      if (fNhan) {
+        const curN = fNhan.value || 'ALL';
+        fNhan.innerHTML = `<option value="ALL">🎯 Kho nhận: Tất cả</option>` + branches.map(c => `<option value="${c.ma}">${c.ma}: ${c.ten}</option>`).join('');
+        fNhan.value = curN;
+      }
+
+      // Dropdown tạo phiếu
+      const sXuat = document.getElementById('select-chuyenkho-xuat');
+      const sNhan = document.getElementById('select-chuyenkho-nhan');
+      if (sXuat) {
+        sXuat.innerHTML = branches.map(c => `<option value="${c.ma}">${c.ma}: ${c.ten}</option>`).join('');
+        sXuat.value = layMaChiNhanh(currentChiNhanh || 'CN01');
+      }
+      if (sNhan) {
+        sNhan.innerHTML = branches.map(c => `<option value="${c.ma}">${c.ma}: ${c.ten}</option>`).join('');
+        const otherCN = branches.find(c => c.ma !== layMaChiNhanh(currentChiNhanh || 'CN01')) || branches[1] || branches[0];
+        sNhan.value = otherCN.ma;
+      }
+    }
+
+    function locDanhSachChuyenKho() {
+      const fXuat = document.getElementById('filter-chuyenkho-xuat')?.value || 'ALL';
+      const fNhan = document.getElementById('filter-chuyenkho-nhan')?.value || 'ALL';
+      const kw = (document.getElementById('search-chuyenkho')?.value || '').trim().toLowerCase();
+
+      const filtered = (rawChuyenKhoList || []).filter(p => {
+        const mXuat = (fXuat === 'ALL') || (layMaChiNhanh(p.cnXuat) === fXuat);
+        const mNhan = (fNhan === 'ALL') || (layMaChiNhanh(p.cnNhan) === fNhan);
+        const mKw = !kw || 
+          String(p.maPhieu || '').toLowerCase().includes(kw) ||
+          String(p.nguoiLap || '').toLowerCase().includes(kw) ||
+          String(p.ghiChu || '').toLowerCase().includes(kw) ||
+          String(p.tenCnXuat || '').toLowerCase().includes(kw) ||
+          String(p.tenCnNhan || '').toLowerCase().includes(kw);
+        return mXuat && mNhan && mKw;
+      });
+
+      renderBangDanhSachChuyenKho(filtered);
+    }
+
+    function renderBangDanhSachChuyenKho(list) {
+      const tbody = document.getElementById('tbl-chuyenkho-body');
+      if (!tbody) return;
+
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">Chưa có phiếu chuyển hàng nào phù hợp!</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(p => `
+        <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+          <td class="p-3 font-mono font-bold text-indigo-700 cursor-pointer hover:underline" onclick="xemChiTietChuyenKho('${p.maPhieu}')">${p.maPhieu}</td>
+          <td class="p-3 text-slate-600">${p.ngayChuyen ? new Date(p.ngayChuyen).toLocaleString('vi-VN') : '-'}</td>
+          <td class="p-3 font-semibold text-amber-800">${p.tenCnXuat || p.cnXuat}</td>
+          <td class="p-3 font-semibold text-indigo-900">${p.tenCnNhan || p.cnNhan}</td>
+          <td class="p-3 text-center font-bold text-slate-700">${p.tongSoMatHang || (p.chiTietSanPham ? p.chiTietSanPham.length : 0)}</td>
+          <td class="p-3 text-right font-mono font-bold text-indigo-700">${(Number(p.tongSoLuong) || 0).toLocaleString()}</td>
+          <td class="p-3 text-slate-700 font-medium">${p.nguoiLap || 'Quản trị viên'}</td>
+          <td class="p-3 text-center">
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700">Hoàn thành</span>
+          </td>
+          <td class="p-3 text-center space-x-1 whitespace-nowrap">
+            <button type="button" onclick="xemChiTietChuyenKho('${p.maPhieu}')" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition" title="Xem chi tiết & In phiếu">
+              <i class="fa-solid fa-file-invoice mr-1"></i>Chi tiết
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function moLapPhieuChuyenKho() {
+      const vDs = document.getElementById('view-chuyenkho-danhsach');
+      const vLap = document.getElementById('view-chuyenkho-lap-phieu');
+      if (vDs) vDs.classList.add('hidden');
+      if (vLap) vLap.classList.remove('hidden');
+
+      capNhatDropdownChiNhanhChuyenKho();
+
+      // Sinh mã phiếu mới
+      const newCode = "CK" + new Date().toISOString().slice(2, 10).replace(/-/g, '') + Math.floor(1000 + Math.random() * 9000);
+      const dispMa = document.getElementById('display-maphieu-chuyenkho');
+      if (dispMa) dispMa.innerText = newCode;
+
+      // Người lập & ngày giờ
+      const inpNguoi = document.getElementById('input-chuyenkho-nguoilap');
+      if (inpNguoi) inpNguoi.value = 'Quản trị viên';
+
+      const inpNgay = document.getElementById('input-chuyenkho-ngay');
+      if (inpNgay) {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        inpNgay.value = now.toISOString().slice(0, 16);
+      }
+
+      const inpGhiChu = document.getElementById('input-chuyenkho-ghichu');
+      if (inpGhiChu) inpGhiChu.value = '';
+
+      const inpSearch = document.getElementById('search-hanghoa-chuyenkho');
+      if (inpSearch) inpSearch.value = '';
+
+      const dropSearch = document.getElementById('dropdown-hanghoa-chuyenkho');
+      if (dropSearch) dropSearch.classList.add('hidden');
+
+      danhSachChuyenKhoCart = [];
+      renderChuyenKhoCart();
+    }
+
+    function troVeDanhSachChuyenKho() {
+      const vLap = document.getElementById('view-chuyenkho-lap-phieu');
+      const vDs = document.getElementById('view-chuyenkho-danhsach');
+      if (vLap) vLap.classList.add('hidden');
+      if (vDs) vDs.classList.remove('hidden');
+      locDanhSachChuyenKho();
+    }
+
+    function thayDoiChiNhanhXuatChuyenKho(val) {
+      const sNhan = document.getElementById('select-chuyenkho-nhan');
+      if (sNhan && sNhan.value === val) {
+        showNotification("Chi nhánh nhận không thể trùng với chi nhánh xuất!", true);
+        const branches = (rawChiNhanhList || []).filter(c => c.ma !== val);
+        if (branches.length > 0) sNhan.value = branches[0].ma;
+      }
+      capNhatTonKhoTrongCartChuyenKho();
+    }
+
+    function thayDoiChiNhanhNhanChuyenKho(val) {
+      const sXuat = document.getElementById('select-chuyenkho-xuat');
+      if (sXuat && sXuat.value === val) {
+        showNotification("Chi nhánh nhận không thể trùng với chi nhánh xuất!", true);
+        const branches = (rawChiNhanhList || []).filter(c => c.ma !== val);
+        if (branches.length > 0) sXuat.value = branches[0].ma;
+      }
+      capNhatTonKhoTrongCartChuyenKho();
+    }
+
+    function capNhatTonKhoTrongCartChuyenKho() {
+      const cnXuat = document.getElementById('select-chuyenkho-xuat')?.value || 'CN01';
+      const cnNhan = document.getElementById('select-chuyenkho-nhan')?.value || 'CN02';
+
+      danhSachChuyenKhoCart.forEach(it => {
+        it.tonXuat = layTonKhoSanPhamTaiChiNhanh(it.maHang, cnXuat);
+        it.tonNhan = layTonKhoSanPhamTaiChiNhanh(it.maHang, cnNhan);
+        if (it.soLuong > it.tonXuat) it.soLuong = Math.max(0, it.tonXuat);
+      });
+      renderChuyenKhoCart();
+    }
+
+    function timKiemHangHoaChuyenKho(kw) {
+      const box = document.getElementById('dropdown-hanghoa-chuyenkho');
+      const val = (kw || '').toLowerCase().trim();
+      if (!val) {
+        if (box) box.classList.add('hidden');
+        return;
+      }
+
+      const cnXuat = document.getElementById('select-chuyenkho-xuat')?.value || 'CN01';
+      const matched = (rawHangHoa || []).filter(h => {
+        return String(h.maHang || '').toLowerCase().includes(val) || String(h.tenHang || '').toLowerCase().includes(val);
+      }).slice(0, 10);
+
+      if (!matched.length) {
+        box.innerHTML = `<p class="p-3 text-slate-400 text-center text-xs">Không tìm thấy sản phẩm phù hợp</p>`;
+        box.classList.remove('hidden');
+        return;
+      }
+
+      box.innerHTML = matched.map(h => {
+        const tonXuat = layTonKhoSanPhamTaiChiNhanh(h.maHang, cnXuat);
+        return `
+          <div onclick="themHangVaoChuyenKho('${h.maHang}')" class="p-2.5 hover:bg-indigo-50 cursor-pointer flex justify-between items-center transition">
+            <div>
+              <p class="font-bold text-slate-800 text-xs">${h.tenHang} <span class="font-mono text-indigo-600 font-semibold">(${h.maHang})</span></p>
+              <p class="text-[11px] text-slate-500">
+                Kho xuất: <b class="${tonXuat > 0 ? 'text-emerald-600' : 'text-rose-600'} font-mono">${tonXuat}</b> ${h.donViTinh || 'Cái'}
+                ${h.coQuanLyIMEI ? '<span class="ml-2 text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.2 rounded font-bold">IMEI</span>' : ''}
+              </p>
+            </div>
+            <button type="button" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[11px] font-bold">
+              + Thêm
+            </button>
+          </div>
+        `;
+      }).join('');
+      box.classList.remove('hidden');
+    }
+
+    function themHangVaoChuyenKho(maHang) {
+      const cleanMa = String(maHang || '').trim().toUpperCase();
+      const sp = (rawHangHoa || []).find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa);
+      if (!sp) return showNotification("Không tìm thấy sản phẩm!", true);
+
+      const cnXuat = document.getElementById('select-chuyenkho-xuat')?.value || 'CN01';
+      const cnNhan = document.getElementById('select-chuyenkho-nhan')?.value || 'CN02';
+      const tonXuat = layTonKhoSanPhamTaiChiNhanh(sp.maHang, cnXuat);
+      const tonNhan = layTonKhoSanPhamTaiChiNhanh(sp.maHang, cnNhan);
+
+      if (tonXuat <= 0) {
+        return showNotification(`Sản phẩm [${sp.tenHang}] hiện đang hết hàng tại kho xuất [${cnXuat}]!`, true);
+      }
+
+      const qlIMEI = Boolean(
+        (sp.tonIMEI && sp.tonIMEI > 0) ||
+        (sp.danhSachIMEI && sp.danhSachIMEI.length > 0) ||
+        sp.coQuanLyIMEI === true || 
+        String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || 
+        String(sp.coQuanLyIMEI).trim().toLowerCase().indexOf('c') === 0 || 
+        String(sp.coQuanLyIMEI).trim() === '1'
+      );
+
+      const exist = danhSachChuyenKhoCart.find(i => String(i.maHang || '').trim().toUpperCase() === cleanMa);
+      if (exist) {
+        if (qlIMEI) {
+          moModalChonIMEIChuyenKho(cleanMa);
+        } else {
+          if (exist.soLuong + 1 > tonXuat) {
+            return showNotification(`Số lượng chuyển không thể vượt quá tồn kho xuất (${tonXuat})!`, true);
+          }
+          exist.soLuong++;
+        }
+      } else {
+        danhSachChuyenKhoCart.push({
+          maHang: sp.maHang,
+          tenHang: sp.tenHang,
+          donViTinh: sp.donViTinh || 'Cái',
+          tonXuat: tonXuat,
+          tonNhan: tonNhan,
+          soLuong: qlIMEI ? 0 : 1,
+          coQuanLyIMEI: qlIMEI,
+          imeiDaChon: []
+        });
+
+        if (qlIMEI) {
+          moModalChonIMEIChuyenKho(cleanMa);
+        }
+      }
+
+      const sInp = document.getElementById('search-hanghoa-chuyenkho');
+      if (sInp) sInp.value = '';
+      const sDrop = document.getElementById('dropdown-hanghoa-chuyenkho');
+      if (sDrop) sDrop.classList.add('hidden');
+
+      renderChuyenKhoCart();
+    }
+
+    function renderChuyenKhoCart() {
+      const tbody = document.getElementById('tbl-chuyenkho-cart-body');
+      const badgeCount = document.getElementById('chuyenkho-cart-count');
+      const sumMH = document.getElementById('summary-chuyenkho-somathang');
+      const sumSL = document.getElementById('summary-chuyenkho-tongsl');
+
+      if (!danhSachChuyenKhoCart || danhSachChuyenKhoCart.length === 0) {
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">Chưa có sản phẩm nào trong phiếu chuyển kho. Hãy tìm kiếm ở trên để thêm vào.</td></tr>`;
+        if (badgeCount) badgeCount.innerText = '0 mặt hàng';
+        if (sumMH) sumMH.innerText = '0';
+        if (sumSL) sumSL.innerText = '0';
+        return;
+      }
+
+      let totalSL = 0;
+      tbody.innerHTML = danhSachChuyenKhoCart.map((it, idx) => {
+        totalSL += (Number(it.soLuong) || 0);
+        return `
+          <tr class="hover:bg-slate-50/70 border-b border-slate-100 transition">
+            <td class="p-2.5">
+              <p class="font-bold text-slate-800">${it.tenHang}</p>
+              <p class="text-[11px] font-mono text-indigo-600 font-semibold">${it.maHang}</p>
+            </td>
+            <td class="p-2.5 text-center text-slate-600">${it.donViTinh || 'Cái'}</td>
+            <td class="p-2.5 text-center font-bold font-mono ${it.tonXuat > 0 ? 'text-amber-800' : 'text-rose-600'}">${it.tonXuat}</td>
+            <td class="p-2.5 text-center font-bold font-mono text-indigo-900">${it.tonNhan}</td>
+            <td class="p-2.5 text-center">
+              ${it.coQuanLyIMEI ? `
+                <span class="font-bold font-mono text-sm text-indigo-700 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-200">${it.soLuong}</span>
+              ` : `
+                <div class="flex items-center justify-center space-x-1">
+                  <button type="button" onclick="tangGiamSLChuyenKho('${it.maHang}', -1)" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-700 flex items-center justify-center">-</button>
+                  <input type="number" min="1" max="${it.tonXuat}" value="${it.soLuong}" onchange="capNhatSLChuyenKho('${it.maHang}', this.value)" class="w-14 text-center border rounded-lg py-0.5 font-mono font-bold text-indigo-700 bg-slate-50 focus:bg-white">
+                  <button type="button" onclick="tangGiamSLChuyenKho('${it.maHang}', 1)" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-700 flex items-center justify-center">+</button>
+                </div>
+              `}
+            </td>
+            <td class="p-2.5">
+              ${it.coQuanLyIMEI ? `
+                <div class="space-y-1">
+                  <button type="button" onclick="moModalChonIMEIChuyenKho('${it.maHang}')" class="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-[11px] font-bold border border-purple-200 flex items-center space-x-1">
+                    <i class="fa-solid fa-barcode text-[10px]"></i>
+                    <span>Chọn IMEI (${it.imeiDaChon ? it.imeiDaChon.length : 0})</span>
+                  </button>
+                  ${it.imeiDaChon && it.imeiDaChon.length > 0 ? `
+                    <div class="flex flex-wrap gap-1 max-w-[200px] max-h-12 overflow-y-auto">
+                      ${it.imeiDaChon.map(im => `<span class="text-[9px] bg-slate-100 px-1.5 py-0.2 rounded font-mono text-slate-700">${im}</span>`).join('')}
+                    </div>
+                  ` : `<span class="text-[10px] text-rose-500 italic font-medium">* Bắt buộc chọn IMEI</span>`}
+                </div>
+              ` : `<span class="text-slate-400 text-[11px]">-</span>`}
+            </td>
+            <td class="p-2.5 text-center">
+              <button type="button" onclick="xoaHangChuyenKho('${it.maHang}')" class="text-rose-400 hover:text-rose-600 p-1 transition" title="Xóa mặt hàng này">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      if (badgeCount) badgeCount.innerText = danhSachChuyenKhoCart.length + ' mặt hàng';
+      if (sumMH) sumMH.innerText = danhSachChuyenKhoCart.length;
+      if (sumSL) sumSL.innerText = totalSL.toLocaleString();
+    }
+
+    function capNhatSLChuyenKho(maHang, val) {
+      const it = danhSachChuyenKhoCart.find(i => i.maHang === maHang);
+      if (!it) return;
+      let sl = parseInt(val) || 1;
+      if (sl < 1) sl = 1;
+      if (sl > it.tonXuat) {
+        sl = it.tonXuat;
+        showNotification(`Số lượng chuyển không thể vượt quá tồn kho xuất (${it.tonXuat})!`, true);
+      }
+      it.soLuong = sl;
+      renderChuyenKhoCart();
+    }
+
+    function tangGiamSLChuyenKho(maHang, delta) {
+      const it = danhSachChuyenKhoCart.find(i => i.maHang === maHang);
+      if (!it) return;
+      const newVal = it.soLuong + Number(delta);
+      if (newVal < 1) return;
+      if (newVal > it.tonXuat) {
+        return showNotification(`Số lượng chuyển không thể vượt quá tồn kho xuất (${it.tonXuat})!`, true);
+      }
+      it.soLuong = newVal;
+      renderChuyenKhoCart();
+    }
+
+    function xoaHangChuyenKho(maHang) {
+      danhSachChuyenKhoCart = danhSachChuyenKhoCart.filter(i => i.maHang !== maHang);
+      renderChuyenKhoCart();
+    }
+
+    // Modal chọn IMEI khi chuyển kho
+    var ckAvailableIMEIs = [];
+
+    async function moModalChonIMEIChuyenKho(maHang) {
+      const it = danhSachChuyenKhoCart.find(i => i.maHang === maHang);
+      if (!it) return;
+      ckCurrentMaHangIMEI = maHang;
+
+      const cnXuat = document.getElementById('select-chuyenkho-xuat')?.value || 'CN01';
+      const titleEl = document.getElementById('modal-imei-ck-title');
+      if (titleEl) titleEl.innerText = `${it.tenHang} (${it.maHang}) - Kho: ${cnXuat}`;
+
+      const sInp = document.getElementById('search-imei-ck');
+      if (sInp) sInp.value = '';
+
+      const container = document.getElementById('list-imei-ck-container');
+      if (container) container.innerHTML = `<p class="text-slate-400 text-center py-4 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Đang tải danh sách IMEI từ kho...</p>`;
+
+      moModal('modal-chon-imei-chuyenkho');
+
+      // Nạp IMEI khả dụng tại chi nhánh xuất
+      let imeis = [];
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('kho_imei')
+            .select('imei,chi_nhanh,trang_thai')
+            .eq('ma_hang', maHang)
+            .eq('trang_thai', 'TrongKho');
+
+          if (!error && data && data.length > 0) {
+            imeis = data.filter(r => laCungChiNhanh(r.chi_nhanh, cnXuat)).map(r => r.imei);
+          }
+        } catch(e) {
+          console.warn(e);
+        }
+      }
+
+      // Fallback: nếu Supabase rỗng hoặc offline, lấy từ sản phẩm hoặc sinh giả định
+      if (!imeis.length) {
+        const sp = (rawHangHoa || []).find(h => h.maHang === maHang);
+        if (sp && Array.isArray(sp.danhSachIMEI)) {
+          imeis = [...sp.danhSachIMEI];
+        } else {
+          for (let i = 1; i <= Math.min(it.tonXuat, 20); i++) {
+            imeis.push(`${maHang}-${cnXuat}-${('000' + i).slice(-3)}`);
+          }
+        }
+      }
+
+      ckAvailableIMEIs = imeis;
+      renderDanhSachIMEIChuyenKhoModal(imeis, it.imeiDaChon || []);
+    }
+
+    function renderDanhSachIMEIChuyenKhoModal(allImeis, selectedImeis = []) {
+      const container = document.getElementById('list-imei-ck-container');
+      const counter = document.getElementById('count-selected-imei-ck');
+      if (!container) return;
+
+      if (!allImeis || allImeis.length === 0) {
+        container.innerHTML = `<p class="text-rose-500 font-semibold text-center py-4 text-xs">Kho xuất hiện không có mã IMEI nào khả dụng!</p>`;
+        if (counter) counter.innerText = `0/0`;
+        return;
+      }
+
+      const selSet = new Set(selectedImeis);
+
+      container.innerHTML = allImeis.map(im => `
+        <label class="flex items-center space-x-2.5 p-2 bg-white rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50/50 transition">
+          <input type="checkbox" class="chk-ck-imei-item w-4 h-4 text-indigo-600 accent-indigo-600 rounded" value="${im}" ${selSet.has(im) ? 'checked' : ''} onchange="capNhatDemIMEIChuyenKho()">
+          <span class="font-mono font-bold text-slate-800 text-xs">${im}</span>
+        </label>
+      `).join('');
+
+      capNhatDemIMEIChuyenKho();
+    }
+
+    function capNhatDemIMEIChuyenKho() {
+      const checked = document.querySelectorAll('.chk-ck-imei-item:checked');
+      const all = document.querySelectorAll('.chk-ck-imei-item');
+      const counter = document.getElementById('count-selected-imei-ck');
+      if (counter) counter.innerText = `${checked.length}/${all.length}`;
+    }
+
+    function locDanhSachIMEIChuyenKho(kw) {
+      const val = (kw || '').trim().toLowerCase();
+      const it = danhSachChuyenKhoCart.find(i => i.maHang === ckCurrentMaHangIMEI);
+      const filtered = (ckAvailableIMEIs || []).filter(im => !val || im.toLowerCase().includes(val));
+      renderDanhSachIMEIChuyenKhoModal(filtered, it ? (it.imeiDaChon || []) : []);
+    }
+
+    function xacNhanChonIMEIChuyenKho() {
+      const it = danhSachChuyenKhoCart.find(i => i.maHang === ckCurrentMaHangIMEI);
+      if (!it) return dongModal('modal-chon-imei-chuyenkho');
+
+      const checkedBoxes = document.querySelectorAll('.chk-ck-imei-item:checked');
+      const selected = Array.from(checkedBoxes).map(c => c.value);
+
+      if (selected.length > it.tonXuat) {
+        return showNotification(`Số lượng IMEI chọn (${selected.length}) vượt quá tồn kho xuất (${it.tonXuat})!`, true);
+      }
+
+      it.imeiDaChon = selected;
+      it.soLuong = selected.length;
+
+      dongModal('modal-chon-imei-chuyenkho');
+      renderChuyenKhoCart();
+      showNotification(`Đã chọn ${selected.length} mã IMEI cho sản phẩm [${it.tenHang}]!`);
+    }
+
+    async function xacNhanThucHienChuyenKho() {
+      if (!danhSachChuyenKhoCart || danhSachChuyenKhoCart.length === 0) {
+        return showNotification("Vui lòng chọn ít nhất 1 mặt hàng cần chuyển kho!", true);
+      }
+
+      const sXuat = document.getElementById('select-chuyenkho-xuat');
+      const sNhan = document.getElementById('select-chuyenkho-nhan');
+      const cnXuat = sXuat ? sXuat.value : 'CN01';
+      const cnNhan = sNhan ? sNhan.value : 'CN02';
+
+      if (cnXuat === cnNhan) {
+        return showNotification("Chi nhánh nhận không thể trùng với chi nhánh xuất!", true);
+      }
+
+      // Kiểm tra tính hợp lệ từng mặt hàng
+      for (const it of danhSachChuyenKhoCart) {
+        if (!it.soLuong || it.soLuong <= 0) {
+          return showNotification(`Sản phẩm [${it.tenHang}] có số lượng chuyển không hợp lệ (phải > 0)!`, true);
+        }
+        if (it.soLuong > it.tonXuat) {
+          return showNotification(`Sản phẩm [${it.tenHang}] số lượng chuyển (${it.soLuong}) vượt quá tồn kho xuất (${it.tonXuat})!`, true);
+        }
+        if (it.coQuanLyIMEI && (!it.imeiDaChon || it.imeiDaChon.length !== it.soLuong)) {
+          return showNotification(`Sản phẩm quản lý IMEI [${it.tenHang}] chưa chọn đủ ${it.soLuong} mã IMEI!`, true);
+        }
+      }
+
+      const tenXuat = layTenChiNhanhDayDu(cnXuat);
+      const tenNhan = layTenChiNhanhDayDu(cnNhan);
+      const tongSL = danhSachChuyenKhoCart.reduce((sum, it) => sum + (Number(it.soLuong) || 0), 0);
+
+      const xacNhan = confirm(`XÁC NHẬN CHUYỂN KHO:\n\n• Từ: ${tenXuat}\n• Đến: ${tenNhan}\n• Tổng số mặt hàng: ${danhSachChuyenKhoCart.length}\n• Tổng số lượng: ${tongSL}\n\nBạn có chắc chắn muốn thực hiện điều chuyển ngay bây giờ không?`);
+      if (!xacNhan) return;
+
+      const btn = document.getElementById('btn-xacnhan-chuyenkho');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang xử lý chuyển kho...`;
+      }
+
+      const maPhieu = document.getElementById('display-maphieu-chuyenkho')?.innerText || ("CK" + Date.now().toString().slice(-8));
+      const ngayChuyen = document.getElementById('input-chuyenkho-ngay')?.value ? new Date(document.getElementById('input-chuyenkho-ngay').value).toISOString() : new Date().toISOString();
+      const nguoiLap = document.getElementById('input-chuyenkho-nguoilap')?.value || 'Quản trị viên';
+      const ghiChu = document.getElementById('input-chuyenkho-ghichu')?.value || '';
+
+      const chiTietCopy = JSON.parse(JSON.stringify(danhSachChuyenKhoCart));
+
+      // 1. Cập nhật tồn kho đa chi nhánh (Trừ kho xuất, Cộng kho nhận)
+      try {
+        chiTietCopy.forEach(it => {
+          dieuChinhTonKhoChiNhanh(it.maHang, cnXuat, -it.soLuong);
+          dieuChinhTonKhoChiNhanh(it.maHang, cnNhan, it.soLuong);
+        });
+        if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
+      } catch(e) {
+        console.warn("Lỗi điều chỉnh tồn kho:", e);
+      }
+
+      // 2. Cập nhật chi nhánh cho các IMEI được chuyển trên Supabase
+      try {
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          const allTransferredIMEIs = [];
+          chiTietCopy.forEach(it => {
+            if (it.coQuanLyIMEI && Array.isArray(it.imeiDaChon) && it.imeiDaChon.length > 0) {
+              allTransferredIMEIs.push(...it.imeiDaChon);
+            }
+          });
+          if (allTransferredIMEIs.length > 0) {
+            await supabaseClient
+              .from('kho_imei')
+              .update({ chi_nhanh: cnNhan })
+              .in('imei', allTransferredIMEIs);
+            console.log(`Đã chuyển chi nhánh ${allTransferredIMEIs.length} IMEI sang ${cnNhan}`);
+          }
+        }
+      } catch(e) {
+        console.warn("Lỗi cập nhật chi nhánh IMEI:", e);
+      }
+
+      // 3. Tạo object phiếu chuyển kho và lưu trữ
+      const phieuMoi = {
+        maPhieu: maPhieu,
+        ngayChuyen: ngayChuyen,
+        cnXuat: cnXuat,
+        tenCnXuat: tenXuat,
+        cnNhan: cnNhan,
+        tenCnNhan: tenNhan,
+        nguoiLap: nguoiLap,
+        ghiChu: ghiChu,
+        tongSoMatHang: chiTietCopy.length,
+        tongSoLuong: tongSL,
+        trangThai: 'Hoàn thành',
+        chiTietSanPham: chiTietCopy
+      };
+
+      rawChuyenKhoList.unshift(phieuMoi);
+      try {
+        localStorage.setItem('tt_pos_chuyen_kho_list', JSON.stringify(rawChuyenKhoList));
+      } catch(e) {}
+
+      // 4. Lưu phiếu vào Supabase don_hang
+      try {
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          await supabaseClient.from('don_hang').insert([{
+            ma_don_hang: maPhieu,
+            ngay_tao: ngayChuyen,
+            chi_nhanh: `${cnXuat} -> ${cnNhan}`,
+            nhan_vien: nguoiLap,
+            tong_tien: 0,
+            da_thanh_toan: 0,
+            trang_thai: 'Hoàn thành',
+            hinh_thuc_tt: 'CHUYEN_KHO',
+            ghi_chu: ghiChu,
+            chi_tiet: chiTietCopy
+          }]);
+        }
+      } catch(e) {
+        console.warn("Lỗi lưu Supabase don_hang phiếu CK:", e);
+      }
+
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-check"></i><span>XÁC NHẬN CHUYỂN KHO</span>`;
+      }
+
+      showNotification(`Điều chuyển thành công phiếu [${maPhieu}] từ ${cnXuat} sang ${cnNhan}!`);
+
+      // 5. Nếu cài đặt in phiếu BẬT thì mở xem chi tiết & in
+      if (layCaiDatInPhieuChuyenKho()) {
+        xemChiTietChuyenKho(maPhieu);
+      }
+
+      troVeDanhSachChuyenKho();
+    }
+
+    function xemChiTietChuyenKho(maPhieu) {
+      const p = (rawChuyenKhoList || []).find(x => x.maPhieu === maPhieu);
+      if (!p) return showNotification("Không tìm thấy thông tin phiếu chuyển kho!", true);
+      chiTietPhieuCKDangXem = p;
+
+      const elMa = document.getElementById('ct-ck-maphieu');
+      const elNgay = document.getElementById('ct-ck-ngay');
+      const elXuat = document.getElementById('ct-ck-khoxuat');
+      const elNhan = document.getElementById('ct-ck-khonhan');
+      const elNguoi = document.getElementById('ct-ck-nguoilap');
+      const elGhiChu = document.getElementById('ct-ck-ghichu');
+      const elTongSL = document.getElementById('ct-ck-tongsl');
+      const elKyNguoi = document.getElementById('ct-ck-ky-nguoilap');
+      const tbody = document.getElementById('ct-ck-tbl-body');
+
+      if (elMa) elMa.innerText = p.maPhieu;
+      if (elNgay) elNgay.innerText = `Ngày: ${p.ngayChuyen ? new Date(p.ngayChuyen).toLocaleString('vi-VN') : '-'}`;
+      if (elXuat) elXuat.innerText = p.tenCnXuat || p.cnXuat;
+      if (elNhan) elNhan.innerText = p.tenCnNhan || p.cnNhan;
+      if (elNguoi) elNguoi.innerText = p.nguoiLap || 'Quản trị viên';
+      if (elGhiChu) elGhiChu.innerText = p.ghiChu || 'Không có';
+      if (elTongSL) elTongSL.innerText = (Number(p.tongSoLuong) || 0).toLocaleString();
+      if (elKyNguoi) elKyNguoi.innerText = p.nguoiLap || 'Quản trị viên';
+
+      const items = Array.isArray(p.chiTietSanPham) ? p.chiTietSanPham : [];
+      if (tbody) {
+        tbody.innerHTML = items.map((it, idx) => `
+          <tr class="hover:bg-slate-50 border-b border-slate-100">
+            <td class="p-2.5 text-center font-bold text-slate-500">${idx + 1}</td>
+            <td class="p-2.5 font-mono font-bold text-indigo-700">${it.maHang}</td>
+            <td class="p-2.5 font-semibold text-slate-800">${it.tenHang}</td>
+            <td class="p-2.5 text-center text-slate-600">${it.donViTinh || 'Cái'}</td>
+            <td class="p-2.5 text-center font-mono font-bold text-indigo-700 text-sm">${it.soLuong}</td>
+            <td class="p-2.5 font-mono text-[11px] text-slate-600">
+              ${it.imeiDaChon && it.imeiDaChon.length > 0 ? it.imeiDaChon.join(', ') : '-'}
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      moModal('modal-chitiet-chuyenkho');
+    }
+
+    function inPhieuChuyenKho() {
+      const p = chiTietPhieuCKDangXem;
+      if (!p) return;
+
+      const items = Array.isArray(p.chiTietSanPham) ? p.chiTietSanPham : [];
+      const rowsHtml = items.map((it, idx) => `
+        <tr>
+          <td style="text-align:center; padding: 6px; border: 1px solid #cbd5e1;">${idx + 1}</td>
+          <td style="font-family: monospace; font-weight: bold; padding: 6px; border: 1px solid #cbd5e1;">${it.maHang}</td>
+          <td style="padding: 6px; border: 1px solid #cbd5e1;">${it.tenHang}</td>
+          <td style="text-align:center; padding: 6px; border: 1px solid #cbd5e1;">${it.donViTinh || 'Cái'}</td>
+          <td style="text-align:center; font-family: monospace; font-weight: bold; font-size: 13px; padding: 6px; border: 1px solid #cbd5e1;">${it.soLuong}</td>
+          <td style="font-family: monospace; font-size: 11px; padding: 6px; border: 1px solid #cbd5e1;">${it.imeiDaChon && it.imeiDaChon.length > 0 ? it.imeiDaChon.join(', ') : '-'}</td>
+        </tr>
+      `).join('');
+
+      const printHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Phiếu Chuyển Hàng - ${p.maPhieu}</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 13px; color: #1e293b; padding: 24px; margin: 0; }
+            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px; }
+            .title { font-size: 18px; font-weight: 900; text-transform: uppercase; margin: 0; color: #0f172a; }
+            .subtitle { font-size: 12px; color: #64748b; margin: 2px 0 0 0; }
+            .meta { text-align: right; }
+            .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
+            th { background: #f1f5f9; padding: 8px 6px; text-align: left; border: 1px solid #cbd5e1; font-weight: bold; text-transform: uppercase; font-size: 11px; }
+            .footer-sign { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; margin-top: 30px; font-size: 12px; }
+            .sign-title { font-weight: bold; margin-bottom: 4px; }
+            .sign-sub { font-size: 10px; color: #94a3b8; font-style: italic; }
+            .sign-space { height: 60px; }
+            @media print { body { padding: 10px; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1 class="title">HỆ THỐNG BÁN HÀNG T&amp;T POS</h1>
+              <p class="subtitle">PHIẾU ĐIỀU CHUYỂN HÀNG HÓA NỘI BỘ</p>
+            </div>
+            <div class="meta">
+              <div style="font-family: monospace; font-weight: bold; font-size: 16px; color: #4338ca;">${p.maPhieu}</div>
+              <div style="font-size: 11px; color: #64748b;">Ngày: ${p.ngayChuyen ? new Date(p.ngayChuyen).toLocaleString('vi-VN') : '-'}</div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div><b>Kho xuất (Từ):</b> ${p.tenCnXuat || p.cnXuat}</div>
+            <div><b>Kho nhận (Đến):</b> ${p.tenCnNhan || p.cnNhan}</div>
+            <div><b>Người lập phiếu:</b> ${p.nguoiLap || 'Quản trị viên'}</div>
+            <div><b>Ghi chú:</b> <i>${p.ghiChu || 'Không có'}</i></div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 35px; text-align: center;">STT</th>
+                <th style="width: 100px;">Mã Hàng</th>
+                <th>Tên Hàng Hóa</th>
+                <th style="width: 50px; text-align: center;">ĐVT</th>
+                <th style="width: 70px; text-align: center;">Số Lượng</th>
+                <th>Mã Serial / IMEI Chi Tiết</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+            <tfoot>
+              <tr style="background: #f8fafc; font-weight: bold;">
+                <td colspan="4" style="text-align: right; padding: 8px; border: 1px solid #cbd5e1;">TỔNG CỘNG SỐ LƯỢNG:</td>
+                <td style="text-align: center; font-family: monospace; font-size: 14px; color: #4338ca; padding: 8px; border: 1px solid #cbd5e1;">${(Number(p.tongSoLuong) || 0).toLocaleString()}</td>
+                <td style="border: 1px solid #cbd5e1;"></td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div class="footer-sign">
+            <div>
+              <div class="sign-title">Người Lập Phiếu</div>
+              <div class="sign-sub">(Ký, họ tên)</div>
+              <div class="sign-space"></div>
+              <div style="font-weight: bold;">${p.nguoiLap || 'Quản trị viên'}</div>
+            </div>
+            <div>
+              <div class="sign-title">Người Vận Chuyển</div>
+              <div class="sign-sub">(Ký, họ tên)</div>
+              <div class="sign-space"></div>
+              <div style="color: #94a3b8;">........................</div>
+            </div>
+            <div>
+              <div class="sign-title">Thủ Kho Nhận Hàng</div>
+              <div class="sign-sub">(Ký, họ tên)</div>
+              <div class="sign-space"></div>
+              <div style="color: #94a3b8;">........................</div>
+            </div>
+          </div>
+
+          <script>
+            window.onload = function() { window.print(); };
+          <\/script>
+        </body>
+        </html>
+      `;
+
+      const pWin = window.open('', '_blank', 'width=850,height=700');
+      if (pWin) {
+        pWin.document.open();
+        pWin.document.write(printHtml);
+        pWin.document.close();
+      }
+    }
+
+    function xuatExcelPhieuChuyenKho() {
+      if (!rawChuyenKhoList || rawChuyenKhoList.length === 0) {
+        return showNotification("Chưa có phiếu chuyển kho nào để xuất Excel!", true);
+      }
+
+      const rows = [];
+      rawChuyenKhoList.forEach(p => {
+        const items = Array.isArray(p.chiTietSanPham) ? p.chiTietSanPham : [];
+        if (items.length > 0) {
+          items.forEach(it => {
+            rows.push({
+              "Mã Phiếu": p.maPhieu,
+              "Ngày Chuyển": p.ngayChuyen ? new Date(p.ngayChuyen).toLocaleString('vi-VN') : '',
+              "Kho Xuất": p.tenCnXuat || p.cnXuat,
+              "Kho Nhận": p.tenCnNhan || p.cnNhan,
+              "Mã Hàng": it.maHang,
+              "Tên Hàng Hóa": it.tenHang,
+              "ĐVT": it.donViTinh || 'Cái',
+              "Số Lượng": it.soLuong,
+              "Danh Sách IMEI": (it.imeiDaChon && it.imeiDaChon.length > 0) ? it.imeiDaChon.join(', ') : '',
+              "Người Lập": p.nguoiLap || 'Quản trị viên',
+              "Ghi Chú": p.ghiChu || ''
+            });
+          });
+        } else {
+          rows.push({
+            "Mã Phiếu": p.maPhieu,
+            "Ngày Chuyển": p.ngayChuyen ? new Date(p.ngayChuyen).toLocaleString('vi-VN') : '',
+            "Kho Xuất": p.tenCnXuat || p.cnXuat,
+            "Kho Nhận": p.tenCnNhan || p.cnNhan,
+            "Mã Hàng": '',
+            "Tên Hàng Hóa": '',
+            "ĐVT": '',
+            "Số Lượng": p.tongSoLuong || 0,
+            "Danh Sách IMEI": '',
+            "Người Lập": p.nguoiLap || 'Quản trị viên',
+            "Ghi Chú": p.ghiChu || ''
+          });
+        }
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "ChuyenKho");
+      const fName = `Phieu_Chuyen_Kho_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, fName);
+      showNotification(`Đã xuất ${rows.length} dòng dữ liệu điều chuyển ra file [${fName}]!`);
+    }
+
+    // Gắn các hàm mới vào window
+    window.layCaiDatTinhGiaVonTB = layCaiDatTinhGiaVonTB;
+    window.layCaiDatChanBanNgungKD = layCaiDatChanBanNgungKD;
+    window.layCaiDatInPhieuChuyenKho = layCaiDatInPhieuChuyenKho;
+    window.moModalCaiDatHeThong = moModalCaiDatHeThong;
+    window.luuCaiDatHeThong = luuCaiDatHeThong;
+    window.tinhVaCapNhatGiaVonBinhQuan = tinhVaCapNhatGiaVonBinhQuan;
+
+    window.kiemTraSanPhamNgungKinhDoanh = kiemTraSanPhamNgungKinhDoanh;
+    window.layHtmlBadgeTrangThaiHangHoa = layHtmlBadgeTrangThaiHangHoa;
+    window.renderCheckboxChiNhanhNgungKD = renderCheckboxChiNhanhNgungKD;
+    window.thayDoiCheDoTrangThai = thayDoiCheDoTrangThai;
+    window.capNhatChuoiTrangThaiTuCheckbox = capNhatChuoiTrangThaiTuCheckbox;
+    window.chonTatCaChiNhanhNgungKD = chonTatCaChiNhanhNgungKD;
+    window.cauHinhGiaoDienTrangThaiSuaHang = cauHinhGiaoDienTrangThaiSuaHang;
+
+    window.loadDanhSachChuyenKho = loadDanhSachChuyenKho;
+    window.locDanhSachChuyenKho = locDanhSachChuyenKho;
+    window.renderBangDanhSachChuyenKho = renderBangDanhSachChuyenKho;
+    window.moLapPhieuChuyenKho = moLapPhieuChuyenKho;
+    window.troVeDanhSachChuyenKho = troVeDanhSachChuyenKho;
+    window.thayDoiChiNhanhXuatChuyenKho = thayDoiChiNhanhXuatChuyenKho;
+    window.thayDoiChiNhanhNhanChuyenKho = thayDoiChiNhanhNhanChuyenKho;
+    window.timKiemHangHoaChuyenKho = timKiemHangHoaChuyenKho;
+    window.themHangVaoChuyenKho = themHangVaoChuyenKho;
+    window.renderChuyenKhoCart = renderChuyenKhoCart;
+    window.capNhatSLChuyenKho = capNhatSLChuyenKho;
+    window.tangGiamSLChuyenKho = tangGiamSLChuyenKho;
+    window.xoaHangChuyenKho = xoaHangChuyenKho;
+    window.moModalChonIMEIChuyenKho = moModalChonIMEIChuyenKho;
+    window.locDanhSachIMEIChuyenKho = locDanhSachIMEIChuyenKho;
+    window.capNhatDemIMEIChuyenKho = capNhatDemIMEIChuyenKho;
+    window.xacNhanChonIMEIChuyenKho = xacNhanChonIMEIChuyenKho;
+    window.xacNhanThucHienChuyenKho = xacNhanThucHienChuyenKho;
+    window.xemChiTietChuyenKho = xemChiTietChuyenKho;
+    window.inPhieuChuyenKho = inPhieuChuyenKho;
+    window.xuatExcelPhieuChuyenKho = xuatExcelPhieuChuyenKho;
   </script>
 
 <!-- MODAL XEM CHI TIẾT HÀNG HÓA & THẺ KHO (LỊCH SỬ NHẬP, BÁN, TRẢ, HỦY) -->
@@ -16972,6 +18373,228 @@ function loadSoQuy(filter) {
 
 <!-- ==================================================================== -->
   <!-- MODAL BẮT BUỘC ĐĂNG NHẬP KHI VÀO PHẦN MỀM -->
+  <!-- ====================================================================
+   * MODAL 1: CÀI ĐẶT TÍNH NĂNG PHẦN MỀM (SETTINGS)
+   * ==================================================================== -->
+  <div id="modal-cai-dat-he-thong" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[9999] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-100 text-xs">
+      <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
+        <h3 class="font-bold text-sm flex items-center space-x-2">
+          <i class="fa-solid fa-sliders text-amber-400"></i>
+          <span>Cài Đặt Tính Năng Phần Mềm</span>
+        </h3>
+        <button type="button" onclick="dongModal('modal-cai-dat-he-thong')" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-4 max-h-[75vh] overflow-y-auto scrollbar-thin">
+        
+        <!-- Mục 1: Tính giá vốn bình quân gia quyền -->
+        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold shadow-xs">
+                <i class="fa-solid fa-calculator"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-800 text-xs">Tính giá vốn trung bình cộng khi nhập kho</h4>
+                <p class="text-[11px] text-slate-500">Tự động tính lại giá vốn theo phương pháp bình quân gia quyền</p>
+              </div>
+            </div>
+            <!-- Switch toggle -->
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="setting-giavon-binhquan" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+          <div class="p-2.5 bg-blue-50/70 rounded-xl text-[11px] text-blue-900 border border-blue-100 leading-relaxed space-y-1">
+            <p class="font-semibold">📐 <b>Công thức bình quân gia quyền:</b></p>
+            <p class="font-mono bg-white p-1.5 rounded-lg border border-blue-200 text-center font-bold text-blue-700">Giá vốn mới = (Tồn cũ × Giá vốn cũ + SL nhập × Giá nhập) ÷ (Tồn cũ + SL nhập)</p>
+            <p class="text-[10px] text-slate-600"><b>Khi BẬT:</b> Mỗi lần tạo đơn nhập hàng từ Nhà cung cấp, hệ thống tự động cập nhật lại giá vốn của sản phẩm.<br><b>Khi TẮT:</b> Giữ nguyên giá vốn hiện tại, không tự động tính lại.</p>
+          </div>
+        </div>
+
+        <!-- Mục 2: Chặn bán sản phẩm đã ngừng kinh doanh tại POS -->
+        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-bold shadow-xs">
+                <i class="fa-solid fa-ban"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-800 text-xs">Chặn bán hàng ngừng kinh doanh tại POS</h4>
+                <p class="text-[11px] text-slate-500">Không cho phép thu ngân bán mặt hàng đã ngừng KD tại chi nhánh</p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="setting-chan-ban-ngungkd" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Mục 3: Tự động mở xem phiếu chuyển kho -->
+        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-bold shadow-xs">
+                <i class="fa-solid fa-print"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-800 text-xs">Tự động xem phiếu sau khi chuyển kho</h4>
+                <p class="text-[11px] text-slate-500">Mở cửa sổ chi tiết và sẵn sàng in ngay sau khi xác nhận chuyển kho</p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="setting-in-phieu-chuyenkho" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+            </label>
+          </div>
+        </div>
+
+      </div>
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end space-x-2">
+        <button type="button" onclick="dongModal('modal-cai-dat-he-thong')" class="px-4 py-2 border rounded-xl font-semibold text-slate-600 hover:bg-slate-100">Đóng</button>
+        <button type="button" onclick="luuCaiDatHeThong()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-xs">
+          <i class="fa-solid fa-check mr-1.5"></i>Lưu cài đặt
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+   * MODAL 2: XEM CHI TIẾT & IN PHIẾU CHUYỂN KHO
+   * ==================================================================== -->
+  <div id="modal-chitiet-chuyenkho" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-100 text-xs">
+      <div class="p-4 bg-indigo-700 text-white flex justify-between items-center">
+        <h3 class="font-bold text-sm flex items-center space-x-2">
+          <i class="fa-solid fa-file-invoice text-amber-300"></i>
+          <span>Chi Tiết Phiếu Chuyển Hàng Chi Nhánh</span>
+        </h3>
+        <button type="button" onclick="dongModal('modal-chitiet-chuyenkho')" class="text-indigo-200 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+      <div class="p-6 space-y-4 max-h-[80vh] overflow-y-auto scrollbar-thin" id="print-area-chuyenkho">
+        <!-- Header Phiếu In -->
+        <div class="flex justify-between items-start border-b pb-4">
+          <div>
+            <h2 class="text-base font-black text-slate-900 uppercase">HỆ THỐNG BÁN HÀNG T&T POS</h2>
+            <p class="text-slate-500 text-[11px] mt-0.5">PHIẾU ĐIỀU CHUYỂN HÀNG HÓA NỘI BỘ</p>
+          </div>
+          <div class="text-right">
+            <p class="font-mono font-bold text-indigo-700 text-sm" id="ct-ck-maphieu">CK...</p>
+            <p class="text-slate-500 text-[10px]" id="ct-ck-ngay">Ngày: ...</p>
+          </div>
+        </div>
+
+        <!-- Thông tin tuyến chuyển -->
+        <div class="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+          <div>
+            <p class="text-[10px] text-slate-500 uppercase font-semibold">Kho xuất (Từ chi nhánh):</p>
+            <p class="font-bold text-amber-900 text-xs mt-0.5" id="ct-ck-khoxuat">...</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-500 uppercase font-semibold">Kho nhận (Đến chi nhánh):</p>
+            <p class="font-bold text-indigo-900 text-xs mt-0.5" id="ct-ck-khonhan">...</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-500 uppercase font-semibold">Người lập phiếu:</p>
+            <p class="font-semibold text-slate-800 text-xs mt-0.5" id="ct-ck-nguoilap">...</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-500 uppercase font-semibold">Ghi chú điều chuyển:</p>
+            <p class="text-slate-700 text-xs mt-0.5 italic" id="ct-ck-ghichu">Không có</p>
+          </div>
+        </div>
+
+        <!-- Bảng sản phẩm chuyển -->
+        <div class="border rounded-2xl overflow-hidden">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b">
+              <tr>
+                <th class="p-2.5 w-10 text-center">STT</th>
+                <th class="p-2.5">Mã Hàng</th>
+                <th class="p-2.5">Tên Sản Phẩm</th>
+                <th class="p-2.5 text-center w-14">ĐVT</th>
+                <th class="p-2.5 text-center w-20">Số Lượng</th>
+                <th class="p-2.5">Chi Tiết Serial / IMEI</th>
+              </tr>
+            </thead>
+            <tbody id="ct-ck-tbl-body" class="divide-y divide-slate-100 font-medium"></tbody>
+            <tfoot class="bg-slate-50 font-bold border-t">
+              <tr>
+                <td colspan="4" class="p-2.5 text-right text-slate-700">TỔNG CỘNG SỐ LƯỢNG:</td>
+                <td class="p-2.5 text-center font-mono text-indigo-700 text-sm" id="ct-ck-tongsl">0</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Chữ ký -->
+        <div class="grid grid-cols-3 gap-4 pt-6 text-center text-xs">
+          <div>
+            <p class="font-bold text-slate-800">Người Lập Phiếu</p>
+            <p class="text-[10px] text-slate-400 italic">(Ký, họ tên)</p>
+            <div class="h-14"></div>
+            <p class="font-semibold text-slate-700" id="ct-ck-ky-nguoilap">Quản trị viên</p>
+          </div>
+          <div>
+            <p class="font-bold text-slate-800">Người Vận Chuyển</p>
+            <p class="text-[10px] text-slate-400 italic">(Ký, họ tên)</p>
+            <div class="h-14"></div>
+            <p class="text-slate-400">.......................</p>
+          </div>
+          <div>
+            <p class="font-bold text-slate-800">Thủ Kho Nhận Hàng</p>
+            <p class="text-[10px] text-slate-400 italic">(Ký, họ tên)</p>
+            <div class="h-14"></div>
+            <p class="text-slate-400">.......................</p>
+          </div>
+        </div>
+      </div>
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end space-x-2">
+        <button type="button" onclick="dongModal('modal-chitiet-chuyenkho')" class="px-4 py-2 border rounded-xl font-semibold text-slate-600 hover:bg-slate-100">Đóng</button>
+        <button type="button" onclick="inPhieuChuyenKho()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-xs flex items-center space-x-1.5">
+          <i class="fa-solid fa-print"></i><span>In phiếu chuyển kho</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+   * MODAL 3: CHỌN MÃ SERIAL/IMEI KHI CHUYỂN KHO
+   * ==================================================================== -->
+  <div id="modal-chon-imei-chuyenkho" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[9999] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100 text-xs">
+      <div class="p-4 bg-indigo-700 text-white flex justify-between items-center">
+        <div>
+          <h3 class="font-bold text-sm">Chọn Mã Serial / IMEI Chuyển Đi</h3>
+          <p class="text-[11px] text-indigo-200" id="modal-imei-ck-title">Sản phẩm...</p>
+        </div>
+        <button type="button" onclick="dongModal('modal-chon-imei-chuyenkho')" class="text-indigo-200 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="flex justify-between items-center">
+          <input type="text" id="search-imei-ck" oninput="locDanhSachIMEIChuyenKho(this.value)" placeholder="Tìm kiếm mã IMEI..." class="flex-1 border rounded-xl p-2 text-xs bg-slate-50">
+          <span class="ml-2 font-mono font-bold text-indigo-700 text-xs" id="count-selected-imei-ck">0/0</span>
+        </div>
+        <div id="list-imei-ck-container" class="max-h-60 overflow-y-auto space-y-1.5 p-1 border rounded-xl bg-slate-50/50"></div>
+        <p class="text-[11px] text-slate-500 italic">* Chỉ hiển thị các IMEI đang có trong kho của chi nhánh xuất.</p>
+      </div>
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end space-x-2">
+        <button type="button" onclick="dongModal('modal-chon-imei-chuyenkho')" class="px-4 py-2 border rounded-xl font-semibold text-slate-600 hover:bg-slate-100">Hủy</button>
+        <button type="button" onclick="xacNhanChonIMEIChuyenKho()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-xs">
+          Xác nhận chọn
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================================================================== -->
   <!-- MÀN HÌNH ĐĂNG NHẬP BẢO MẬT T&T POS (BẮT BUỘC TRƯỚC KHI TRUY CẬP) -->
   <!-- ==================================================================== -->
