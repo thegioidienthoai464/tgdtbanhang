@@ -38,6 +38,7 @@ class CashbookViewModel extends ChangeNotifier {
     required double soTien,
     required String doiTuong,
     required String ghiChu,
+    String? chiNhanh,
   }) async {
     final now = DateTime.now();
     final prefix = loaiPhieu == 'THU' ? 'PT' : 'PC';
@@ -45,6 +46,7 @@ class CashbookViewModel extends ChangeNotifier {
 
     final tx = CashbookModel(
       maPhieu: maPhieu,
+      chiNhanh: chiNhanh ?? 'CN01: Trụ sở chính',
       loaiPhieu: loaiPhieu,
       loaiQuy: loaiQuy,
       ngayGD: now,
