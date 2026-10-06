@@ -1,8 +1,8 @@
 {
-  "version": "1.0.3",
-  "build_number": 4,
+  "version": "1.0.4",
+  "build_number": 5,
   "force_update": true,
-  "release_notes": "• Thêm tính năng đăng nhập bảo mật bắt buộc trước khi sử dụng.\n• Hỗ trợ cài đặt nhanh cho iPhone & iPad (iOS Web App).\n• Tự động phát hiện và yêu cầu cập nhật phiên bản mới nhất.",
+  "release_notes": "• Đồng bộ chuẩn xác danh sách các chi nhánh đã tạo từ cơ sở dữ liệu.\n• Mặc định tự động chọn chi nhánh chính (CN01: Trụ sở chính Thanh Miện).\n• Tự động phát hiện và yêu cầu cập nhật phiên bản mới.",
   "download_url": "https://tgdtbanhang.netlify.app/app-release.apk",
   "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/latest/download/app-release.apk"
 }
