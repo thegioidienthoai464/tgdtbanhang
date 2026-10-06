@@ -29,8 +29,8 @@ class UpdateInfo {
 
 class UpdateService {
   // Phiên bản hiện tại của App
-  static const String currentVersion = '1.0.1';
-  static const int currentBuildNumber = 2;
+  static const String currentVersion = '1.0.2';
+  static const int currentBuildNumber = 3;
 
   // Đường dẫn kiểm tra phiên bản trên GitHub
   static const String versionCheckUrl =
