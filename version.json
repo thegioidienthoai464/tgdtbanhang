@@ -1,8 +1,8 @@
 {
-  "version": "1.0.4",
-  "build_number": 5,
+  "version": "1.0.5",
+  "build_number": 6,
   "force_update": true,
-  "release_notes": "• Đồng bộ chuẩn xác danh sách các chi nhánh đã tạo từ cơ sở dữ liệu.\n• Mặc định tự động chọn chi nhánh chính (CN01: Trụ sở chính Thanh Miện).\n• Tự động phát hiện và yêu cầu cập nhật phiên bản mới.",
+  "release_notes": "• Quản lý Tồn kho, Giao dịch (Bán hàng POS, Đơn nhập, Đơn đặt, Trả hàng, Kiểm kho) và Sổ quỹ độc lập, riêng biệt theo từng chi nhánh.\n• Dùng chung toàn hệ thống đối tác Khách hàng, Nhà cung cấp và Danh mục hàng hóa.\n• Bổ sung bảng phân bổ tồn kho đa chi nhánh và bộ lọc chi nhánh cho toàn bộ chứng từ.",
   "download_url": "https://tgdtbanhang.netlify.app/app-release.apk",
   "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/latest/download/app-release.apk"
 }
