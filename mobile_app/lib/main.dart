@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'data/services/supabase_service.dart';
 import 'ui/core/app_theme.dart';
+import 'ui/features/branch/branch_view_model.dart';
 import 'ui/features/dashboard/dashboard_view.dart';
 import 'ui/features/pos/pos_view.dart';
 import 'ui/features/pos/pos_view_model.dart';
@@ -30,6 +31,7 @@ class SmartErpMobileApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => BranchViewModel()..init()),
         ChangeNotifierProvider(create: (_) => PosViewModel()),
         ChangeNotifierProvider(create: (_) => OrdersViewModel()),
         ChangeNotifierProvider(create: (_) => InventoryViewModel()),
