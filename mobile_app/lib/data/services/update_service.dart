@@ -32,8 +32,8 @@ class UpdateInfo {
 
 class UpdateService {
   // Phiên bản hiện tại của App
-  static const String currentVersion = '1.0.2';
-  static const int currentBuildNumber = 3;
+  static const String currentVersion = '1.0.8';
+  static const int currentBuildNumber = 9;
 
   // Danh sách nguồn kiểm tra phiên bản (Ưu tiên Netlify tức thì, dự phòng GitHub)
   static const List<String> versionCheckUrls = [
