@@ -1,8 +1,8 @@
 {
-  "version": "1.0.2",
-  "build_number": 3,
-  "force_update": false,
-  "release_notes": "• Cập nhật nhận diện thương hiệu T&T POS và Logo chính thức.\n• Tích hợp tính năng in bill qua máy in mạng LAN / Wifi (ESC/POS).\n• Tự động kiểm tra bản cập nhật khi mở ứng dụng.\n• Giao diện mới Vàng Gold & Đen Slate sang trọng, dễ nhìn.",
+  "version": "1.0.3",
+  "build_number": 4,
+  "force_update": true,
+  "release_notes": "• Thêm tính năng đăng nhập bảo mật bắt buộc trước khi sử dụng.\n• Hỗ trợ cài đặt nhanh cho iPhone & iPad (iOS Web App).\n• Tự động phát hiện và yêu cầu cập nhật phiên bản mới nhất.",
   "download_url": "https://tgdtbanhang.netlify.app/app-release.apk",
   "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/latest/download/app-release.apk"
 }
