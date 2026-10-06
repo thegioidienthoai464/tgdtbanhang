@@ -32,6 +32,11 @@ dependencies:
   # Lưu trữ cài đặt cục bộ (Chi nhánh, Tùy chọn)
   shared_preferences: ^2.3.2
 
+  # Mở trình duyệt tải file APK cập nhật
+  url_launcher: ^6.3.0
+  # HTTP client kiểm tra bản cập nhật
+  http: ^1.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
