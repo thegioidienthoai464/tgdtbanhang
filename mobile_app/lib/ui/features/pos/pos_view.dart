@@ -95,7 +95,7 @@ class _PosViewState extends State<PosView> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.Border.all(
+                              border: Border.all(
                                 color: isInCart ? AppTheme.primaryBlue : AppTheme.borderSubtle,
                                 width: isInCart ? 1.5 : 1,
                               ),
