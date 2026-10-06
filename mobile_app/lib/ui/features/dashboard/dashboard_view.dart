@@ -93,11 +93,12 @@ class _DashboardViewState extends State<DashboardView> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [AppTheme.primaryBlue, AppTheme.primaryBlueDark],
+                    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.35), width: 1.5),
                 ),
                 child: Row(
                   children: [
