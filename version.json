@@ -1,8 +1,8 @@
 {
-  "version": "1.0.6",
-  "build_number": 7,
+  "version": "1.0.7",
+  "build_number": 8,
   "force_update": true,
-  "release_notes": "• Đã reset toàn bộ dữ liệu giao dịch và tồn kho về 0 để cập nhật số liệu thực tế.\n• Bảo lưu 100% 33.126 khách hàng, nhà cung cấp và danh mục sản phẩm.\n• Hiển thị đầy đủ phân cấp Nhóm hàng cha > Nhóm hàng con và hỗ trợ file mẫu Excel mới.",
+  "release_notes": "• Quản lý danh mục hàng hóa chung toàn chuỗi; cấu hình tình trạng kinh doanh linh hoạt theo từng chi nhánh (Kinh doanh tất cả, Ngừng KD chọn lọc 1 hoặc nhiều chi nhánh, Ngừng KD toàn chuỗi).\n• Thêm tính năng Chuyển hàng giữa các chi nhánh (chọn kho xuất/nhận, quản lý chuyển IMEI, in phiếu điều chuyển nội bộ).\n• Tính giá vốn bình quân gia quyền tự động khi nhập kho (có công tắc Bật/Tắt trong Cài đặt tính năng phần mềm).\n• Kiểm soát và chặn bán hàng ngừng kinh doanh tại thu ngân POS.",
   "download_url": "https://tgdtbanhang.netlify.app/app-release.apk",
   "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/latest/download/app-release.apk"
 }
