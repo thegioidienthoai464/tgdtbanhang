@@ -50,7 +50,7 @@ class _CashbookViewState extends State<CashbookView> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.Border.all(color: AppTheme.borderSubtle),
+              border: Border.all(color: AppTheme.borderSubtle),
             ),
             child: Column(
               children: [
@@ -150,7 +150,7 @@ class _CashbookViewState extends State<CashbookView> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.Border.all(color: AppTheme.borderSubtle),
+                              border: Border.all(color: AppTheme.borderSubtle),
                             ),
                             child: ListTile(
                               leading: CircleAvatar(
