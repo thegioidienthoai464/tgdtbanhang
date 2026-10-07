@@ -442,39 +442,84 @@
 
       <!-- TAB 2.2: THIẾT LẬP BẢNG GIÁ -->
       <section id="tab-thietlapgia" class="hidden space-y-3">
+        <!-- THANH CÔNG CỤ ĐIỀU HÀNH BẢNG GIÁ -->
         <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap justify-between items-center gap-3">
-          <div class="flex items-center space-x-2">
-            <button type="button" onclick="moModalBangGia()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition">
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="moModalBangGia()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1.5 transition">
               <i class="fa-solid fa-plus"></i><span>Thêm bảng giá mới</span>
+            </button>
+            <button type="button" onclick="moModalCongThucBangGia('CURRENT')" class="px-3.5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1.5 transition">
+              <i class="fa-solid fa-wand-magic-sparkles"></i><span>Cập nhật theo công thức</span>
+            </button>
+            <button type="button" onclick="luuThayDoiBangGiaHienTai()" id="btn-save-banggia" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1.5 transition">
+              <i class="fa-solid fa-floppy-disk"></i><span>Lưu bảng giá</span>
+            </button>
+            <button type="button" onclick="xoaBangGiaHienTai()" id="btn-delete-banggia" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold border border-rose-200 transition flex items-center space-x-1.5" title="Xóa bảng giá tùy chỉnh này">
+              <i class="fa-solid fa-trash-can"></i><span>Xóa</span>
             </button>
             <button type="button" onclick="xuatExcelBangGia()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition flex items-center space-x-1.5">
               <i class="fa-solid fa-file-export text-blue-600"></i><span>Xuất Excel</span>
             </button>
             <input type="file" id="excelFileBangGia" accept=".xlsx, .xls" class="hidden" onchange="xuLyImportExcelBangGia(event)">
-            <button type="button" onclick="document.getElementById('excelFileBangGia').click()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition">
-              <i class="fa-solid fa-file-excel"></i><span>Nhập giá từ Excel</span>
+            <button type="button" onclick="document.getElementById('excelFileBangGia').click()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-file-excel text-emerald-600"></i><span>Nhập Excel</span>
             </button>
           </div>
           <div class="flex items-center space-x-2">
-            <label class="text-xs font-semibold text-slate-600">Bảng giá xem:</label>
-            <select id="select-bang-gia" onchange="hienThiGiaTheoBang()" class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs bg-slate-50 font-medium"></select>
+            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-tags text-indigo-600"></i> Bảng giá:
+            </span>
+            <select id="select-bang-gia" onchange="hienThiGiaTheoBang()" class="border-2 border-indigo-200 focus:border-indigo-500 rounded-xl px-3 py-1.5 text-xs bg-indigo-50/50 font-bold text-indigo-900 shadow-2xs"></select>
           </div>
         </div>
 
+        <!-- BỘ LỌC TÌM KIẾM & THỐNG KÊ NHANH -->
+        <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap justify-between items-center gap-3 text-xs">
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="relative">
+              <input type="text" id="filter-search-banggia" oninput="hienThiGiaTheoBang()" placeholder="🔍 Tìm mã, tên sản phẩm..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs w-48 sm:w-56 bg-slate-50 focus:bg-white focus:outline-blue-500">
+            </div>
+            <select id="filter-nhom-banggia" onchange="hienThiGiaTheoBang()" class="border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs bg-slate-50 font-medium text-slate-700">
+              <option value="ALL">📁 Tất cả nhóm hàng</option>
+            </select>
+            <select id="filter-loai-banggia" onchange="hienThiGiaTheoBang()" class="border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs bg-slate-50 font-medium text-slate-700">
+              <option value="ALL">🏷️ Tất cả loại hàng</option>
+              <option value="IMEI">📱 Hàng quản lý Serial / IMEI</option>
+              <option value="THUONG">📦 Hàng thông thường (không IMEI)</option>
+            </select>
+            <select id="filter-chenhlech-banggia" onchange="hienThiGiaTheoBang()" class="border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs bg-slate-50 font-medium text-slate-700">
+              <option value="ALL">⚡ Mọi mức giá</option>
+              <option value="CO_DOI">Đã đổi giá (Khác chuẩn)</option>
+              <option value="TANG">Giá tăng (+)</option>
+              <option value="GIAM">Giá giảm (-)</option>
+            </select>
+          </div>
+          <div class="flex items-center space-x-2 text-[11px] font-semibold text-slate-600">
+            <span id="badge-banggia-total" class="px-2.5 py-1 bg-slate-100 rounded-lg">Tổng: 0 SP</span>
+            <span id="badge-banggia-custom" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg">Có giá riêng: 0 SP</span>
+          </div>
+        </div>
+
+        <!-- BẢNG DANH SÁCH GIÁ BÁN -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-          <table class="w-full text-left border-collapse text-xs">
-            <thead class="bg-slate-100/90 text-slate-600 uppercase font-semibold border-b">
-              <tr>
-                <th class="p-3">Mã Hàng</th>
-                <th class="p-3">Tên Sản Phẩm</th>
-                <th class="p-3 text-right">Giá Vốn</th>
-                <th class="p-3 text-right">Giá Bán Chuẩn</th>
-                <th class="p-3 text-right">Giá Bảng Này</th>
-                <th class="p-3 text-center">Chênh Lệch</th>
-              </tr>
-            </thead>
-            <tbody id="tbl-thietlapgia-body" class="divide-y divide-slate-100 font-medium"></tbody>
-          </table>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-100/90 text-slate-600 uppercase font-semibold border-b">
+                <tr>
+                  <th class="p-3 w-28">Mã Hàng</th>
+                  <th class="p-3">Tên Sản Phẩm</th>
+                  <th class="p-3 w-32">Nhóm Hàng</th>
+                  <th class="p-3 w-28 text-center">Loại Hàng</th>
+                  <th class="p-3 text-right w-28">Giá Vốn</th>
+                  <th class="p-3 text-right w-32">Giá Bán Chuẩn</th>
+                  <th class="p-3 text-right w-36">Giá Bảng Này</th>
+                  <th class="p-3 text-center w-32">Chênh Lệch</th>
+                  <th class="p-3 text-center w-28">% LN / Vốn</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-thietlapgia-body" class="divide-y divide-slate-100 font-medium"></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -2919,32 +2964,296 @@
   </div>
 
   <!-- MODAL: BẢNG GIÁ (2.2) -->
-  <div id="modal-banggia" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] flex flex-col">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="font-bold text-sm text-slate-800"><i class="fa-solid fa-tags text-blue-600 mr-1.5"></i>Tạo Bảng Giá Mới</h3>
+  <div id="modal-banggia" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] flex flex-col">
+      <div class="flex justify-between items-center border-b pb-2.5">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-tags text-blue-600 text-base"></i>
+          <h3 class="font-bold text-sm text-slate-800">Tạo Bảng Giá Mới</h3>
+        </div>
         <button type="button" onclick="dongModal('modal-banggia')" class="text-slate-400 hover:text-slate-600 text-base"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div>
-        <label class="font-semibold text-slate-600">Tên bảng giá (*):</label>
-        <input type="text" id="input-ten-banggia" class="w-full border rounded-xl p-2 bg-slate-50 mt-1 font-semibold" placeholder="VD: Bảng giá đại lý cấp 1, Bảng giá khách VIP...">
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+        <div>
+          <label class="font-semibold text-slate-700">Tên bảng giá (*):</label>
+          <input type="text" id="input-ten-banggia" class="w-full border rounded-xl p-2 bg-slate-50 mt-1 font-semibold text-xs focus:bg-white focus:outline-blue-500" placeholder="VD: Bảng giá đại lý cấp 1, Bảng giá khách VIP...">
+        </div>
+        <div class="flex items-center space-x-2">
+          <button type="button" onclick="moModalCongThucBangGia('MODAL_NEW')" class="flex-1 py-2 px-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-bold shadow-xs flex items-center justify-center space-x-1.5 transition">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Áp dụng công thức nhanh</span>
+          </button>
+        </div>
       </div>
-      <div class="flex-1 overflow-y-auto border rounded-xl max-h-64">
+
+      <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium px-1">
+        <span>Điều chỉnh giá trực tiếp cho từng mặt hàng bên dưới hoặc áp dụng công thức đồng loạt:</span>
+        <span id="modal-banggia-count" class="font-bold text-slate-700">0 sản phẩm</span>
+      </div>
+
+      <div class="flex-1 overflow-y-auto border rounded-xl max-h-72">
         <table class="w-full text-left text-xs">
-          <thead class="bg-slate-100 uppercase sticky top-0 font-semibold border-b">
+          <thead class="bg-slate-100 uppercase sticky top-0 font-semibold border-b text-slate-600">
             <tr>
-              <th class="p-2.5">Mã Hàng</th>
+              <th class="p-2.5 w-24">Mã Hàng</th>
               <th class="p-2.5">Tên Sản Phẩm</th>
-              <th class="p-2.5 text-right">Giá Chuẩn</th>
-              <th class="p-2.5 text-right w-32">Giá Bảng Mới</th>
+              <th class="p-2.5 text-right w-28">Giá Vốn</th>
+              <th class="p-2.5 text-right w-28">Giá Chuẩn</th>
+              <th class="p-2.5 text-right w-36">Giá Bảng Mới (VNĐ)</th>
             </tr>
           </thead>
           <tbody id="modal-banggia-body" class="divide-y divide-slate-100 font-medium"></tbody>
         </table>
       </div>
+
       <div class="flex justify-end space-x-2 pt-2 border-t">
-        <button type="button" onclick="dongModal('modal-banggia')" class="px-4 py-2 border rounded-xl font-semibold text-slate-600">Hủy</button>
-        <button type="button" onclick="xacNhanLuuBangGia()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow">Lưu bảng giá</button>
+        <button type="button" onclick="dongModal('modal-banggia')" class="px-4 py-2 border rounded-xl font-semibold text-slate-600 hover:bg-slate-50 transition">Hủy</button>
+        <button type="button" onclick="xacNhanLuuBangGia()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>Lưu bảng giá</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CẬP NHẬT BẢNG GIÁ THEO CÔNG THỨC (CHUYÊN NGHIỆP) -->
+  <div id="modal-congthuc-banggia" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl space-y-4 text-xs max-h-[92vh] flex flex-col">
+      <!-- Header -->
+      <div class="flex justify-between items-center border-b pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md">
+            <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-slate-800">Thiết Lập Bảng Giá Theo Công Thức</h3>
+            <p class="text-[11px] text-slate-500 font-medium">Áp dụng công thức tính giá tự động theo nhóm, loại hàng hoặc toàn bộ danh mục</p>
+          </div>
+        </div>
+        <button type="button" onclick="dongModal('modal-congthuc-banggia')" class="text-slate-400 hover:text-slate-600 text-lg w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Scrollable Content -->
+      <div class="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin">
+        <!-- Target Price Book Indicator -->
+        <div class="bg-indigo-50/70 border border-indigo-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center space-x-2">
+            <span class="text-indigo-900 font-bold">Bảng giá áp dụng:</span>
+            <span id="congthuc-target-name" class="font-extrabold text-indigo-700 bg-white px-2.5 py-0.5 rounded-lg border border-indigo-200 text-xs">Bảng giá bán lẻ chuẩn</span>
+          </div>
+          <span class="text-[11px] text-indigo-600 font-medium italic">* Giá mới sẽ được tính toán và áp dụng vào bảng giá này</span>
+        </div>
+
+        <!-- 1. PHẠM VI ÁP DỤNG -->
+        <div class="border border-slate-200 rounded-xl p-3.5 space-y-2.5 bg-slate-50/50">
+          <label class="font-bold text-slate-700 flex items-center space-x-1.5">
+            <span class="w-5 h-5 rounded-full bg-blue-600 text-white inline-flex items-center justify-center text-[11px]">1</span>
+            <span>Chọn phạm vi áp dụng (Đối tượng cập nhật):</span>
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <label class="flex items-start space-x-2.5 p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400 transition">
+              <input type="radio" name="congthuc-phamvi" value="TAT_CA" checked onchange="thayDoiPhamViCongThuc()" class="mt-0.5 text-blue-600">
+              <div>
+                <span class="font-bold text-slate-800 block">🌐 Tất cả hàng hóa</span>
+                <span class="text-[11px] text-slate-500">Áp dụng cho toàn bộ danh mục</span>
+              </div>
+            </label>
+            <label class="flex items-start space-x-2.5 p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400 transition">
+              <input type="radio" name="congthuc-phamvi" value="THEO_NHOM" onchange="thayDoiPhamViCongThuc()" class="mt-0.5 text-blue-600">
+              <div>
+                <span class="font-bold text-slate-800 block">📁 Theo từng nhóm hàng</span>
+                <span class="text-[11px] text-slate-500">Chỉ áp dụng nhóm chỉ định</span>
+              </div>
+            </label>
+            <label class="flex items-start space-x-2.5 p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400 transition">
+              <input type="radio" name="congthuc-phamvi" value="THEO_LOAI" onchange="thayDoiPhamViCongThuc()" class="mt-0.5 text-blue-600">
+              <div>
+                <span class="font-bold text-slate-800 block">🏷️ Theo loại hàng</span>
+                <span class="text-[11px] text-slate-500">Hàng Serial/IMEI hoặc thường</span>
+              </div>
+            </label>
+          </div>
+
+          <!-- Chi tiết Nhóm hàng nếu chọn THEO_NHOM -->
+          <div id="box-chon-nhom-congthuc" class="hidden pt-2 border-t border-slate-200 flex flex-wrap items-center gap-2">
+            <label class="font-semibold text-slate-700 text-xs">Chọn nhóm hàng cụ thể:</label>
+            <select id="select-nhom-congthuc" onchange="capNhatPreviewCongThuc()" class="flex-1 border border-slate-300 rounded-xl px-3 py-1.5 text-xs bg-white font-medium focus:ring-2 focus:ring-blue-500"></select>
+          </div>
+
+          <!-- Chi tiết Loại hàng nếu chọn THEO_LOAI -->
+          <div id="box-chon-loai-congthuc" class="hidden pt-2 border-t border-slate-200 flex flex-wrap items-center gap-2">
+            <label class="font-semibold text-slate-700 text-xs">Chọn phân loại hàng hóa:</label>
+            <select id="select-loai-congthuc" onchange="capNhatPreviewCongThuc()" class="flex-1 border border-slate-300 rounded-xl px-3 py-1.5 text-xs bg-white font-medium focus:ring-2 focus:ring-blue-500">
+              <option value="IMEI">📱 Hàng có quản lý Serial / IMEI (Điện thoại, Máy tính...)</option>
+              <option value="THUONG">📦 Hàng hóa thông thường (Phụ kiện, Linh kiện, Không IMEI...)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 2. CÔNG THỨC THIẾT LẬP GIÁ -->
+        <div class="border border-slate-200 rounded-xl p-3.5 space-y-3 bg-slate-50/50">
+          <label class="font-bold text-slate-700 flex items-center space-x-1.5">
+            <span class="w-5 h-5 rounded-full bg-indigo-600 text-white inline-flex items-center justify-center text-[11px]">2</span>
+            <span>Chọn công thức tính giá bán mới:</span>
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <label class="flex items-start space-x-2.5 p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-400 transition">
+              <input type="radio" name="congthuc-loai" value="PHAN_TRAM_GIA_BAN" checked onchange="thayDoiLoaiCongThuc()" class="mt-0.5 text-indigo-600">
+              <div>
+                <span class="font-bold text-slate-800 block">% Giá bán</span>
+                <span class="text-[11px] text-slate-500">Tỷ lệ theo giá bán chuẩn</span>
+              </div>
+            </label>
+            <label class="flex items-start space-x-2.5 p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-400 transition">
+              <input type="radio" name="congthuc-loai" value="SO_TIEN_TUY_CHON" onchange="thayDoiLoaiCongThuc()" class="mt-0.5 text-indigo-600">
+              <div>
+                <span class="font-bold text-slate-800 block">Số tiền tùy chọn</span>
+                <span class="text-[11px] text-slate-500">Tăng / giảm hoặc cố định</span>
+              </div>
+            </label>
+            <label class="flex items-start space-x-2.5 p-2.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-400 transition">
+              <input type="radio" name="congthuc-loai" value="LOI_NHUAN_GIA_VON" onchange="thayDoiLoaiCongThuc()" class="mt-0.5 text-indigo-600">
+              <div>
+                <span class="font-bold text-slate-800 block">% LN trên giá vốn</span>
+                <span class="text-[11px] text-slate-500">Giá vốn + % Lợi nhuận</span>
+              </div>
+            </label>
+          </div>
+
+          <!-- Chi tiết Công thức 1: % Giá bán -->
+          <div id="subbox-phan-tram-giaban" class="p-3 bg-white rounded-xl border border-slate-200 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label class="font-semibold text-slate-600 text-[11px]">Cách tính %:</label>
+                <select id="ct-giaban-kieu" onchange="capNhatPreviewCongThuc()" class="w-full border rounded-xl p-2 bg-slate-50 text-xs font-semibold">
+                  <option value="BANG_PHAN_TRAM">Bằng % Giá bán chuẩn (VD: 90% = giảm 10%)</option>
+                  <option value="TANG_PHAN_TRAM">Tăng thêm (+) % so với Giá bán chuẩn</option>
+                  <option value="GIAM_PHAN_TRAM">Giảm bớt (-) % so với Giá bán chuẩn</option>
+                </select>
+              </div>
+              <div>
+                <label class="font-semibold text-slate-600 text-[11px]">Tỷ lệ phần trăm (%):</label>
+                <div class="relative">
+                  <input type="number" id="ct-giaban-giatri" value="95" min="0" max="1000" step="0.5" oninput="capNhatPreviewCongThuc()" class="w-full border rounded-xl p-2 bg-slate-50 text-xs font-bold font-mono text-indigo-600 pr-8">
+                  <span class="absolute right-3 top-2 text-slate-400 font-bold">%</span>
+                </div>
+              </div>
+            </div>
+            <p id="ct-giaban-mota" class="text-[11px] font-medium text-indigo-700 italic bg-indigo-50/50 p-2 rounded-lg border border-indigo-100">
+              Công thức: Giá mới = Giá bán chuẩn × 95%
+            </p>
+          </div>
+
+          <!-- Chi tiết Công thức 2: Số tiền tùy chọn -->
+          <div id="subbox-so-tien" class="hidden p-3 bg-white rounded-xl border border-slate-200 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label class="font-semibold text-slate-600 text-[11px]">Cách áp dụng số tiền:</label>
+                <select id="ct-sotien-kieu" onchange="capNhatPreviewCongThuc()" class="w-full border rounded-xl p-2 bg-slate-50 text-xs font-semibold">
+                  <option value="TANG_SO_TIEN">Tăng thêm (+) Số tiền so với Giá bán chuẩn</option>
+                  <option value="GIAM_SO_TIEN">Giảm bớt (-) Số tiền so với Giá bán chuẩn</option>
+                  <option value="CO_DINH">Đặt giá cố định bằng đúng Số tiền này</option>
+                </select>
+              </div>
+              <div>
+                <label class="font-semibold text-slate-600 text-[11px]">Số tiền (VNĐ):</label>
+                <input type="number" id="ct-sotien-giatri" value="50000" min="0" step="1000" oninput="capNhatPreviewCongThuc()" class="w-full border rounded-xl p-2 bg-slate-50 text-xs font-bold font-mono text-indigo-600">
+              </div>
+            </div>
+            <p id="ct-sotien-mota" class="text-[11px] font-medium text-indigo-700 italic bg-indigo-50/50 p-2 rounded-lg border border-indigo-100">
+              Công thức: Giá mới = Giá bán chuẩn + 50.000 đ
+            </p>
+          </div>
+
+          <!-- Chi tiết Công thức 3: % Lợi nhuận trên giá vốn -->
+          <div id="subbox-loi-nhuan-giavon" class="hidden p-3 bg-white rounded-xl border border-slate-200 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label class="font-semibold text-slate-600 text-[11px]">% Lợi nhuận mong muốn trên giá vốn:</label>
+                <div class="relative">
+                  <input type="number" id="ct-giavon-phantram" value="20" min="0" max="1000" step="0.5" oninput="capNhatPreviewCongThuc()" class="w-full border rounded-xl p-2 bg-slate-50 text-xs font-bold font-mono text-emerald-600 pr-8">
+                  <span class="absolute right-3 top-2 text-slate-400 font-bold">%</span>
+                </div>
+              </div>
+              <div>
+                <label class="font-semibold text-slate-600 text-[11px]">Nếu sản phẩm chưa có giá vốn (= 0đ):</label>
+                <select id="ct-giavon-khongvon" onchange="capNhatPreviewCongThuc()" class="w-full border rounded-xl p-2 bg-slate-50 text-xs font-semibold">
+                  <option value="GIU_NGUYEN">Giữ nguyên giá bán chuẩn hiện tại</option>
+                  <option value="BO_QUA">Không thay đổi (Bỏ qua)</option>
+                  <option value="BANG_KHONG">Đặt bằng 0 đ</option>
+                </select>
+              </div>
+            </div>
+            <p id="ct-giavon-mota" class="text-[11px] font-medium text-emerald-700 italic bg-emerald-50/50 p-2 rounded-lg border border-emerald-100">
+              Công thức: Giá mới = Giá vốn + (Giá vốn × 20%) = Giá vốn × 1.20
+            </p>
+          </div>
+
+          <!-- Quy tắc làm tròn số tiền -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+            <div>
+              <label class="font-semibold text-slate-600 text-[11px] flex items-center space-x-1">
+                <i class="fa-solid fa-calculator text-slate-400"></i>
+                <span>Quy tắc làm tròn số tiền:</span>
+              </label>
+              <select id="ct-lamtron-muc" onchange="capNhatPreviewCongThuc()" class="w-full border rounded-xl p-2 bg-white text-xs font-semibold">
+                <option value="1000">Làm tròn đến 1.000 đ (nghìn đồng)</option>
+                <option value="10000">Làm tròn đến 10.000 đ (chục nghìn)</option>
+                <option value="100000">Làm tròn đến 100.000 đ (trăm nghìn)</option>
+                <option value="0">Không làm tròn (Giữ nguyên)</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-semibold text-slate-600 text-[11px]">Chế độ làm tròn:</label>
+              <select id="ct-lamtron-chedo" onchange="capNhatPreviewCongThuc()" class="w-full border rounded-xl p-2 bg-white text-xs font-semibold">
+                <option value="ROUND">Làm tròn gần nhất (Math.round)</option>
+                <option value="CEIL">Làm tròn lên trần (Math.ceil)</option>
+                <option value="FLOOR">Làm tròn xuống đáy (Math.floor)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. XEM TRƯỚC TRỰC TIẾP (LIVE PREVIEW) -->
+        <div class="border border-slate-200 rounded-xl p-3.5 space-y-2 bg-white">
+          <div class="flex justify-between items-center">
+            <label class="font-bold text-slate-700 flex items-center space-x-1.5">
+              <span class="w-5 h-5 rounded-full bg-emerald-600 text-white inline-flex items-center justify-center text-[11px]">3</span>
+              <span>Xem trước kết quả (Live Preview):</span>
+            </label>
+            <span id="congthuc-preview-count" class="font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full text-[11px]">Sẽ cập nhật: 0 sản phẩm</span>
+          </div>
+
+          <div class="border rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100 uppercase sticky top-0 font-semibold border-b text-slate-600">
+                <tr>
+                  <th class="p-2">Mã Hàng</th>
+                  <th class="p-2">Tên Sản Phẩm</th>
+                  <th class="p-2 text-right">Giá Vốn</th>
+                  <th class="p-2 text-right">Giá Chuẩn</th>
+                  <th class="p-2 text-right font-bold text-indigo-700">Giá Mới</th>
+                  <th class="p-2 text-center">Chênh Lệch</th>
+                </tr>
+              </thead>
+              <tbody id="congthuc-preview-body" class="divide-y divide-slate-100 font-medium"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="flex justify-between items-center pt-3 border-t">
+        <button type="button" onclick="dongModal('modal-congthuc-banggia')" class="px-4 py-2 border rounded-xl font-semibold text-slate-600 hover:bg-slate-50 transition">
+          Hủy bỏ
+        </button>
+        <button type="button" onclick="apDungCongThucVaoBangGia()" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-bold shadow-md flex items-center space-x-2 transition">
+          <i class="fa-solid fa-bolt"></i>
+          <span>Áp dụng công thức vào bảng giá</span>
+        </button>
       </div>
     </div>
   </div>
@@ -5096,8 +5405,8 @@ function timKiemKhachHangPOS(kw) {
       if (!Array.isArray(rawHangHoa) || !rawHangHoa.length) return;
       if (!window.tonKhoChiNhanhMap) window.tonKhoChiNhanhMap = {};
 
-      // Tự động dọn sạch cache tồn kho cũ khi hệ thống vừa reset tồn kho
-      const RESET_INVENTORY_KEY = 'tt_pos_reset_inventory_v20261007';
+      // Tự động dọn sạch cache tồn kho cũ khi hệ thống vừa nạp lại tồn kho mới
+      const RESET_INVENTORY_KEY = 'tt_pos_reset_inventory_v20261007_imported_all_v1';
       try {
         if (!localStorage.getItem(RESET_INVENTORY_KEY)) {
           localStorage.removeItem('tt_pos_tonkho_chinhanh');
@@ -5165,6 +5474,8 @@ function timKiemKhachHangPOS(kw) {
                   const m = String(it.maHang || it.ma_hang || '').trim().toUpperCase();
                   const sl = Number(it.soLuong) || 0;
                   if (!m || !sl) return;
+                  const sp = (rawHangHoa || []).find(h => String(h.maHang || '').trim().toUpperCase() === m);
+                  if (sp && sp.coQuanLyIMEI) return; // Sản phẩm quản lý theo IMEI đã được tính chính xác từ kho_imei
                   if (!window.tonKhoChiNhanhMap[m]) window.tonKhoChiNhanhMap[m] = { CN01: 0, CN02: 0, CN03: 0, CN04: 0 };
                   if (cn !== 'CN01') {
                     if (maDH.startsWith('PNH') || maDH.startsWith('TH')) {
@@ -5952,6 +6263,7 @@ function timKiemKhachHangPOS(kw) {
           if (typeof loadHangHoa === 'function') loadHangHoa();
         } else if (tabId === 'tab-thietlapgia') {
           if (typeof loadHangHoa === 'function') loadHangHoa();
+          if (typeof loadThietLapGia === 'function') loadThietLapGia();
         } else if (tabId === 'tab-kiemkho') {
           if (typeof loadLichSuKiemKho === 'function') loadLichSuKiemKho();
         } else if (tabId === 'tab-xuathuy') {
@@ -8095,80 +8407,783 @@ function timKiemKhachHangPOS(kw) {
       guiGoiTiepTheo(); // Bắt đầu chạy gói đầu tiên
     }
 
-    /* 2.2 Bảng giá */
+    /* ====================================================================
+     * 2.2 THIẾT LẬP BẢNG GIÁ - HỆ THỐNG CÔNG THỨC & QUẢN LÝ ĐA BẢNG GIÁ
+     * ==================================================================== */
+    let congThucTargetMode = 'CURRENT'; // 'CURRENT' hoặc 'MODAL_NEW'
+
     function loadThietLapGia() {
-      google.script.run.withSuccessHandler(function(res) {
-        bangGiaData = res || { danhSachBangGia: ["Bảng giá bán lẻ chuẩn"], chiTietGia: [] };
-        const sel = document.getElementById('select-bang-gia');
+      // 1. Thử lấy từ localStorage trước để hiển thị tức thì
+      try {
+        const cached = localStorage.getItem('ERP_BANG_GIA_DATA');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && Array.isArray(parsed.danhSachBangGia)) {
+            bangGiaData = parsed;
+            capNhatGiaoDienBangGia();
+          }
+        }
+      } catch (e) {
+        console.warn("Lỗi đọc cache bảng giá:", e);
+      }
+
+      // 2. Ưu tiên nạp từ Supabase (nếu có kết nối)
+      if (supabaseClient) {
+        supabaseClient.from('dm_banggia').select('*').order('id', { ascending: true })
+          .then(({ data, error }) => {
+            if (!error && data && data.length > 0) {
+              const bgSet = new Set(["Bảng giá bán lẻ chuẩn"]);
+              const details = [];
+              data.forEach(row => {
+                if (row.ten_bang_gia) bgSet.add(String(row.ten_bang_gia).trim());
+                details.push({
+                  maBangGia: row.ma_bang_gia || '',
+                  tenBangGia: row.ten_bang_gia,
+                  maHang: row.ma_hang,
+                  giaBan: Number(row.gia_ban) || 0
+                });
+              });
+              bangGiaData = { danhSachBangGia: Array.from(bgSet), chiTietGia: details };
+              localStorage.setItem('ERP_BANG_GIA_DATA', JSON.stringify(bangGiaData));
+              capNhatGiaoDienBangGia();
+              return;
+            }
+            napBangGiaTuGas();
+          })
+          .catch(() => napBangGiaTuGas());
+        return;
+      }
+
+      // 3. Nạp từ Google Apps Script / Google Sheets
+      napBangGiaTuGas();
+    }
+
+    function napBangGiaTuGas() {
+      if (window.google && google.script && google.script.run && typeof google.script.run.apiGetBangGiaData === 'function') {
+        google.script.run.withSuccessHandler(function(res) {
+          if (res && Array.isArray(res.danhSachBangGia)) {
+            bangGiaData = res;
+            if (!bangGiaData.danhSachBangGia.includes("Bảng giá bán lẻ chuẩn")) {
+              bangGiaData.danhSachBangGia.unshift("Bảng giá bán lẻ chuẩn");
+            }
+            localStorage.setItem('ERP_BANG_GIA_DATA', JSON.stringify(bangGiaData));
+            capNhatGiaoDienBangGia();
+          }
+        }).apiGetBangGiaData();
+      } else {
+        capNhatGiaoDienBangGia();
+      }
+    }
+
+    function capNhatGiaoDienBangGia() {
+      if (!bangGiaData || !Array.isArray(bangGiaData.danhSachBangGia) || !bangGiaData.danhSachBangGia.length) {
+        bangGiaData = { danhSachBangGia: ["Bảng giá bán lẻ chuẩn"], chiTietGia: [] };
+      }
+
+      const sel = document.getElementById('select-bang-gia');
+      if (sel) {
+        const curVal = sel.value;
         sel.innerHTML = bangGiaData.danhSachBangGia.map(b => `<option value="${b}">${b}</option>`).join('');
-        hienThiGiaTheoBang();
-      }).apiGetBangGiaData();
+        if (curVal && bangGiaData.danhSachBangGia.includes(curVal)) {
+          sel.value = curVal;
+        }
+      }
+
+      // Nạp danh sách nhóm hàng vào bộ lọc bảng giá
+      const selNhomFilter = document.getElementById('filter-nhom-banggia');
+      if (selNhomFilter && typeof rawNhomHang !== 'undefined' && Array.isArray(rawNhomHang)) {
+        const curNhom = selNhomFilter.value;
+        let nhomOptions = '<option value="ALL">📁 Tất cả nhóm hàng</option>';
+        rawNhomHang.forEach(n => {
+          nhomOptions += `<option value="${n.maNhom}">${n.tenNhom || n.maNhom}</option>`;
+        });
+        selNhomFilter.innerHTML = nhomOptions;
+        if (curNhom) selNhomFilter.value = curNhom;
+      }
+
+      hienThiGiaTheoBang();
+    }
+
+    // Lấy giá bán của mặt hàng theo bảng giá chỉ định
+    function layGiaTheoBang(tenBang, maHang, giaGoc) {
+      if (!tenBang || tenBang === "Bảng giá bán lẻ chuẩn") return Number(giaGoc) || 0;
+      if (bangGiaData && Array.isArray(bangGiaData.chiTietGia)) {
+        const match = bangGiaData.chiTietGia.find(c => c.tenBangGia === tenBang && c.maHang === maHang);
+        if (match && typeof match.giaBan === 'number') return match.giaBan;
+      }
+      return Number(giaGoc) || 0;
     }
 
     function hienThiGiaTheoBang() {
-      const curBang = document.getElementById('select-bang-gia').value;
+      const curBang = document.getElementById('select-bang-gia')?.value || "Bảng giá bán lẻ chuẩn";
       const tbody = document.getElementById('tbl-thietlapgia-body');
-      if (!rawHangHoa.length) { tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">Chưa có sản phẩm nào</td></tr>'; return; }
-      tbody.innerHTML = rawHangHoa.map(h => {
-        let price = h.giaBan;
-        if (curBang !== "Bảng giá bán lẻ chuẩn") {
-          const match = bangGiaData.chiTietGia.find(c => c.tenBangGia === curBang && c.maHang === h.maHang);
-          if (match) price = match.giaBan;
+      if (!tbody) return;
+
+      // Cập nhật trạng thái nút xóa bảng giá
+      const btnDel = document.getElementById('btn-delete-banggia');
+      if (btnDel) {
+        if (curBang === "Bảng giá bán lẻ chuẩn") {
+          btnDel.classList.add('opacity-40', 'pointer-events-none');
+          btnDel.title = "Không thể xóa Bảng giá bán lẻ chuẩn mặc định";
+        } else {
+          btnDel.classList.remove('opacity-40', 'pointer-events-none');
+          btnDel.title = `Xóa bảng giá: ${curBang}`;
         }
-        const diff = price - h.giaBan;
+      }
+
+      if (!rawHangHoa || !rawHangHoa.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400 font-semibold">Chưa có sản phẩm nào trong hệ thống</td></tr>';
+        return;
+      }
+
+      // Bộ lọc
+      const sKeyword = (document.getElementById('filter-search-banggia')?.value || '').toLowerCase().trim();
+      const sNhom = document.getElementById('filter-nhom-banggia')?.value || 'ALL';
+      const sLoai = document.getElementById('filter-loai-banggia')?.value || 'ALL';
+      const sChenhLech = document.getElementById('filter-chenhlech-banggia')?.value || 'ALL';
+
+      let countCustom = 0;
+      let filteredList = rawHangHoa.filter(h => {
+        // Lọc từ khóa
+        if (sKeyword) {
+          const ma = String(h.maHang || '').toLowerCase();
+          const ten = String(h.tenHang || '').toLowerCase();
+          if (!ma.includes(sKeyword) && !ten.includes(sKeyword)) return false;
+        }
+
+        // Lọc nhóm hàng
+        if (sNhom !== 'ALL') {
+          const maNhom = String(h.maNhom || '');
+          if (maNhom !== sNhom) return false;
+        }
+
+        // Lọc loại hàng (Serial/IMEI vs Thông thường)
+        if (sLoai !== 'ALL') {
+          const isIMEI = Boolean(h.coQuanLyIMEI);
+          if (sLoai === 'IMEI' && !isIMEI) return false;
+          if (sLoai === 'THUONG' && isIMEI) return false;
+        }
+
+        const currentPrice = layGiaTheoBang(curBang, h.maHang, h.giaBan);
+        const diff = currentPrice - h.giaBan;
+        if (curBang !== "Bảng giá bán lẻ chuẩn" && diff !== 0) countCustom++;
+
+        // Lọc chênh lệch
+        if (sChenhLech === 'CO_DOI' && diff === 0) return false;
+        if (sChenhLech === 'TANG' && diff <= 0) return false;
+        if (sChenhLech === 'GIAM' && diff >= 0) return false;
+
+        return true;
+      });
+
+      // Cập nhật badges
+      const elTotal = document.getElementById('badge-banggia-total');
+      if (elTotal) elTotal.innerText = `Hiển thị: ${filteredList.length}/${rawHangHoa.length} SP`;
+      const elCustom = document.getElementById('badge-banggia-custom');
+      if (elCustom) elCustom.innerText = `Có giá riêng: ${countCustom} SP`;
+
+      if (!filteredList.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400 font-semibold">Không tìm thấy sản phẩm phù hợp với bộ lọc</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filteredList.map(h => {
+        const giaVon = Number(h.giaVon) || 0;
+        const giaBanChuan = Number(h.giaBan) || 0;
+        const giaBangNay = layGiaTheoBang(curBang, h.maHang, giaBanChuan);
+        const diff = giaBangNay - giaBanChuan;
+        const diffPercent = giaBanChuan > 0 ? ((diff / giaBanChuan) * 100).toFixed(1) : 0;
+        
+        // % Lợi nhuận trên giá vốn = (Giá bán - Giá vốn) / Giá vốn * 100%
+        let roiText = 'N/A';
+        let roiColor = 'text-slate-400';
+        if (giaVon > 0) {
+          const roi = ((giaBangNay - giaVon) / giaVon) * 100;
+          roiText = (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%';
+          roiColor = roi >= 0 ? 'text-emerald-700 bg-emerald-50' : 'text-rose-700 bg-rose-50';
+        }
+
+        const tenNhom = typeof layTenDayDuNhomHang === 'function' ? layTenDayDuNhomHang(h.maNhom) : (h.maNhom || '---');
+        const isIMEI = Boolean(h.coQuanLyIMEI);
+        const isCustomPrice = curBang !== "Bảng giá bán lẻ chuẩn" && diff !== 0;
+
         return `
-          <tr class="hover:bg-slate-50 border-b transition">
-            <td class="p-3 font-semibold text-blue-600 font-mono">${h.maHang}</td>
-            <td class="p-3 font-medium text-slate-800">${h.tenHang}</td>
-            <td class="p-3 text-right font-mono text-slate-500">${h.giaVon.toLocaleString()} đ</td>
-            <td class="p-3 text-right font-mono">${h.giaBan.toLocaleString()} đ</td>
-            <td class="p-3 text-right font-bold text-blue-600 font-mono">${price.toLocaleString()} đ</td>
-            <td class="p-3 text-center font-mono font-semibold ${diff >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${diff >= 0 ? '+' : ''}${diff.toLocaleString()} đ</td>
+          <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
+            <td class="p-3 font-semibold text-blue-600 font-mono text-xs">${h.maHang}</td>
+            <td class="p-3 font-medium text-slate-800">
+              <div>${h.tenHang}</div>
+              <div class="text-[10px] text-slate-400 font-mono">ĐVT: ${h.donViTinh || 'Cái'}</div>
+            </td>
+            <td class="p-3 text-slate-600">
+              <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-[11px] font-medium truncate inline-block max-w-[130px]" title="${tenNhom}">${tenNhom}</span>
+            </td>
+            <td class="p-3 text-center">
+              ${isIMEI 
+                ? '<span class="px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-md text-[10px] font-bold">IMEI</span>'
+                : '<span class="px-2 py-0.5 bg-slate-50 text-slate-600 border border-slate-200 rounded-md text-[10px] font-medium">Thường</span>'}
+            </td>
+            <td class="p-3 text-right font-mono text-slate-500">${giaVon.toLocaleString()} đ</td>
+            <td class="p-3 text-right font-mono text-slate-700 font-semibold">${giaBanChuan.toLocaleString()} đ</td>
+            <td class="p-3 text-right">
+              <input type="number" 
+                     id="tbl-price-${h.maHang}" 
+                     value="${giaBangNay}" 
+                     min="0"
+                     step="1000"
+                     onchange="capNhatGiaDong('${h.maHang}', this.value)" 
+                     class="w-32 border rounded-xl p-1.5 text-right font-mono font-bold text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none transition ${isCustomPrice ? 'border-indigo-400 bg-indigo-50 text-indigo-700' : 'border-slate-300 bg-white text-slate-800'}">
+            </td>
+            <td class="p-3 text-center font-mono font-semibold text-xs">
+              ${diff === 0 
+                ? '<span class="text-slate-400">0 đ</span>' 
+                : `<span class="${diff > 0 ? 'text-emerald-600' : 'text-rose-600'}">
+                     ${diff > 0 ? '+' : ''}${diff.toLocaleString()} đ 
+                     <span class="text-[10px] block opacity-80">(${diff > 0 ? '+' : ''}${diffPercent}%)</span>
+                   </span>`}
+            </td>
+            <td class="p-3 text-center font-mono">
+              <span class="px-2 py-0.5 rounded-md font-bold text-[11px] ${roiColor}">${roiText}</span>
+            </td>
           </tr>
         `;
       }).join('');
     }
 
+    // Cập nhật giá một dòng trực tiếp từ ô nhập
+    function capNhatGiaDong(maHang, val) {
+      const curBang = document.getElementById('select-bang-gia')?.value || "Bảng giá bán lẻ chuẩn";
+      const newPrice = Number(val) || 0;
+
+      if (curBang === "Bảng giá bán lẻ chuẩn") {
+        // Cập nhật trực tiếp giá bán chuẩn của sản phẩm trong rawHangHoa
+        const sp = rawHangHoa.find(h => h.maHang === maHang);
+        if (sp) sp.giaBan = newPrice;
+      } else {
+        // Cập nhật vào chi tiết bảng giá
+        if (!bangGiaData.chiTietGia) bangGiaData.chiTietGia = [];
+        const exist = bangGiaData.chiTietGia.find(c => c.tenBangGia === curBang && c.maHang === maHang);
+        if (exist) {
+          exist.giaBan = newPrice;
+        } else {
+          bangGiaData.chiTietGia.push({ tenBangGia: curBang, maHang: maHang, giaBan: newPrice });
+        }
+      }
+
+      hienThiGiaTheoBang();
+    }
+
+    // Modal tạo bảng giá mới
     function moModalBangGia() {
       document.getElementById('input-ten-banggia').value = "";
-      document.getElementById('modal-banggia-body').innerHTML = rawHangHoa.map(h => `
-        <tr class="border-b">
-          <td class="p-2 font-mono font-semibold">${h.maHang}</td>
-          <td class="p-2 font-medium">${h.tenHang}</td>
-          <td class="p-2 text-right font-mono">${h.giaBan.toLocaleString()} đ</td>
-          <td class="p-2 text-right"><input type="number" id="bg-price-${h.maHang}" value="${h.giaBan}" class="w-28 border rounded-lg p-1 text-right font-mono font-bold text-blue-600"></td>
-        </tr>
-      `).join('');
+      const countEl = document.getElementById('modal-banggia-count');
+      if (countEl) countEl.innerText = `${rawHangHoa.length} sản phẩm`;
+
+      const tbody = document.getElementById('modal-banggia-body');
+      if (tbody) {
+        tbody.innerHTML = rawHangHoa.map(h => `
+          <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
+            <td class="p-2.5 font-mono font-semibold text-blue-600">${h.maHang}</td>
+            <td class="p-2.5 font-medium text-slate-800">${h.tenHang}</td>
+            <td class="p-2.5 text-right font-mono text-slate-500">${(Number(h.giaVon) || 0).toLocaleString()} đ</td>
+            <td class="p-2.5 text-right font-mono text-slate-700">${(Number(h.giaBan) || 0).toLocaleString()} đ</td>
+            <td class="p-2.5 text-right">
+              <input type="number" 
+                     id="bg-price-${h.maHang}" 
+                     value="${h.giaBan || 0}" 
+                     min="0"
+                     step="1000"
+                     class="w-32 border border-slate-300 rounded-xl p-1.5 text-right font-mono font-bold text-xs text-blue-600 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </td>
+          </tr>
+        `).join('');
+      }
       moModal('modal-banggia');
     }
 
-    function xacNhanLuuBangGia() {
+    // ====================================================================
+    // CÔNG THỨC THIẾT LẬP GIÁ (CÔNG CỤ TÍNH TOÁN THEO YÊU CẦU NGƯỜI DÙNG)
+    // ====================================================================
+    function moModalCongThucBangGia(target = 'CURRENT') {
+      congThucTargetMode = target;
+      
+      let targetName = "Bảng giá bán lẻ chuẩn";
+      if (target === 'CURRENT') {
+        targetName = document.getElementById('select-bang-gia')?.value || "Bảng giá bán lẻ chuẩn";
+      } else if (target === 'MODAL_NEW') {
+        const inp = document.getElementById('input-ten-banggia')?.value.trim();
+        targetName = inp ? `[Mới] ${inp}` : "[Mới] Bảng giá mới đang tạo";
+      }
+
+      const elTarget = document.getElementById('congthuc-target-name');
+      if (elTarget) elTarget.innerText = targetName;
+
+      // Nạp danh sách nhóm hàng vào select trong modal công thức kèm số lượng SP
+      const selNhom = document.getElementById('select-nhom-congthuc');
+      if (selNhom && typeof rawNhomHang !== 'undefined' && Array.isArray(rawNhomHang)) {
+        selNhom.innerHTML = rawNhomHang.map(n => {
+          const cnt = rawHangHoa.filter(h => h.maNhom === n.maNhom).length;
+          return `<option value="${n.maNhom}">📁 ${n.tenNhom || n.maNhom} (${cnt} sản phẩm)</option>`;
+        }).join('');
+      }
+
+      thayDoiPhamViCongThuc();
+      thayDoiLoaiCongThuc();
+      capNhatPreviewCongThuc();
+      moModal('modal-congthuc-banggia');
+    }
+
+    function thayDoiPhamViCongThuc() {
+      const phamVi = document.querySelector('input[name="congthuc-phamvi"]:checked')?.value || 'TAT_CA';
+      const boxNhom = document.getElementById('box-chon-nhom-congthuc');
+      const boxLoai = document.getElementById('box-chon-loai-congthuc');
+
+      if (boxNhom) boxNhom.classList.toggle('hidden', phamVi !== 'THEO_NHOM');
+      if (boxLoai) boxLoai.classList.toggle('hidden', phamVi !== 'THEO_LOAI');
+
+      capNhatPreviewCongThuc();
+    }
+
+    function thayDoiLoaiCongThuc() {
+      const loai = document.querySelector('input[name="congthuc-loai"]:checked')?.value || 'PHAN_TRAM_GIA_BAN';
+      const boxPT = document.getElementById('subbox-phan-tram-giaban');
+      const boxST = document.getElementById('subbox-so-tien');
+      const boxLN = document.getElementById('subbox-loi-nhuan-giavon');
+
+      if (boxPT) boxPT.classList.toggle('hidden', loai !== 'PHAN_TRAM_GIA_BAN');
+      if (boxST) boxST.classList.toggle('hidden', loai !== 'SO_TIEN_TUY_CHON');
+      if (boxLN) boxLN.classList.toggle('hidden', loai !== 'LOI_NHUAN_GIA_VON');
+
+      capNhatPreviewCongThuc();
+    }
+
+    // Thu thập tham số công thức hiện tại
+    function layThamSoCongThuc() {
+      const phamVi = document.querySelector('input[name="congthuc-phamvi"]:checked')?.value || 'TAT_CA';
+      const nhomChon = document.getElementById('select-nhom-congthuc')?.value || '';
+      const loaiChon = document.getElementById('select-loai-congthuc')?.value || 'IMEI';
+
+      const loaiCongThuc = document.querySelector('input[name="congthuc-loai"]:checked')?.value || 'PHAN_TRAM_GIA_BAN';
+
+      // 1. % Giá bán
+      const kieuPT = document.getElementById('ct-giaban-kieu')?.value || 'BANG_PHAN_TRAM';
+      const valPT = Math.max(0, Number(document.getElementById('ct-giaban-giatri')?.value) || 0);
+
+      // 2. Số tiền
+      const kieuST = document.getElementById('ct-sotien-kieu')?.value || 'TANG_SO_TIEN';
+      const valST = Math.max(0, Number(document.getElementById('ct-sotien-giatri')?.value) || 0);
+
+      // 3. % Lợi nhuận trên giá vốn
+      const valLN = Number(document.getElementById('ct-giavon-phantram')?.value) || 0;
+      const khongVon = document.getElementById('ct-giavon-khongvon')?.value || 'GIU_NGUYEN';
+
+      // Làm tròn
+      const lamTronMuc = Number(document.getElementById('ct-lamtron-muc')?.value) || 0;
+      const lamTronCheDo = document.getElementById('ct-lamtron-chedo')?.value || 'ROUND';
+
+      return {
+        phamVi, nhomChon, loaiChon,
+        loaiCongThuc,
+        kieuPT, valPT,
+        kieuST, valST,
+        valLN, khongVon,
+        lamTronMuc, lamTronCheDo
+      };
+    }
+
+    // Tính toán giá mới cho 1 sản phẩm
+    function tinhGiaMoiTheoCongThuc(sp, params) {
+      const giaBanChuan = Number(sp.giaBan) || 0;
+      const giaVon = Number(sp.giaVon) || 0;
+      let rawGia = giaBanChuan;
+
+      if (params.loaiCongThuc === 'PHAN_TRAM_GIA_BAN') {
+        if (params.kieuPT === 'BANG_PHAN_TRAM') {
+          rawGia = giaBanChuan * (params.valPT / 100);
+        } else if (params.kieuPT === 'TANG_PHAN_TRAM') {
+          rawGia = giaBanChuan * (1 + params.valPT / 100);
+        } else if (params.kieuPT === 'GIAM_PHAN_TRAM') {
+          rawGia = giaBanChuan * Math.max(0, 1 - params.valPT / 100);
+        }
+      } else if (params.loaiCongThuc === 'SO_TIEN_TUY_CHON') {
+        if (params.kieuST === 'TANG_SO_TIEN') {
+          rawGia = giaBanChuan + params.valST;
+        } else if (params.kieuST === 'GIAM_SO_TIEN') {
+          rawGia = Math.max(0, giaBanChuan - params.valST);
+        } else if (params.kieuST === 'CO_DINH') {
+          rawGia = params.valST;
+        }
+      } else if (params.loaiCongThuc === 'LOI_NHUAN_GIA_VON') {
+        if (giaVon <= 0) {
+          if (params.khongVon === 'GIU_NGUYEN') rawGia = giaBanChuan;
+          else if (params.khongVon === 'BO_QUA') return null; // Bỏ qua sản phẩm này
+          else if (params.khongVon === 'BANG_KHONG') rawGia = 0;
+        } else {
+          // Giá mới = Giá vốn + (Giá vốn * % Lợi nhuận)
+          rawGia = giaVon * (1 + params.valLN / 100);
+        }
+      }
+
+      // Làm tròn
+      if (params.lamTronMuc > 0 && rawGia !== null) {
+        const step = params.lamTronMuc;
+        if (params.lamTronCheDo === 'CEIL') {
+          rawGia = Math.ceil(rawGia / step) * step;
+        } else if (params.lamTronCheDo === 'FLOOR') {
+          rawGia = Math.floor(rawGia / step) * step;
+        } else {
+          rawGia = Math.round(rawGia / step) * step;
+        }
+      }
+
+      return Math.max(0, Math.round(rawGia));
+    }
+
+    // Kiểm tra sản phẩm có thuộc phạm vi áp dụng không
+    function kiemTraSanPhamKhopPhamVi(sp, params) {
+      if (params.phamVi === 'TAT_CA') return true;
+      if (params.phamVi === 'THEO_NHOM') {
+        return String(sp.maNhom || '') === String(params.nhomChon || '');
+      }
+      if (params.phamVi === 'THEO_LOAI') {
+        const isIMEI = Boolean(sp.coQuanLyIMEI);
+        if (params.loaiChon === 'IMEI') return isIMEI;
+        if (params.loaiChon === 'THUONG') return !isIMEI;
+      }
+      return true;
+    }
+
+    function capNhatPreviewCongThuc() {
+      const params = layThamSoCongThuc();
+
+      // Cập nhật text mô tả công thức sinh động
+      const descPT = document.getElementById('ct-giaban-mota');
+      if (descPT) {
+        if (params.kieuPT === 'BANG_PHAN_TRAM') descPT.innerText = `Công thức: Giá mới = Giá bán chuẩn × ${params.valPT}%`;
+        else if (params.kieuPT === 'TANG_PHAN_TRAM') descPT.innerText = `Công thức: Giá mới = Giá bán chuẩn + (${params.valPT}% giá chuẩn) = Giá chuẩn × ${(1 + params.valPT/100).toFixed(2)}`;
+        else if (params.kieuPT === 'GIAM_PHAN_TRAM') descPT.innerText = `Công thức: Giá mới = Giá bán chuẩn - (${params.valPT}% giá chuẩn) = Giá chuẩn × ${Math.max(0, 1 - params.valPT/100).toFixed(2)}`;
+      }
+
+      const descST = document.getElementById('ct-sotien-mota');
+      if (descST) {
+        if (params.kieuST === 'TANG_SO_TIEN') descST.innerText = `Công thức: Giá mới = Giá bán chuẩn + ${params.valST.toLocaleString()} đ`;
+        else if (params.kieuST === 'GIAM_SO_TIEN') descST.innerText = `Công thức: Giá mới = Giá bán chuẩn - ${params.valST.toLocaleString()} đ`;
+        else if (params.kieuST === 'CO_DINH') descST.innerText = `Công thức: Đặt tất cả đồng giá = ${params.valST.toLocaleString()} đ`;
+      }
+
+      const descLN = document.getElementById('ct-giavon-mota');
+      if (descLN) {
+        descLN.innerText = `Công thức: Giá mới = Giá vốn + (Giá vốn × ${params.valLN}%) = Giá vốn × ${(1 + params.valLN/100).toFixed(2)}`;
+      }
+
+      // Lọc danh sách khớp phạm vi
+      const matchingItems = (rawHangHoa || []).filter(sp => kiemTraSanPhamKhopPhamVi(sp, params));
+
+      const countBadge = document.getElementById('congthuc-preview-count');
+      if (countBadge) {
+        countBadge.innerText = `Sẽ cập nhật: ${matchingItems.length} sản phẩm`;
+      }
+
+      const tbody = document.getElementById('congthuc-preview-body');
+      if (!tbody) return;
+
+      if (!matchingItems.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400 font-semibold">Không có sản phẩm nào thuộc phạm vi đã chọn</td></tr>';
+        return;
+      }
+
+      // Hiển thị tối đa 8 sản phẩm mẫu trong Preview
+      const sampleItems = matchingItems.slice(0, 8);
+      tbody.innerHTML = sampleItems.map(sp => {
+        const giaMoi = tinhGiaMoiTheoCongThuc(sp, params);
+        if (giaMoi === null) return '';
+        const giaChuan = Number(sp.giaBan) || 0;
+        const giaVon = Number(sp.giaVon) || 0;
+        const diff = giaMoi - giaChuan;
+
+        return `
+          <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
+            <td class="p-2 font-mono font-semibold text-blue-600 text-xs">${sp.maHang}</td>
+            <td class="p-2 font-medium text-slate-800 truncate max-w-[180px]" title="${sp.tenHang}">${sp.tenHang}</td>
+            <td class="p-2 text-right font-mono text-slate-500">${giaVon.toLocaleString()} đ</td>
+            <td class="p-2 text-right font-mono text-slate-600">${giaChuan.toLocaleString()} đ</td>
+            <td class="p-2 text-right font-mono font-bold text-indigo-700">${giaMoi.toLocaleString()} đ</td>
+            <td class="p-2 text-center font-mono font-bold text-xs ${diff >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
+              ${diff >= 0 ? '+' : ''}${diff.toLocaleString()} đ
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Áp dụng công thức vào bảng giá
+    function apDungCongThucVaoBangGia() {
+      const params = layThamSoCongThuc();
+      const matchingItems = (rawHangHoa || []).filter(sp => kiemTraSanPhamKhopPhamVi(sp, params));
+
+      if (!matchingItems.length) {
+        return showNotification("Không có sản phẩm nào khớp với phạm vi đã chọn!", true);
+      }
+
+      let countSuccess = 0;
+
+      if (congThucTargetMode === 'CURRENT') {
+        const curBang = document.getElementById('select-bang-gia')?.value || "Bảng giá bán lẻ chuẩn";
+        if (!bangGiaData.chiTietGia) bangGiaData.chiTietGia = [];
+
+        matchingItems.forEach(sp => {
+          const newPrice = tinhGiaMoiTheoCongThuc(sp, params);
+          if (newPrice !== null) {
+            if (curBang === "Bảng giá bán lẻ chuẩn") {
+              sp.giaBan = newPrice;
+            } else {
+              const exist = bangGiaData.chiTietGia.find(c => c.tenBangGia === curBang && c.maHang === sp.maHang);
+              if (exist) exist.giaBan = newPrice;
+              else bangGiaData.chiTietGia.push({ tenBangGia: curBang, maHang: sp.maHang, giaBan: newPrice });
+            }
+            countSuccess++;
+          }
+        });
+
+        dongModal('modal-congthuc-banggia');
+        hienThiGiaTheoBang();
+        showNotification(`⚡ Đã tính và cập nhật giá cho ${countSuccess} sản phẩm! Vui lòng nhấn "Lưu bảng giá" để ghi nhận vĩnh viễn.`);
+      } else if (congThucTargetMode === 'MODAL_NEW') {
+        matchingItems.forEach(sp => {
+          const newPrice = tinhGiaMoiTheoCongThuc(sp, params);
+          if (newPrice !== null) {
+            const inp = document.getElementById(`bg-price-${sp.maHang}`);
+            if (inp) {
+              inp.value = newPrice;
+              countSuccess++;
+            }
+          }
+        });
+
+        dongModal('modal-congthuc-banggia');
+        showNotification(`⚡ Đã áp dụng công thức cho ${countSuccess} sản phẩm trong Bảng giá mới!`);
+      }
+    }
+
+    // Lưu bảng giá đang xem (Lưu vĩnh viễn vào Supabase, Sheets & Cache)
+    async function luuThayDoiBangGiaHienTai() {
+      const curBang = document.getElementById('select-bang-gia')?.value || "Bảng giá bán lẻ chuẩn";
+      const btn = document.getElementById('btn-save-banggia');
+      if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang lưu...';
+
+      try {
+        if (curBang === "Bảng giá bán lẻ chuẩn") {
+          // Lưu giá bán chuẩn vào bảng hàng hóa dm_hanghoa
+          if (supabaseClient) {
+            const updates = rawHangHoa.map(h => ({
+              ma_hang: h.maHang,
+              gia_ban: h.giaBan
+            }));
+            for (const item of updates) {
+              await supabaseClient.from('dm_hanghoa').update({ gia_ban: item.gia_ban }).eq('ma_hang', item.ma_hang);
+            }
+          }
+          if (window.google && google.script && google.script.run && typeof google.script.run.apiLuuDanhSachHangHoa === 'function') {
+            google.script.run.apiLuuDanhSachHangHoa(rawHangHoa);
+          }
+        } else {
+          // Bảng giá tùy chỉnh
+          const listGia = [];
+          rawHangHoa.forEach(h => {
+            const pr = layGiaTheoBang(curBang, h.maHang, h.giaBan);
+            listGia.push({ maHang: h.maHang, giaBan: pr });
+          });
+
+          // Lưu cache
+          localStorage.setItem('ERP_BANG_GIA_DATA', JSON.stringify(bangGiaData));
+
+          // Lưu Supabase
+          if (supabaseClient) {
+            await supabaseClient.from('dm_banggia').delete().eq('ten_bang_gia', curBang);
+            const dbRows = listGia.map(item => ({
+              ten_bang_gia: curBang,
+              ma_hang: item.maHang,
+              gia_ban: item.giaBan
+            }));
+            await supabaseClient.from('dm_banggia').insert(dbRows);
+          }
+
+          // Lưu Google Sheets
+          if (window.google && google.script && google.script.run && typeof google.script.run.apiLuuBangGia === 'function') {
+            google.script.run.apiLuuBangGia({ tenBangGia: curBang, danhSachGia: listGia });
+          }
+        }
+
+        showNotification(`✅ Đã lưu thành công [${curBang}] vào hệ thống!`);
+      } catch (err) {
+        console.error("Lỗi lưu bảng giá:", err);
+        showNotification("Có lỗi khi lưu bảng giá: " + err.message, true);
+      } finally {
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1.5"></i><span>Lưu bảng giá</span>';
+      }
+    }
+
+    // Xác nhận lưu từ modal tạo bảng giá mới
+    async function xacNhanLuuBangGia() {
       const ten = document.getElementById('input-ten-banggia').value.trim();
-      if (!ten) return showNotification("Vui lòng nhập tên bảng giá!", true);
-      if (!bangGiaData.danhSachBangGia.includes(ten)) bangGiaData.danhSachBangGia.push(ten);
+      if (!ten) return showNotification("Vui lòng nhập tên bảng giá mới!", true);
+
+      if (!bangGiaData.danhSachBangGia.includes(ten)) {
+        bangGiaData.danhSachBangGia.push(ten);
+      }
+
+      const listGia = [];
       rawHangHoa.forEach(h => {
-        const val = Number(document.getElementById(`bg-price-${h.maHang}`)?.value) || h.giaBan;
+        const inp = document.getElementById(`bg-price-${h.maHang}`);
+        const val = inp ? (Number(inp.value) || h.giaBan) : h.giaBan;
+        listGia.push({ maHang: h.maHang, giaBan: val });
+
         const exist = bangGiaData.chiTietGia.find(c => c.tenBangGia === ten && c.maHang === h.maHang);
-        if (exist) exist.giaBan = val; else bangGiaData.chiTietGia.push({ tenBangGia: ten, maHang: h.maHang, giaBan: val });
+        if (exist) exist.giaBan = val;
+        else bangGiaData.chiTietGia.push({ tenBangGia: ten, maHang: h.maHang, giaBan: val });
       });
+
+      // Lưu cache
+      localStorage.setItem('ERP_BANG_GIA_DATA', JSON.stringify(bangGiaData));
+
+      // Lưu Supabase
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('dm_banggia').delete().eq('ten_bang_gia', ten);
+          const dbRows = listGia.map(item => ({
+            ten_bang_gia: ten,
+            ma_hang: item.maHang,
+            gia_ban: item.giaBan
+          }));
+          await supabaseClient.from('dm_banggia').insert(dbRows);
+        } catch (e) {
+          console.warn("Lỗi lưu Supabase:", e);
+        }
+      }
+
+      // Lưu Google Sheets
+      if (window.google && google.script && google.script.run && typeof google.script.run.apiLuuBangGia === 'function') {
+        google.script.run.apiLuuBangGia({ tenBangGia: ten, danhSachGia: listGia });
+      }
+
       dongModal('modal-banggia');
-      showNotification("Đã lưu bảng giá thành công!");
-      loadThietLapGia();
+      showNotification(`✅ Đã tạo và lưu bảng giá [${ten}] thành công!`);
+
+      // Cập nhật giao diện và chọn bảng giá vừa tạo
+      capNhatGiaoDienBangGia();
+      const sel = document.getElementById('select-bang-gia');
+      if (sel) {
+        sel.value = ten;
+        hienThiGiaTheoBang();
+      }
+    }
+
+    // Xóa bảng giá tùy chỉnh
+    async function xoaBangGiaHienTai() {
+      const curBang = document.getElementById('select-bang-gia')?.value || "Bảng giá bán lẻ chuẩn";
+      if (!curBang || curBang === "Bảng giá bán lẻ chuẩn") {
+        return showNotification("Không thể xóa Bảng giá bán lẻ chuẩn mặc định của hệ thống!", true);
+      }
+
+      if (!confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn bảng giá "${curBang}" không?`)) {
+        return;
+      }
+
+      // Xóa trong bộ nhớ
+      bangGiaData.danhSachBangGia = bangGiaData.danhSachBangGia.filter(b => b !== curBang);
+      bangGiaData.chiTietGia = bangGiaData.chiTietGia.filter(c => c.tenBangGia !== curBang);
+      localStorage.setItem('ERP_BANG_GIA_DATA', JSON.stringify(bangGiaData));
+
+      // Xóa trong Supabase
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('dm_banggia').delete().eq('ten_bang_gia', curBang);
+        } catch(e) {}
+      }
+
+      // Xóa trong Google Sheets
+      if (window.google && google.script && google.script.run && typeof google.script.run.apiXoaBangGia === 'function') {
+        google.script.run.apiXoaBangGia(curBang);
+      }
+
+      showNotification(`🗑️ Đã xóa bảng giá "${curBang}" thành công!`);
+      capNhatGiaoDienBangGia();
     }
 
     function xuatExcelBangGia() {
-      const ten = document.getElementById('select-bang-gia').value;
-      const rows = rawHangHoa.map(h => ({ "Mã hàng": h.maHang, "Tên hàng": h.tenHang, "Giá bảng này": h.giaBan }));
+      const curBang = document.getElementById('select-bang-gia')?.value || "Bảng giá bán lẻ chuẩn";
+      const rows = rawHangHoa.map(h => {
+        const giaVon = Number(h.giaVon) || 0;
+        const giaChuan = Number(h.giaBan) || 0;
+        const giaBangNay = layGiaTheoBang(curBang, h.maHang, giaChuan);
+        const diff = giaBangNay - giaChuan;
+        const tenNhom = typeof layTenDayDuNhomHang === 'function' ? layTenDayDuNhomHang(h.maNhom) : (h.maNhom || '');
+
+        return {
+          "Mã hàng": h.maHang,
+          "Tên hàng hóa": h.tenHang,
+          "Nhóm hàng": tenNhom,
+          "Quản lý IMEI": h.coQuanLyIMEI ? "Có" : "Không",
+          "Giá vốn": giaVon,
+          "Giá bán chuẩn": giaChuan,
+          "Giá bảng này": giaBangNay,
+          "Chênh lệch": diff
+        };
+      });
+
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "BangGia");
-      XLSX.writeFile(wb, `Bang_Gia_${ten}.xlsx`);
+      const cleanName = curBang.replace(/[\/\\?%*:|"<>]/g, '_');
+      XLSX.writeFile(wb, `Bang_Gia_${cleanName}.xlsx`);
     }
 
     function xuLyImportExcelBangGia(e) {
       const f = e.target.files?.[0];
       if (!f) return;
-      showNotification("Đã nạp dữ liệu cập nhật giá từ Excel!");
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(firstSheet);
+
+          if (!json || !json.length) {
+            return showNotification("File Excel không có dữ liệu!", true);
+          }
+
+          const curBang = document.getElementById('select-bang-gia')?.value || "Bảng giá bán lẻ chuẩn";
+          let countImported = 0;
+
+          json.forEach(row => {
+            const ma = String(row["Mã hàng"] || row["Mã Hàng"] || row["maHang"] || "").trim();
+            const giaMoi = Number(row["Giá bảng này"] || row["Giá Bảng Này"] || row["giaBan"] || row["Giá bán"] || row["Giá mới"]);
+
+            if (ma && !isNaN(giaMoi) && giaMoi >= 0) {
+              const sp = rawHangHoa.find(h => String(h.maHang).toUpperCase() === ma.toUpperCase());
+              if (sp) {
+                if (curBang === "Bảng giá bán lẻ chuẩn") {
+                  sp.giaBan = giaMoi;
+                } else {
+                  if (!bangGiaData.chiTietGia) bangGiaData.chiTietGia = [];
+                  const exist = bangGiaData.chiTietGia.find(c => c.tenBangGia === curBang && c.maHang === sp.maHang);
+                  if (exist) exist.giaBan = giaMoi;
+                  else bangGiaData.chiTietGia.push({ tenBangGia: curBang, maHang: sp.maHang, giaBan: giaMoi });
+                }
+                countImported++;
+              }
+            }
+          });
+
+          hienThiGiaTheoBang();
+          showNotification(`✅ Đã nhập thành công giá cho ${countImported} sản phẩm từ Excel! Vui lòng nhấn "Lưu bảng giá".`);
+        } catch (err) {
+          console.error("Lỗi đọc Excel:", err);
+          showNotification("Lỗi khi đọc file Excel: " + err.message, true);
+        }
+      };
+      reader.readAsArrayBuffer(f);
       e.target.value = "";
     }
 
@@ -13182,6 +14197,7 @@ let danhSachTamXuatExcel = [];
       const targetCN = cnFilter === 'CURRENT' ? layMaChiNhanh(currentChiNhanh) : cnFilter;
 
       const filtered = rawDonHangList.filter(d => {
+        if (String(d.maDonHang || '').startsWith('PNH') || String(d.maDonHang || '').startsWith('DDH')) return false;
         if (targetCN !== 'ALL') {
           if (!laCungChiNhanh(d.chiNhanh, targetCN)) return false;
         }
