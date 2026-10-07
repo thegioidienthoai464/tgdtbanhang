@@ -5251,7 +5251,7 @@ function formatVND(amount) {
       const inpKH = document.getElementById('pos-kh-search');
       if (inpKH) inpKH.value = '';
       const inpMaKH = document.getElementById('pos-makh');
-      if (inpMaKH) inpMaKH.value = 'KL';
+      if (inpMaKH) inpMaKH.value = 'KHACHLE';
       const dropKH = document.getElementById('pos-kh-dropdown');
       if (dropKH) { dropKH.classList.add('hidden'); dropKH.innerHTML = ''; }
       const inpHidden = document.getElementById('pos-makh-hidden');
@@ -5312,7 +5312,7 @@ function formatVND(amount) {
 
     async function xacNhanThanhToanPOS() {
       if (!posCart || !posCart.length) return showNotification("Giỏ hàng đang trống! Vui lòng chọn sản phẩm.", true);
-      const maKH = document.getElementById('pos-makh')?.value || 'KL';
+      const maKH = document.getElementById('pos-makh')?.value || 'KHACHLE';
       
       const total = posCart.reduce((a, b) => a + (b.soLuong * b.donGia), 0);
       const discount = Number(document.getElementById('pos-giamgia')?.value) || 0;
@@ -5432,7 +5432,7 @@ function formatVND(amount) {
             await supabaseClient.from('don_hang').upsert([{
               ma_don_hang: String(orderPayload.maDonHang).slice(0, 50),
               ngay_ban: ngayBanISO,
-              ma_kh: String(orderPayload.maKH || 'KL').slice(0, 50),
+              ma_kh: String(orderPayload.maKH || 'KHACHLE').slice(0, 50),
               ten_kh: String(orderPayload.tenKH || 'Khách lẻ').slice(0, 255),
               so_dien_thoai: String(orderPayload.soDienThoai || '').slice(0, 50),
               chi_nhanh: String(orderPayload.chiNhanh || '').slice(0, 100),
@@ -13182,7 +13182,7 @@ function formatVND(amount) {
                 .map(d => ({
                   maDonHang: d.ma_don_hang,
                   ngayBan: (d.ngay_ban || '').replace('T', ' ').slice(0, 19),
-                  maKH: d.ma_kh || 'KL',
+                  maKH: d.ma_kh || 'KHACHLE',
                   tenKH: d.ten_kh || 'Khách lẻ',
                   soDienThoai: d.so_dien_thoai || '',
                   chiNhanh: d.chi_nhanh || 'CN01: Trụ sở chính',
@@ -16382,7 +16382,7 @@ let danhSachTamXuatExcel = [];
                 .map(d => ({
                   maDonHang: d.ma_don_hang,
                   ngayBan: (d.ngay_ban || '').replace('T', ' ').slice(0, 19),
-                  maKH: d.ma_kh || 'KL',
+                  maKH: d.ma_kh || 'KHACHLE',
                   tenKH: d.ten_kh || 'Khách lẻ',
                   soDienThoai: d.so_dien_thoai || '',
                   chiNhanh: d.chi_nhanh || 'CN01: Trụ sở chính',
@@ -16904,7 +16904,7 @@ function loadSoQuy(filter) {
             <td class="p-3 align-top">
               <div class="font-bold text-slate-800 text-xs">${escapeHtml(d.tenKH || 'Khách lẻ')}</div>
               ${d.soDienThoai ? `<div class="inline-flex items-center mt-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-mono font-semibold border border-emerald-200"><i class="fa-solid fa-phone text-[9px] mr-1"></i>${escapeHtml(d.soDienThoai)}</div>` : '<div class="text-[10px] text-slate-400 italic mt-0.5">Chưa có SĐT</div>'}
-              <div class="text-[10px] text-slate-400 font-mono mt-0.5">Mã KH: ${escapeHtml(d.maKH || 'KL')}</div>
+              <div class="text-[10px] text-slate-400 font-mono mt-0.5">Mã KH: ${escapeHtml(d.maKH || 'KHACHLE')}</div>
             </td>
             <td class="p-3 align-top">
               <div class="space-y-1 max-w-md">
@@ -18485,7 +18485,7 @@ function loadSoQuy(filter) {
         if (!window.dangSuaDonDatMaDon) {
           dathangCart = [];
           document.getElementById('dathang-kh-search').value = '';
-          document.getElementById('dathang-makh').value = 'KL';
+          document.getElementById('dathang-makh').value = 'KHACHLE';
           document.getElementById('dathang-sdt').value = '';
           document.getElementById('dathang-tiencoc').value = '0';
           document.getElementById('dathang-ghichu').value = '';
@@ -18652,10 +18652,10 @@ function loadSoQuy(filter) {
       let sdt = document.getElementById('dathang-sdt')?.value.trim();
       if (!tenKH) return showNotification("Vui lòng nhập tên khách hàng đặt!", true);
 
-      let maKH = document.getElementById('dathang-makh')?.value || 'KL';
+      let maKH = document.getElementById('dathang-makh')?.value || 'KHACHLE';
 
-      // Tự động tìm kiếm mã khách hàng thật trong rawKHList nếu maKH đang là 'KL'
-      if ((!maKH || maKH === 'KL') && tenKH) {
+      // Tự động tìm kiếm mã khách hàng thật trong rawKHList nếu maKH đang là 'KL' hoặc 'KHACHLE'
+      if ((!maKH || maKH === 'KL' || maKH === 'KHACHLE') && tenKH) {
         const normTen = tenKH.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
         const found = (rawKHList || []).find(k => {
           let t = (k.tenDoiTac || k.tenKH || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -18720,7 +18720,7 @@ function loadSoQuy(filter) {
           }
         } else if (tenKH && tenKH !== 'Khách lẻ') {
           const newKH = {
-            maDoiTac: (maKH && maKH !== 'KL') ? maKH : ("KH" + (sdt ? sdt.slice(-6) : Date.now().toString().slice(-4))),
+            maDoiTac: (maKH && maKH !== 'KL' && maKH !== 'KHACHLE') ? maKH : ("KH" + (sdt ? sdt.slice(-6) : Date.now().toString().slice(-4))),
             tenDoiTac: tenKH,
             soDienThoai: sdt,
             diaChi: '',
@@ -18794,7 +18794,7 @@ function loadSoQuy(filter) {
         supabaseClient.from('don_hang').upsert([{
           ma_don_hang: payload.maDonDat,
           ngay_ban: payload.ngayDat || new Date().toISOString(),
-          ma_kh: payload.maKH || 'KL',
+          ma_kh: payload.maKH || 'KHACHLE',
           ten_kh: payload.tenKH || 'Khách lẻ',
           so_dien_thoai: payload.soDienThoai || '',
           chi_nhanh: payload.chiNhanh || 'CN01: Trụ sở chính',
@@ -18845,7 +18845,7 @@ function loadSoQuy(filter) {
                 maDonDat: d.ma_don_hang,
                 maDon: d.ma_don_hang,
                 ngayDat: (d.ngay_ban || '').replace('T', ' ').slice(0, 19),
-                maKH: d.ma_kh || 'KL',
+                maKH: d.ma_kh || 'KHACHLE',
                 tenKH: d.ten_kh || 'Khách lẻ',
                 soDienThoai: d.so_dien_thoai || '',
                 sdt: d.so_dien_thoai || '',
@@ -19049,7 +19049,7 @@ function loadSoQuy(filter) {
 
       // Điền thông tin cũ vào form
       document.getElementById('dathang-kh-search').value = d.tenKH || '';
-      document.getElementById('dathang-makh').value = d.maKH || 'KL';
+      document.getElementById('dathang-makh').value = d.maKH || 'KHACHLE';
       document.getElementById('dathang-sdt').value = d.soDienThoai || d.sdt || '';
       document.getElementById('dathang-tiencoc').value = d.tienCoc || 0;
       document.getElementById('dathang-ghichu').value = d.ghiChu || '';
@@ -19153,8 +19153,8 @@ function loadSoQuy(filter) {
       const posKhSearch = document.getElementById('pos-kh-search');
       const posMaKH = document.getElementById('pos-makh');
       const sdtStr = d.soDienThoai || d.sdt || '';
-      if (posKhSearch) posKhSearch.value = d.tenKH + (sdtStr ? ' - ' + sdtStr : '') + ' (' + (d.maKH || 'KL') + ')';
-      if (posMaKH) posMaKH.value = d.maKH || 'KL';
+      if (posKhSearch) posKhSearch.value = d.tenKH + (sdtStr ? ' - ' + sdtStr : '') + ' (' + (d.maKH || 'KHACHLE') + ')';
+      if (posMaKH) posMaKH.value = d.maKH || 'KHACHLE';
       
       // Yêu cầu: Không trừ tiền cọc vào ô giảm giá!
       const giamGiaEl = document.getElementById('pos-giamgia');
