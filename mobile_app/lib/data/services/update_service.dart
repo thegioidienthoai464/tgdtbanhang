@@ -33,8 +33,9 @@ class UpdateInfo {
 
 class UpdateService {
   // Phiên bản hiện tại của App
-  static const String currentVersion = '1.1.0';
-  static const int currentBuildNumber = 11;
+  static const String currentVersion = '1.1.1';
+  static const int currentBuildNumber = 12;
+
 
   // Cờ ghi nhớ người dùng đã từ chối cập nhật trong phiên hiện tại (tránh pop-up lặp lại liên tục)
   static bool _dismissedInThisSession = false;
