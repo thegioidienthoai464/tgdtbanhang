@@ -30,6 +30,7 @@ class OrderRepository {
         .from('don_hang')
         .select('*')
         .like('ma_don_hang', 'PNH%')
+        .not('ma_don_hang', 'like', 'PNH_TON%')
         .order('ngay_ban', ascending: false);
 
     return (response as List)
