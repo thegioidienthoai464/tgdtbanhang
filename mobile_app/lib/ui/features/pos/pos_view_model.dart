@@ -157,6 +157,33 @@ class PosViewModel extends ChangeNotifier {
     }
   }
 
+  void updateCartItem(String maHang, {int? quantity, double? price, String? imeiStr}) {
+    final idx = _cart.indexWhere((item) => item.maHang == maHang);
+    if (idx >= 0) {
+      final current = _cart[idx];
+      final newQty = quantity ?? current.soLuong;
+      final newPrice = price ?? current.donGia;
+      final newImei = imeiStr ?? current.imeiStr;
+      if (newQty <= 0) {
+        _cart.removeAt(idx);
+      } else {
+        _cart[idx] = OrderItemModel(
+          maHang: current.maHang,
+          tenHang: current.tenHang,
+          soLuong: newQty,
+          donGia: newPrice,
+          imeiStr: newImei,
+        );
+      }
+      notifyListeners();
+    }
+  }
+
+  void removeFromCart(String maHang) {
+    _cart.removeWhere((item) => item.maHang == maHang);
+    notifyListeners();
+  }
+
   void setCustomer(PartnerModel? customer) {
     if (customer == null) {
       final khachLe = _customers.firstWhere(
