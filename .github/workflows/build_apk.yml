@@ -1,12 +1,15 @@
-name: Tự động đóng gói App Android APK
+name: Tự động đóng gói App Android (APK) & iOS (IPA)
 
 on:
   push:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  build:
+  build-android:
     name: Build Android Release APK
     runs-on: ubuntu-latest
 
@@ -32,14 +35,9 @@ jobs:
           if [ -d "mobile_app" ] && [ -f "mobile_app/pubspec.yaml" ]; then
             cd mobile_app
           fi
-          # Tự động sửa lỗi cú pháp Dart
           find lib -type f -name "*.dart" -exec sed -i 's/Border\.Border\.all/Border.all/g' {} + 2>/dev/null || true
-          
-          # Xóa thư mục android cũ chưa đủ cấu hình để Flutter tự sinh mới 100% chuẩn
           rm -rf android
           flutter create --org com.thegioidienthoai --project-name smart_erp_mobile --platforms=android .
-          
-          # Cấu hình minSdkVersion 21 cho thư viện camera quét mã vạch
           if [ -f "android/app/build.gradle" ]; then
             sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle 2>/dev/null || true
             sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/g' android/app/build.gradle 2>/dev/null || true
@@ -47,12 +45,9 @@ jobs:
           if [ -f "android/app/build.gradle.kts" ]; then
             sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 21/g' android/app/build.gradle.kts 2>/dev/null || true
           fi
-          
-          # Cấp quyền Camera, Bluetooth và Internet vào AndroidManifest
           if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
             sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.BLUETOOTH"/>\n    <application|' android/app/src/main/AndroidManifest.xml 2>/dev/null || true
           fi
-          
           flutter pub get
 
       - name: Biên dịch file APK Release
@@ -67,3 +62,70 @@ jobs:
         with:
           name: SmartERP-Android-App
           path: '**/build/app/outputs/flutter-apk/app-release.apk'
+
+  build-ios:
+    name: Build iOS Release IPA
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Cài đặt Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Chuẩn hóa mã nguồn và Khởi tạo iOS Scaffolding
+        run: |
+          if [ -d "mobile_app" ] && [ -f "mobile_app/pubspec.yaml" ]; then
+            cd mobile_app
+          fi
+          find lib -type f -name "*.dart" -exec sed -i '' 's/Border\.Border\.all/Border.all/g' {} + 2>/dev/null || true
+          rm -rf ios
+          flutter create --org com.thegioidienthoai --project-name tt_pos --platforms=ios .
+          if [ -f "ios/Podfile" ]; then
+            sed -i '' "s/# platform :ios, '12.0'/platform :ios, '13.0'/g" ios/Podfile 2>/dev/null || true
+            sed -i '' "s/platform :ios, '12.0'/platform :ios, '13.0'/g" ios/Podfile 2>/dev/null || true
+          fi
+          PLIST_PATH="ios/Runner/Info.plist"
+          if [ -f "$PLIST_PATH" ]; then
+            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName 'T&T POS'" "$PLIST_PATH" 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string 'T&T POS'" "$PLIST_PATH"
+            /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'Ứng dụng cần quyền Camera để quét mã vạch Barcode, QR và số IMEI sản phẩm khi bán hàng hoặc nhập kho.'" "$PLIST_PATH" 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Add :NSBluetoothAlwaysUsageDescription string 'Ứng dụng cần quyền Bluetooth để kết nối máy in nhiệt hóa đơn cầm tay.'" "$PLIST_PATH" 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Add :NSBluetoothPeripheralUsageDescription string 'Ứng dụng cần quyền Bluetooth để kết nối máy in nhiệt hóa đơn cầm tay.'" "$PLIST_PATH" 2>/dev/null || true
+          fi
+          if [ -f "assets/images/logo.png" ]; then
+            ICON_DIR="ios/Runner/Assets.xcassets/AppIcon.appiconset"
+            if [ -d "$ICON_DIR" ]; then
+              cp assets/images/logo.png "$ICON_DIR/Icon-App-1024x1024@1x.png" 2>/dev/null || true
+            fi
+          fi
+          flutter pub get
+
+      - name: Biên dịch iOS Release (No Code Signing)
+        run: |
+          if [ -d "mobile_app" ] && [ -f "mobile_app/pubspec.yaml" ]; then
+            cd mobile_app
+          fi
+          flutter build ios --release --no-codesign
+
+      - name: Đóng gói thành file IPA (Payload)
+        run: |
+          if [ -d "mobile_app" ] && [ -f "mobile_app/pubspec.yaml" ]; then
+            cd mobile_app
+          fi
+          mkdir -p build/ios/iphoneos/Payload
+          cp -r build/ios/iphoneos/Runner.app build/ios/iphoneos/Payload/
+          cd build/ios/iphoneos
+          zip -r -y TT_POS.ipa Payload
+          echo "Đóng gói file IPA thành công:"
+          ls -lh TT_POS.ipa
+
+      - name: Tải file IPA lên Artifacts để tải về
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartERP-iOS-IPA
+          path: '**/build/ios/iphoneos/TT_POS.ipa'
