@@ -492,59 +492,233 @@ class _PosViewState extends State<PosView> {
     );
   }
 
-  // Dialog Tạo nhanh khách hàng
+  // Dialog / Modal Tạo khách hàng mới đầy đủ thông tin
   void _showQuickAddCustomerDialog(BuildContext context, PosViewModel vm, StateSetter parentSetState) {
+    final now = DateTime.now();
+    final defaultCode = "KH${now.millisecondsSinceEpoch.toString().substring(7)}";
+
+    final codeCtrl = TextEditingController(text: defaultCode);
     final nameCtrl = TextEditingController();
     final phoneCtrl = TextEditingController();
+    final addressCtrl = TextEditingController();
+    final debtCtrl = TextEditingController(text: '0');
+    final noteCtrl = TextEditingController();
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (dCtx) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Thêm khách hàng nhanh', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                autofocus: true,
-                decoration: const InputDecoration(labelText: 'Tên khách hàng (*)', hintText: 'VD: Anh Tuấn'),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: phoneCtrl,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(labelText: 'Số điện thoại', hintText: '09xxxxxxxx'),
-              ),
-            ],
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dCtx),
-              child: const Text('Hủy'),
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(dCtx).viewInsets.bottom + 20,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryBlue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.person_add_rounded, color: AppTheme.primaryBlue, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Thêm khách hàng mới', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                          Text('Điền đầy đủ thông tin để quản lý công nợ & lịch sử mua hàng', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20, color: AppTheme.textMuted),
+                      onPressed: () => Navigator.pop(dCtx),
+                    ),
+                  ],
+                ),
+                const Divider(height: 24),
+
+                // 1. Mã khách hàng & Tên khách hàng
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 4,
+                      child: TextField(
+                        controller: codeCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Mã khách hàng',
+                          hintText: 'VD: KH0123',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 6,
+                      child: TextField(
+                        controller: nameCtrl,
+                        autofocus: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Tên khách hàng (*)',
+                          hintText: 'VD: Nguyễn Văn A',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // 2. Số điện thoại
+                TextField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Số điện thoại',
+                    hintText: 'VD: 0988888888',
+                    prefixIcon: Icon(Icons.phone_outlined, size: 20),
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // 3. Địa chỉ
+                TextField(
+                  controller: addressCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Địa chỉ',
+                    hintText: 'VD: Thanh Miện, Hải Dương',
+                    prefixIcon: Icon(Icons.location_on_outlined, size: 20),
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // 4. Công nợ ban đầu
+                TextField(
+                  controller: debtCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Công nợ ban đầu (VNĐ)',
+                    hintText: '0',
+                    prefixIcon: Icon(Icons.account_balance_wallet_outlined, size: 20),
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // 5. Ghi chú
+                TextField(
+                  controller: noteCtrl,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Ghi chú',
+                    hintText: 'Ghi chú thêm về khách hàng...',
+                    prefixIcon: Icon(Icons.note_alt_outlined, size: 20),
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: () => Navigator.pop(dCtx),
+                        child: const Text('Hủy'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryBlue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        icon: const Icon(Icons.check_rounded, size: 20),
+                        label: const Text('LƯU KHÁCH HÀNG', style: TextStyle(fontWeight: FontWeight.bold)),
+                        onPressed: () async {
+                          final name = nameCtrl.text.trim();
+                          if (name.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Vui lòng nhập tên khách hàng (*)')),
+                            );
+                            return;
+                          }
+
+                          final code = codeCtrl.text.trim().isNotEmpty ? codeCtrl.text.trim() : defaultCode;
+                          final debt = double.tryParse(debtCtrl.text.replaceAll('.', '').replaceAll(',', '')) ?? 0.0;
+
+                          Navigator.pop(dCtx);
+                          final created = await vm.createFullCustomer(
+                            maKH: code,
+                            tenKH: name,
+                            soDienThoai: phoneCtrl.text.trim(),
+                            diaChi: addressCtrl.text.trim(),
+                            congNo: debt,
+                            ghiChu: noteCtrl.text.trim(),
+                          );
+
+                          if (created != null) {
+                            parentSetState(() {});
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Đã tạo khách hàng thành công: ${created.tenDoiTac} (${created.maDoiTac})'),
+                                backgroundColor: AppTheme.successGreen,
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Lỗi tạo khách hàng, vui lòng thử lại!'),
+                                backgroundColor: AppTheme.dangerRed,
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = nameCtrl.text.trim();
-                if (name.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Vui lòng nhập tên khách hàng')),
-                  );
-                  return;
-                }
-                Navigator.pop(dCtx);
-                final created = await vm.createQuickCustomer(name, phoneCtrl.text.trim());
-                if (created != null) {
-                  parentSetState(() {});
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Đã thêm khách hàng: ${created.tenDoiTac}')),
-                  );
-                }
-              },
-              child: const Text('Lưu'),
-            ),
-          ],
+          ),
         );
       },
     );
