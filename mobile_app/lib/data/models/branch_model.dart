@@ -23,7 +23,10 @@ class BranchModel {
     };
   }
 
+  bool get isAll => maCN.toUpperCase() == 'ALL';
+
   static final List<BranchModel> defaultBranches = [
+    BranchModel(maCN: 'ALL', tenCN: 'Toàn hệ thống (Tất cả chi nhánh)'),
     BranchModel(maCN: 'CN01', tenCN: 'Trụ sở chính Thanh Miện'),
     BranchModel(maCN: 'CN02', tenCN: 'Chi nhánh Thanh Giang'),
     BranchModel(maCN: 'CN03', tenCN: 'Chi nhánh Bình Giang'),
