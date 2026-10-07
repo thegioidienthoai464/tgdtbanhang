@@ -1995,12 +1995,36 @@
           </div>
         </div>
 
+        <!-- HÀNG 2.5: THANH THAO TÁC HÀNG LOẠT SỔ QUỸ KHI CHỌN CHECKBOX -->
+        <div id="bar-thao-tac-soquy" class="hidden bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 shadow-2xs">
+          <div class="flex items-center space-x-2 text-xs text-blue-900 font-medium">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-600 text-white shadow-2xs">
+              Đã chọn: <span id="soquy-count-selected" class="ml-1">0</span>
+            </span>
+            <span class="text-slate-600 font-semibold">phiếu thu / chi</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button type="button" id="btn-sua-soquy-dachon" onclick="suaPhieuSoQuyDaChon()" class="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold shadow-2xs flex items-center space-x-1 transition" title="Chỉnh sửa phiếu đang chọn">
+              <i class="fa-solid fa-pen-to-square"></i><span>Sửa phiếu</span>
+            </button>
+            <button type="button" id="btn-xoa-soquy-dachon" onclick="xoaCacPhieuSoQuyDaChon()" class="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold shadow-2xs flex items-center space-x-1 transition" title="Xóa các phiếu đã chọn">
+              <i class="fa-solid fa-trash-can"></i><span id="btn-xoa-soquy-text">Xóa các phiếu đã chọn</span>
+            </button>
+            <button type="button" onclick="boChonTatCaSoQuy()" class="px-2 py-1.5 bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded-lg text-xs font-semibold shadow-2xs transition">
+              <i class="fa-solid fa-xmark mr-1"></i>Bỏ chọn
+            </button>
+          </div>
+        </div>
+
         <!-- HÀNG 3: BẢNG DANH SÁCH GIAO DỊCH TỐI ĐA HÓA KHÔNG GIAN MÀN HÌNH -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden flex flex-col flex-1">
           <div class="overflow-x-auto overflow-y-auto max-h-[calc(100vh-210px)] min-h-[460px]">
             <table class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-100/95 text-slate-600 uppercase text-[10px] font-bold sticky top-0 z-10 border-b border-slate-200 backdrop-blur-xs">
                 <tr>
+                  <th class="p-2.5 w-10 text-center">
+                    <input type="checkbox" id="chk-all-soquy" onchange="toggleSelectAllSoQuy(this.checked)" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" title="Chọn / Bỏ chọn tất cả">
+                  </th>
                   <th class="p-2.5 w-32">Chi nhánh</th>
                   <th class="p-2.5 w-24">Mã Phiếu</th>
                   <th class="p-2.5 w-32">Ngày GD</th>
@@ -2010,7 +2034,7 @@
                   <th class="p-2.5 w-44">Đối Tượng / Mã</th>
                   <th class="p-2.5">Lý Do Thu / Chi</th>
                   <th class="p-2.5 w-28 text-center">Trạng Thái</th>
-                  <th class="p-2.5 w-16 text-center">Thao Tác</th>
+                  <th class="p-2.5 w-24 text-center">Thao Tác</th>
                 </tr>
               </thead>
               <tbody id="tbl-soquy-body" class="divide-y divide-slate-100 font-medium"></tbody>
@@ -13401,6 +13425,148 @@ function formatVND(amount) {
       }).apiGetChiTietSoQuy(quyLoc);
     }
 
+    var selectedSoQuySet = new Set();
+    var dangSuaPhieuSoQuyMa = null;
+
+    const HANG_MUC_THU_MAU = [
+      "Thu tiền bán hàng",
+      "Thu công nợ khách hàng",
+      "Thu hoàn tiền nhà cung cấp",
+      "Thu hoàn tiền tạm ứng",
+      "Thu vay / mượn",
+      "Thu lãi tiền gửi",
+      "Thu chi tổng hợp khác"
+    ];
+
+    const HANG_MUC_CHI_MAU = [
+      "Chi nhập hàng",
+      "Chi trả nợ nhà cung cấp",
+      "Chi trả lương nhân viên",
+      "Chi tiền thuê mặt bằng",
+      "Chi tiền điện / nước / mạng",
+      "Chi tiếp khách / sinh hoạt",
+      "Chi vận chuyển / giao hàng",
+      "Chi quảng cáo / marketing",
+      "Chi sửa chữa / bảo trì",
+      "Chi tổng hợp khác"
+    ];
+
+    function napGoiYHangMucSoQuy(isThu, currentVal = '') {
+      const sel = document.getElementById('sq-input-hangmuc-select');
+      if (!sel) return;
+      const list = isThu ? HANG_MUC_THU_MAU : HANG_MUC_CHI_MAU;
+      let html = '<option value="">-- Chọn hạng mục mẫu --</option>';
+      list.forEach(h => {
+        const isSel = (currentVal && currentVal === h) ? 'selected' : '';
+        html += `<option value="${h}" ${isSel}>${h}</option>`;
+      });
+      sel.innerHTML = html;
+    }
+
+    function thayDoiHangMucSoQuy(val) {
+      const custom = document.getElementById('sq-input-hangmuc-custom');
+      if (custom && val) custom.value = val;
+    }
+
+    function thayDoiLoaiQuySoQuy(val) {
+      const box = document.getElementById('box-sq-nganhang');
+      const selBank = document.getElementById('sq-input-nganhang');
+      if (val === 'TAI_KHOAN') {
+        if (box) box.classList.remove('hidden');
+        if (selBank) {
+          const targetCN = currentChiNhanh || 'CN01';
+          let banks = (rawNganHangList || []).filter(item => typeof isBankAllowedForBranch === 'function' ? isBankAllowedForBranch(item, targetCN) : true);
+          if (!banks.length && Array.isArray(rawNganHangList) && rawNganHangList.length) banks = rawNganHangList;
+          if (banks.length) {
+            selBank.innerHTML = banks.map(b => {
+              const name = b.tenNH || b.tenNganHang || 'Ngân hàng';
+              const stk = b.soTK || b.soTaiKhoan || '';
+              const chu = b.chuTK || b.chuTaiKhoan || '';
+              return `<option value="${name} - ${stk}">${name} - ${stk} (${chu})</option>`;
+            }).join('');
+          }
+        }
+      } else {
+        if (box) box.classList.add('hidden');
+      }
+    }
+
+    function thayDoiNhomDoiTuongSoQuy(val) {
+      const txt = document.getElementById('sq-input-madoituong');
+      if (!txt) return;
+      if (val === 'Khách hàng') txt.placeholder = 'KH001 hoặc tên KH...';
+      else if (val === 'Nhà cung cấp') txt.placeholder = 'NCC001 hoặc tên NCC...';
+      else if (val === 'Nhân viên') txt.placeholder = 'NV001 hoặc tên NV...';
+      else txt.placeholder = 'Tên hoặc mã đối tác...';
+    }
+
+    function toggleSelectSoQuy(maPhieu, isChecked) {
+      if (isChecked) {
+        selectedSoQuySet.add(maPhieu);
+      } else {
+        selectedSoQuySet.delete(maPhieu);
+      }
+      capNhatGiaoDienChonSoQuy();
+    }
+
+    function toggleSelectAllSoQuy(isChecked) {
+      const checkboxes = document.querySelectorAll('.chk-item-soquy');
+      checkboxes.forEach(cb => {
+        cb.checked = isChecked;
+        if (isChecked) {
+          selectedSoQuySet.add(cb.value);
+        } else {
+          selectedSoQuySet.delete(cb.value);
+        }
+      });
+      capNhatGiaoDienChonSoQuy();
+    }
+
+    function boChonTatCaSoQuy() {
+      selectedSoQuySet.clear();
+      const chkAll = document.getElementById('chk-all-soquy');
+      if (chkAll) chkAll.checked = false;
+      const checkboxes = document.querySelectorAll('.chk-item-soquy');
+      checkboxes.forEach(cb => cb.checked = false);
+      capNhatGiaoDienChonSoQuy();
+    }
+
+    function capNhatGiaoDienChonSoQuy() {
+      const bar = document.getElementById('bar-thao-tac-soquy');
+      const countEl = document.getElementById('soquy-count-selected');
+      const btnSua = document.getElementById('btn-sua-soquy-dachon');
+      const btnXoaTxt = document.getElementById('btn-xoa-soquy-text');
+      const chkAll = document.getElementById('chk-all-soquy');
+      const count = selectedSoQuySet.size;
+
+      if (countEl) countEl.innerText = count;
+
+      if (bar) {
+        if (count > 0) {
+          bar.classList.remove('hidden');
+        } else {
+          bar.classList.add('hidden');
+        }
+      }
+
+      if (btnSua) {
+        btnSua.style.display = count === 1 ? 'inline-flex' : 'none';
+      }
+
+      if (btnXoaTxt) {
+        btnXoaTxt.innerText = count > 1 ? `Xóa (${count}) phiếu đã chọn` : 'Xóa phiếu đã chọn';
+      }
+
+      const checkboxes = document.querySelectorAll('.chk-item-soquy');
+      if (chkAll) {
+        if (checkboxes.length > 0) {
+          chkAll.checked = Array.from(checkboxes).every(cb => cb.checked);
+        } else {
+          chkAll.checked = false;
+        }
+      }
+    }
+
     function locDuLieuSoQuy() {
       if (!window.rawSoQuyData || !window.rawSoQuyData.danhSach) {
         if (typeof loadDuLieuSoQuy === 'function') loadDuLieuSoQuy();
@@ -13432,16 +13598,21 @@ function formatVND(amount) {
       if (!tbody) return;
       
       if (!list.length) { 
-        tbody.innerHTML = '<tr><td colspan="10" class="p-8 text-center text-slate-400 text-xs">Không có phiếu thu chi phù hợp</td></tr>'; 
+        tbody.innerHTML = '<tr><td colspan="11" class="p-8 text-center text-slate-400 text-xs">Không có phiếu thu chi phù hợp</td></tr>'; 
+        capNhatGiaoDienChonSoQuy();
         return; 
       }
       
       tbody.innerHTML = list.map(p => {
         let tienVal = Number(p.soTien || 0);
         let isThu = String(p.loaiPhieu || "").trim().toUpperCase() === 'THU';
+        let isChecked = selectedSoQuySet.has(p.maPhieu);
         
         return `
-          <tr class="hover:bg-amber-50/30 transition border-b border-slate-100 text-xs">
+          <tr class="hover:bg-amber-50/30 transition border-b border-slate-100 text-xs ${isChecked ? 'bg-blue-50/40' : ''}">
+            <td class="p-2.5 text-center whitespace-nowrap">
+              <input type="checkbox" class="chk-item-soquy w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" value="${p.maPhieu}" onchange="toggleSelectSoQuy('${p.maPhieu}', this.checked)" ${isChecked ? 'checked' : ''}>
+            </td>
             <td class="px-2.5 py-2 text-slate-600 font-medium whitespace-nowrap">
               <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] bg-slate-100 text-slate-700 font-semibold border border-slate-200">
                 <i class="fa-solid fa-store mr-1 text-[8px] text-blue-600"></i>${p.chiNhanh || ''}
@@ -13465,14 +13636,24 @@ function formatVND(amount) {
                 ${p.trangThai === 'DaThanhToan' ? 'Đã thanh toán' : (p.trangThai || 'Hoàn thành')}
               </span>
             </td>
-            <td class="px-2.5 py-2 text-center whitespace-nowrap">
-              <button type="button" onclick="xemChiTietPhieuSoQuy('${p.maPhieu}')" class="p-1 hover:bg-slate-200 rounded text-slate-600 transition" title="Xem chi tiết">
-                <i class="fa-solid fa-eye"></i>
-              </button>
+            <td class="px-2 py-2 text-center whitespace-nowrap">
+              <div class="inline-flex items-center space-x-1">
+                <button type="button" onclick="moModalSuaPhieuSoQuy('${p.maPhieu}')" class="p-1 hover:bg-amber-100 rounded text-amber-600 transition" title="Sửa phiếu">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button type="button" onclick="xoaMotPhieuSoQuy('${p.maPhieu}')" class="p-1 hover:bg-rose-100 rounded text-rose-600 transition" title="Xóa phiếu">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+                <button type="button" onclick="xemChiTietPhieuSoQuy('${p.maPhieu}')" class="p-1 hover:bg-slate-200 rounded text-slate-600 transition" title="Xem chi tiết">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
             </td>
           </tr>
         `;
       }).join('');
+
+      capNhatGiaoDienChonSoQuy();
     }
 
     function xemChiTietPhieuSoQuy(maPhieu) {
@@ -13487,26 +13668,169 @@ function formatVND(amount) {
     }
 
     function moModalLapPhieuThu() {
+      dangSuaPhieuSoQuyMa = null;
       loaiPhieuDangLap = "THU";
       document.getElementById('sq-modal-title').innerText = "Lập Phiếu Thu Tiền";
-      document.getElementById('btn-luu-soquy').className = "px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow";
+      const btn = document.getElementById('btn-luu-soquy');
+      if (btn) {
+        btn.className = "px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow transition";
+        btn.innerHTML = '<i class="fa-solid fa-plus-circle mr-1.5"></i>Xác nhận lưu';
+      }
       document.getElementById('sq-input-sotien').value = "";
       document.getElementById('sq-input-ghichu').value = "";
-      if (currentQuyDangXem !== 'ALL') document.getElementById('sq-input-loaiquy').value = currentQuyDangXem;
+      document.getElementById('sq-input-madoituong').value = "";
+      document.getElementById('sq-input-hangmuc-custom').value = "";
+      document.getElementById('sq-input-nguoithuchi').value = currentUser?.hoTen || "Admin";
+
+      // Đặt ngày giờ hiện tại
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('sq-input-ngaygd').value = now.toISOString().slice(0, 16);
+
+      const targetQuy = (typeof currentQuyDangXem !== 'undefined' && currentQuyDangXem !== 'ALL') ? currentQuyDangXem : 'TIEN_MAT';
+      document.getElementById('sq-input-loaiquy').value = targetQuy;
+      thayDoiLoaiQuySoQuy(targetQuy);
+      napGoiYHangMucSoQuy(true);
+
       moModal('modal-phieu-soquy');
     }
 
     function moModalLapPhieuChi() {
+      dangSuaPhieuSoQuyMa = null;
       loaiPhieuDangLap = "CHI";
       document.getElementById('sq-modal-title').innerText = "Lập Phiếu Chi Tiền";
-      document.getElementById('btn-luu-soquy').className = "px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-semibold shadow";
+      const btn = document.getElementById('btn-luu-soquy');
+      if (btn) {
+        btn.className = "px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-semibold shadow transition";
+        btn.innerHTML = '<i class="fa-solid fa-minus-circle mr-1.5"></i>Xác nhận lưu';
+      }
       document.getElementById('sq-input-sotien').value = "";
       document.getElementById('sq-input-ghichu').value = "";
-      if (currentQuyDangXem !== 'ALL') document.getElementById('sq-input-loaiquy').value = currentQuyDangXem;
+      document.getElementById('sq-input-madoituong').value = "";
+      document.getElementById('sq-input-hangmuc-custom').value = "";
+      document.getElementById('sq-input-nguoithuchi').value = currentUser?.hoTen || "Admin";
+
+      // Đặt ngày giờ hiện tại
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('sq-input-ngaygd').value = now.toISOString().slice(0, 16);
+
+      const targetQuy = (typeof currentQuyDangXem !== 'undefined' && currentQuyDangXem !== 'ALL') ? currentQuyDangXem : 'TIEN_MAT';
+      document.getElementById('sq-input-loaiquy').value = targetQuy;
+      thayDoiLoaiQuySoQuy(targetQuy);
+      napGoiYHangMucSoQuy(false);
+
       moModal('modal-phieu-soquy');
     }
 
-    function xacNhanLuuPhieuSoQuy() {
+    function suaPhieuSoQuyDaChon() {
+      if (selectedSoQuySet.size !== 1) {
+        return showNotification("Vui lòng chọn đúng 1 phiếu để chỉnh sửa!", true);
+      }
+      const ma = Array.from(selectedSoQuySet)[0];
+      moModalSuaPhieuSoQuy(ma);
+    }
+
+    function moModalSuaPhieuSoQuy(maPhieu) {
+      if (!window.rawSoQuyData || !window.rawSoQuyData.danhSach) return;
+      const p = window.rawSoQuyData.danhSach.find(x => x.maPhieu === maPhieu);
+      if (!p) return showNotification("Không tìm thấy thông tin phiếu: " + maPhieu, true);
+
+      dangSuaPhieuSoQuyMa = p.maPhieu;
+      loaiPhieuDangLap = String(p.loaiPhieu || 'THU').toUpperCase() === 'CHI' ? 'CHI' : 'THU';
+      const isThu = loaiPhieuDangLap === 'THU';
+
+      document.getElementById('sq-modal-title').innerText = `Sửa Phiếu ${isThu ? 'Thu' : 'Chi'}: ${p.maPhieu}`;
+      const btn = document.getElementById('btn-luu-soquy');
+      if (btn) {
+        btn.className = `px-5 py-2 ${isThu ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'} text-white rounded-xl font-bold shadow transition`;
+        btn.innerHTML = '<i class="fa-solid fa-check mr-1.5"></i>Cập nhật phiếu';
+      }
+
+      // 1. Điền ngày giờ giao dịch
+      const elNgay = document.getElementById('sq-input-ngaygd');
+      if (elNgay) {
+        if (p.ngayGD || p.ngayGiaoDich) {
+          try {
+            const rawD = p.ngayGD || p.ngayGiaoDich;
+            const d = new Date(rawD);
+            if (!isNaN(d.getTime())) {
+              d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+              elNgay.value = d.toISOString().slice(0, 16);
+            } else {
+              elNgay.value = String(rawD).slice(0, 16).replace(' ', 'T');
+            }
+          } catch(e) {
+            elNgay.value = '';
+          }
+        } else {
+          elNgay.value = '';
+        }
+      }
+
+      // 2. Tách người thực hiện và hạng mục từ ghi chú
+      let gcRaw = p.ghiChu || p.lyDoThuChi || '';
+      let nguoiThucHien = currentUser?.hoTen || 'Admin';
+      const mNguoi = gcRaw.match(/\(Người thực hiện:\s*([^)]+)\)/);
+      if (mNguoi && mNguoi[1]) {
+        nguoiThucHien = mNguoi[1].trim();
+        gcRaw = gcRaw.replace(mNguoi[0], '').trim();
+      }
+      document.getElementById('sq-input-nguoithuchi').value = nguoiThucHien;
+
+      let hangMuc = '';
+      const mHangMuc = gcRaw.match(/^\[(.*?)\]/);
+      if (mHangMuc && mHangMuc[1]) {
+        hangMuc = mHangMuc[1].trim();
+        gcRaw = gcRaw.replace(mHangMuc[0], '').trim();
+      }
+      napGoiYHangMucSoQuy(isThu, hangMuc);
+      document.getElementById('sq-input-hangmuc-custom').value = hangMuc;
+
+      // Tách phần ngân hàng từ ghi chú nếu có: [Ngân hàng ...]
+      const mBank = gcRaw.match(/\[([^\]]*?(?:Ngân hàng|STK|Vietcombank|Techcombank|MB|BIDV|Agribank|ACB|VPBank)[^\]]*?)\]/i);
+      let bankTrongGhiChu = '';
+      if (mBank && mBank[0]) {
+        bankTrongGhiChu = mBank[1].trim();
+        gcRaw = gcRaw.replace(mBank[0], '').trim();
+      }
+
+      document.getElementById('sq-input-ghichu').value = gcRaw;
+
+      // 3. Số tiền
+      document.getElementById('sq-input-sotien').value = Number(p.soTien) || 0;
+
+      // 4. Đối tượng
+      const elDoiTuong = document.getElementById('sq-input-doituong');
+      if (elDoiTuong) {
+        elDoiTuong.value = p.doiTuong || 'Khách hàng';
+        thayDoiNhomDoiTuongSoQuy(elDoiTuong.value);
+      }
+      document.getElementById('sq-input-madoituong').value = p.maDoiTuong || '';
+
+      // 5. Loại quỹ và tài khoản ngân hàng
+      const lq = String(p.loaiQuy || p.quyNguon || 'TIEN_MAT').toUpperCase();
+      const isBank = (lq === 'TAI_KHOAN' || lq.includes('NGAN_HANG') || lq.includes('TÀI KHOẢN'));
+      const elLoaiQuy = document.getElementById('sq-input-loaiquy');
+      if (elLoaiQuy) {
+        elLoaiQuy.value = isBank ? 'TAI_KHOAN' : 'TIEN_MAT';
+        thayDoiLoaiQuySoQuy(elLoaiQuy.value);
+      }
+      if (isBank && bankTrongGhiChu) {
+        const selBank = document.getElementById('sq-input-nganhang');
+        if (selBank) {
+          Array.from(selBank.options).forEach(opt => {
+            if (opt.value.includes(bankTrongGhiChu) || bankTrongGhiChu.includes(opt.value)) {
+              opt.selected = true;
+            }
+          });
+        }
+      }
+
+      moModal('modal-phieu-soquy');
+    }
+
+    async function xacNhanLuuPhieuSoQuy() {
       const st = Number(document.getElementById('sq-input-sotien').value) || 0;
       const gc = document.getElementById('sq-input-ghichu').value.trim();
       if (st <= 0) return showNotification("Vui lòng nhập số tiền lớn hơn 0!", true);
@@ -13520,52 +13844,206 @@ function formatVND(amount) {
       
       const fullGhiChu = `[${hangMuc}] ${gc} (Người thực hiện: ${nguoiThuChi})` + (nganHangChon ? ` [${nganHangChon}]` : '');
 
+      const isEditing = Boolean(dangSuaPhieuSoQuyMa);
+      let pOld = null;
+      if (isEditing && window.rawSoQuyData?.danhSach) {
+        pOld = window.rawSoQuyData.danhSach.find(x => x.maPhieu === dangSuaPhieuSoQuyMa);
+      }
+
+      const maPhieu = isEditing ? dangSuaPhieuSoQuyMa : ((loaiPhieuDangLap === 'THU' ? 'PT' : 'PC') + Date.now().toString().slice(-6));
+      const targetCN = isEditing ? (pOld?.chiNhanh || currentChiNhanh || "CN01: Trụ sở chính") : (currentChiNhanh || "CN01: Trụ sở chính");
+
       const payload = {
-        maPhieu: (loaiPhieuDangLap === 'THU' ? 'PT' : 'PC') + Date.now().toString().slice(-6),
+        maPhieu: maPhieu,
         loaiPhieu: loaiPhieuDangLap,
         loaiQuy: loaiQuy,
+        quyNguon: (loaiQuy === 'TAI_KHOAN' && nganHangChon) ? nganHangChon : loaiQuy,
         nganHang: nganHangChon,
         ngayGD: ngayGD,
+        ngayGiaoDich: ngayGD,
         soTien: st,
         doiTuong: document.getElementById('sq-input-doituong').value,
         maDoiTuong: document.getElementById('sq-input-madoituong').value.trim().toUpperCase(),
-        maChungTu: "THU_CHI_THU_CONG",
-        trangThai: "DaThanhToan",
+        maChungTu: isEditing ? (pOld?.maChungTu || "THU_CHI_THU_CONG") : "THU_CHI_THU_CONG",
+        trangThai: isEditing ? (pOld?.trangThai || "DaThanhToan") : "DaThanhToan",
         ghiChu: fullGhiChu,
-        chiNhanh: currentChiNhanh || "CN01: Trụ sở chính"
+        lyDoThuChi: fullGhiChu,
+        chiNhanh: targetCN
       };
 
       const btn = document.getElementById('btn-luu-soquy');
       if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Đang lưu...'; }
 
-      google.script.run.withSuccessHandler(function(res) {
-        if (btn) { btn.disabled = false; btn.innerHTML = 'Xác nhận lưu'; }
-        if (res && res.success) {
-          if (supabaseClient) {
-            supabaseClient.from('so_quy').upsert([{
-              chi_nhanh: String(payload.chiNhanh || "CN01: Trụ sở chính").slice(0, 100),
-              ma_phieu: String(payload.maPhieu).slice(0, 50),
-              loai_phieu: String(payload.loaiPhieu || "THU").slice(0, 20),
-              loai_quy: String(payload.loaiQuy || "TIEN_MAT").slice(0, 100),
-              ngay_gd: payload.ngayGD || new Date().toISOString(),
-              so_tien: Number(payload.soTien) || 0,
-              doi_tuong: String(payload.doiTuong || "Khách hàng").slice(0, 100),
-              ma_doi_tuong: String(payload.maDoiTuong || "").slice(0, 50),
-              ma_chung_tu: String(payload.maChungTu || "").slice(0, 50),
-              trang_thai: "DaThanhToan",
-              ghi_chu: payload.ghiChu || ""
-            }]).then(() => {}, e => console.error("Lỗi sync phiếu sổ quỹ Supabase:", e));
-          }
-          dongModal('modal-phieu-soquy');
-          showNotification("Đã lưu phiếu sổ quỹ thành công!");
-          loadSoQuy();
-        } else {
-          showNotification(res.error || "Lỗi lưu phiếu sổ quỹ", true);
+      try {
+        // 1. Lưu lập tức lên Supabase
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          const dbRow = {
+            chi_nhanh: String(payload.chiNhanh || "CN01: Trụ sở chính").slice(0, 100),
+            ma_phieu: String(payload.maPhieu).slice(0, 50),
+            loai_phieu: String(payload.loaiPhieu || "THU").slice(0, 20),
+            loai_quy: String(payload.loaiQuy || "TIEN_MAT").slice(0, 100),
+            ngay_gd: payload.ngayGD || new Date().toISOString(),
+            so_tien: Number(payload.soTien) || 0,
+            doi_tuong: String(payload.doiTuong || "Khách hàng").slice(0, 100),
+            ma_doi_tuong: String(payload.maDoiTuong || "").slice(0, 50),
+            ma_chung_tu: String(payload.maChungTu || "").slice(0, 50),
+            trang_thai: payload.trangThai || "DaThanhToan",
+            ghi_chu: payload.ghiChu || ""
+          };
+          const { error: sbErr } = await supabaseClient.from('so_quy').upsert([dbRow], { onConflict: 'ma_phieu' });
+          if (sbErr) console.warn("Lỗi lưu Supabase so_quy:", sbErr);
         }
-      }).withFailureHandler(function(err) {
-        if (btn) { btn.disabled = false; btn.innerHTML = 'Xác nhận lưu'; }
-        showNotification("Lỗi kết nối máy chủ: " + err.message, true);
-      }).apiLuuPhieuSoQuy(payload);
+
+        // 2. Cập nhật dữ liệu trong RAM ngay lập tức (< 1ms)
+        if (!window.rawSoQuyData) window.rawSoQuyData = { danhSach: [] };
+        if (!Array.isArray(window.rawSoQuyData.danhSach)) window.rawSoQuyData.danhSach = [];
+
+        if (isEditing) {
+          const idx = window.rawSoQuyData.danhSach.findIndex(x => x.maPhieu === maPhieu);
+          if (idx > -1) {
+            window.rawSoQuyData.danhSach[idx] = Object.assign(window.rawSoQuyData.danhSach[idx], payload);
+          }
+        } else {
+          window.rawSoQuyData.danhSach.unshift(payload);
+        }
+
+        // Cập nhật rawSoQuyAllRecords nếu có
+        if (Array.isArray(window.rawSoQuyAllRecords)) {
+          const allIdx = window.rawSoQuyAllRecords.findIndex(x => x.ma_phieu === maPhieu);
+          const allItem = {
+            ma_phieu: payload.maPhieu,
+            chi_nhanh: payload.chiNhanh,
+            loai_phieu: payload.loaiPhieu,
+            loai_quy: payload.loaiQuy,
+            ngay_gd: payload.ngayGD,
+            so_tien: payload.soTien,
+            doi_tuong: payload.doiTuong,
+            ma_doi_tuong: payload.maDoiTuong,
+            ma_chung_tu: payload.maChungTu,
+            trang_thai: payload.trangThai,
+            ghi_chu: payload.ghiChu
+          };
+          if (allIdx > -1) window.rawSoQuyAllRecords[allIdx] = allItem;
+          else window.rawSoQuyAllRecords.unshift(allItem);
+        }
+
+        // 3. Tính lại tổng thu, tổng chi, tồn quỹ trên 4 thẻ KPI
+        let tongThu = 0;
+        let tongChi = 0;
+        window.rawSoQuyData.danhSach.forEach(item => {
+          if (item.trangThai !== 'DaHuy') {
+            const stVal = Number(item.soTien) || 0;
+            if (item.loaiPhieu === 'THU') tongThu += stVal;
+            else if (item.loaiPhieu === 'CHI') tongChi += stVal;
+          }
+        });
+        window.rawSoQuyData.tongThu = tongThu;
+        window.rawSoQuyData.tongChi = tongChi;
+        window.rawSoQuyData.tonQuy = tongThu - tongChi;
+
+        const elThu = document.getElementById('sq-tong-thu');
+        const elChi = document.getElementById('sq-tong-chi');
+        const elTon = document.getElementById('sq-ton-quy');
+        if (elThu) elThu.innerText = (tongThu || 0).toLocaleString('vi-VN') + ' đ';
+        if (elChi) elChi.innerText = (tongChi || 0).toLocaleString('vi-VN') + ' đ';
+        if (elTon) elTon.innerText = ((tongThu - tongChi) || 0).toLocaleString('vi-VN') + ' đ';
+
+        // 4. Đồng bộ Google Apps Script ngầm nếu có
+        try {
+          if (typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run.apiLuuPhieuSoQuy === 'function') {
+            google.script.run.apiLuuPhieuSoQuy(payload);
+          }
+        } catch(e) {}
+
+        dongModal('modal-phieu-soquy');
+        dangSuaPhieuSoQuyMa = null;
+        showNotification(isEditing ? `Đã cập nhật phiếu [${maPhieu}] thành công!` : `Đã lưu phiếu [${maPhieu}] thành công!`);
+        locDuLieuSoQuy();
+      } catch (err) {
+        console.error("Lỗi lưu phiếu sổ quỹ:", err);
+        showNotification("Có lỗi xảy ra: " + err.message, true);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = isEditing ? '<i class="fa-solid fa-check mr-1.5"></i>Cập nhật phiếu' : '<i class="fa-solid fa-plus-circle mr-1.5"></i>Xác nhận lưu';
+        }
+      }
+    }
+
+    function xoaMotPhieuSoQuy(maPhieu) {
+      if (!maPhieu) return;
+      showConfirm("Xác nhận xóa phiếu", `Bạn có chắc chắn muốn xóa phiếu [${maPhieu}] khỏi sổ quỹ? Thao tác này sẽ xóa vĩnh viễn dữ liệu.`, () => {
+        thucHienXoaDanhSachPhieuSoQuy([maPhieu]);
+      });
+    }
+
+    function xoaCacPhieuSoQuyDaChon() {
+      const listMa = Array.from(selectedSoQuySet);
+      if (!listMa.length) {
+        return showNotification("Vui lòng chọn ít nhất 1 phiếu cần xóa!", true);
+      }
+      showConfirm("Xác nhận xóa nhiều phiếu", `Bạn có chắc chắn muốn xóa ${listMa.length} phiếu thu / chi đã chọn khỏi hệ thống? Thao tác này không thể hoàn tác!`, () => {
+        thucHienXoaDanhSachPhieuSoQuy(listMa);
+      });
+    }
+
+    async function thucHienXoaDanhSachPhieuSoQuy(listMa) {
+      if (!Array.isArray(listMa) || !listMa.length) return;
+      try {
+        // 1. Xóa trên Supabase
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          const { error } = await supabaseClient.from('so_quy').delete().in('ma_phieu', listMa);
+          if (error) {
+            console.error("Lỗi xóa phiếu trên Supabase:", error);
+            showNotification("Cảnh báo máy chủ khi xóa: " + error.message, true);
+          }
+        }
+
+        // 2. Cập nhật dữ liệu trong RAM
+        if (window.rawSoQuyData && Array.isArray(window.rawSoQuyData.danhSach)) {
+          window.rawSoQuyData.danhSach = window.rawSoQuyData.danhSach.filter(p => !listMa.includes(p.maPhieu));
+        }
+        if (Array.isArray(window.rawSoQuyAllRecords)) {
+          window.rawSoQuyAllRecords = window.rawSoQuyAllRecords.filter(p => !listMa.includes(p.ma_phieu && p.ma_phieu.toString()));
+        }
+        if (typeof localData !== 'undefined' && Array.isArray(localData.soQuy)) {
+          localData.soQuy = localData.soQuy.filter(p => !listMa.includes(p.maPhieu));
+        }
+
+        // 3. Tính lại tổng thu, tổng chi, tồn quỹ
+        let tongThu = 0;
+        let tongChi = 0;
+        (window.rawSoQuyData?.danhSach || []).forEach(p => {
+          if (p.trangThai !== 'DaHuy') {
+            const st = Number(p.soTien) || 0;
+            if (p.loaiPhieu === 'THU') tongThu += st;
+            else if (p.loaiPhieu === 'CHI') tongChi += st;
+          }
+        });
+        if (window.rawSoQuyData) {
+          window.rawSoQuyData.tongThu = tongThu;
+          window.rawSoQuyData.tongChi = tongChi;
+          window.rawSoQuyData.tonQuy = tongThu - tongChi;
+        }
+
+        const elThu = document.getElementById('sq-tong-thu');
+        const elChi = document.getElementById('sq-tong-chi');
+        const elTon = document.getElementById('sq-ton-quy');
+        if (elThu) elThu.innerText = (tongThu || 0).toLocaleString('vi-VN') + ' đ';
+        if (elChi) elChi.innerText = (tongChi || 0).toLocaleString('vi-VN') + ' đ';
+        if (elTon) elTon.innerText = ((tongThu - tongChi) || 0).toLocaleString('vi-VN') + ' đ';
+
+        // 4. Bỏ chọn các phiếu vừa xóa
+        listMa.forEach(m => selectedSoQuySet.delete(m));
+        capNhatGiaoDienChonSoQuy();
+
+        // 5. Render lại bảng
+        locDuLieuSoQuy();
+        showNotification(`Đã xóa thành công ${listMa.length} phiếu khỏi sổ quỹ!`);
+      } catch(err) {
+        console.error("Lỗi khi xóa phiếu:", err);
+        showNotification("Có lỗi xảy ra khi xóa phiếu: " + err.message, true);
+      }
     }
 
     function huyPhieuSoQuy(ma) {
