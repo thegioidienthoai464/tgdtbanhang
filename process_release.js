@@ -6,8 +6,8 @@ const { execSync } = require('child_process');
 const env = fs.readFileSync('.env', 'utf8');
 const token = env.match(/GITHUB_TOKEN=(.*)/)[1].trim();
 const repo = 'thegioidienthoai464/tgdtbanhang';
-const TARGET_VERSION = 'v1.1.3';
-const TARGET_BUILD = 14;
+const TARGET_VERSION = 'v1.1.4';
+const TARGET_BUILD = 15;
 
 function githubRequest(endpoint, method = 'GET', data = null, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -221,17 +221,18 @@ async function main() {
     body: `## 🚀 Bản cập nhật T&T POS ${TARGET_VERSION} (Build ${TARGET_BUILD})
 
 ### ✨ Tính năng mới & Cải tiến:
-1. **Form thêm khách hàng mới đầy đủ thông tin**:
-   - Thêm nút **+ Thêm KH** trực tiếp trên thanh thu ngân POS và trong bảng tìm khách hàng.
-   - Điền đầy đủ thông tin: Mã KH, Tên KH (*), SĐT, Địa chỉ, Số dư công nợ ban đầu, Ghi chú.
-2. **Mặc định bán cho khách lẻ (Mã: KHACHLE)**:
-   - Trên cả bản điện thoại và máy tính, khi thu ngân không nhập thông tin khách hàng, hệ thống tự động ghi nhận cho khách hàng \`KHACHLE\` (Khách lẻ).
-3. **Đổi tài khoản ngân hàng trong Sổ quỹ**:
-   - Cho phép chọn xem 1 tài khoản cụ thể hoặc Tất cả tài khoản kèm tính toán số dư chính xác.
-4. **Thẻ tổng hợp quỹ tài chính toàn diện**:
-   - Hiển thị nổi bật Tổng tồn quỹ (Tiền mặt + Ngân hàng), chi tiết Quỹ tiền mặt và Quỹ ngân hàng.
-5. **Chọn 1 hoặc nhiều chi nhánh linh hoạt**:
-   - Tùy chọn linh hoạt xem Tổng quan, Kho hàng, Đơn hàng và Sổ quỹ theo tổ hợp chi nhánh được chọn (hoặc Toàn hệ thống).`,
+1. **Sửa lỗi hiển thị số tiền Tổng tồn quỹ**:
+   - Thẻ Sổ quỹ thu chi tách riêng số tiền Tổng tồn quỹ trên một hàng lớn, hiển thị toàn bộ số tiền rõ ràng, không bị tràn viền hay che khuất.
+2. **Giao diện Tổng quan - Giữ duy nhất 1 vị trí chọn chi nhánh**:
+   - Giữ lại nút chọn chi nhánh trên thanh tiêu đề AppBar (Vị trí số 1), loại bỏ hộp chọn chi nhánh trùng lặp bên trong banner.
+3. **Quét mã vạch Barcode/QR bằng Camera trên màn hình POS**:
+   - Biểu tượng quét mã vạch ở cuối ô tìm kiếm sản phẩm POS, tự động quét và thêm sản phẩm vào đơn.
+4. **Mặc định bán cho khách lẻ (Mã: KHACHLE)**:
+   - Trên cả bản điện thoại và máy tính, hệ thống mặc định chọn khách hàng \`KHACHLE\` (Khách lẻ).
+5. **Form thêm khách hàng mới đầy đủ thông tin**:
+   - Thêm nút **+ Thêm KH** trực tiếp trên màn hình POS (Mã KH, Tên KH (*), SĐT, Địa chỉ, Công nợ, Ghi chú).
+6. **Đổi tài khoản ngân hàng trong Sổ quỹ**:
+   - Cho phép chọn xem 1 tài khoản cụ thể hoặc Tất cả tài khoản kèm tính toán số dư chính xác.`,
     draft: false,
     prerelease: false
   };
