@@ -1905,7 +1905,7 @@
               <i class="fa-solid fa-vault"></i>
             </span>
             <div>
-              <span class="text-[10px] text-amber-800 font-bold uppercase tracking-wider block">Sổ quỹ tiền mặt & Tài khoản ngân hàng</span>
+              <span id="sq-header-title" class="text-[10px] text-amber-800 font-bold uppercase tracking-wider block">Sổ quỹ tiền mặt & Tài khoản ngân hàng</span>
               <h4 id="sq-header-chinhanh" class="text-sm font-extrabold text-slate-800 font-mono">CN01: Trụ sở chính Thanh Miện</h4>
             </div>
           </div>
@@ -1938,6 +1938,34 @@
           </div>
         </div>
 
+        <!-- THANH QUẢN LÝ TÀI KHOẢN NGÂN HÀNG (DÀNH CHO TAB 5.2) -->
+        <div id="toolbar-nganhang-container" class="hidden bg-gradient-to-r from-blue-500/10 via-indigo-50 to-white p-3.5 rounded-2xl border border-blue-200 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+          <div class="flex items-center space-x-3">
+            <span class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+              <i class="fa-solid fa-building-columns"></i>
+            </span>
+            <div>
+              <h4 class="text-xs font-extrabold text-blue-900 uppercase tracking-wide flex items-center space-x-1.5">
+                <span>Quản Lý Tài Khoản Ngân Hàng & Phân Quyền Chi Nhánh</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">Tab 5.2</span>
+              </h4>
+              <p class="text-[11px] text-slate-500">Chỉ định tài khoản hoạt động và lọc hiển thị theo từng chi nhánh</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="filter-quy-nganhang" onchange="locSoQuyNganHang()" class="border border-blue-300 rounded-xl px-3 py-1.5 text-xs bg-white font-semibold text-slate-800 shadow-xs focus:ring-2 focus:ring-blue-500">
+              <option value="">-- Tất cả tài khoản ngân hàng --</option>
+            </select>
+            <button type="button" onclick="moModalThemNganHang()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1.5 transition">
+              <i class="fa-solid fa-plus"></i><span>Thêm tài khoản NH</span>
+            </button>
+            <button type="button" onclick="moModalQuanLyNganHang()" class="px-3.5 py-1.5 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1.5 transition">
+              <i class="fa-solid fa-university text-indigo-600"></i><span>Quản lý danh mục & Phân quyền</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- THANH CÔNG CỤ THAO TÁC SỔ QUỸ -->
         <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap justify-between items-center gap-3">
           <div class="flex items-center space-x-2">
             <button type="button" onclick="moModalLapPhieuThu()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition">
@@ -1949,20 +1977,14 @@
             <button type="button" onclick="xuatExcelSoQuy()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition flex items-center space-x-1.5">
               <i class="fa-solid fa-file-export text-blue-600"></i><span>Xuất Excel</span>
             </button>
-          <div id="toolbar-nganhang-container" class="invisible pointer-events-none flex items-center space-x-2">
-        <select id="filter-quy-nganhang" onchange="locSoQuyNganHang()" class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs bg-slate-50 font-medium">
-          <option value="">-- Tất cả tài khoản ngân hàng --</option>
-        </select>
-        <button type="button" onclick="moModalQuanLyNganHang()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition flex items-center space-x-1 shrink-0">
-          <i class="fa-solid fa-university text-blue-600"></i><span>Quản lý TKNH</span>
-        </button>
-      </div>
-         
-          <select id="sq-loc-trangthai" onchange="locDuLieuSoQuy()" class="border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs bg-slate-50 font-medium">
-            <option value="ALL">Tất cả giao dịch</option>
-            <option value="DaThanhToan">Đã thanh toán</option>
-            <option value="DaHuy">Đã hủy bỏ</option>
-          </select>
+          </div>
+          <div class="flex items-center space-x-2">
+            <select id="sq-loc-trangthai" onchange="locDuLieuSoQuy()" class="border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs bg-slate-50 font-medium">
+              <option value="ALL">Tất cả giao dịch</option>
+              <option value="DaThanhToan">Đã thanh toán</option>
+              <option value="DaHuy">Đã hủy bỏ</option>
+            </select>
+          </div>
         </div>
 
         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
@@ -2008,6 +2030,10 @@
             </button>
           </div>
           <div class="flex items-center space-x-2">
+            <select id="bc-filter-chinhanh" onchange="loadBaoCao()" class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs bg-slate-50 font-semibold text-slate-700 focus:outline-none focus:border-blue-500">
+              <option value="CURRENT">📍 Chi nhánh hiện tại</option>
+              <option value="ALL">🌐 Toàn chuỗi (Tất cả chi nhánh)</option>
+            </select>
             <select id="bc-filter-thoigian" onchange="loadBaoCao()" class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs bg-slate-50 font-semibold text-slate-700 focus:outline-none focus:border-blue-500">
               <option value="ALL">Toàn bộ thời gian</option>
               <option value="TODAY">Hôm nay</option>
@@ -4857,11 +4883,21 @@
 function chuyenTabSoQuy(loaiQuy) {
   currentLoaiQuy = loaiQuy;
   
-  // (Tùy chọn) Đổi màu active cho các nút tab để người dùng biết đang ở tab nào
-  document.querySelectorAll('.tab-so-quy-btn').forEach(el => el.classList.remove('bg-blue-600', 'text-white'));
-  // Thêm hiệu ứng active tùy theo giao diện Tailwind của bạn...
+  const elHeaderTitle = document.getElementById('sq-header-title');
+  const tbNH = document.getElementById('toolbar-nganhang-container');
 
-  // Gọi hàm lấy dữ liệu từ Google Apps Script (Backend)
+  if (loaiQuy === 'TAI_KHOAN') {
+    if (elHeaderTitle) elHeaderTitle.innerText = "5.2 Sổ Quỹ Tài Khoản Ngân Hàng";
+    if (tbNH) tbNH.classList.remove('hidden');
+    if (typeof renderFilterNganHangTab52 === 'function') renderFilterNganHangTab52();
+  } else if (loaiQuy === 'TIEN_MAT') {
+    if (elHeaderTitle) elHeaderTitle.innerText = "5.1 Sổ Quỹ Tiền Mặt";
+    if (tbNH) tbNH.classList.add('hidden');
+  } else {
+    if (elHeaderTitle) elHeaderTitle.innerText = "5.3 Tổng Hợp Dòng Tiền (Sổ Quỹ)";
+    if (tbNH) tbNH.classList.add('hidden');
+  }
+
   loadDuLieuSoQuy(currentLoaiQuy);
 }
 
@@ -4904,6 +4940,15 @@ function loadDuLieuSoQuy(loaiQuy) {
             if (qFilter === 'TIEN_MAT') pass = isTienMat;
             else if (qFilter === 'TAI_KHOAN' || qFilter === 'NGAN_HANG') pass = !isTienMat;
             else if (qFilter !== 'ALL') pass = lq.includes(qFilter);
+
+            const filterBankVal = document.getElementById('filter-quy-nganhang')?.value;
+            if (pass && filterBankVal && (qFilter === 'TAI_KHOAN' || qFilter === 'NGAN_HANG')) {
+              const strCheck = `${item.loai_quy || ''} ${item.ghi_chu || ''}`.toUpperCase();
+              const bankParts = filterBankVal.toUpperCase().split('-').map(s => s.trim()).filter(Boolean);
+              if (!bankParts.some(p => strCheck.includes(p))) {
+                pass = false;
+              }
+            }
 
             if (pass) {
               let soTien = Number(item.so_tien) || 0;
@@ -7041,16 +7086,24 @@ function formatVND(amount) {
           if (typeof chuyenTabSoQuy === 'function') chuyenTabSoQuy('TAI_KHOAN');
         } else if (tabId === 'tab-soquy') {
           if (typeof chuyenTabSoQuy === 'function') chuyenTabSoQuy('ALL');
+        } else if (tabId === 'tab-baocao-chung') {
+          if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('banhang');
+          if (typeof loadBaoCao === 'function') loadBaoCao();
         } else if (tabId === 'tab-bc-banhang') {
           if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('banhang');
+          if (typeof loadBaoCao === 'function') loadBaoCao();
         } else if (tabId === 'tab-bc-hanghoa') {
           if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('hanghoa');
+          if (typeof loadBaoCao === 'function') loadBaoCao();
         } else if (tabId === 'tab-bc-khachhang') {
           if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('khachhang');
+          if (typeof loadBaoCao === 'function') loadBaoCao();
         } else if (tabId === 'tab-bc-ncc') {
           if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('ncc');
+          if (typeof loadBaoCao === 'function') loadBaoCao();
         } else if (tabId === 'tab-bc-taichinh') {
           if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('taichinh');
+          if (typeof loadBaoCao === 'function') loadBaoCao();
         } else if (tabId === 'tab-nguoidung') {
           if (typeof loadNguoiDung === 'function') loadNguoiDung();
           else if (typeof loadDanhSachNguoiDung === 'function') loadDanhSachNguoiDung();
@@ -12933,7 +12986,10 @@ function formatVND(amount) {
       
       const list = window.rawSoQuyData.danhSach.filter(p => {
         const matchTrangThai = (locTrangThai === 'ALL' || p.trangThai === locTrangThai);
-        const matchNganHang = !filterNH || (p.loaiQuy && p.loaiQuy.includes(filterNH));
+        const matchNganHang = !filterNH || 
+          (p.loaiQuy && (p.loaiQuy.includes(filterNH) || filterNH.includes(p.loaiQuy))) ||
+          (p.quyNguon && (p.quyNguon.includes(filterNH) || filterNH.includes(p.quyNguon))) ||
+          (p.ghiChu && filterNH.split('-').some(part => part.trim() && p.ghiChu.includes(part.trim())));
         return matchTrangThai && matchNganHang;
       });
 
@@ -13117,19 +13173,23 @@ function formatVND(amount) {
         }
       });
 
-      // Tải dữ liệu nếu chưa có
+      // Tải dữ liệu nếu chưa có, hoặc cập nhật giao diện nếu đã có
       if (!rawBaoCaoData) {
         loadBaoCao();
+      } else {
+        renderBaoCaoDuLieu(rawBaoCaoData);
       }
     }
 
-    function loadBaoCao() {
+    async function loadBaoCao() {
       const filterTime = document.getElementById('bc-filter-thoigian')?.value || 'ALL';
+      const filterCN = document.getElementById('bc-filter-chinhanh')?.value || 'CURRENT';
+      const targetCN = (filterCN === 'CURRENT') ? (currentChiNhanh || 'CN01') : filterCN;
       
       // Hiển thị trạng thái đang tải trên các bảng
       const setTbodyLoading = (id, col) => {
         const el = document.getElementById(id);
-        if (el) el.innerHTML = `<tr><td colspan="${col}" class="p-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải dữ liệu báo cáo...</td></tr>`;
+        if (el) el.innerHTML = `<tr><td colspan="${col}" class="p-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tổng hợp dữ liệu báo cáo phân tích...</td></tr>`;
       };
       setTbodyLoading('tbl-bc-banhang-body', 9);
       setTbodyLoading('tbl-bc-hanghoa-body', 8);
@@ -13137,26 +13197,307 @@ function formatVND(amount) {
       setTbodyLoading('tbl-bc-khachhang-body', 7);
       setTbodyLoading('tbl-bc-ncc-body', 7);
 
-      // Gọi API lấy dữ liệu báo cáo
-      google.script.run
-        .withSuccessHandler(function(res) {
-          console.log("apiGetBaoCaoTongHop response:", res);
-          if (!res) {
-            showNotification("Không thể tải dữ liệu báo cáo: Phản hồi rỗng từ máy chủ!", true);
-            return;
+      // 1. Đảm bảo nạp đủ các nguồn dữ liệu từ Supabase nếu bộ nhớ tạm đang rỗng
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+          if (!rawDonHangList || rawDonHangList.length === 0) {
+            const { data: dData } = await supabaseClient.from('don_hang').select('*').order('ngay_ban', { ascending: false });
+            if (Array.isArray(dData)) {
+              rawDonHangList = dData
+                .filter(d => {
+                  const ma = String(d.ma_don_hang || '').trim().toUpperCase();
+                  const nv = String(d.nhan_vien || '').trim().toLowerCase();
+                  if (ma.startsWith('PNH') || ma.startsWith('DDH') || nv === 'hệ thống tự động' || nv === 'he thong tu dong') return false;
+                  return true;
+                })
+                .map(d => ({
+                  maDonHang: d.ma_don_hang,
+                  ngayBan: (d.ngay_ban || '').replace('T', ' ').slice(0, 19),
+                  maKH: d.ma_kh || 'KL',
+                  tenKH: d.ten_kh || 'Khách lẻ',
+                  soDienThoai: d.so_dien_thoai || '',
+                  chiNhanh: d.chi_nhanh || 'CN01: Trụ sở chính',
+                  tongTien: Number(d.tong_tien) || 0,
+                  giamGia: Number(d.giam_gia) || 0,
+                  khachPhaiTra: Number(d.khach_phai_tra) || 0,
+                  khachTra: Number(d.khach_tra) || 0,
+                  hinhThucTT: d.hinh_thuc_tt || 'TIEN_MAT',
+                  chiTietSanPham: d.chi_tiet_san_pham || [],
+                  trangThai: d.trang_thai || 'Hoàn thành',
+                  nhanVien: d.nhan_vien || 'Admin'
+                }));
+            }
           }
-          if (res.success === false) {
-            showNotification("Không thể tải dữ liệu báo cáo: " + (res.error || "Lỗi xử lý máy chủ"), true);
-            return;
+
+          if (!rawHangHoa || rawHangHoa.length === 0) {
+            const { data: hData } = await supabaseClient.from('dm_hanghoa').select('*').order('id', { ascending: true });
+            if (Array.isArray(hData)) rawHangHoa = hData;
           }
-          rawBaoCaoData = res;
-          renderBaoCaoDuLieu(res);
-        })
-        .withFailureHandler(function(err) {
-          console.error("apiGetBaoCaoTongHop failure:", err);
-          showNotification("Lỗi kết nối tải báo cáo: " + (err?.message || err), true);
-        })
-        .apiGetBaoCaoTongHop(filterTime);
+
+          if (!rawKHList || rawKHList.length === 0) {
+            const { data: kData } = await supabaseClient.from('dm_doitac').select('*').eq('loai_doi_tac', 'KH');
+            if (Array.isArray(kData)) rawKHList = kData;
+          }
+
+          if (!rawNCCList || rawNCCList.length === 0) {
+            const { data: nData } = await supabaseClient.from('dm_doitac').select('*').eq('loai_doi_tac', 'NCC');
+            if (Array.isArray(nData)) rawNCCList = nData;
+          }
+
+          if (!window.rawSoQuyAllRecords || window.rawSoQuyAllRecords.length === 0) {
+            const { data: sData } = await supabaseClient.from('so_quy').select('*').order('ngay_gd', { ascending: false });
+            if (Array.isArray(sData)) window.rawSoQuyAllRecords = sData;
+          }
+        } catch(sbErr) {
+          console.warn("Lỗi đồng bộ Supabase cho báo cáo:", sbErr);
+        }
+      }
+
+      // 2. Tính toán phân tích dữ liệu tổng hợp
+      const now = new Date();
+      const hangHoaMap = {};
+      (rawHangHoa || []).forEach(h => {
+        hangHoaMap[String(h.maHang || h.ma_hang || '').toUpperCase()] = h;
+      });
+
+      // Lọc đơn hàng theo chi nhánh và thời gian
+      const donHangFiltered = (rawDonHangList || []).filter(d => {
+        const ma = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
+        if (ma.startsWith('PNH') || ma.startsWith('DDH')) return false;
+
+        // Lọc theo chi nhánh
+        if (targetCN !== 'ALL' && typeof laCungChiNhanh === 'function') {
+          if (!laCungChiNhanh(d.chiNhanh, targetCN)) return false;
+        }
+
+        const dateStr = d.ngayBan || d.ngay_ban || '';
+        if (!dateStr) return true;
+        const ngayD = new Date(dateStr);
+        if (isNaN(ngayD.getTime())) return true;
+
+        if (filterTime === 'TODAY') {
+          return (ngayD.toDateString() === now.toDateString());
+        } else if (filterTime === '7DAYS') {
+          return (now.getTime() - ngayD.getTime() <= 7 * 24 * 3600 * 1000);
+        } else if (filterTime === 'THIS_MONTH') {
+          return (ngayD.getMonth() === now.getMonth() && ngayD.getFullYear() === now.getFullYear());
+        }
+        return true;
+      });
+
+      // 2.1 Báo cáo bán hàng & Giá vốn hàng bán
+      let tongBan = 0;
+      let tongGiamGia = 0;
+      let soDonBan = 0;
+      let tongTraHang = 0;
+      let soDonTra = 0;
+      let giaVonHangBan = 0;
+      const topHangBanMap = {};
+      const danhSachDonHang = [];
+
+      donHangFiltered.forEach(d => {
+        const ma = String(d.maDonHang || d.ma_don_hang || '');
+        const isTra = String(d.trangThai || d.trang_thai || '').includes('Trả') || ma.startsWith('TH');
+        const tt = Number(d.khachPhaiTra || d.khach_phai_tra || d.tongTien || d.tong_tien || 0);
+        const gg = Number(d.giamGia || d.giam_gia || 0);
+        const kt = Number(d.khachTra || d.khach_tra || tt);
+
+        if (isTra) {
+          tongTraHang += tt;
+          soDonTra++;
+        } else {
+          tongBan += tt;
+          tongGiamGia += gg;
+          soDonBan++;
+
+          // Tính giá vốn và top sản phẩm bán chạy
+          const chiTiet = Array.isArray(d.chiTietSanPham || d.chi_tiet_san_pham) ? (d.chiTietSanPham || d.chi_tiet_san_pham) : [];
+          chiTiet.forEach(sp => {
+            const maH = String(sp.maHang || sp.ma_hang || '').toUpperCase();
+            const tenH = sp.tenHang || sp.ten_hang || maH;
+            const sl = Number(sp.soLuong || sp.so_luong || 1);
+            const dg = Number(sp.donGia || sp.don_gia || sp.giaBan || sp.gia_ban || 0);
+            const hInfo = hangHoaMap[maH] || {};
+            const gVon = Number(sp.giaVon || sp.gia_von || hInfo.giaVon || hInfo.gia_von || hInfo.giaNhap || hInfo.gia_nhap || 0);
+            giaVonHangBan += (sl * gVon);
+
+            if (maH) {
+              if (!topHangBanMap[maH]) {
+                topHangBanMap[maH] = { maHang: maH, tenHang: tenH, soLuong: 0, doanhThu: 0 };
+              }
+              topHangBanMap[maH].soLuong += sl;
+              topHangBanMap[maH].doanhThu += (sl * dg);
+            }
+          });
+        }
+
+        danhSachDonHang.push({
+          maDonHang: ma,
+          ngayBan: d.ngayBan || d.ngay_ban || '',
+          tenKH: d.tenKH || d.ten_kh || 'Khách lẻ',
+          soDienThoai: d.soDienThoai || d.so_dien_thoai || '',
+          nhanVien: d.nhanVien || d.nhan_vien || 'Admin',
+          tongTien: tt,
+          giamGia: gg,
+          khachTra: kt,
+          trangThai: d.trangThai || d.trang_thai || (isTra ? 'Đã trả hàng' : 'Hoàn thành')
+        });
+      });
+
+      const doanhThuThuan = Math.max(0, tongBan - tongTraHang);
+      const loiNhuanGop = doanhThuThuan - giaVonHangBan;
+      const tySuatLoiNhuan = doanhThuThuan > 0 ? Math.round((loiNhuanGop / doanhThuThuan) * 100) : 0;
+      const topHangBan = Object.values(topHangBanMap).sort((a, b) => b.soLuong - a.soLuong).slice(0, 10);
+
+      // 2.2 Báo cáo hàng hóa & tồn kho
+      let tongTonKho = 0;
+      let tongGiaTriVonTon = 0;
+      let tongGiaTriBanTon = 0;
+      const danhSachHangHoa = (rawHangHoa || []).map(h => {
+        let ton = 0;
+        if (targetCN !== 'ALL' && h.chi_nhanh_ton && typeof h.chi_nhanh_ton === 'object') {
+          ton = Number(h.chi_nhanh_ton[targetCN] || 0);
+        } else {
+          ton = Number(h.tonKho || h.ton_kho || 0);
+        }
+        const gVon = Number(h.giaVon || h.gia_von || h.giaNhap || h.gia_nhap || 0);
+        const gBan = Number(h.giaBan || h.gia_ban || 0);
+        tongTonKho += ton;
+        tongGiaTriVonTon += (ton * gVon);
+        tongGiaTriBanTon += (ton * gBan);
+        return {
+          maHang: h.maHang || h.ma_hang || '',
+          tenHang: h.tenHang || h.ten_hang || '',
+          donViTinh: h.donViTinh || h.dvt || 'Cái',
+          giaVon: gVon,
+          giaBan: gBan,
+          tonKho: ton
+        };
+      });
+
+      // 2.3 Báo cáo khách hàng & công nợ
+      let tongCongNoKH = 0;
+      const danhSachKH = (rawKHList || []).map(k => {
+        const no = Number(k.congNo || k.cong_no || 0);
+        tongCongNoKH += no;
+        return {
+          maDoiTac: k.maDoiTac || k.ma_doi_tac || '',
+          tenDoiTac: k.tenDoiTac || k.ten_doi_tac || '',
+          soDienThoai: k.soDienThoai || k.sdt || '',
+          diaChi: k.diaChi || k.dia_chi || '',
+          tongTienMua: Number(k.tongTienMua || k.tong_tien_mua || 0),
+          congNo: no
+        };
+      });
+
+      // 2.4 Báo cáo nhà cung cấp & công nợ
+      let tongNoNCC = 0;
+      let tongNhapHang = 0;
+      const danhSachNCC = (rawNCCList || []).map(n => {
+        const no = Number(n.congNo || n.cong_no || 0);
+        const nhap = Number(n.tongTienNhap || n.tong_nhap || 0);
+        tongNoNCC += no;
+        tongNhapHang += nhap;
+        return {
+          maDoiTac: n.maDoiTac || n.ma_doi_tac || '',
+          tenDoiTac: n.tenDoiTac || n.ten_doi_tac || '',
+          soDienThoai: n.soDienThoai || n.sdt || '',
+          diaChi: n.diaChi || n.dia_chi || '',
+          tongTienNhap: nhap,
+          congNo: no
+        };
+      });
+
+      // 2.5 Báo cáo tài chính & dòng tiền từ sổ quỹ
+      let tongThuQuy = 0;
+      let tongChiQuy = 0;
+      let tonQuyTM = 0;
+      let tonQuyNH = 0;
+
+      const soQuyRows = window.rawSoQuyAllRecords || [];
+      soQuyRows.forEach(item => {
+        if (item.trang_thai === 'DaHuy') return;
+        if (targetCN !== 'ALL' && typeof laCungChiNhanh === 'function' && !laCungChiNhanh(item.chi_nhanh, targetCN)) {
+          return;
+        }
+
+        const lp = String(item.loai_phieu || '').toUpperCase();
+        const lq = String(item.loai_quy || '').toUpperCase();
+        const st = Number(item.so_tien || 0);
+        const isTM = (lq === 'TIEN_MAT' || lq.includes('TIỀN MẶT') || lq.includes('TIEN MAT'));
+
+        // Lọc theo thời gian đối với Thu/Chi phát sinh trong kỳ
+        let inTime = true;
+        const dateStr = item.ngay_gd || item.ngay || item.ngayTao || '';
+        if (dateStr) {
+          const ngayQ = new Date(dateStr);
+          if (!isNaN(ngayQ.getTime())) {
+            if (filterTime === 'TODAY') {
+              inTime = (ngayQ.toDateString() === now.toDateString());
+            } else if (filterTime === '7DAYS') {
+              inTime = (now.getTime() - ngayQ.getTime() <= 7 * 24 * 3600 * 1000 && ngayQ.getTime() <= now.getTime());
+            } else if (filterTime === 'THIS_MONTH') {
+              inTime = (ngayQ.getMonth() === now.getMonth() && ngayQ.getFullYear() === now.getFullYear());
+            }
+          }
+        }
+
+        if (lp === 'THU') {
+          if (inTime) tongThuQuy += st;
+          if (isTM) tonQuyTM += st; else tonQuyNH += st;
+        } else if (lp === 'CHI') {
+          if (inTime) tongChiQuy += st;
+          if (isTM) tonQuyTM -= st; else tonQuyNH -= st;
+        }
+      });
+      const tonQuyThucTe = tonQuyTM + tonQuyNH;
+
+      // 3. Đóng gói kết quả báo cáo
+      const baoCaoData = {
+        success: true,
+        banHang: {
+          tongBan: tongBan,
+          soDonBan: soDonBan,
+          tongGiamGia: tongGiamGia,
+          tongTraHang: tongTraHang,
+          soDonTra: soDonTra,
+          doanhThuThuan: doanhThuThuan,
+          danhSachDonHang: danhSachDonHang
+        },
+        hangHoa: {
+          tongMaHang: danhSachHangHoa.length,
+          tongTonKho: tongTonKho,
+          tongGiaTriVonTon: tongGiaTriVonTon,
+          tongGiaTriBanTon: tongGiaTriBanTon,
+          topHangBan: topHangBan,
+          danhSachHangHoa: danhSachHangHoa
+        },
+        khachHang: {
+          tongSoKH: danhSachKH.length,
+          tongCongNoKH: tongCongNoKH,
+          danhSachKH: danhSachKH
+        },
+        ncc: {
+          tongSoNCC: danhSachNCC.length,
+          tongNhapHang: tongNhapHang,
+          tongNoNCC: tongNoNCC,
+          danhSachNCC: danhSachNCC
+        },
+        taiChinh: {
+          doanhThuThuan: doanhThuThuan,
+          giaVonHangBan: giaVonHangBan,
+          loiNhuanGop: loiNhuanGop,
+          tySuatLoiNhuan: tySuatLoiNhuan,
+          tongThuQuy: tongThuQuy,
+          tongChiQuy: tongChiQuy,
+          tonQuyTienMat: tonQuyTM,
+          tonQuyNganHang: tonQuyNH,
+          tonQuyThucTe: tonQuyThucTe
+        }
+      };
+
+      rawBaoCaoData = baoCaoData;
+      renderBaoCaoDuLieu(baoCaoData);
     }
 
     function renderBaoCaoDuLieu(data) {
@@ -19353,34 +19694,7 @@ function loadSoQuy(filter) {
       taiLichSuGiaoDichKH(ma);
     }
 
-    // -------------------------------------------------------------------------
-    // 7. MODULE 6: BÁO CÁO SIÊU TỐC (< 10ms - Client-side In-memory Aggregation)
-    // -------------------------------------------------------------------------
-    function loadBaoCao() {
-      const filterTime = document.getElementById('bc-filter-thoigian')?.value || 'ALL';
-      console.log("Instant In-memory Reporting loaded for filter:", filterTime);
 
-      const hangHoa = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) ? rawHangHoa : [];
-      const donHang = (typeof rawTraHangDonList !== 'undefined' && Array.isArray(rawTraHangDonList)) ? rawTraHangDonList : [];
-      const soQuy = (typeof rawSoQuyData !== 'undefined' && Array.isArray(rawSoQuyData)) ? rawSoQuyData : [];
-      const khList = (typeof rawKHList !== 'undefined' && Array.isArray(rawKHList)) ? rawKHList : [];
-      const nccList = (typeof rawNCCList !== 'undefined' && Array.isArray(rawNCCList)) ? rawNCCList : [];
-
-      // Tính toán siêu tốc
-      const tongTon = hangHoa.reduce((a, b) => a + (Number(b.tonKho || b.ton_kho || 0)), 0);
-      const giaTriTon = hangHoa.reduce((a, b) => a + ((Number(b.tonKho || b.ton_kho || 0)) * (Number(b.giaNhap || b.gia_nhap || b.giaVon || 0))), 0);
-      const tongDoanhThu = donHang.reduce((a, b) => a + (Number(b.khachPhaiTra || b.tongTien || b.tong_tien || 0)), 0);
-      const tongCongNoKH = khList.reduce((a, b) => a + (Number(b.congNo || 0)), 0);
-      const tongCongNoNCC = nccList.reduce((a, b) => a + (Number(b.congNo || 0)), 0);
-
-      // Render KPI cards if exist
-      const elDT = document.getElementById('bc-kpi-doanhthu');
-      if (elDT) elDT.innerText = tongDoanhThu.toLocaleString('vi-VN') + ' đ';
-      const elTon = document.getElementById('bc-kpi-tonkho');
-      if (elTon) elTon.innerText = tongTon.toLocaleString('vi-VN') + ' sp (' + giaTriTon.toLocaleString('vi-VN') + ' đ)';
-      const elNoKH = document.getElementById('bc-kpi-congno-kh');
-      if (elNoKH) elNoKH.innerText = tongCongNoKH.toLocaleString('vi-VN') + ' đ';
-    }
 
     // Gắn các hàm quan trọng của Nhập Hàng vào window
     window.xacNhanLuuPhieuNhap = xacNhanLuuPhieuNhap;
