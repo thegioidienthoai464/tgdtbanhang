@@ -26,6 +26,13 @@ class _InventoryViewState extends State<InventoryView> {
     final vm = context.watch<InventoryViewModel>();
     final branchVm = context.watch<BranchViewModel>();
 
+    final filteredProducts = branchVm.isAllSelected
+        ? vm.products
+        : vm.products.where((p) => branchVm.matchesBranch(p.chiNhanh)).toList();
+
+    final currentTotalStock = filteredProducts.fold(0.0, (sum, p) => sum + p.tonKho);
+    final currentTotalValue = filteredProducts.fold(0.0, (sum, p) => sum + (p.tonKho * p.giaVon));
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kho & IMEI'),
@@ -53,7 +60,7 @@ class _InventoryViewState extends State<InventoryView> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Chi nhánh kho: ${branchVm.selectedBranch.displayName}',
+                      'Chi nhánh kho: ${branchVm.summaryDisplayName}',
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.primaryBlue),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -96,7 +103,7 @@ class _InventoryViewState extends State<InventoryView> {
                     const Text('Tổng số lượng', style: TextStyle(color: Colors.white70, fontSize: 13)),
                     const SizedBox(height: 4),
                     Text(
-                      '${vm.totalStock.toInt()} cái',
+                      '${currentTotalStock.toInt()} cái',
                       style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -107,7 +114,7 @@ class _InventoryViewState extends State<InventoryView> {
                     const Text('Tổng giá trị vốn', style: TextStyle(color: Colors.white70, fontSize: 13)),
                     const SizedBox(height: 4),
                     Text(
-                      Formatters.formatCurrency(vm.totalStockValue),
+                      Formatters.formatCurrency(currentTotalValue),
                       style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -144,14 +151,14 @@ class _InventoryViewState extends State<InventoryView> {
           Expanded(
             child: vm.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : vm.products.isEmpty
+                : filteredProducts.isEmpty
                     ? const Center(child: Text('Không có hàng hóa nào'))
                     : ListView.separated(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                        itemCount: vm.products.length,
+                        itemCount: filteredProducts.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
-                          final p = vm.products[index];
+                          final p = filteredProducts[index];
                           final hasStock = p.tonKho > 0;
 
                           return Container(
