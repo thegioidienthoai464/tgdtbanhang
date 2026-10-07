@@ -27,6 +27,8 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- Supabase JS v2 CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Dữ liệu tồn kho, giá vốn & IMEI 3 chi nhánh từ Excel gốc -->
+  <script src="ton_kho_3_chinhanh.js"></script>
 
   <script>
     tailwind.config = {
@@ -448,7 +450,7 @@
                 <th class="p-3">Mã Hàng</th>
                 <th class="p-3">Tên Sản Phẩm</th>
                 <th class="p-3">Nhóm</th>
-                <th class="p-3 text-right">Giá Vốn</th>
+                <th class="p-3 text-right" id="th-giavon-chinhanh">Giá Vốn (CN01)</th>
                 <th class="p-3 text-right">Giá Bán</th>
                 <th class="p-3 text-center">Quản Lý IMEI</th>
                 <th class="p-3 text-right" id="th-tonkho-chinhanh">Tồn Kho (CN01)</th>
@@ -5808,12 +5810,33 @@ function formatVND(amount) {
       if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) {
         return Number(window.tonKhoChiNhanhMap[cleanMa][targetCN]) || 0;
       }
+      if (window.RAW_TON_KHO_3_CHI_NHANH && window.RAW_TON_KHO_3_CHI_NHANH[cleanMa]) {
+        const idx = targetCN === 'CN01' ? 0 : (targetCN === 'CN02' ? 1 : (targetCN === 'CN03' ? 2 : -1));
+        if (idx >= 0) return Number(window.RAW_TON_KHO_3_CHI_NHANH[cleanMa][idx]) || 0;
+      }
       const sp = (rawHangHoa || []).find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa);
       if (sp) {
         if (targetCN === 'CN01') return Number(sp.tonKhoBanDau !== undefined ? sp.tonKhoBanDau : sp.tonKho) || 0;
         return 0;
       }
       return 0;
+    }
+
+    // 4.1 Lấy giá vốn của một sản phẩm tại chi nhánh cụ thể
+    function layGiaVonSanPhamTaiChiNhanh(maHang, maCN) {
+      const cleanMa = String(maHang || '').trim().toUpperCase();
+      const targetCN = layMaChiNhanh(maCN || currentChiNhanh || 'CN01');
+      if (window.giaVonChiNhanhMap && window.giaVonChiNhanhMap[cleanMa] && window.giaVonChiNhanhMap[cleanMa][targetCN]) {
+        return Number(window.giaVonChiNhanhMap[cleanMa][targetCN]) || 0;
+      }
+      if (window.RAW_GIA_VON_3_CHI_NHANH && window.RAW_GIA_VON_3_CHI_NHANH[cleanMa]) {
+        const idx = targetCN === 'CN01' ? 0 : (targetCN === 'CN02' ? 1 : (targetCN === 'CN03' ? 2 : -1));
+        if (idx >= 0 && Number(window.RAW_GIA_VON_3_CHI_NHANH[cleanMa][idx]) > 0) {
+          return Number(window.RAW_GIA_VON_3_CHI_NHANH[cleanMa][idx]);
+        }
+      }
+      const sp = (rawHangHoa || []).find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa);
+      return sp ? (Number(sp.giaVon) || 0) : 0;
     }
 
     // 5. Cập nhật tồn kho của một sản phẩm tại chi nhánh cụ thể
@@ -5847,17 +5870,44 @@ function formatVND(amount) {
       return newVal;
     }
 
-    // 7. Đồng bộ số lượng sp.tonKho và danh sách IMEI hiển thị theo chi nhánh hiện tại
+    // 7. Đồng bộ số lượng sp.tonKho, giá vốn và danh sách IMEI hiển thị theo chi nhánh hiện tại
     function capNhatTonKhoTheoChiNhanhHienTai() {
       const targetCN = layMaChiNhanh(currentChiNhanh || 'CN01');
+      const rawTonMap = window.RAW_TON_KHO_3_CHI_NHANH || {};
+      const rawGiaVonMap = window.RAW_GIA_VON_3_CHI_NHANH || {};
+
       if (Array.isArray(rawHangHoa)) {
         rawHangHoa.forEach(sp => {
           const cleanMa = String(sp.maHang || '').trim().toUpperCase();
-          if (!window.tonKhoChiNhanhMap[cleanMa]) {
-            const banDau = Number(sp.tonKhoBanDau !== undefined ? sp.tonKhoBanDau : sp.tonKho) || 0;
-            window.tonKhoChiNhanhMap[cleanMa] = { CN01: banDau, CN02: 0, CN03: 0, CN04: 0 };
+          if (sp.giaVonBanDau === undefined) sp.giaVonBanDau = Number(sp.giaVon) || 0;
+          if (sp.tonKhoBanDau === undefined) sp.tonKhoBanDau = Number(sp.tonKho) || 0;
+
+          if (!window.tonKhoChiNhanhMap || !window.tonKhoChiNhanhMap[cleanMa]) {
+            if (!window.tonKhoChiNhanhMap) window.tonKhoChiNhanhMap = {};
+            const rawTon = rawTonMap[cleanMa];
+            window.tonKhoChiNhanhMap[cleanMa] = {
+              CN01: rawTon ? (Number(rawTon[0]) || 0) : (Number(sp.tonKhoBanDau) || 0),
+              CN02: rawTon ? (Number(rawTon[1]) || 0) : 0,
+              CN03: rawTon ? (Number(rawTon[2]) || 0) : 0,
+              CN04: 0
+            };
           }
           sp.tonKho = Number(window.tonKhoChiNhanhMap[cleanMa][targetCN]) || 0;
+
+          // Cập nhật giá vốn theo chi nhánh hiện tại
+          if (window.giaVonChiNhanhMap && window.giaVonChiNhanhMap[cleanMa]) {
+            const gvCN = Number(window.giaVonChiNhanhMap[cleanMa][targetCN]);
+            if (gvCN > 0) {
+              sp.giaVon = gvCN;
+            } else if (sp.giaVonBanDau) {
+              sp.giaVon = sp.giaVonBanDau;
+            }
+          } else if (rawGiaVonMap[cleanMa]) {
+            const idx = targetCN === 'CN01' ? 0 : (targetCN === 'CN02' ? 1 : (targetCN === 'CN03' ? 2 : -1));
+            if (idx >= 0 && Number(rawGiaVonMap[cleanMa][idx]) > 0) {
+              sp.giaVon = Number(rawGiaVonMap[cleanMa][idx]);
+            }
+          }
 
           // 👉 ĐỒNG BỘ DANH SÁCH IMEI CHÍNH XÁC THEO CHI NHÁNH ĐANG CHỌN
           if (window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa]) {
@@ -5880,17 +5930,23 @@ function formatVND(amount) {
         const cnObj = (rawChiNhanhList || []).find(x => x.ma === targetCN);
         thTonKho.innerText = `Tồn Kho (${cnObj ? cnObj.ten : targetCN})`;
       }
+      const thGiaVon = document.getElementById('th-giavon-chinhanh');
+      if (thGiaVon) {
+        thGiaVon.innerText = `Giá Vốn (${targetCN})`;
+      }
     }
 
     // 8. Chuyển chế độ xem tồn kho trên bảng hàng hóa
     function doiChiNhanhXemTonKho(mode) {
       if (!Array.isArray(rawHangHoa)) return;
       const thTonKho = document.getElementById('th-tonkho-chinhanh');
+      const thGiaVon = document.getElementById('th-giavon-chinhanh');
       if (mode === 'ALL') {
         rawHangHoa.forEach(sp => {
           const cleanMa = String(sp.maHang || '').trim().toUpperCase();
-          const map = window.tonKhoChiNhanhMap[cleanMa] || {};
+          const map = (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) || {};
           sp.tonKho = Object.values(map).reduce((a, b) => a + (Number(b) || 0), 0);
+          if (sp.giaVonBanDau) sp.giaVon = sp.giaVonBanDau;
           if (sp.coQuanLyIMEI && window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa]) {
             const allImeis = Object.values(window.imeiListByProductAndBranch[cleanMa]).flat();
             sp.danhSachIMEI = allImeis;
@@ -5898,14 +5954,20 @@ function formatVND(amount) {
           }
         });
         if (thTonKho) thTonKho.innerText = "Tổng Tồn (Toàn Chuỗi)";
+        if (thGiaVon) thGiaVon.innerText = "Giá Vốn Chuẩn";
       } else if (mode === 'CURRENT') {
         capNhatTonKhoTheoChiNhanhHienTai();
       } else {
         const targetCN = layMaChiNhanh(mode);
         rawHangHoa.forEach(sp => {
           const cleanMa = String(sp.maHang || '').trim().toUpperCase();
-          const map = window.tonKhoChiNhanhMap[cleanMa] || {};
+          const map = (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) || {};
           sp.tonKho = Number(map[targetCN]) || 0;
+          if (window.giaVonChiNhanhMap && window.giaVonChiNhanhMap[cleanMa]) {
+            const gv = Number(window.giaVonChiNhanhMap[cleanMa][targetCN]);
+            if (gv > 0) sp.giaVon = gv;
+            else if (sp.giaVonBanDau) sp.giaVon = sp.giaVonBanDau;
+          }
           if (sp.coQuanLyIMEI && window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa]) {
             const cnImeis = window.imeiListByProductAndBranch[cleanMa][targetCN] || [];
             sp.danhSachIMEI = cnImeis;
@@ -5914,6 +5976,7 @@ function formatVND(amount) {
         });
         const cnObj = (rawChiNhanhList || []).find(x => x.ma === targetCN);
         if (thTonKho) thTonKho.innerText = `Tồn Kho (${cnObj ? cnObj.ten : targetCN})`;
+        if (thGiaVon) thGiaVon.innerText = `Giá Vốn (${targetCN})`;
       }
       locDanhSachHangHoa(false);
     }
@@ -5922,10 +5985,15 @@ function formatVND(amount) {
     function khoiTaoTonKhoDaChiNhanh() {
       if (!Array.isArray(rawHangHoa) || !rawHangHoa.length) return;
       if (!window.tonKhoChiNhanhMap) window.tonKhoChiNhanhMap = {};
+      if (!window.giaVonChiNhanhMap) window.giaVonChiNhanhMap = {};
       if (!window.imeiListByProductAndBranch) window.imeiListByProductAndBranch = {};
 
+      const rawTonMap = window.RAW_TON_KHO_3_CHI_NHANH || {};
+      const rawGiaVonMap = window.RAW_GIA_VON_3_CHI_NHANH || {};
+      const rawImeiMap = window.RAW_IMEI_3_CHI_NHANH || {};
+
       // Tự động dọn sạch cache tồn kho cũ khi hệ thống vừa nạp lại tồn kho mới
-      const RESET_INVENTORY_KEY = 'tt_pos_reset_inventory_v20261007_imported_all_v2';
+      const RESET_INVENTORY_KEY = 'tt_pos_reset_inventory_v20261007_imported_all_v3';
       try {
         if (!localStorage.getItem(RESET_INVENTORY_KEY)) {
           localStorage.removeItem('tt_pos_tonkho_chinhanh');
@@ -5940,11 +6008,15 @@ function formatVND(amount) {
 
       rawHangHoa.forEach(h => {
         const ma = String(h.maHang || '').trim().toUpperCase();
+        if (h.giaVonBanDau === undefined) h.giaVonBanDau = Number(h.giaVon) || 0;
+        if (h.tonKhoBanDau === undefined) h.tonKhoBanDau = Number(h.tonKho) || 0;
+
+        const rawTon = rawTonMap[ma];
         if (!window.tonKhoChiNhanhMap[ma]) {
           window.tonKhoChiNhanhMap[ma] = {
-            CN01: Number(h.tonKhoBanDau !== undefined ? h.tonKhoBanDau : h.tonKho) || 0,
-            CN02: 0,
-            CN03: 0,
+            CN01: rawTon ? (Number(rawTon[0]) || 0) : (Number(h.tonKhoBanDau) || 0),
+            CN02: rawTon ? (Number(rawTon[1]) || 0) : 0,
+            CN03: rawTon ? (Number(rawTon[2]) || 0) : 0,
             CN04: 0
           };
           if (localCache[ma]) {
@@ -5953,7 +6025,37 @@ function formatVND(amount) {
             });
           }
         }
+
+        const rawGv = rawGiaVonMap[ma];
+        const baseCost = Number(h.giaVonBanDau) || 0;
+        if (!window.giaVonChiNhanhMap[ma]) {
+          window.giaVonChiNhanhMap[ma] = {
+            CN01: (rawGv && Number(rawGv[0]) > 0) ? Number(rawGv[0]) : baseCost,
+            CN02: (rawGv && Number(rawGv[1]) > 0) ? Number(rawGv[1]) : (baseCost || (rawGv && Number(rawGv[0])) || 0),
+            CN03: (rawGv && Number(rawGv[2]) > 0) ? Number(rawGv[2]) : (baseCost || (rawGv && Number(rawGv[0])) || 0),
+            CN04: baseCost
+          };
+        }
       });
+
+      // Nạp tồn kho và IMEI ban đầu từ rawImeiMap
+      if (rawImeiMap && typeof rawImeiMap === 'object') {
+        Object.keys(rawImeiMap).forEach(m => {
+          const itemImeis = rawImeiMap[m] || {};
+          if (!window.imeiListByProductAndBranch[m]) {
+            window.imeiListByProductAndBranch[m] = {
+              CN01: Array.isArray(itemImeis.CN01) ? [...itemImeis.CN01] : [],
+              CN02: Array.isArray(itemImeis.CN02) ? [...itemImeis.CN02] : [],
+              CN03: Array.isArray(itemImeis.CN03) ? [...itemImeis.CN03] : [],
+              CN04: []
+            };
+          }
+          const sp = rawHangHoa.find(h => String(h.maHang || '').trim().toUpperCase() === m);
+          if (sp) {
+            sp.coQuanLyIMEI = true;
+          }
+        });
+      }
 
       // Nạp tồn kho chính xác theo chi nhánh cho các sản phẩm có IMEI từ kho_imei
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
@@ -5990,15 +6092,18 @@ function formatVND(amount) {
             }
           }).catch(e => console.warn("Lỗi load kho_imei:", e));
 
-        // Nạp và điều chỉnh tồn kho theo chi nhánh từ các giao dịch nhập / bán
+        // Nạp và điều chỉnh tồn kho theo chi nhánh từ các giao dịch nhập / bán thực tế
         supabaseClient.from('don_hang').select('ma_don_hang,chi_nhanh,chi_tiet_san_pham,trang_thai')
           .then(({ data }) => {
             if (data && Array.isArray(data)) {
               data.forEach(dh => {
                 if (dh.trang_thai === 'Đã hủy') return;
+                const maDH = String(dh.ma_don_hang || '').toUpperCase();
+                // Bỏ qua các phiếu nạp tồn giả lập PNH_TON_ để tránh cộng dồn trùng với baseline Excel
+                if (maDH.startsWith('PNH_TON_')) return;
+
                 const cn = layMaChiNhanh(dh.chi_nhanh || 'CN01');
                 const items = Array.isArray(dh.chi_tiet_san_pham) ? dh.chi_tiet_san_pham : [];
-                const maDH = String(dh.ma_don_hang || '').toUpperCase();
                 items.forEach(it => {
                   const m = String(it.maHang || it.ma_hang || '').trim().toUpperCase();
                   const sl = Number(it.soLuong) || 0;
@@ -6006,12 +6111,10 @@ function formatVND(amount) {
                   const sp = (rawHangHoa || []).find(h => String(h.maHang || '').trim().toUpperCase() === m);
                   if (sp && sp.coQuanLyIMEI) return; // Sản phẩm quản lý theo IMEI đã được tính chính xác từ kho_imei
                   if (!window.tonKhoChiNhanhMap[m]) window.tonKhoChiNhanhMap[m] = { CN01: 0, CN02: 0, CN03: 0, CN04: 0 };
-                  if (cn !== 'CN01') {
-                    if (maDH.startsWith('PNH') || maDH.startsWith('TH')) {
-                      window.tonKhoChiNhanhMap[m][cn] = (window.tonKhoChiNhanhMap[m][cn] || 0) + sl;
-                    } else if (maDH.startsWith('HD') || maDH.startsWith('PNT')) {
-                      window.tonKhoChiNhanhMap[m][cn] = Math.max(0, (window.tonKhoChiNhanhMap[m][cn] || 0) - sl);
-                    }
+                  if (maDH.startsWith('PNH') || maDH.startsWith('TH')) {
+                    window.tonKhoChiNhanhMap[m][cn] = (window.tonKhoChiNhanhMap[m][cn] || 0) + sl;
+                  } else if (maDH.startsWith('HD') || maDH.startsWith('PNT')) {
+                    window.tonKhoChiNhanhMap[m][cn] = Math.max(0, (window.tonKhoChiNhanhMap[m][cn] || 0) - sl);
                   }
                 });
               });
@@ -8042,6 +8145,7 @@ function formatVND(amount) {
                 maNhom: h.ma_nhom,
                 donViTinh: h.don_vi_tinh,
                 giaVon: Number(h.gia_von) || 0,
+                giaVonBanDau: Number(h.gia_von) || 0,
                 giaBan: Number(h.gia_ban) || 0,
                 coQuanLyIMEI: Boolean(h.co_quan_ly_imei),
                 tonKho: Number(h.ton_kho) || 0,
@@ -8065,6 +8169,7 @@ function formatVND(amount) {
       google.script.run.withSuccessHandler(function(data) {
         rawHangHoa = (data || []).map(h => ({
           ...h,
+          giaVonBanDau: Number(h.giaVon) || 0,
           tonKhoBanDau: Number(h.tonKho) || 0
         }));
         khoiTaoTonKhoDaChiNhanh();
@@ -15924,7 +16029,7 @@ let danhSachTamXuatExcel = [];
         body.innerHTML = `
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div class="bg-blue-50/50 p-3.5 rounded-2xl border border-blue-100 space-y-1">
-              <span class="text-slate-400 block font-semibold text-[11px]">GIÁ VỐN NHẬP</span>
+              <span class="text-slate-400 block font-semibold text-[11px]">GIÁ VỐN NHẬP (${targetCN})</span>
               <strong class="text-slate-900 font-mono text-base font-extrabold">${(Number(h.giaVon) || 0).toLocaleString()} đ</strong>
               <span class="text-[10px] text-slate-400 block">Dùng tính lợi nhuận & giá trị kho</span>
             </div>
@@ -15934,7 +16039,7 @@ let danhSachTamXuatExcel = [];
               <span class="text-[10px] text-emerald-600 block">Giá niêm yết bán lẻ POS</span>
             </div>
             <div class="bg-purple-50/50 p-3.5 rounded-2xl border border-purple-100 space-y-1">
-              <span class="text-slate-400 block font-semibold text-[11px]">TỔNG TỒN KHO</span>
+              <span class="text-slate-400 block font-semibold text-[11px]">TỔNG TỒN KHO (${targetCN})</span>
               <strong class="text-purple-700 font-mono text-base font-extrabold">${(Number(h.tonKho) || 0).toLocaleString()} ${h.donViTinh || 'Cái'}</strong>
               <span class="text-[10px] text-purple-600 block">${isQuanLyIMEI ? 'Quản lý theo Serial/IMEI' : 'Quản lý theo số lượng thông thường'}</span>
             </div>
@@ -15959,12 +16064,12 @@ let danhSachTamXuatExcel = [];
             </div>
           </div>
 
-          <!-- Phân bổ tồn kho theo từng chi nhánh -->
+          <!-- Phân bổ tồn kho & giá vốn theo từng chi nhánh -->
           <div class="bg-amber-50/50 p-3.5 rounded-2xl border border-amber-200/80 space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-amber-950 flex items-center space-x-1.5">
                 <i class="fa-solid fa-code-branch text-amber-600"></i>
-                <span>Phân bổ tồn kho theo từng chi nhánh:</span>
+                <span>Phân bổ tồn kho & giá vốn theo từng chi nhánh:</span>
               </span>
               <span class="text-[11px] font-extrabold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200">
                 Tổng toàn chuỗi: ${(Object.values((window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) || {})).reduce((a,b)=>a+(Number(b)||0), 0).toLocaleString()} ${h.donViTinh || 'Cái'}
@@ -15974,11 +16079,14 @@ let danhSachTamXuatExcel = [];
               ${(rawChiNhanhList || []).map(cn => {
                 const mapCN = (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) || {};
                 const slCN = Number(mapCN[cn.ma]) || 0;
+                const mapGv = (window.giaVonChiNhanhMap && window.giaVonChiNhanhMap[cleanMa]) || {};
+                const gvCN = Number(mapGv[cn.ma]) || 0;
                 const isCur = cn.ma === targetCN;
                 return `
                   <div class="p-2.5 rounded-xl border text-center transition ${isCur ? 'bg-amber-100/70 border-amber-400 ring-2 ring-amber-400/40 shadow-xs' : 'bg-white border-slate-200'}">
                     <div class="text-[10px] text-slate-500 font-bold truncate" title="${cn.ten}">${cn.ma}: ${cn.ten}</div>
-                    <div class="text-base font-black font-mono mt-0.5 ${slCN > 0 ? 'text-amber-900' : 'text-slate-400'}">${slCN.toLocaleString()}</div>
+                    <div class="text-base font-black font-mono mt-0.5 ${slCN > 0 ? 'text-amber-900' : 'text-slate-400'}">${slCN.toLocaleString()} <span class="text-[10px] font-normal text-slate-500">${h.donViTinh || 'Cái'}</span></div>
+                    <div class="text-[10px] font-mono text-slate-500 mt-0.5">Vốn: <b class="text-slate-700">${gvCN > 0 ? gvCN.toLocaleString() + ' đ' : (Number(h.giaVon) || 0).toLocaleString() + ' đ'}</b></div>
                     ${isCur ? '<span class="text-[9px] text-amber-700 font-bold uppercase tracking-wider block mt-0.5">📍 Chi nhánh này</span>' : ''}
                   </div>
                 `;
