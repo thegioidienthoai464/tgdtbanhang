@@ -13,3 +13,5 @@ flutter:
       android:
         package: com.thegioidienthoai.app_branding
         pluginClass: AppBrandingPlugin
+      ios:
+        pluginClass: AppBrandingPlugin
