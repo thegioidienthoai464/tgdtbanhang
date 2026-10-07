@@ -226,8 +226,10 @@ class LanPrinterService {
       final ptttStr = order.hinhThucTT == 'TIEN_MAT'
           ? 'Tien mat'
           : order.hinhThucTT == 'TAI_KHOAN'
-              ? 'Chuyen khoan'
-              : 'Ghi no';
+              ? 'Chuyen khoan${order.nganHangNhan != null ? " (${removeDiacritics(order.nganHangNhan!)})" : ""}'
+              : order.hinhThucTT == 'HON_HOP'
+                  ? 'Hon hop (TM + CK)'
+                  : 'Ghi no';
 
       bytes.addAll([0x1B, 0x45, 0x01]); // In đậm
       bytes.addAll(utf8.encode("TONG TIEN HANG  : $tongTienStr\n"));
