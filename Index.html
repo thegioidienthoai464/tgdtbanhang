@@ -7960,6 +7960,7 @@ function formatVND(amount) {
       if (elForm) elForm.innerHTML = formHtml;
       const elCha = document.getElementById('input-nhom-cha');
       if (elCha) elCha.innerHTML = '<option value="">(Không chọn nhóm cha - Là nhóm chính)</option>' + nhomCha.map(cha => `<option value="${cha.MaNhom}">📁 ${cha.TenNhom}</option>`).join('');
+      if (typeof napDanhSachNhomHangVaoCongThuc === 'function') napDanhSachNhomHangVaoCongThuc();
     }
 
     let selectedHangHoaSet = new Set();
@@ -9113,14 +9114,97 @@ function formatVND(amount) {
       const elTarget = document.getElementById('congthuc-target-name');
       if (elTarget) elTarget.innerText = targetName;
 
-      // Nạp danh sách nhóm hàng vào select trong modal công thức kèm số lượng SP
+    function napDanhSachNhomHangVaoCongThuc() {
       const selNhom = document.getElementById('select-nhom-congthuc');
-      if (selNhom && typeof rawNhomHang !== 'undefined' && Array.isArray(rawNhomHang)) {
-        selNhom.innerHTML = rawNhomHang.map(n => {
-          const cnt = rawHangHoa.filter(h => h.maNhom === n.maNhom).length;
-          return `<option value="${n.maNhom}">📁 ${n.tenNhom || n.maNhom} (${cnt} sản phẩm)</option>`;
-        }).join('');
+      if (!selNhom) return;
+
+      const hangHoaList = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) ? rawHangHoa : [];
+      let nhomList = (typeof rawNhomHang !== 'undefined' && Array.isArray(rawNhomHang)) ? rawNhomHang : [];
+
+      // Nếu rawNhomHang đang trống, thử nạp từ hàm loadNhomHang hoặc trích xuất tự động từ danh mục hàng hóa
+      if (!nhomList.length) {
+        if (typeof loadNhomHang === 'function') {
+          try { loadNhomHang(); } catch(e) {}
+        }
+        // Thu thập tất cả các nhóm hàng thực tế đang có trong rawHangHoa
+        const nhomSet = new Set();
+        hangHoaList.forEach(h => {
+          const m = h.maNhom || h.ma_nhom || h.nhomHang || h.tenNhom;
+          if (m) nhomSet.add(String(m).trim());
+        });
+        if (nhomSet.size > 0) {
+          nhomList = Array.from(nhomSet).map(m => ({
+            MaNhom: m,
+            TenNhom: (typeof layTenDayDuNhomHang === 'function') ? layTenDayDuNhomHang(m) : m,
+            MaNhomCha: ""
+          }));
+        }
       }
+
+      if (!nhomList.length) {
+        selNhom.innerHTML = '<option value="">(Chưa có nhóm hàng nào trong hệ thống)</option>';
+        return;
+      }
+
+      // Chuẩn hóa danh sách nhóm hàng (hỗ trợ cả PascalCase, camelCase và snake_case)
+      const cleanNhomList = nhomList.map(n => {
+        const ma = String(n.MaNhom || n.maNhom || n.ma_nhom || '').trim();
+        const ten = String(n.TenNhom || n.tenNhom || n.ten_nhom || ma).trim();
+        const cha = String(n.MaNhomCha || n.maNhomCha || n.ma_nhom_cha || '').trim();
+        return { ma, ten, cha };
+      }).filter(n => n.ma !== '');
+
+      // Tách nhóm cha (không có nhóm cha) và nhóm con
+      const nhomCha = cleanNhomList.filter(n => !n.cha);
+
+      // Hàm đếm số sản phẩm trong 1 nhóm hoặc các nhóm con
+      function demSanPhamTheoNhom(targetMa, includeChildren = false) {
+        const targetClean = String(targetMa || '').trim().toUpperCase();
+        const targetCodes = [targetClean];
+        if (includeChildren) {
+          cleanNhomList.filter(n => n.cha.toUpperCase() === targetClean).forEach(c => {
+            targetCodes.push(c.ma.toUpperCase());
+          });
+        }
+        return hangHoaList.filter(h => {
+          const hMa = String(h.maNhom || h.ma_nhom || h.nhomHang || '').trim().toUpperCase();
+          const hTen = String(h.tenNhom || '').trim().toLowerCase();
+          if (targetCodes.includes(hMa)) return true;
+          // Tìm theo tên nếu mã không khớp
+          const matchedGroup = cleanNhomList.find(n => targetCodes.includes(n.ma.toUpperCase()));
+          if (matchedGroup && (matchedGroup.ten.toLowerCase() === hTen || matchedGroup.ten.toLowerCase() === hMa.toLowerCase())) {
+            return true;
+          }
+          return false;
+        }).length;
+      }
+
+      let optionsHtml = '';
+
+      // Đổ danh sách theo cây phân cấp trực quan: Nhóm Cha -> Nhóm Con
+      nhomCha.forEach(cha => {
+        const countCha = demSanPhamTheoNhom(cha.ma, true);
+        optionsHtml += `<option value="${cha.ma}">📁 [Nhóm chính] ${cha.ten} (${countCha} sản phẩm)</option>`;
+
+        const cacNhomCon = cleanNhomList.filter(n => n.cha.toUpperCase() === cha.ma.toUpperCase());
+        cacNhomCon.forEach(con => {
+          const countCon = demSanPhamTheoNhom(con.ma, false);
+          optionsHtml += `<option value="${con.ma}">&nbsp;&nbsp;&nbsp;&nbsp;└── ${con.ten} (${countCon} sản phẩm)</option>`;
+        });
+      });
+
+      // Nhóm mồ côi (nếu có nhóm con mà nhóm cha không nằm trong danh sách nhóm cha)
+      const orphanGroups = cleanNhomList.filter(n => n.cha && !nhomCha.some(p => p.ma.toUpperCase() === n.cha.toUpperCase()));
+      orphanGroups.forEach(orphan => {
+        const countOrphan = demSanPhamTheoNhom(orphan.ma, false);
+        optionsHtml += `<option value="${orphan.ma}">📁 ${orphan.ten} (${countOrphan} sản phẩm)</option>`;
+      });
+
+      selNhom.innerHTML = optionsHtml || '<option value="">(Không có nhóm hàng)</option>';
+    }
+
+      // Nạp danh sách nhóm hàng đầy đủ và chuẩn xác vào select modal
+      napDanhSachNhomHangVaoCongThuc();
 
       thayDoiPhamViCongThuc();
       thayDoiLoaiCongThuc();
@@ -9236,15 +9320,49 @@ function formatVND(amount) {
 
     // Kiểm tra sản phẩm có thuộc phạm vi áp dụng không
     function kiemTraSanPhamKhopPhamVi(sp, params) {
+      if (!sp) return false;
       if (params.phamVi === 'TAT_CA') return true;
+
       if (params.phamVi === 'THEO_NHOM') {
-        return String(sp.maNhom || '') === String(params.nhomChon || '');
+        const targetNhom = String(params.nhomChon || '').trim().toUpperCase();
+        if (!targetNhom) return false;
+
+        const spMaNhom = String(sp.maNhom || sp.ma_nhom || sp.nhomHang || '').trim().toUpperCase();
+        const spTenNhom = String(sp.tenNhom || '').trim().toLowerCase();
+
+        // 1. Khớp trực tiếp mã nhóm
+        if (spMaNhom === targetNhom) return true;
+
+        // 2. Nếu targetNhom là nhóm cha, kiểm tra xem sp có thuộc nhóm con nào của targetNhom không
+        const nhomList = (typeof rawNhomHang !== 'undefined' && Array.isArray(rawNhomHang)) ? rawNhomHang : [];
+        const childGroupCodes = nhomList
+          .filter(n => String(n.MaNhomCha || n.maNhomCha || n.ma_nhom_cha || '').trim().toUpperCase() === targetNhom)
+          .map(n => String(n.MaNhom || n.maNhom || n.ma_nhom || '').trim().toUpperCase());
+
+        if (childGroupCodes.includes(spMaNhom)) return true;
+
+        // 3. Khớp theo tên nhóm hàng
+        const targetGroupObj = nhomList.find(n => String(n.MaNhom || n.maNhom || n.ma_nhom || '').trim().toUpperCase() === targetNhom);
+        if (targetGroupObj) {
+          const targetTen = String(targetGroupObj.TenNhom || targetGroupObj.tenNhom || targetGroupObj.ten_nhom || '').trim().toLowerCase();
+          if (targetTen && (targetTen === spTenNhom || targetTen === spMaNhom.toLowerCase())) return true;
+        }
+
+        return false;
       }
+
       if (params.phamVi === 'THEO_LOAI') {
-        const isIMEI = Boolean(sp.coQuanLyIMEI);
+        const isIMEI = Boolean(
+          sp.coQuanLyIMEI === true || 
+          String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' ||
+          String(sp.coQuanLyIMEI).trim() === '1' ||
+          (sp.tonIMEI && sp.tonIMEI > 0) ||
+          (sp.danhSachIMEI && sp.danhSachIMEI.length > 0)
+        );
         if (params.loaiChon === 'IMEI') return isIMEI;
         if (params.loaiChon === 'THUONG') return !isIMEI;
       }
+
       return true;
     }
 
