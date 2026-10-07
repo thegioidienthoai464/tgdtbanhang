@@ -4,6 +4,6 @@
   "force_update": false,
   "release_notes": "• Thêm mục chọn khách hàng trên giao diện thu ngân POS (tìm kiếm theo tên, SĐT, hiển thị nợ cũ, tạo nhanh khách hàng).\n• Bổ sung phương thức thanh toán hỗn hợp (kết hợp linh hoạt Tiền mặt + Chuyển khoản ngân hàng).\n• Cho phép lựa chọn tài khoản ngân hàng nhận tiền chi tiết khi thanh toán chuyển khoản.\n• Tự do điều chỉnh số tiền khách thanh toán: tự động tính tiền thiếu (ghi nhận vào công nợ) hoặc tiền thừa (trả khách hoặc cấn trừ nợ).",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.0.9/app-release.apk",
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.0.9/TT_POS_v1.0.9.apk",
   "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.0.9"
 }
