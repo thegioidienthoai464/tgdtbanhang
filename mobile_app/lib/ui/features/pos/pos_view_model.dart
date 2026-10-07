@@ -219,8 +219,12 @@ class PosViewModel extends ChangeNotifier {
       final order = OrderModel(
         maDonHang: maDon,
         ngayBan: now,
-        maKH: _selectedCustomer?.maDoiTac ?? 'KHACHLE',
-        tenKH: _selectedCustomer?.tenDoiTac ?? 'Khách lẻ',
+        maKH: (_selectedCustomer != null && _selectedCustomer!.maDoiTac.trim().isNotEmpty)
+            ? _selectedCustomer!.maDoiTac.trim()
+            : 'KHACHLE',
+        tenKH: (_selectedCustomer != null && _selectedCustomer!.tenDoiTac.trim().isNotEmpty)
+            ? _selectedCustomer!.tenDoiTac.trim()
+            : 'Khách lẻ',
         soDienThoai: _selectedCustomer?.soDienThoai ?? '',
         chiNhanh: branch,
         tongTien: total,
