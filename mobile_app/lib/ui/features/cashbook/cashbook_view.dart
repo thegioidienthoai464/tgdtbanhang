@@ -90,36 +90,61 @@ class _CashbookViewState extends State<CashbookView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 1. Dòng tiêu đề
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.account_balance_wallet_rounded, color: Colors.amber, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'TỔNG TỒN QUỸ (Tiền mặt + Ngân hàng)',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ],
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.amber, size: 16),
                     ),
-                    Text(
-                      Formatters.formatCurrency(totalFund),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'TỔNG TỒN QUỸ',
                       style: TextStyle(
-                        fontSize: 20,
+                        color: Colors.white70,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: totalFund >= 0 ? const Color(0xFF10B981) : Colors.redAccent,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'Tiền mặt + Ngân hàng',
+                        style: TextStyle(color: Colors.white70, fontSize: 10.5),
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
 
-                const SizedBox(height: 12),
+                // 2. Số tiền Tổng tồn quỹ nổi bật - không bao giờ bị tràn số
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    Formatters.formatCurrency(totalFund),
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                      color: totalFund >= 0 ? const Color(0xFF10B981) : Colors.redAccent,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                // 3. Khung phân tách Quỹ tiền mặt & Quỹ ngân hàng
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -141,12 +166,16 @@ class _CashbookViewState extends State<CashbookView> {
                               ],
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              Formatters.formatCurrency(cashBalance),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                fontSize: 14,
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                Formatters.formatCurrency(cashBalance),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
                           ],
@@ -176,15 +205,18 @@ class _CashbookViewState extends State<CashbookView> {
                               ],
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              Formatters.formatCurrency(bankBalance),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF38BDF8),
-                                fontSize: 14,
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                Formatters.formatCurrency(bankBalance),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF38BDF8),
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
-
                           ],
                         ),
                       ),
