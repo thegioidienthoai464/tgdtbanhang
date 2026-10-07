@@ -191,14 +191,33 @@ class _PosViewState extends State<PosView> {
                     onPressed: () => vm.setCustomer(null),
                   )
                 else
-                  TextButton.icon(
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    icon: const Icon(Icons.person_search_outlined, size: 16),
-                    label: const Text('Chọn', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                    onPressed: () => _showCustomerSelectorBottomSheet(context, vm),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        icon: const Icon(Icons.person_search_outlined, size: 16),
+                        label: const Text('Chọn', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        onPressed: () => _showCustomerSelectorBottomSheet(context, vm),
+                      ),
+                      const SizedBox(width: 4),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryBlue.withOpacity(0.12),
+                          foregroundColor: AppTheme.primaryBlue,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          visualDensity: VisualDensity.compact,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        icon: const Icon(Icons.person_add_alt_1, size: 15),
+                        label: const Text('+ Thêm KH', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                        onPressed: () => _showQuickAddCustomerDialog(context, vm),
+                      ),
+                    ],
                   ),
               ],
             ),
@@ -493,7 +512,7 @@ class _PosViewState extends State<PosView> {
   }
 
   // Dialog / Modal Tạo khách hàng mới đầy đủ thông tin
-  void _showQuickAddCustomerDialog(BuildContext context, PosViewModel vm, StateSetter parentSetState) {
+  void _showQuickAddCustomerDialog(BuildContext context, PosViewModel vm, [StateSetter? parentSetState]) {
     final now = DateTime.now();
     final defaultCode = "KH${now.millisecondsSinceEpoch.toString().substring(7)}";
 
@@ -696,7 +715,9 @@ class _PosViewState extends State<PosView> {
                           );
 
                           if (created != null) {
-                            parentSetState(() {});
+                            if (parentSetState != null) {
+                              parentSetState(() {});
+                            }
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Đã tạo khách hàng thành công: ${created.tenDoiTac} (${created.maDoiTac})'),
