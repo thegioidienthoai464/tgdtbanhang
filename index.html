@@ -251,7 +251,25 @@
    * VÙNG NỘI DUNG CHÍNH (MAIN AREA)
    * ==================================================================== -->
   <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-   <!-- Header Topbar -->
+    <!-- BANNER CẢNH BÁO MÔI TRƯỜNG KIỂM THỬ (CHỈ HIỂN THỊ KHI Ở CHẾ ĐỘ THỬ NGHIỆM) -->
+    <div id="env-test-banner" class="hidden bg-gradient-to-r from-amber-600 via-orange-600 to-indigo-700 text-white px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold shadow-md flex-shrink-0 z-50">
+      <div class="flex items-center space-x-2">
+        <span class="px-2 py-0.5 bg-white text-orange-700 font-extrabold rounded-md uppercase tracking-wider text-[10px] animate-pulse">🧪 MÔI TRƯỜNG THỬ NGHIỆM</span>
+        <span class="text-white/95">Bạn đang ở liên kết <b>Chạy thử tính năng (Sandbox)</b>. Mọi giao dịch thử được cách ly an toàn 100%, <b>không ảnh hưởng</b> đến số liệu bán hàng thực tế!</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button type="button" onclick="xoaSachDuLieuSandboxTest()" title="Xóa toàn bộ các đơn hàng thử, dữ liệu thử và nạp lại từ hệ thống thật" class="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white rounded-lg text-[11px] font-bold flex items-center space-x-1 transition cursor-pointer">
+          <i class="fa-solid fa-rotate-left"></i>
+          <span>Làm mới dữ liệu thử</span>
+        </button>
+        <a href="https://tgdtbanhang.netlify.app" target="_blank" title="Mở trang bán hàng chính thức đang hoạt động thực tế" class="px-2.5 py-1 bg-white text-slate-800 hover:bg-slate-100 rounded-lg text-[11px] font-bold flex items-center space-x-1 transition shadow-xs cursor-pointer">
+          <i class="fa-solid fa-arrow-up-right-from-square text-orange-600"></i>
+          <span>Vào Bán hàng thực tế</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Header Topbar -->
     <header class="h-14 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between shadow-xs flex-shrink-0">
       <div class="flex items-center space-x-3">
         <h2 id="page-title" class="font-bold text-sm text-slate-800 tracking-tight">1. Tổng quan tình hình kinh doanh</h2>
@@ -262,6 +280,10 @@
           <i class="fa-solid fa-bolt text-amber-500"></i>
           <span id="btn-sync-supabase-label">Đồng bộ Supabase</span>
         </button>
+        <a id="btn-open-test-env" href="test.html" target="_blank" title="Mở môi trường chạy thử tính năng mới trước khi đưa vào hoạt động thực tế" class="px-3 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-full text-[11px] font-bold flex items-center space-x-1.5 transition shadow-xs">
+          <i class="fa-solid fa-flask text-purple-600"></i>
+          <span>Chạy thử tính năng</span>
+        </a>
         <button type="button" onclick="moModalHuongDanIos()" title="Cài đặt và sử dụng ứng dụng trên iPhone / iPad" class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-full text-[11px] font-bold flex items-center space-x-1.5 transition shadow-xs">
           <i class="fa-brands fa-apple text-xs text-slate-800"></i>
           <span>App iPhone/iPad</span>
@@ -4397,6 +4419,178 @@
     }
 
     /* ====================================================================
+     * HỆ THỐNG PHÂN TÁCH MÔI TRƯỜNG & SANDBOX CHỐNG ẢNH HƯỞNG DỮ LIỆU THẬT
+     * ==================================================================== */
+    const IS_TEST_ENV = (typeof window !== 'undefined') && (
+      window.location.pathname.toLowerCase().includes('test.html') ||
+      window.location.search.toLowerCase().includes('mode=test') ||
+      window.location.search.toLowerCase().includes('env=test') ||
+      window.location.hostname.toLowerCase().includes('test') ||
+      (window.IS_FORCE_TEST_ENV === true)
+    );
+
+    function initEnvironmentUI() {
+      const banner = document.getElementById('env-test-banner');
+      const btnOpenTest = document.getElementById('btn-open-test-env');
+      const btnQuickLoginTest = document.getElementById('btn-login-quick-test');
+      const logoTitle = document.querySelector('h1.font-bold.text-sm.text-white');
+
+      if (IS_TEST_ENV) {
+        document.title = "🧪 [TEST MODE] T&T POS - Môi Trường Chạy Thử Tính Năng";
+        if (banner) banner.classList.remove('hidden');
+        if (btnOpenTest) btnOpenTest.classList.add('hidden');
+        if (btnQuickLoginTest) btnQuickLoginTest.classList.remove('hidden');
+        if (logoTitle && !logoTitle.innerHTML.includes('TEST')) {
+          logoTitle.innerHTML += ' <span class="ml-1 px-1.5 py-0.2 bg-amber-400 text-slate-900 text-[10px] font-black rounded shadow-xs">TEST</span>';
+        }
+      } else {
+        if (banner) banner.classList.add('hidden');
+        if (btnOpenTest) btnOpenTest.classList.remove('hidden');
+        if (btnQuickLoginTest) btnQuickLoginTest.classList.add('hidden');
+      }
+    }
+
+    function xoaSachDuLieuSandboxTest() {
+      if (!confirm("Bạn có chắc chắn muốn xóa toàn bộ dữ liệu đơn hàng thử, hóa đơn thử và làm mới lại môi trường kiểm thử không? Dữ liệu thực tế sẽ được nạp lại nguyên bản.")) return;
+      ['tt_sandbox_don_hang', 'tt_sandbox_so_quy', 'tt_sandbox_phieu_tra_hang', 'tt_sandbox_dm_hanghoa', 'tt_sandbox_dm_doitac', 'tt_sandbox_dm_banggia'].forEach(k => {
+        try { localStorage.removeItem(k); } catch(e) {}
+      });
+      alert("✅ Đã làm mới môi trường thử nghiệm thành công!");
+      window.location.reload();
+    }
+
+    function getSandboxCache(tableName) {
+      try {
+        const raw = localStorage.getItem('tt_sandbox_' + tableName);
+        return raw ? JSON.parse(raw) : [];
+      } catch(e) { return []; }
+    }
+
+    function saveToSandboxCache(tableName, values) {
+      try {
+        const list = getSandboxCache(tableName);
+        const toAdd = Array.isArray(values) ? values : [values];
+        const merged = [...toAdd, ...list];
+        localStorage.setItem('tt_sandbox_' + tableName, JSON.stringify(merged.slice(0, 500)));
+      } catch(e) {}
+    }
+
+    function updateInSandboxCache(tableName, col, val, newValues) {
+      try {
+        const list = getSandboxCache(tableName);
+        list.forEach(item => {
+          if (String(item[col]) === String(val)) {
+            Object.assign(item, newValues);
+          }
+        });
+        localStorage.setItem('tt_sandbox_' + tableName, JSON.stringify(list));
+      } catch(e) {}
+    }
+
+    function deleteInSandboxCache(tableName, col, val) {
+      try {
+        let list = getSandboxCache(tableName);
+        list = list.filter(item => String(item[col]) !== String(val));
+        localStorage.setItem('tt_sandbox_' + tableName, JSON.stringify(list));
+      } catch(e) {}
+    }
+
+    function wrapSupabaseWithSandbox(client) {
+      if (!client || !IS_TEST_ENV) return client;
+
+      console.warn("🛡️ KÍCH HOẠT SANDBOX LAYER: Mọi thao tác ghi (insert, update, delete, upsert) được cách ly 100% trong Sandbox của trình duyệt và KHÔNG ghi vào Supabase thực tế!");
+
+      const rawFrom = client.from.bind(client);
+
+      client.from = function(tableName) {
+        const queryBuilder = rawFrom(tableName);
+        const isSensitiveTable = ['don_hang', 'so_quy', 'phieu_tra_hang', 'dm_hanghoa', 'dm_doitac', 'dm_banggia', 'kho_imei'].includes(tableName);
+
+        if (!isSensitiveTable) return queryBuilder;
+
+        const originalSelect = queryBuilder.select?.bind(queryBuilder);
+
+        queryBuilder.insert = function(values) {
+          console.log(`[SANDBOX TEST] Intercepted insert vào [${tableName}]:`, values);
+          saveToSandboxCache(tableName, values);
+          return Promise.resolve({ data: values, error: null });
+        };
+
+        queryBuilder.upsert = function(values) {
+          console.log(`[SANDBOX TEST] Intercepted upsert vào [${tableName}]:`, values);
+          saveToSandboxCache(tableName, values);
+          return Promise.resolve({ data: values, error: null });
+        };
+
+        queryBuilder.update = function(values) {
+          console.log(`[SANDBOX TEST] Intercepted update vào [${tableName}]:`, values);
+          return {
+            eq: function(col, val) {
+              updateInSandboxCache(tableName, col, val, values);
+              return Promise.resolve({ data: [values], error: null });
+            },
+            in: function(col, vals) {
+              return Promise.resolve({ data: [values], error: null });
+            },
+            then: function(cb) {
+              return Promise.resolve({ data: [values], error: null }).then(cb);
+            }
+          };
+        };
+
+        queryBuilder.delete = function() {
+          console.log(`[SANDBOX TEST] Intercepted delete từ [${tableName}]`);
+          return {
+            eq: function(col, val) {
+              deleteInSandboxCache(tableName, col, val);
+              return Promise.resolve({ data: [], error: null });
+            },
+            in: function(col, vals) {
+              return Promise.resolve({ data: [], error: null });
+            },
+            then: function(cb) {
+              return Promise.resolve({ data: [], error: null }).then(cb);
+            }
+          };
+        };
+
+        if (originalSelect && (tableName === 'don_hang' || tableName === 'so_quy')) {
+          queryBuilder.select = function(...args) {
+            const selectPromise = originalSelect(...args);
+            const originalOrder = selectPromise.order?.bind(selectPromise);
+            const wrapPromise = function(p) {
+              const oldThen = p.then.bind(p);
+              p.then = function(onSuccess, onError) {
+                return oldThen(res => {
+                  if (res && res.data) {
+                    const sandboxRows = getSandboxCache(tableName);
+                    if (sandboxRows.length > 0) {
+                      res.data = [...sandboxRows, ...res.data];
+                    }
+                  }
+                  return onSuccess ? onSuccess(res) : res;
+                }, onError);
+              };
+              return p;
+            };
+
+            if (selectPromise.order) {
+              selectPromise.order = function(...orderArgs) {
+                const ordered = originalOrder(...orderArgs);
+                return wrapPromise(ordered);
+              };
+            }
+            return wrapPromise(selectPromise);
+          };
+        }
+
+        return queryBuilder;
+      };
+
+      return client;
+    }
+
+    /* ====================================================================
      * KẾT NỐI SUPABASE POSTGRESQL (TỐC ĐỘ SIÊU CAO < 100MS)
      * ==================================================================== */
     const SUPABASE_CONFIG = {
@@ -4407,7 +4601,8 @@
     var supabaseClient = null;
     try {
       if (typeof supabase !== 'undefined' && supabase.createClient) {
-        supabaseClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+        const rawClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+        supabaseClient = wrapSupabaseWithSandbox(rawClient);
         console.log("⚡ Supabase Client đã được khởi tạo thành công!");
       }
     } catch (e) {
@@ -13215,6 +13410,7 @@ function timKiemKhachHangPOS(kw) {
 
     /* Khởi động ứng dụng */
     function khoiDongUngDung() {
+      if (typeof initEnvironmentUI === 'function') initEnvironmentUI();
       const now = new Date();
       const dateEl = document.getElementById('current-date-badge');
       if (dateEl) dateEl.innerText = now.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' });
@@ -13237,6 +13433,22 @@ function timKiemKhachHangPOS(kw) {
       });
     }
 
+    function dangNhapNhanhTester() {
+      const testerUser = {
+        username: "tester",
+        hoTen: "Kỹ sư Kiểm thử (Sandbox)",
+        vaiTro: "Quản trị viên",
+        chiNhanh: "CN01: Trụ sở chính Thanh Miện",
+        quyenHan: ["FULL", "ADMIN", "POS", "KHO", "SOQUY", "BANGGIA", "CAIDAT"]
+      };
+      currentUser = testerUser;
+      window.currentUser = testerUser;
+      sessionStorage.setItem("tt_pos_logged_user", JSON.stringify(testerUser));
+      document.getElementById('modal-dangnhap')?.classList.add('hidden');
+      if (typeof hienThiGiaoDienSauKhiDangNhap === 'function') hienThiGiaoDienSauKhiDangNhap();
+      if (typeof showNotification === 'function') showNotification("Đã đăng nhập thành công vào Chế độ Kiểm thử (Sandbox)!");
+    }
+
     if (document.readyState === 'complete') {
       khoiDongUngDung();
     } else {
@@ -13248,6 +13460,7 @@ function timKiemKhachHangPOS(kw) {
 
     // Kiểm tra & Khởi tạo phiên đăng nhập ngay khi mở trang
     function kiemTraVaKhoiTaoPhienLamViec() {
+      if (typeof initEnvironmentUI === 'function') initEnvironmentUI();
       let savedUser = sessionStorage.getItem("erp_logged_user") || sessionStorage.getItem("tt_pos_logged_user");
       if (!savedUser) {
         savedUser = localStorage.getItem("erp_logged_user") || localStorage.getItem("tt_pos_logged_user");
@@ -19914,6 +20127,12 @@ function loadSoQuy(filter) {
         <button type="button" id="btn-login-submit" onclick="xuLyDangNhap()" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-2xl font-bold text-sm shadow-lg shadow-amber-500/25 transition flex items-center justify-center space-x-2 cursor-pointer active:scale-[0.98]">
           <span>ĐĂNG NHẬP HỆ THỐNG</span>
           <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
+        </button>
+
+        <!-- Nút vào nhanh bằng tài khoản thử nghiệm (Chỉ hiện khi ở Test Mode) -->
+        <button type="button" id="btn-login-quick-test" onclick="dangNhapNhanhTester()" class="hidden w-full py-2.5 bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 text-purple-700 border border-purple-200 rounded-2xl font-bold text-xs transition flex items-center justify-center space-x-2 cursor-pointer shadow-xs">
+          <i class="fa-solid fa-flask text-purple-600"></i>
+          <span>Vào nhanh với quyền Quản trị Kiểm thử (Sandbox)</span>
         </button>
       </div>
 
