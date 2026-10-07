@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../../ui/core/app_theme.dart';
@@ -21,10 +22,10 @@ class UpdateInfo {
 
   factory UpdateInfo.fromJson(Map<String, dynamic> json) {
     return UpdateInfo(
-      version: json['version'] ?? '1.0.0',
-      buildNumber: json['build_number'] ?? 1,
+      version: json['version'] ?? '1.0.8',
+      buildNumber: json['build_number'] ?? 9,
       releaseNotes: json['release_notes'] ?? 'Bản cập nhật tối ưu hệ thống.',
-      downloadUrl: json['download_url'] ?? 'https://tgdtbanhang.netlify.app/app-release.apk',
+      downloadUrl: json['download_url'] ?? 'https://tgdtbanhang.netlify.app/download.html',
       forceUpdate: json['force_update'] == true,
     );
   }
@@ -74,8 +75,8 @@ class UpdateService {
   static void showUpdateDialog(BuildContext context, UpdateInfo update, {bool isManualCheck = false}) {
     showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (context) {
+      barrierDismissible: !update.forceUpdate,
+      builder: (dialogCtx) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
@@ -104,6 +105,12 @@ class UpdateService {
                   ],
                 ),
               ),
+              if (!update.forceUpdate)
+                IconButton(
+                  icon: const Icon(Icons.close, size: 20, color: AppTheme.textMuted),
+                  onPressed: () => Navigator.pop(dialogCtx),
+                  tooltip: 'Đóng',
+                ),
             ],
           ),
           content: Column(
@@ -130,55 +137,76 @@ class UpdateService {
               ),
             ],
           ),
+          actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
-            if (!update.forceUpdate)
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Để sau', style: TextStyle(color: AppTheme.textMuted)),
-              ),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.download_rounded, size: 18),
-              label: const Text('CẬP NHẬT NGAY'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryBlue,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              onPressed: () async {
-                if (!update.forceUpdate) {
-                  Navigator.pop(context);
-                }
-                final uri = Uri.parse(update.downloadUrl);
-                bool success = false;
-                try {
-                  success = await launchUrl(uri, mode: LaunchMode.externalApplication);
-                } catch (_) {}
-
-                if (!success) {
-                  try {
-                    success = await launchUrl(uri, mode: LaunchMode.platformDefault);
-                  } catch (_) {}
-                }
-
-                if (!success) {
-                  try {
-                    success = await launchUrl(uri);
-                  } catch (_) {}
-                }
-
-                if (!success && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      duration: const Duration(seconds: 8),
-                      content: Text('Vui lòng mở trình duyệt và tải tại: ${update.downloadUrl}'),
-                      action: SnackBarAction(
-                        label: 'Đóng',
-                        onPressed: () {},
-                      ),
-                    ),
-                  );
-                }
+            TextButton.icon(
+              icon: const Icon(Icons.copy_rounded, size: 16),
+              label: const Text('Sao chép link tải'),
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: update.downloadUrl));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Đã sao chép link tải! Bạn có thể dán vào trình duyệt để tải file APK.'),
+                    duration: Duration(seconds: 4),
+                  ),
+                );
               },
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!update.forceUpdate)
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogCtx),
+                    child: const Text('Để sau', style: TextStyle(color: AppTheme.textMuted)),
+                  ),
+                const SizedBox(width: 6),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.download_rounded, size: 18),
+                  label: const Text('CẬP NHẬT NGAY'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () async {
+                    if (!update.forceUpdate) {
+                      Navigator.pop(dialogCtx);
+                    }
+                    final uri = Uri.parse(update.downloadUrl);
+                    bool success = false;
+                    try {
+                      success = await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    } catch (_) {}
+
+                    if (!success) {
+                      try {
+                        success = await launchUrl(uri, mode: LaunchMode.platformDefault);
+                      } catch (_) {}
+                    }
+
+                    if (!success) {
+                      try {
+                        success = await launchUrl(uri);
+                      } catch (_) {}
+                    }
+
+                    if (!success && context.mounted) {
+                      Clipboard.setData(ClipboardData(text: update.downloadUrl));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          duration: const Duration(seconds: 8),
+                          content: Text('Đã sao chép link! Vui lòng dán vào trình duyệt: ${update.downloadUrl}'),
+                          action: SnackBarAction(
+                            label: 'Đóng',
+                            onPressed: () {},
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
             ),
           ],
         );
