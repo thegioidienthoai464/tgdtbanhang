@@ -3,6 +3,7 @@
   "build_number": 9,
   "force_update": false,
   "release_notes": "• Thêm mục chọn chi nhánh làm việc trực quan trên ứng dụng (Dashboard, Thu ngân POS, Cài đặt, Đơn hàng, Sổ quỹ, Kho).\n• Tự động đồng bộ danh sách chi nhánh từ Supabase & lưu nhớ chi nhánh đã chọn khi khởi động lại ứng dụng.\n• Tự động ghi nhận chi nhánh vào từng đơn bán hàng POS và phiếu thu chi sổ quỹ.\n• Hiển thị chi nhánh chi tiết trên từng hóa đơn bán hàng và lịch sử giao dịch.",
-  "download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.0.8/app-release.apk",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.0.8/app-release.apk"
+  "download_url": "https://tgdtbanhang.netlify.app/download.html",
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.0.8/app-release.apk",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.0.8"
 }
