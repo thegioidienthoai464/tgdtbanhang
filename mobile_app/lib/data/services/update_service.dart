@@ -36,10 +36,10 @@ class UpdateService {
   static const String currentVersion = '1.0.8';
   static const int currentBuildNumber = 9;
 
-  // Danh sách nguồn kiểm tra phiên bản (Ưu tiên Netlify tức thì, dự phòng GitHub)
+  // Danh sách nguồn kiểm tra phiên bản (Ưu tiên GitHub Raw và GitHub Pages luôn cập nhật mới nhất)
   static const List<String> versionCheckUrls = [
-    'https://tgdtbanhang.netlify.app/version.json',
     'https://raw.githubusercontent.com/thegioidienthoai464/tgdtbanhang/main/version.json',
+    'https://thegioidienthoai464.github.io/tgdtbanhang/version.json',
   ];
 
   // Kiểm tra xem có bản cập nhật mới không
