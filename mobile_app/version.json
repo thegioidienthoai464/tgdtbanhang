@@ -1,9 +1,9 @@
 {
-  "version": "1.0.9",
-  "build_number": 10,
+  "version": "1.1.1",
+  "build_number": 12,
   "force_update": false,
-  "release_notes": "• Thêm mục chọn khách hàng trên giao diện thu ngân POS (tìm kiếm theo tên, SĐT, hiển thị nợ cũ, tạo nhanh khách hàng).\n• Bổ sung phương thức thanh toán hỗn hợp (kết hợp linh hoạt Tiền mặt + Chuyển khoản ngân hàng).\n• Cho phép lựa chọn tài khoản ngân hàng nhận tiền chi tiết khi thanh toán chuyển khoản.\n• Tự do điều chỉnh số tiền khách thanh toán: tự động tính tiền thiếu (ghi nhận vào công nợ) hoặc tiền thừa (trả khách hoặc cấn trừ nợ).",
+  "release_notes": "• Cho phép chọn 1 hoặc nhiều chi nhánh trực quan ngay tại mục Chỉ số hoạt động.\n• Bổ sung thanh nút chọn chi nhánh (Toàn hệ thống, CN01, CN02, CN03) trên Tổng quan, Kho, Đơn hàng, Sổ quỹ.\n• Lọc số dư quỹ, doanh số và tồn kho chính xác theo tổ hợp chi nhánh được chọn.\n• Form thêm khách hàng mới đầy đủ thông tin.\n• Mặc định bán cho khách lẻ mã KHACHLE trên cả điện thoại và máy tính.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.0.9/TT_POS_v1.0.9.apk",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.0.9"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.1/TT_POS_v1.1.1.apk",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.1.1"
 }
