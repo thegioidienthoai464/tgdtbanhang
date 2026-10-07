@@ -40,4 +40,15 @@ class OrdersViewModel extends ChangeNotifier {
       debugPrint("Lỗi hủy đơn: $e");
     }
   }
+
+  Future<bool> deleteOrder(String maDonHang) async {
+    try {
+      await _orderRepo.deleteOrder(maDonHang);
+      await fetchOrders();
+      return true;
+    } catch (e) {
+      debugPrint("Lỗi xóa đơn hàng: $e");
+      return false;
+    }
+  }
 }
