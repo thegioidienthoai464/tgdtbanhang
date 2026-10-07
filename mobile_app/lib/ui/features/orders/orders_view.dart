@@ -34,6 +34,11 @@ class _OrdersViewState extends State<OrdersView> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<OrdersViewModel>();
+    final branchVm = context.watch<BranchViewModel>();
+
+    final filteredPreOrders = vm.preOrders.where((o) => branchVm.matchesBranch(o.chiNhanh)).toList();
+    final filteredSalesOrders = vm.salesOrders.where((o) => branchVm.matchesBranch(o.chiNhanh)).toList();
+    final filteredImportOrders = vm.importOrders.where((o) => branchVm.matchesBranch(o.chiNhanh)).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -55,22 +60,66 @@ class _OrdersViewState extends State<OrdersView> with SingleTickerProviderStateM
           unselectedLabelColor: AppTheme.textMuted,
           indicatorColor: AppTheme.primaryBlue,
           tabs: [
-            Tab(text: 'Đặt hàng (${vm.preOrders.length})'),
-            Tab(text: 'Bán hàng (${vm.salesOrders.length})'),
-            Tab(text: 'Nhập kho (${vm.importOrders.length})'),
+            Tab(text: 'Đặt hàng (${filteredPreOrders.length})'),
+            Tab(text: 'Bán hàng (${filteredSalesOrders.length})'),
+            Tab(text: 'Nhập kho (${filteredImportOrders.length})'),
           ],
         ),
       ),
-      body: vm.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildOrderList(context, vm.preOrders, isPreOrder: true),
-                _buildOrderList(context, vm.salesOrders),
-                _buildOrderList(context, vm.importOrders, isImport: true),
-              ],
+      body: Column(
+        children: [
+          // Thanh chi nhánh giao dịch
+          InkWell(
+            onTap: () => BranchViewModel.showBranchBottomSheet(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryBlue.withOpacity(0.06),
+                border: Border(bottom: BorderSide(color: AppTheme.primaryBlue.withOpacity(0.12))),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.storefront_rounded, size: 16, color: AppTheme.primaryBlue),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Chi nhánh: ${branchVm.summaryDisplayName}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.primaryBlue),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryBlue.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Đổi', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue)),
+                        Icon(Icons.arrow_drop_down, size: 16, color: AppTheme.primaryBlue),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
+          ),
+          Expanded(
+            child: vm.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildOrderList(context, filteredPreOrders, isPreOrder: true),
+                      _buildOrderList(context, filteredSalesOrders),
+                      _buildOrderList(context, filteredImportOrders, isImport: true),
+                    ],
+                  ),
+          ),
+        ],
+      ),
     );
   }
 
