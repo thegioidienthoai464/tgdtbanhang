@@ -54,7 +54,7 @@ jobs:
           # Cập nhật tên App Android thành T&T POS và cấp quyền
           if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
             sed -i 's/android:label="[^"]*"/android:label="T\&T POS"/g' android/app/src/main/AndroidManifest.xml 2>/dev/null || true
-            sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.BLUETOOTH"/>\n    <queries>\n        <intent><action android:name="android.intent.action.VIEW"/><data android:scheme="https"/></intent>\n        <intent><action android:name="android.intent.action.VIEW"/><data android:scheme="http"/></intent>\n    </queries>\n    <application|' android/app/src/main/AndroidManifest.xml 2>/dev/null || true
+            sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.BLUETOOTH"/>\n    <application|' android/app/src/main/AndroidManifest.xml 2>/dev/null || true
           fi
 
           # Tự động thay icon ứng dụng bằng Logo T&T POS
@@ -85,14 +85,14 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.2
-          name: T&T POS v1.0.2
+          tag_name: v1.0.9
+          name: T&T POS v1.0.9
           body: |
-            Bản cập nhật v1.0.2:
-            - Cập nhật nhận diện thương hiệu T&T POS và Logo chính thức.
-            - Thêm tính năng in bill qua máy in mạng LAN (ESC/POS).
-            - Tự động kiểm tra bản cập nhật phần mềm mới.
-            - Tối ưu hiệu năng bán hàng POS và kho hàng.
+            Bản cập nhật v1.0.9:
+            - Bổ sung chọn khách hàng trên giao diện thu ngân POS (tìm kiếm theo tên, SĐT, hiển thị nợ cũ).
+            - Bổ sung phương thức thanh toán hỗn hợp (kết hợp linh hoạt Tiền mặt + Chuyển khoản ngân hàng).
+            - Cho phép lựa chọn tài khoản ngân hàng nhận tiền chi tiết khi thanh toán chuyển khoản.
+            - Tự do điều chỉnh số tiền khách thanh toán: tự động tính tiền thiếu (ghi nhận vào công nợ) hoặc tiền thừa (trả khách hoặc cấn trừ nợ).
           files: '**/build/app/outputs/flutter-apk/app-release.apk'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
