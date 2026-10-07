@@ -3,11 +3,13 @@ import 'package:provider/provider.dart';
 import '../../core/app_theme.dart';
 import '../../core/formatters.dart';
 import '../branch/branch_view_model.dart';
+import '../branch/branch_filter_chips.dart';
 import '../pos/pos_view_model.dart';
 import '../orders/orders_view_model.dart';
 import '../inventory/inventory_view_model.dart';
 import '../cashbook/cashbook_view_model.dart';
 import '../settings/settings_view.dart';
+
 
 class DashboardView extends StatefulWidget {
   final Function(int) onTabChange;
@@ -47,6 +49,17 @@ class _DashboardViewState extends State<DashboardView> {
     final currentStock = branchVm.isAllSelected
         ? invVm.totalStock
         : invVm.products.where((p) => branchVm.matchesBranch(p.chiNhanh)).fold(0.0, (sum, p) => sum + p.tonKho);
+
+    // Quỹ tiền lọc theo chi nhánh
+    final currentFund = branchVm.isAllSelected
+        ? cashVm.totalFund
+        : cashVm.filteredTotalFund(branchVm.matchesBranch);
+
+    final branchBadge = branchVm.isAllSelected
+        ? 'Toàn hệ thống'
+        : (branchVm.selectedBranchCodes.length == 1
+            ? 'CN: ${branchVm.selectedBranchCodes.first}'
+            : '${branchVm.selectedBranchCodes.length} chi nhánh');
 
     return Scaffold(
       appBar: AppBar(
@@ -240,7 +253,58 @@ class _DashboardViewState extends State<DashboardView> {
               ),
               const SizedBox(height: 20),
 
-              const Text('Chỉ số hoạt động', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              // ================= CHỈ SỐ HOẠT ĐỘNG =================
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Chỉ số hoạt động',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Color(0xFF0F172A)),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on_rounded, size: 13, color: AppTheme.primaryBlue),
+                          const SizedBox(width: 3),
+                          Text(
+                            'Áp dụng: $branchBadge',
+                            style: const TextStyle(fontSize: 12, color: AppTheme.primaryBlue, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      side: BorderSide(color: AppTheme.primaryBlue.withOpacity(0.35)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      backgroundColor: AppTheme.primaryBlue.withOpacity(0.05),
+                    ),
+                    icon: const Icon(Icons.tune_rounded, size: 15, color: AppTheme.primaryBlue),
+                    label: const Text(
+                      'Tùy chọn CN',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                    ),
+                    onPressed: () => BranchViewModel.showBranchBottomSheet(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // THANH CHỌN 1 HOẶC NHIỀU CHI NHÁNH TRỰC QUAN NGAY TẠI CHỈ SỐ HOẠT ĐỘNG
+              const BranchFilterChips(),
+              const SizedBox(height: 4),
+              const Padding(
+                padding: EdgeInsets.only(left: 4),
+                child: Text(
+                  '💡 Chạm chọn 1 hoặc nhiều chi nhánh, chạm giữ để xem riêng 1 chi nhánh',
+                  style: TextStyle(fontSize: 11, color: AppTheme.textMuted, fontStyle: FontStyle.italic),
+                ),
+              ),
               const SizedBox(height: 12),
 
               // Lưới các thẻ KPI
@@ -255,6 +319,7 @@ class _DashboardViewState extends State<DashboardView> {
                   _buildKpiCard(
                     title: 'Doanh số bán',
                     value: Formatters.formatCurrency(todaySales),
+                    subtitle: branchBadge,
                     icon: Icons.payments_outlined,
                     color: AppTheme.primaryBlue,
                     onTap: () => widget.onTabChange(2), // Tab Đơn hàng
@@ -262,6 +327,7 @@ class _DashboardViewState extends State<DashboardView> {
                   _buildKpiCard(
                     title: 'Đơn đặt hàng chờ',
                     value: '$preOrdersCount đơn',
+                    subtitle: branchBadge,
                     icon: Icons.receipt_long_outlined,
                     color: AppTheme.warningOrange,
                     onTap: () => widget.onTabChange(2), // Tab Đơn hàng
@@ -269,16 +335,18 @@ class _DashboardViewState extends State<DashboardView> {
                   _buildKpiCard(
                     title: 'Tồn kho máy',
                     value: '${currentStock.toInt()} sản phẩm',
+                    subtitle: branchBadge,
                     icon: Icons.inventory_2_outlined,
                     color: AppTheme.successGreen,
                     onTap: () => widget.onTabChange(3), // Tab Kho
                   ),
                   _buildKpiCard(
                     title: 'Tổng tồn quỹ',
-                    value: Formatters.formatCurrency(cashVm.totalFund),
+                    value: Formatters.formatCurrency(currentFund),
+                    subtitle: branchBadge,
                     icon: Icons.account_balance_wallet_outlined,
                     color: const Color(0xFF8B5CF6),
-                    onTap: () => widget.onTabChange(3), // Tab Sổ quỹ
+                    onTap: () => widget.onTabChange(4), // Tab Sổ quỹ (index 4)
                   ),
                 ],
               ),
@@ -321,16 +389,24 @@ class _DashboardViewState extends State<DashboardView> {
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
+    String? subtitle,
   }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppTheme.borderSubtle),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,15 +415,50 @@ class _DashboardViewState extends State<DashboardView> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(title, style: const TextStyle(color: AppTheme.textMuted, fontSize: 12, fontWeight: FontWeight.w500)),
-                Icon(icon, color: color, size: 20),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(color: AppTheme.textMuted, fontSize: 12, fontWeight: FontWeight.w500),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 18),
+                ),
               ],
             ),
-            Text(
-              value,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.5, color: color),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on, size: 10, color: Colors.grey.shade500),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: Text(
+                          subtitle,
+                          style: TextStyle(color: Colors.grey.shade500, fontSize: 10, fontWeight: FontWeight.w500),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
             ),
           ],
         ),
