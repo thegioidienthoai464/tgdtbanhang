@@ -62,7 +62,7 @@ class OrderModel {
   OrderModel({
     required this.maDonHang,
     DateTime? ngayBan,
-    this.maKH = 'KL',
+    this.maKH = 'KHACHLE',
     this.tenKH = 'Khách lẻ',
     this.soDienThoai = '',
     this.chiNhanh = 'CN01: Trụ sở chính',
@@ -102,7 +102,7 @@ class OrderModel {
     return OrderModel(
       maDonHang: json['ma_don_hang']?.toString() ?? '',
       ngayBan: parsedDate,
-      maKH: json['ma_kh']?.toString() ?? 'KL',
+      maKH: json['ma_kh']?.toString() ?? 'KHACHLE',
       tenKH: json['ten_kh']?.toString() ?? 'Khách lẻ',
       soDienThoai: json['so_dien_thoai']?.toString() ?? '',
       chiNhanh: json['chi_nhanh']?.toString() ?? 'CN01: Trụ sở chính',
