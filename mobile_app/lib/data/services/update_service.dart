@@ -10,6 +10,8 @@ class UpdateInfo {
   final int buildNumber;
   final String releaseNotes;
   final String downloadUrl;
+  final String? apkUrl;
+  final String? ipaUrl;
   final bool forceUpdate;
 
   UpdateInfo({
@@ -17,15 +19,19 @@ class UpdateInfo {
     required this.buildNumber,
     required this.releaseNotes,
     required this.downloadUrl,
+    this.apkUrl,
+    this.ipaUrl,
     this.forceUpdate = false,
   });
 
   factory UpdateInfo.fromJson(Map<String, dynamic> json) {
     return UpdateInfo(
-      version: json['version'] ?? '1.0.8',
-      buildNumber: json['build_number'] ?? 9,
+      version: json['version'] ?? '1.1.5',
+      buildNumber: json['build_number'] ?? 16,
       releaseNotes: json['release_notes'] ?? 'Bản cập nhật tối ưu hệ thống.',
-      downloadUrl: json['download_url'] ?? 'https://tgdtbanhang.netlify.app/download.html',
+      downloadUrl: json['download_url'] ?? 'https://thegioidienthoai464.github.io/tgdtbanhang/download.html',
+      apkUrl: json['apk_url'],
+      ipaUrl: json['ipa_url'],
       forceUpdate: json['force_update'] == true,
     );
   }
@@ -150,77 +156,92 @@ class UpdateService {
           ),
           actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
-            TextButton.icon(
-              icon: const Icon(Icons.copy_rounded, size: 16),
-              label: const Text('Sao chép link tải'),
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: update.downloadUrl));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Đã sao chép link tải! Bạn có thể dán vào trình duyệt để tải file APK.'),
-                    duration: Duration(seconds: 4),
-                  ),
+            Builder(
+              builder: (btnCtx) {
+                final isIOS = Theme.of(btnCtx).platform == TargetPlatform.iOS;
+                final targetUrl = isIOS 
+                    ? (update.ipaUrl ?? update.downloadUrl) 
+                    : (update.apkUrl ?? update.downloadUrl);
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      icon: const Icon(Icons.copy_rounded, size: 16),
+                      label: Text(isIOS ? 'Link tải iOS (.IPA)' : 'Sao chép link tải'),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: targetUrl));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(isIOS 
+                              ? 'Đã sao chép link tải file iOS (.IPA)! Dán vào trình duyệt để tải.' 
+                              : 'Đã sao chép link tải! Bạn có thể dán vào trình duyệt để tải file APK.'),
+                            duration: const Duration(seconds: 4),
+                          ),
+                        );
+                      },
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (!update.forceUpdate)
+                          TextButton(
+                            onPressed: () {
+                              _dismissedInThisSession = true;
+                              Navigator.pop(dialogCtx);
+                            },
+                            child: const Text('Để sau', style: TextStyle(color: AppTheme.textMuted)),
+                          ),
+                        const SizedBox(width: 6),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.download_rounded, size: 18),
+                          label: Text(isIOS ? 'CẬP NHẬT iOS' : 'CẬP NHẬT NGAY'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryBlue,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: () async {
+                            if (!update.forceUpdate) {
+                              Navigator.pop(dialogCtx);
+                            }
+                            final uri = Uri.parse(targetUrl);
+                            bool success = false;
+                            try {
+                              success = await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            } catch (_) {}
+
+                            if (!success) {
+                              try {
+                                success = await launchUrl(uri, mode: LaunchMode.platformDefault);
+                              } catch (_) {}
+                            }
+
+                            if (!success) {
+                              try {
+                                success = await launchUrl(uri);
+                              } catch (_) {}
+                            }
+
+                            if (!success && context.mounted) {
+                              Clipboard.setData(ClipboardData(text: targetUrl));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  duration: const Duration(seconds: 8),
+                                  content: Text('Đã sao chép link! Vui lòng dán vào trình duyệt: $targetUrl'),
+                                  action: SnackBarAction(
+                                    label: 'Đóng',
+                                    onPressed: () {},
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
                 );
               },
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (!update.forceUpdate)
-                  TextButton(
-                    onPressed: () {
-                      _dismissedInThisSession = true;
-                      Navigator.pop(dialogCtx);
-                    },
-                    child: const Text('Để sau', style: TextStyle(color: AppTheme.textMuted)),
-                  ),
-                const SizedBox(width: 6),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.download_rounded, size: 18),
-                  label: const Text('CẬP NHẬT NGAY'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryBlue,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                  onPressed: () async {
-                    if (!update.forceUpdate) {
-                      Navigator.pop(dialogCtx);
-                    }
-                    final uri = Uri.parse(update.downloadUrl);
-                    bool success = false;
-                    try {
-                      success = await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    } catch (_) {}
-
-                    if (!success) {
-                      try {
-                        success = await launchUrl(uri, mode: LaunchMode.platformDefault);
-                      } catch (_) {}
-                    }
-
-                    if (!success) {
-                      try {
-                        success = await launchUrl(uri);
-                      } catch (_) {}
-                    }
-
-                    if (!success && context.mounted) {
-                      Clipboard.setData(ClipboardData(text: update.downloadUrl));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          duration: const Duration(seconds: 8),
-                          content: Text('Đã sao chép link! Vui lòng dán vào trình duyệt: ${update.downloadUrl}'),
-                          action: SnackBarAction(
-                            label: 'Đóng',
-                            onPressed: () {},
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                ),
-              ],
             ),
           ],
         );

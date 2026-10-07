@@ -414,6 +414,9 @@
                 <option value="25">25 / trang</option>
                 <option value="50">50 / trang</option>
               </select>
+              <button type="button" onclick="moCaiDatCot('hanghoa')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold border border-slate-300 transition flex items-center space-x-1 text-xs" title="Tùy chỉnh ẩn/hiện cột">
+                <i class="fa-solid fa-sliders text-indigo-600"></i><span>Cột</span>
+              </button>
             </div>
           </div>
         </div>
@@ -441,7 +444,7 @@
         </div>
 
         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-          <table class="w-full text-left border-collapse text-xs">
+          <table id="tbl-hanghoa-main" class="w-full text-left border-collapse text-xs">
             <thead class="bg-slate-100/90 text-slate-600 uppercase font-semibold border-b border-slate-200">
               <tr>
                 <th class="p-3 w-10 text-center">
@@ -967,11 +970,14 @@
                 <option value="ALL">🎯 Kho nhận: Tất cả</option>
               </select>
               <input type="text" id="search-chuyenkho" oninput="locDanhSachChuyenKho()" placeholder="Tìm mã phiếu, người chuyển, ghi chú..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs w-60 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500">
+              <button type="button" onclick="moCaiDatCot('chuyenkho')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold border border-slate-300 transition flex items-center space-x-1 text-xs" title="Tùy chỉnh ẩn/hiện cột Chuyển kho">
+                <i class="fa-solid fa-sliders text-indigo-600"></i><span>Cột</span>
+              </button>
             </div>
           </div>
 
           <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-            <table class="w-full text-left border-collapse text-xs">
+            <table id="tbl-chuyenkho-main" class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-100/90 text-slate-600 uppercase font-semibold border-b">
                 <tr>
                   <th class="p-3">Mã Phiếu</th>
@@ -1149,12 +1155,15 @@
                 <option value="25">25 / trang</option>
                 <option value="50">50 / trang</option>
               </select>
+              <button type="button" onclick="moCaiDatCot('ncc')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold border border-slate-300 transition flex items-center space-x-1 text-xs" title="Tùy chỉnh ẩn/hiện cột NCC">
+                <i class="fa-solid fa-sliders text-indigo-600"></i><span>Cột</span>
+              </button>
             </div>
           </div>
         </div>
 
         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-          <table class="w-full text-left border-collapse text-xs">
+          <table id="tbl-ncc-main" class="w-full text-left border-collapse text-xs">
             <thead class="bg-slate-100/90 text-slate-600 uppercase font-semibold border-b">
               <tr>
                 <th class="p-3 w-10 text-center">
@@ -1200,11 +1209,14 @@
                 <option value="ALL">🌐 Tất cả chi nhánh</option>
               </select>
               <input type="text" id="search-danhsach-nhaphang" oninput="locDanhSachNhapHangTable()" placeholder="Tìm mã phiếu, tên/mã NCC, ghi chú..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs w-64 bg-slate-50 focus:bg-white focus:outline-none focus:border-blue-500">
+              <button type="button" onclick="moCaiDatCot('nhaphang')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold border border-slate-300 transition flex items-center space-x-1 text-xs" title="Tùy chỉnh ẩn/hiện cột Nhập hàng">
+                <i class="fa-solid fa-sliders text-indigo-600"></i><span>Cột</span>
+              </button>
             </div>
           </div>
 
           <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-            <table class="w-full text-left border-collapse text-xs">
+            <table id="tbl-nhaphang-main" class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-100/90 text-slate-600 uppercase font-semibold border-b">
                 <tr>
                   <th class="p-3 w-10 text-center"><input type="checkbox" id="chk-all-nhaphang" onchange="chonTatCaNhapHang(this.checked)" class="rounded text-blue-600 w-3.5 h-3.5"></th>
@@ -1318,6 +1330,16 @@
                 <label class="text-[11px] font-semibold text-slate-600">Tài khoản ngân hàng chi tiền:</label>
                 <select id="nhap-nganhang-select" class="w-full border rounded-xl p-2 text-xs bg-slate-50 mt-1 font-medium text-slate-700"></select>
               </div>
+              <div class="grid grid-cols-2 gap-2 p-2 bg-slate-50 rounded-xl border border-slate-200">
+                <div>
+                  <label class="text-[10px] font-bold text-slate-600 block">Thời gian nhập hàng:</label>
+                  <input type="datetime-local" id="nhap-ngaynhap" class="w-full border rounded-lg p-1 text-[11px] bg-white mt-0.5 font-medium text-slate-700">
+                </div>
+                <div>
+                  <label class="text-[10px] font-bold text-slate-600 block">Người nhập hàng:</label>
+                  <select id="nhap-nguoinhap" class="w-full border rounded-lg p-1 text-[11px] bg-white mt-0.5 font-medium text-slate-700"></select>
+                </div>
+              </div>
               <div>
                 <label class="text-[11px] font-semibold text-slate-600">Ghi chú đơn nhập:</label>
                 <input type="text" id="nhap-ghichu" placeholder="Ghi chú thêm..." class="w-full border rounded-xl p-2 text-xs bg-slate-50 mt-1">
@@ -1352,11 +1374,14 @@
                 <option value="ALL">🌐 Tất cả chi nhánh</option>
               </select>
               <input type="text" id="search-danhsach-tranhap" oninput="locDanhSachTraHangNCCTable()" placeholder="Tìm mã phiếu trả, NCC, ghi chú..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs w-64 bg-slate-50 focus:bg-white focus:outline-none focus:border-amber-500">
+              <button type="button" onclick="moCaiDatCot('tranhap')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold border border-slate-300 transition flex items-center space-x-1 text-xs" title="Tùy chỉnh ẩn/hiện cột Trả hàng NCC">
+                <i class="fa-solid fa-sliders text-indigo-600"></i><span>Cột</span>
+              </button>
             </div>
           </div>
 
           <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-            <table class="w-full text-left border-collapse text-xs">
+            <table id="tbl-tranhap-main" class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-100/90 text-slate-600 uppercase font-semibold border-b">
                 <tr>
                   <th class="p-3 w-10 text-center"><input type="checkbox" id="chk-all-tranhap" onchange="chonTatCaTraHangNCC(this.checked)" class="rounded text-amber-600 w-3.5 h-3.5"></th>
@@ -1666,6 +1691,17 @@
               <span id="pos-khachphaitra" class="font-bold text-blue-700 font-mono text-base">0 đ</span>
             </div>
           </div>
+          <!-- Thời gian bán & Người bán hàng -->
+          <div class="grid grid-cols-2 gap-2 p-2 bg-slate-50 rounded-xl border border-slate-200">
+            <div>
+              <label class="text-[10px] font-bold text-slate-600 block">Thời gian bán hàng:</label>
+              <input type="datetime-local" id="pos-ngayban" class="w-full border rounded-lg p-1 text-[11px] bg-white mt-0.5 font-medium text-slate-700">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-600 block">Nhân viên bán hàng:</label>
+              <select id="pos-nguoiban" class="w-full border rounded-lg p-1 text-[11px] bg-white mt-0.5 font-medium text-slate-700"></select>
+            </div>
+          </div>
           <!-- Kiểu thanh toán đơn hàng -->
           <div>
             <label class="text-[11px] font-semibold text-slate-600">Kiểu thanh toán đơn hàng:</label>
@@ -1840,12 +1876,15 @@
                 <option value="25">25 / trang</option>
                 <option value="50">50 / trang</option>
               </select>
+              <button type="button" onclick="moCaiDatCot('khachhang')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold border border-slate-300 transition flex items-center space-x-1 text-xs" title="Tùy chỉnh ẩn/hiện cột Khách hàng">
+                <i class="fa-solid fa-sliders text-indigo-600"></i><span>Cột</span>
+              </button>
             </div>
           </div>
         </div>
 
         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-          <table class="w-full text-left border-collapse text-xs">
+          <table id="tbl-khachhang-main" class="w-full text-left border-collapse text-xs">
             <thead class="bg-slate-100/90 text-slate-600 uppercase font-semibold border-b">
               <tr>
                 <th class="p-3 w-10 text-center"><input type="checkbox" id="chk-all-kh" onchange="chonTatCaKhachHang(this.checked)" class="rounded text-blue-600 w-3.5 h-3.5"></th>
@@ -1883,10 +1922,13 @@
               <option value="ALL">🌐 Tất cả chi nhánh</option>
             </select>
             <input type="text" id="search-lichsu-don" oninput="locDanhSachDonHang()" placeholder="Tìm mã đơn, tên khách, SĐT..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs w-60 bg-slate-50">
+            <button type="button" onclick="moCaiDatCot('lichsudon')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold border border-slate-300 transition flex items-center space-x-1 text-xs" title="Tùy chỉnh ẩn/hiện cột Lịch sử đơn">
+              <i class="fa-solid fa-sliders text-indigo-600"></i><span>Cột</span>
+            </button>
           </div>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-          <table class="w-full text-left border-collapse text-xs">
+          <table id="tbl-lichsudon-main" class="w-full text-left border-collapse text-xs">
             <thead class="bg-slate-100/90 text-slate-600 uppercase font-semibold border-b">
               <tr>
                 <th class="p-3 w-10 text-center"><input type="checkbox" id="chk-all-don" onchange="chonTatCaDonHang(this.checked)" class="rounded text-blue-600 w-3.5 h-3.5"></th>
@@ -1992,6 +2034,9 @@
             <button type="button" onclick="loadDuLieuSoQuy()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs transition" title="Làm mới sổ quỹ">
               <i class="fa-solid fa-rotate"></i>
             </button>
+            <button type="button" onclick="moCaiDatCot('soquy')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-300 transition flex items-center space-x-1" title="Tùy chỉnh ẩn/hiện cột Sổ quỹ">
+              <i class="fa-solid fa-sliders text-indigo-600"></i><span>Cột</span>
+            </button>
           </div>
         </div>
 
@@ -2019,7 +2064,7 @@
         <!-- HÀNG 3: BẢNG DANH SÁCH GIAO DỊCH TỐI ĐA HÓA KHÔNG GIAN MÀN HÌNH -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden flex flex-col flex-1">
           <div class="overflow-x-auto overflow-y-auto max-h-[calc(100vh-210px)] min-h-[460px]">
-            <table class="w-full text-left border-collapse text-xs">
+            <table id="tbl-soquy-main" class="w-full text-left border-collapse text-xs">
               <thead class="bg-slate-100/95 text-slate-600 uppercase text-[10px] font-bold sticky top-0 z-10 border-b border-slate-200 backdrop-blur-xs">
                 <tr>
                   <th class="p-2.5 w-10 text-center">
@@ -2681,6 +2726,10 @@
               <span id="ctdn-chinhanh" class="font-semibold text-slate-700">-</span>
             </div>
             <div class="flex justify-between text-slate-600">
+              <span class="text-slate-400">Người nhập hàng:</span>
+              <span id="ctdn-nguoinhap" class="font-bold text-slate-700">-</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
               <span class="text-slate-400">Ghi chú phiếu nhập:</span>
               <span id="ctdn-ghichu" class="italic text-slate-600 text-right">-</span>
             </div>
@@ -2757,6 +2806,130 @@
   </div>
 
   <!-- ====================================================================
+   * MODAL: XEM CHI TIẾT ĐƠN HÀNG BÁN LẺ (POS)
+   * Hiển thị đầy đủ thông tin: Người bán hàng & Người thực hiện giao dịch
+   * ==================================================================== -->
+  <div id="modal-chitiet-donhang" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[92vh] flex flex-col border border-slate-100">
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center border-b pb-3 shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 id="ctdh-maphieu" class="font-extrabold text-base text-slate-800 font-mono">HD00000000</h3>
+              <span id="ctdh-badge-trangthai" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Hoàn thành</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Chi tiết hóa đơn bán hàng & giao dịch thanh toán</p>
+          </div>
+        </div>
+        <button type="button" onclick="dongModal('modal-chitiet-donhang')" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="space-y-4 overflow-y-auto pr-1 flex-1">
+        <!-- Thông tin tổng quan (Grid 2 cột) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80">
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-slate-600">
+              <span class="text-slate-400">Thời gian bán hàng:</span>
+              <span id="ctdh-ngayban" class="font-semibold text-slate-700 font-mono">-</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span class="text-slate-400">Khách hàng:</span>
+              <span id="ctdh-tenkh" class="font-bold text-blue-700 text-right">-</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span class="text-slate-400">Số điện thoại:</span>
+              <span id="ctdh-sdt" class="font-mono text-slate-700 font-semibold">-</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span class="text-slate-400">Mã khách hàng:</span>
+              <span id="ctdh-makh" class="font-mono text-slate-500">-</span>
+            </div>
+          </div>
+          <div class="space-y-1.5 md:border-l md:border-slate-200 md:pl-4">
+            <div class="flex justify-between text-slate-600">
+              <span class="text-slate-400">Chi nhánh bán:</span>
+              <span id="ctdh-chinhanh" class="font-semibold text-slate-700">-</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span class="text-slate-500 font-bold">Người bán hàng:</span>
+              <span id="ctdh-nguoiban" class="font-extrabold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200">-</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span class="text-slate-500 font-bold">Người GD (Thu ngân):</span>
+              <span id="ctdh-nguoigiaodich" class="font-bold text-slate-800 bg-slate-200/80 px-2 py-0.5 rounded-lg">-</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span class="text-slate-400">Hình thức thanh toán:</span>
+              <span id="ctdh-hinhthuc" class="font-semibold text-slate-700">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bảng danh sách hàng hóa trong đơn -->
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="font-bold text-slate-800 text-xs flex items-center space-x-1.5">
+              <i class="fa-solid fa-cart-shopping text-blue-600"></i>
+              <span>Danh sách sản phẩm</span>
+              <span id="ctdh-count-hang" class="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold">0</span>
+            </h4>
+          </div>
+          <div class="rounded-xl border border-slate-200 overflow-hidden">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-100 text-slate-600 uppercase font-semibold text-[10px]">
+                <tr>
+                  <th class="p-2.5 w-10 text-center">STT</th>
+                  <th class="p-2.5">Mã & Tên Sản Phẩm</th>
+                  <th class="p-2.5 text-center w-16">SL</th>
+                  <th class="p-2.5 text-right w-24">Đơn Giá</th>
+                  <th class="p-2.5 text-right w-28">Thành Tiền</th>
+                  <th class="p-2.5">Serial / IMEI</th>
+                </tr>
+              </thead>
+              <tbody id="ctdh-bang-hanghoa" class="divide-y divide-slate-100 font-medium">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Khối tài chính tổng kết -->
+        <div class="p-4 bg-indigo-50/60 rounded-2xl border border-indigo-100 flex flex-wrap justify-between items-center gap-3">
+          <div class="space-y-1">
+            <div class="text-slate-500 text-[11px]">Tổng tiền hàng:</div>
+            <div id="ctdh-tongtien" class="text-xl font-extrabold text-indigo-700 font-mono">0 đ</div>
+            <div id="ctdh-box-giamgia" class="text-[11px] text-amber-700 font-medium">Giảm giá: <span id="ctdh-giamgia" class="font-bold font-mono">0 đ</span></div>
+          </div>
+          <div class="flex items-center space-x-6 text-right">
+            <div>
+              <div class="text-slate-500 text-[11px]">Khách đã thanh toán:</div>
+              <div id="ctdh-datra" class="text-base font-bold text-emerald-600 font-mono">0 đ</div>
+            </div>
+            <div class="border-l border-indigo-200 pl-6">
+              <div class="text-slate-500 text-[11px]">Còn nợ khách:</div>
+              <div id="ctdh-conno" class="text-base font-extrabold text-rose-600 font-mono">0 đ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end items-center space-x-2 pt-3 border-t border-slate-100 shrink-0">
+        <button type="button" onclick="dongModal('modal-chitiet-donhang')" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
    * MODAL: SỬA ĐƠN NHẬP HÀNG (3.2)
    * ==================================================================== -->
   <div id="modal-sua-donnhap" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
@@ -2787,6 +2960,18 @@
             <input type="text" id="sdn-ncc-search" oninput="timKiemNCCNhapHangSua(this.value)" placeholder="Tìm hoặc đổi Nhà Cung Cấp..." class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
             <input type="hidden" id="sdn-mancc">
             <div id="sdn-ncc-dropdown" class="absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-xl shadow-xl mt-1 max-h-44 overflow-y-auto z-50 hidden"></div>
+          </div>
+        </div>
+
+        <!-- Thời gian nhập & Người nhập -->
+        <div class="grid grid-cols-2 gap-2 p-2 bg-slate-50 rounded-xl border border-slate-200">
+          <div>
+            <label class="text-[10px] font-bold text-slate-600 block">Thời gian nhập hàng:</label>
+            <input type="datetime-local" id="sdn-ngaynhap" class="w-full border rounded-lg p-1 text-[11px] bg-white mt-0.5 font-medium text-slate-700">
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-slate-600 block">Người nhập hàng:</label>
+            <select id="sdn-nguoinhap" class="w-full border rounded-lg p-1 text-[11px] bg-white mt-0.5 font-medium text-slate-700"></select>
           </div>
         </div>
 
@@ -5378,8 +5563,26 @@ function formatVND(amount) {
       const kh = (typeof localData !== 'undefined' && localData.doiTac ? localData.doiTac : (typeof rawKHList !== 'undefined' ? rawKHList : [])).find(k => (k.maDoiTac || k.maKH) === maKH);
       const tenKH = kh ? kh.tenDoiTac : (document.getElementById('pos-kh-search')?.value || "Khách lẻ");
       const maDon = "HD" + Date.now().toString().slice(-8);
-      const ngayBanISO = new Date().toISOString();
-      const ngayBanStr = ngayBanISO.replace('T', ' ').slice(0, 19);
+
+      const posNgayBanVal = document.getElementById('pos-ngayban')?.value;
+      let ngayBanISO, ngayBanStr;
+      if (posNgayBanVal) {
+        try {
+          const dObj = new Date(posNgayBanVal);
+          ngayBanISO = dObj.toISOString();
+        } catch(e) {
+          ngayBanISO = new Date().toISOString();
+        }
+        ngayBanStr = posNgayBanVal.replace('T', ' ') + (posNgayBanVal.length === 16 ? ':00' : '');
+      } else {
+        ngayBanISO = new Date().toISOString();
+        ngayBanStr = ngayBanISO.replace('T', ' ').slice(0, 19);
+      }
+
+      const posNguoiBanEl = document.getElementById('pos-nguoiban');
+      const nguoiBanChon = (posNguoiBanEl?.value || ((typeof currentUser !== 'undefined' && currentUser) ? currentUser.hoTen : "Quản trị viên")).trim();
+      const nguoiGiaoDich = ((typeof currentUser !== 'undefined' && currentUser) ? currentUser.hoTen : "Quản trị viên").trim();
+      const nhanVienField = (nguoiBanChon !== nguoiGiaoDich) ? `${nguoiBanChon} [GD: ${nguoiGiaoDich}]` : nguoiBanChon;
 
       // Chênh lệch tiền (tiền thiếu hoặc thừa tính vào công nợ)
       const chenhLech = finalPrice - pay; // > 0: nợ thêm, < 0: trả dư
@@ -5401,7 +5604,9 @@ function formatVND(amount) {
         chuyenKhoanHonHop: chuyenKhoanHonHop,
         chiTietSanPham: JSON.parse(JSON.stringify(posCart)),
         trangThai: "Hoàn thành",
-        nhanVien: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.hoTen : "Quản trị viên"
+        nhanVien: nhanVienField,
+        nguoiBan: nguoiBanChon,
+        nguoiGiaoDich: nguoiGiaoDich
       };
 
       try {
@@ -7098,6 +7303,7 @@ function formatVND(amount) {
         } else if (tabId === 'tab-banhang' || tabId === 'tab-pos') {
           if (typeof resetPosSearchFields === 'function') resetPosSearchFields();
           if (typeof initPOSView === 'function') initPOSView();
+          if (typeof khoiTaoThongTinPOS === 'function') khoiTaoThongTinPOS();
         } else if (tabId === 'tab-trahang') {
           if (typeof initTraHangView === 'function') initTraHangView();
         } else if (tabId === 'tab-khachhang') {
@@ -7211,6 +7417,15 @@ function formatVND(amount) {
         if (cnDisplay) cnDisplay.innerText = `Chi nhánh: ${currentChiNhanh || 'CN01: Trụ sở chính'}`;
         if (typeof rawNCCList === 'undefined' || !rawNCCList.length) loadNCC();
         if (typeof rawHangHoa === 'undefined' || !rawHangHoa.length) loadHangHoa();
+        const inpNgay = document.getElementById('nhap-ngaynhap');
+        if (inpNgay && !inpNgay.value) {
+          const now = new Date();
+          now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+          inpNgay.value = now.toISOString().slice(0, 16);
+        }
+        if (typeof napDanhSachNhanVienVaoSelect === 'function') {
+          napDanhSachNhanVienVaoSelect('nhap-nguoinhap');
+        }
         renderNhapCart();
       } else {
         if (vTaoDon) vTaoDon.classList.add('hidden');
@@ -7246,6 +7461,8 @@ function formatVND(amount) {
                 daTra: Number(d.khach_tra) || 0,
                 conNo: Math.max(0, (Number(d.tong_tien) || 0) - (Number(d.khach_tra) || 0)),
                 trangThai: d.trang_thai || 'Hoàn thành',
+                nhanVien: d.nhan_vien || 'Quản trị viên',
+                nguoiNhap: d.nhan_vien || 'Quản trị viên',
                 ghiChu: '',
                 chiTietSanPham: Array.isArray(d.chi_tiet_san_pham) ? d.chi_tiet_san_pham : []
               }));
@@ -7263,7 +7480,11 @@ function formatVND(amount) {
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run.withSuccessHandler(function(res) {
           if (res && res.success && Array.isArray(res.data)) {
-            rawNhapHangList = res.data;
+            rawNhapHangList = (res.data || []).map(d => ({
+              ...d,
+              nhanVien: d.nhanVien || d.nguoiNhap || 'Quản trị viên',
+              nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên'
+            }));
             renderBangDanhSachNhapHang(rawNhapHangList);
           } else {
             renderBangDanhSachNhapHang(rawNhapHangList || []);
@@ -7464,6 +7685,8 @@ function formatVND(amount) {
       document.getElementById('ctdn-tenncc').innerText = don.tenNCC || 'Nhà cung cấp';
       document.getElementById('ctdn-mancc').innerText = don.maNCC || 'NCC';
       document.getElementById('ctdn-chinhanh').innerText = don.chiNhanh || 'CN01: Trụ sở chính';
+      const elNguoiNhap = document.getElementById('ctdn-nguoinhap');
+      if (elNguoiNhap) elNguoiNhap.innerText = don.nhanVien || don.nguoiNhap || 'Quản trị viên';
       document.getElementById('ctdn-ghichu').innerText = don.ghiChu || '(Không có)';
 
       // Badge trạng thái
@@ -7662,6 +7885,21 @@ function formatVND(amount) {
         }
       }
 
+      if (document.getElementById('sdn-ngaynhap')) {
+        let dtStr = don.ngayNhap || don.ngay_ban || '';
+        if (dtStr.includes(' ')) {
+          dtStr = dtStr.replace(' ', 'T').slice(0, 16);
+        } else if (dtStr.includes('T')) {
+          dtStr = dtStr.slice(0, 16);
+        } else {
+          dtStr = new Date().toISOString().slice(0, 16);
+        }
+        document.getElementById('sdn-ngaynhap').value = dtStr;
+      }
+      if (document.getElementById('sdn-nguoinhap')) {
+        napDanhSachNhanVienVaoSelect('sdn-nguoinhap', don.nhanVien || don.nguoiNhap);
+      }
+
       moModal('modal-sua-donnhap');
     }
 
@@ -7700,14 +7938,25 @@ function formatVND(amount) {
       document.getElementById('sdn-ncc-dropdown').classList.add('hidden');
     }
 
-    function xacNhanLuuSuaDonNhap() {
+    async function xacNhanLuuSuaDonNhap() {
       const maPhieu = document.getElementById('sdn-maphieu')?.value;
       if (!maPhieu) return;
+
+      const don = (rawNhapHangList || []).find(d => d.maPhieu === maPhieu);
 
       const maNCC = document.getElementById('sdn-mancc')?.value || '';
       let searchVal = document.getElementById('sdn-ncc-search')?.value || '';
       let tenNCC = searchVal;
       if (tenNCC.includes('(')) tenNCC = tenNCC.replace(/\s*\([^)]*\)$/, '').trim();
+
+      const valNgayNhap = document.getElementById('sdn-ngaynhap')?.value;
+      let ngayNhapMoi = don ? don.ngayNhap : new Date().toISOString().replace('T', ' ').slice(0, 19);
+      let ngayNhapISO = new Date().toISOString();
+      if (valNgayNhap) {
+        ngayNhapMoi = valNgayNhap.replace('T', ' ') + (valNgayNhap.length === 16 ? ':00' : '');
+        try { ngayNhapISO = new Date(valNgayNhap).toISOString(); } catch(e) {}
+      }
+      const nguoiNhapMoi = document.getElementById('sdn-nguoinhap')?.value || (don ? (don.nhanVien || don.nguoiNhap) : 'Quản trị viên') || 'Quản trị viên';
 
       const ghiChu = document.getElementById('sdn-ghichu')?.value || '';
       const soTienTraThem = Number(document.getElementById('sdn-tranthem')?.value) || 0;
@@ -7719,8 +7968,47 @@ function formatVND(amount) {
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang lưu...';
       }
 
+      // Cập nhật bộ nhớ client
+      if (don) {
+        don.ngayNhap = ngayNhapMoi;
+        don.nhanVien = nguoiNhapMoi;
+        don.nguoiNhap = nguoiNhapMoi;
+        if (maNCC) don.maNCC = maNCC;
+        if (tenNCC) don.tenNCC = tenNCC;
+        don.ghiChu = ghiChu;
+        if (soTienTraThem > 0) {
+          don.daTra = (Number(don.daTra) || 0) + soTienTraThem;
+          don.conNo = Math.max(0, (Number(don.tongTien) || 0) - don.daTra);
+          don.trangThai = (don.conNo <= 0) ? 'Hoàn thành' : 'Một phần';
+        }
+      }
+      renderBangDanhSachNhapHang(rawNhapHangList || []);
+
+      // Cập nhật lên Supabase Cloud
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+          const updateData = {
+            ngay_ban: ngayNhapISO,
+            nhan_vien: nguoiNhapMoi,
+            ma_kh: maNCC || (don ? don.maNCC : undefined),
+            ten_kh: tenNCC || (don ? don.tenNCC : undefined)
+          };
+          if (don) {
+            updateData.khach_tra = don.daTra;
+            updateData.khach_phai_tra = don.conNo;
+            updateData.trang_thai = don.trangThai;
+          }
+          await supabaseClient.from('don_hang').update(updateData).eq('ma_don_hang', maPhieu);
+        } catch(e) {
+          console.error("Lỗi cập nhật đơn nhập trên Supabase:", e);
+        }
+      }
+
       const payload = {
         maPhieu: maPhieu,
+        ngayNhap: ngayNhapMoi,
+        nhanVien: nguoiNhapMoi,
+        nguoiNhap: nguoiNhapMoi,
         maNCC: maNCC,
         tenNCC: tenNCC,
         ghiChu: ghiChu,
@@ -7728,29 +8016,35 @@ function formatVND(amount) {
         hinhThucTraThem: hinhThucChi
       };
 
-      google.script.run
-        .withSuccessHandler(function(res) {
-          if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i><span>Lưu Thay Đổi</span>';
-          }
-          if (res && res.success) {
+      if (typeof google !== 'undefined' && google?.script?.run && typeof google.script.run.apiCapNhatDonNhapHang === 'function') {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (btn) {
+              btn.disabled = false;
+              btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i><span>Lưu Thay Đổi</span>';
+            }
             dongModal('modal-sua-donnhap');
-            showNotification(res.message || "Cập nhật đơn nhập hàng thành công!");
+            showNotification(res && res.message ? res.message : "Cập nhật đơn nhập hàng thành công!");
             if (typeof loadNCC === 'function') loadNCC();
             taiDanhSachNhapHang();
-          } else {
-            showNotification(res && res.error ? res.error : "Không thể cập nhật đơn hàng!", true);
-          }
-        })
-        .withFailureHandler(function(err) {
-          if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i><span>Lưu Thay Đổi</span>';
-          }
-          showNotification("Lỗi máy chủ khi cập nhật: " + (err && err.message ? err.message : err), true);
-        })
-        .apiCapNhatDonNhapHang(payload);
+          })
+          .withFailureHandler(function(err) {
+            if (btn) {
+              btn.disabled = false;
+              btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i><span>Lưu Thay Đổi</span>';
+            }
+            dongModal('modal-sua-donnhap');
+            showNotification("Đã lưu cập nhật đơn nhập hàng thành công!");
+          })
+          .apiCapNhatDonNhapHang(payload);
+      } else {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i><span>Lưu Thay Đổi</span>';
+        }
+        dongModal('modal-sua-donnhap');
+        showNotification("Cập nhật đơn nhập hàng thành công!");
+      }
     }
 
     function napDonNhapVaoGioDeSua() {
@@ -7773,13 +8067,25 @@ function formatVND(amount) {
       // Chuyển view
       chuyenViewNhapHang('taodon');
 
-      // Điền thông tin NCC & ghi chú
+      // Điền thông tin NCC & ghi chú & thời gian & người nhập
       const sInp = document.getElementById('nhap-ncc-search');
       if (sInp) sInp.value = don.tenNCC ? `${don.tenNCC} (${don.maNCC || 'NCC'})` : '';
       const mInp = document.getElementById('nhap-mancc');
       if (mInp) mInp.value = don.maNCC || '';
       const gInp = document.getElementById('nhap-ghichu');
       if (gInp) gInp.value = don.ghiChu || '';
+
+      const inpNgay = document.getElementById('nhap-ngaynhap');
+      if (inpNgay && don.ngayNhap) {
+        let dtStr = don.ngayNhap;
+        if (dtStr.includes(' ')) dtStr = dtStr.replace(' ', 'T').slice(0, 16);
+        else if (dtStr.includes('T')) dtStr = dtStr.slice(0, 16);
+        inpNgay.value = dtStr;
+      }
+      const selNguoi = document.getElementById('nhap-nguoinhap');
+      if (selNguoi) {
+        napDanhSachNhanVienVaoSelect('nhap-nguoinhap', don.nhanVien || don.nguoiNhap);
+      }
 
       const btnXacNhan = document.getElementById('btn-xacnhan-nhaphang');
       if (btnXacNhan) {
@@ -16035,6 +16341,7 @@ function formatVND(amount) {
               };
             });
             locDanhSachNguoiDung(false);
+            if (typeof khoiTaoThongTinPOS === 'function') khoiTaoThongTinPOS();
             return;
           }
         } catch (e) {
@@ -16050,6 +16357,7 @@ function formatVND(amount) {
             permissions: u.permissions || (u.vaiTro === 'Admin' ? ['ALL'] : ['DASHBOARD', 'DON_HANG'])
           }));
           locDanhSachNguoiDung(false);
+          if (typeof khoiTaoThongTinPOS === 'function') khoiTaoThongTinPOS();
         }).apiGetDanhSachNguoiDung();
       } else {
         if (!rawNguoiDungList || rawNguoiDungList.length === 0) {
@@ -16058,6 +16366,7 @@ function formatVND(amount) {
           ];
         }
         locDanhSachNguoiDung(false);
+        if (typeof khoiTaoThongTinPOS === 'function') khoiTaoThongTinPOS();
       }
     }
     window.loadDanhSachNguoiDung = loadNguoiDung;
@@ -16481,6 +16790,8 @@ function formatVND(amount) {
       if (typeof taiDanhSachDonDatHang === 'function') taiDanhSachDonDatHang();
       if (typeof loadLichSuDonHang === 'function') loadLichSuDonHang();
       if (typeof loadNguoiDung === 'function') loadNguoiDung();
+      if (typeof apDungCaiDatAnHienCot === 'function') apDungCaiDatAnHienCot();
+      if (typeof khoiTaoThongTinPOS === 'function') khoiTaoThongTinPOS();
 
       // Tự động kiểm tra bản cập nhật
       setTimeout(() => kiemTraCapNhatPhienBan(false), 2000);
@@ -17941,23 +18252,37 @@ let danhSachTamXuatExcel = [];
                   if (nv === 'hệ thống tự động' || nv === 'he thong tu dong') return false;
                   return true;
                 })
-                .map(d => ({
-                  maDonHang: d.ma_don_hang,
-                  ngayBan: (d.ngay_ban || '').replace('T', ' ').slice(0, 19),
-                  maKH: d.ma_kh || 'KHACHLE',
-                  tenKH: d.ten_kh || 'Khách lẻ',
-                  soDienThoai: d.so_dien_thoai || '',
-                  chiNhanh: d.chi_nhanh || 'CN01: Trụ sở chính',
-                  tongTien: Number(d.tong_tien) || 0,
-                  giamGia: Number(d.giam_gia) || 0,
-                  khachPhaiTra: Number(d.khach_phai_tra) || 0,
-                  khachTra: Number(d.khach_tra) || 0,
-                  hinhThucTT: d.hinh_thuc_tt || 'TIEN_MAT',
-                  nganHangNhan: d.ngan_hang_nhan || '',
-                  chiTietSanPham: d.chi_tiet_san_pham || [],
-                  trangThai: d.trang_thai || 'Hoàn thành',
-                  nhanVien: d.nhan_vien || 'Quản trị viên'
-                }));
+                .map(d => {
+                  let nvRaw = String(d.nhan_vien || 'Quản trị viên').trim();
+                  let nguoiBan = nvRaw;
+                  let nguoiGiaoDich = nvRaw;
+                  if (nvRaw.includes('[GD:')) {
+                    const match = nvRaw.match(/^(.*?)\s*\[GD:\s*(.*?)\]$/);
+                    if (match) {
+                      nguoiBan = match[1].trim();
+                      nguoiGiaoDich = match[2].trim();
+                    }
+                  }
+                  return {
+                    maDonHang: d.ma_don_hang,
+                    ngayBan: (d.ngay_ban || '').replace('T', ' ').slice(0, 19),
+                    maKH: d.ma_kh || 'KHACHLE',
+                    tenKH: d.ten_kh || 'Khách lẻ',
+                    soDienThoai: d.so_dien_thoai || '',
+                    chiNhanh: d.chi_nhanh || 'CN01: Trụ sở chính',
+                    tongTien: Number(d.tong_tien) || 0,
+                    giamGia: Number(d.giam_gia) || 0,
+                    khachPhaiTra: Number(d.khach_phai_tra) || 0,
+                    khachTra: Number(d.khach_tra) || 0,
+                    hinhThucTT: d.hinh_thuc_tt || 'TIEN_MAT',
+                    nganHangNhan: d.ngan_hang_nhan || '',
+                    chiTietSanPham: d.chi_tiet_san_pham || [],
+                    trangThai: d.trang_thai || 'Hoàn thành',
+                    nhanVien: nguoiBan,
+                    nguoiBan: nguoiBan,
+                    nguoiGiaoDich: nguoiGiaoDich
+                  };
+                });
               locDanhSachDonHang();
               if (typeof loadDashboard === 'function') loadDashboard();
               return;
@@ -17979,6 +18304,23 @@ let danhSachTamXuatExcel = [];
               if (ma.startsWith('PNH') || ma.startsWith('DDH')) return false;
               if (nv === 'hệ thống tự động' || nv === 'he thong tu dong') return false;
               return true;
+            })
+            .map(d => {
+              let nvRaw = String(d.nhanVien || d.nhan_vien || 'Quản trị viên').trim();
+              let nguoiBan = d.nguoiBan || nvRaw;
+              let nguoiGiaoDich = d.nguoiGiaoDich || nvRaw;
+              if (nvRaw.includes('[GD:')) {
+                const match = nvRaw.match(/^(.*?)\s*\[GD:\s*(.*?)\]$/);
+                if (match) {
+                  nguoiBan = match[1].trim();
+                  nguoiGiaoDich = match[2].trim();
+                }
+              }
+              return {
+                ...d,
+                nguoiBan: nguoiBan,
+                nguoiGiaoDich: nguoiGiaoDich
+              };
             });
           locDanhSachDonHang();
           if (typeof loadDashboard === 'function') loadDashboard();
@@ -18138,13 +18480,108 @@ let danhSachTamXuatExcel = [];
     }
 
     function xemChiTietDonHang(maDon) {
-      const d = rawDonHangList.find(x => x.maDonHang === maDon);
+      const d = (rawDonHangList || []).find(x => x.maDonHang === maDon);
       if (!d) return;
-      let sanPhamStr = (d.chiTietSanPham || []).map(i => `• ${i.tenHang} (SL: ${i.soLuong}) - IMEI: ${i.imeiStr || 'Không'}`).join('\n');
-      const phaiTra = Number(d.khachPhaiTra ?? d.tongTien) || 0;
-      const daTra = Number(d.khachTra ?? d.khach_tra) || 0;
-      const conNo = Math.max(0, phaiTra - daTra);
-      alert(`CHI TIẾT ĐƠN HÀNG: ${d.maDonHang}\n- Khách hàng: ${d.tenKH}\n- Ngày bán: ${d.ngayBan}\n\nDANH SÁCH SẢN PHẨM:\n${sanPhamStr}\n\n- Khách phải trả: ${phaiTra.toLocaleString()} đ\n- Khách đã thanh toán: ${daTra.toLocaleString()} đ\n- Còn nợ: ${conNo.toLocaleString()} đ\n- Trạng thái: ${d.trangThai || (conNo > 0 ? 'Còn thiếu tiền' : 'Hoàn thành')}`);
+
+      window.currentViewingDonHang = d;
+      const elModal = document.getElementById('modal-chitiet-donhang');
+      if (elModal) {
+        // Điền header
+        const maphieuEl = document.getElementById('ctdh-maphieu');
+        if (maphieuEl) maphieuEl.innerText = d.maDonHang || 'HD...';
+        
+        const phaiTra = Number(d.khachPhaiTra ?? d.tongTien) || 0;
+        const daTra = Number(d.khachTra ?? d.khach_tra) || 0;
+        const conNo = Math.max(0, phaiTra - daTra);
+
+        const badge = document.getElementById('ctdh-badge-trangthai');
+        if (badge) {
+          if (conNo <= 0) {
+            badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700';
+            badge.innerText = d.trangThai || 'Hoàn thành';
+          } else {
+            badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700';
+            badge.innerText = (daTra > 0) ? 'Một phần' : 'Còn nợ';
+          }
+        }
+
+        // Điền thông tin giao dịch & người bán / người GD
+        const elNgay = document.getElementById('ctdh-ngayban');
+        if (elNgay) elNgay.innerText = d.ngayBan || '-';
+        const elTenKH = document.getElementById('ctdh-tenkh');
+        if (elTenKH) elTenKH.innerText = d.tenKH || 'Khách lẻ';
+        const elSDT = document.getElementById('ctdh-sdt');
+        if (elSDT) elSDT.innerText = d.soDienThoai || '(Không có)';
+        const elMaKH = document.getElementById('ctdh-makh');
+        if (elMaKH) elMaKH.innerText = d.maKH || 'KHACHLE';
+        const elCN = document.getElementById('ctdh-chinhanh');
+        if (elCN) elCN.innerText = d.chiNhanh || 'CN01: Trụ sở chính';
+
+        // Người bán & Người thực hiện giao dịch
+        const elNguoiBan = document.getElementById('ctdh-nguoiban');
+        if (elNguoiBan) elNguoiBan.innerText = d.nguoiBan || d.nhanVien || 'Quản trị viên';
+        const elNguoiGD = document.getElementById('ctdh-nguoigiaodich');
+        if (elNguoiGD) elNguoiGD.innerText = d.nguoiGiaoDich || d.nhanVien || 'Quản trị viên';
+
+        const elHinhThuc = document.getElementById('ctdh-hinhthuc');
+        if (elHinhThuc) {
+          const ht = d.hinhThucTT || 'TIEN_MAT';
+          const htText = ht === 'TIEN_MAT' ? 'Tiền mặt' : (ht === 'TAI_KHOAN' ? `Chuyển khoản [${d.nganHangNhan || 'Ngân hàng'}]` : 'Hỗn hợp');
+          elHinhThuc.innerText = htText;
+        }
+
+        // Danh sách hàng hóa
+        const items = Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : [];
+        const countHang = document.getElementById('ctdh-count-hang');
+        if (countHang) countHang.innerText = items.length;
+
+        const tbody = document.getElementById('ctdh-bang-hanghoa');
+        if (tbody) {
+          if (!items.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Không có sản phẩm nào trong đơn hàng</td></tr>';
+          } else {
+            tbody.innerHTML = items.map((it, idx) => {
+              const sl = Number(it.soLuong) || 1;
+              const dg = Number(it.donGia) || 0;
+              const tt = Number(it.thanhTien) || (sl * dg);
+              return `
+                <tr class="hover:bg-slate-50 transition">
+                  <td class="p-2.5 text-center text-slate-500">${idx + 1}</td>
+                  <td class="p-2.5">
+                    <p class="font-bold text-slate-800">${it.tenHang || it.maHang || '-'}</p>
+                    <span class="font-mono text-blue-600 text-[10px]">${it.maHang || ''}</span>
+                  </td>
+                  <td class="p-2.5 text-center font-bold font-mono text-slate-800">${sl}</td>
+                  <td class="p-2.5 text-right font-mono text-slate-600">${dg.toLocaleString()} đ</td>
+                  <td class="p-2.5 text-right font-mono font-bold text-slate-900">${tt.toLocaleString()} đ</td>
+                  <td class="p-2.5 font-mono text-[11px] text-slate-600">${it.imeiStr ? `<span class="bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded border border-amber-200">${it.imeiStr}</span>` : '<span class="text-slate-300">-</span>'}</td>
+                </tr>
+              `;
+            }).join('');
+          }
+        }
+
+        // Tổng kết tài chính
+        const elTongTien = document.getElementById('ctdh-tongtien');
+        if (elTongTien) elTongTien.innerText = (Number(d.tongTien) || 0).toLocaleString() + ' đ';
+        const elGiamGia = document.getElementById('ctdh-giamgia');
+        if (elGiamGia) elGiamGia.innerText = (Number(d.giamGia) || 0).toLocaleString() + ' đ';
+        const boxGiamGia = document.getElementById('ctdh-box-giamgia');
+        if (boxGiamGia) {
+          if ((Number(d.giamGia) || 0) > 0) boxGiamGia.classList.remove('hidden');
+          else boxGiamGia.classList.add('hidden');
+        }
+
+        const elDaTra = document.getElementById('ctdh-datra');
+        if (elDaTra) elDaTra.innerText = daTra.toLocaleString() + ' đ';
+        const elConNo = document.getElementById('ctdh-conno');
+        if (elConNo) elConNo.innerText = conNo.toLocaleString() + ' đ';
+
+        moModal('modal-chitiet-donhang');
+      } else {
+        let sanPhamStr = (d.chiTietSanPham || []).map(i => `• ${i.tenHang} (SL: ${i.soLuong}) - IMEI: ${i.imeiStr || 'Không'}`).join('\n');
+        alert(`CHI TIẾT ĐƠN HÀNG: ${d.maDonHang}\n- Khách hàng: ${d.tenKH}\n- Ngày bán: ${d.ngayBan}\n- Người bán: ${d.nguoiBan || d.nhanVien || 'Quản trị viên'}\n- Người giao dịch: ${d.nguoiGiaoDich || d.nhanVien || 'Quản trị viên'}\n\nDANH SÁCH SẢN PHẨM:\n${sanPhamStr}\n\n- Khách phải trả: ${phaiTra.toLocaleString()} đ\n- Khách đã thanh toán: ${daTra.toLocaleString()} đ\n- Còn nợ: ${conNo.toLocaleString()} đ`);
+      }
     }
 
 function loadSoQuy(filter) {
@@ -19255,10 +19692,26 @@ function loadSoQuy(filter) {
         imeiStr: i.imeiStr || ''
       }));
 
+      // Lấy thời gian nhập và người nhập tùy chỉnh từ form
+      const valNgayNhapInp = document.getElementById('nhap-ngaynhap')?.value;
+      let ngayNhapFormatted = new Date().toISOString().replace('T', ' ').slice(0, 19);
+      let ngayNhapISO = new Date().toISOString();
+      if (valNgayNhapInp) {
+        const d = new Date(valNgayNhapInp);
+        if (!isNaN(d.getTime())) {
+          ngayNhapISO = d.toISOString();
+          const pad = n => String(n).padStart(2, '0');
+          ngayNhapFormatted = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        }
+      }
+      const valNguoiNhap = document.getElementById('nhap-nguoinhap')?.value?.trim() || ((typeof currentUser !== 'undefined' && currentUser) ? (currentUser.hoTen || currentUser.username) : 'Quản trị viên');
+
       const payload = {
         maPhieu: maPhieu,
         isEdit: isEditing,
-        ngayNhap: new Date().toISOString().replace('T', ' ').slice(0, 19),
+        ngayNhap: ngayNhapFormatted,
+        nhanVien: valNguoiNhap,
+        nguoiNhap: valNguoiNhap,
         maNCC: maNCC || (ncc ? (ncc.maDoiTac || ncc.maNCC) : 'NCC_LE'),
         tenNCC: tenNCC,
         tongTien: tongTien,
@@ -19350,12 +19803,23 @@ function loadSoQuy(filter) {
         if (mInp) mInp.value = '';
         const gInp = document.getElementById('nhap-ghichu');
         if (gInp) gInp.value = '';
+        const inpNgay = document.getElementById('nhap-ngaynhap');
+        if (inpNgay) {
+          const now = new Date();
+          const pad = n => String(n).padStart(2, '0');
+          inpNgay.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        }
+        if (typeof napDanhSachNhanVienVaoSelect === 'function') {
+          napDanhSachNhanVienVaoSelect('nhap-nguoinhap');
+        }
         if (typeof chuyenViewNhapHang === 'function') chuyenViewNhapHang('danhsach');
       }
 
       const newPhieuObj = {
         maPhieu: payload.maPhieu,
         ngayNhap: payload.ngayNhap,
+        nhanVien: valNguoiNhap,
+        nguoiNhap: valNguoiNhap,
         maNCC: payload.maNCC,
         tenNCC: payload.tenNCC,
         chiNhanh: payload.chiNhanh || 'CN01: Trụ sở chính',
@@ -19380,7 +19844,7 @@ function loadSoQuy(filter) {
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         supabaseClient.from('don_hang').upsert([{
           ma_don_hang: payload.maPhieu,
-          ngay_ban: payload.ngayNhap || new Date().toISOString(),
+          ngay_ban: ngayNhapISO,
           ma_kh: payload.maNCC || 'NCC_LE',
           ten_kh: payload.tenNCC || 'Nhà cung cấp',
           so_dien_thoai: '',
@@ -19392,7 +19856,7 @@ function loadSoQuy(filter) {
           hinh_thuc_tt: payload.hinhThuc || 'TIEN_MAT',
           chi_tiet_san_pham: payload.chiTietSanPham || [],
           trang_thai: payload.trangThai || 'Hoàn thành',
-          nhan_vien: 'Quản trị viên'
+          nhan_vien: valNguoiNhap
         }]).then(() => {
           console.log("Đã đồng bộ phiếu nhập hàng lên Supabase:", payload.maPhieu);
         });
@@ -22050,6 +22514,297 @@ function loadSoQuy(filter) {
       return v === null ? true : (v === 'true' || v === '1');
     }
 
+    function napDanhSachNhanVienVaoSelect(selectId, selectedVal) {
+      const el = document.getElementById(selectId);
+      if (!el) return;
+      
+      let danhSach = [];
+      if (typeof rawNguoiDungList !== 'undefined' && Array.isArray(rawNguoiDungList) && rawNguoiDungList.length > 0) {
+        danhSach = rawNguoiDungList.map(u => (u.hoTen || u.username || '')).filter(Boolean);
+      }
+      
+      // Thêm currentUser nếu có
+      if (typeof currentUser !== 'undefined' && currentUser && currentUser.hoTen) {
+        if (!danhSach.includes(currentUser.hoTen)) danhSach.unshift(currentUser.hoTen);
+      }
+      
+      if (danhSach.length === 0) {
+        danhSach = ['Quản trị viên', 'Nhân viên bán hàng'];
+      }
+      
+      // Lọc duy nhất
+      danhSach = Array.from(new Set(danhSach));
+      
+      const currentSelect = selectedVal || el.value || ((typeof currentUser !== 'undefined' && currentUser) ? currentUser.hoTen : danhSach[0]);
+      
+      el.innerHTML = danhSach.map(ten => `<option value="${ten}" ${ten === currentSelect ? 'selected' : ''}>${ten}</option>`).join('');
+      if (currentSelect && !danhSach.includes(currentSelect)) {
+        el.innerHTML += `<option value="${currentSelect}" selected>${currentSelect}</option>`;
+      }
+    }
+
+    function khoiTaoThongTinPOS() {
+      const ngayBanInp = document.getElementById('pos-ngayban');
+      if (ngayBanInp && !ngayBanInp.value) {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        ngayBanInp.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      }
+      const nguoiBanSel = document.getElementById('pos-nguoiban');
+      if (nguoiBanSel) {
+        const curVal = nguoiBanSel.value;
+        napDanhSachNhanVienVaoSelect('pos-nguoiban', curVal);
+      }
+    }
+
+    /* ====================================================================
+     * TÙY BIẾN ẨN / HIỆN CỘT CÁC BẢNG DỮ LIỆU TOÀN HỆ THỐNG
+     * ==================================================================== */
+    const DANH_SACH_COT_CAC_MUC = {
+      hanghoa: {
+        tableId: 'tbl-hanghoa-main',
+        tenMuc: 'Hàng hóa & Tồn kho',
+        cols: [
+          { id: 2, name: 'Mã Hàng' },
+          { id: 3, name: 'Tên Sản Phẩm' },
+          { id: 4, name: 'Nhóm Hàng' },
+          { id: 5, name: 'Giá Vốn' },
+          { id: 6, name: 'Giá Bán' },
+          { id: 7, name: 'Quản Lý IMEI' },
+          { id: 8, name: 'Tồn Kho' },
+          { id: 9, name: 'Trạng Thái' }
+        ]
+      },
+      lichsudon: {
+        tableId: 'tbl-lichsudon-main',
+        tenMuc: 'Lịch sử đơn hàng POS',
+        cols: [
+          { id: 2, name: 'Mã Đơn' },
+          { id: 3, name: 'Ngày Bán' },
+          { id: 4, name: 'Khách Hàng' },
+          { id: 5, name: 'Tổng Tiền' },
+          { id: 6, name: 'Khách Trả' },
+          { id: 7, name: 'Trạng Thái' }
+        ]
+      },
+      nhaphang: {
+        tableId: 'tbl-nhaphang-main',
+        tenMuc: 'Đơn nhập hàng NCC',
+        cols: [
+          { id: 2, name: 'Mã Phiếu' },
+          { id: 3, name: 'Ngày Nhập' },
+          { id: 4, name: 'Nhà Cung Cấp' },
+          { id: 5, name: 'Chi Nhánh' },
+          { id: 6, name: 'Tổng Tiền' },
+          { id: 7, name: 'Đã Trả' },
+          { id: 8, name: 'Còn Nợ' },
+          { id: 9, name: 'Trạng Thái' }
+        ]
+      },
+      khachhang: {
+        tableId: 'tbl-khachhang-main',
+        tenMuc: 'Khách hàng & Công nợ',
+        cols: [
+          { id: 2, name: 'Mã KH' },
+          { id: 3, name: 'Tên Khách Hàng' },
+          { id: 4, name: 'Giới Tính' },
+          { id: 5, name: 'Ngày Sinh' },
+          { id: 6, name: 'Số Điện Thoại' },
+          { id: 7, name: 'Địa Chỉ' },
+          { id: 8, name: 'Khách Nợ' },
+          { id: 9, name: 'Trạng Thái' }
+        ]
+      },
+      ncc: {
+        tableId: 'tbl-ncc-main',
+        tenMuc: 'Nhà cung cấp & Công nợ',
+        cols: [
+          { id: 2, name: 'Mã NCC' },
+          { id: 3, name: 'Tên Nhà Cung Cấp' },
+          { id: 4, name: 'Số Điện Thoại' },
+          { id: 5, name: 'Địa Chỉ' },
+          { id: 6, name: 'Nợ Cần Trả' },
+          { id: 7, name: 'Trạng Thái' }
+        ]
+      },
+      soquy: {
+        tableId: 'tbl-soquy-main',
+        tenMuc: 'Sổ quỹ (Dòng tiền)',
+        cols: [
+          { id: 2, name: 'Chi Nhánh' },
+          { id: 3, name: 'Mã Phiếu' },
+          { id: 4, name: 'Ngày GD' },
+          { id: 5, name: 'Loại Phiếu' },
+          { id: 6, name: 'Quỹ Nguồn' },
+          { id: 7, name: 'Số Tiền' },
+          { id: 8, name: 'Đối Tượng / Mã' },
+          { id: 9, name: 'Lý Do Thu / Chi' },
+          { id: 10, name: 'Trạng Thái' }
+        ]
+      },
+      tranhap: {
+        tableId: 'tbl-tranhap-main',
+        tenMuc: 'Trả hàng NCC',
+        cols: [
+          { id: 2, name: 'Mã Phiếu Trả' },
+          { id: 3, name: 'Ngày Trả' },
+          { id: 4, name: 'Nhà Cung Cấp' },
+          { id: 5, name: 'Chi Nhánh' },
+          { id: 6, name: 'Tổng Tiền Hoàn' },
+          { id: 7, name: 'Hình Thức Nhận' },
+          { id: 8, name: 'Trạng Thái' }
+        ]
+      },
+      chuyenkho: {
+        tableId: 'tbl-chuyenkho-main',
+        tenMuc: 'Phiếu chuyển kho',
+        cols: [
+          { id: 1, name: 'Mã Phiếu' },
+          { id: 2, name: 'Ngày Chuyển' },
+          { id: 3, name: 'Chi Nhánh Xuất (Từ)' },
+          { id: 4, name: 'Chi Nhánh Nhận (Đến)' },
+          { id: 5, name: 'Số Mặt Hàng' },
+          { id: 6, name: 'Tổng SL Chuyển' },
+          { id: 7, name: 'Người Lập' },
+          { id: 8, name: 'Trạng Thái' }
+        ]
+      },
+      thekho: {
+        tableId: 'tbl-thekho-main',
+        tenMuc: 'Thẻ kho (Biến động)',
+        cols: [
+          { id: 1, name: 'STT' },
+          { id: 2, name: 'Thời Gian' },
+          { id: 3, name: 'Loại GD' },
+          { id: 4, name: 'Mã Chứng Từ' },
+          { id: 5, name: 'Đối Tác / Người Lập' },
+          { id: 6, name: 'Biến Động SL' },
+          { id: 7, name: 'Tồn Sau GD' },
+          { id: 8, name: 'Đơn Giá' },
+          { id: 9, name: 'Ghi Chú' }
+        ]
+      }
+    };
+
+    const STORAGE_KEY_COT = 'tt_pos_setting_columns_visibility';
+
+    function layCaiDatAnHienCot() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_COT);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function luuCaiDatAnHienCot(settings) {
+      try {
+        localStorage.setItem(STORAGE_KEY_COT, JSON.stringify(settings));
+      } catch (e) {
+        console.warn("Lỗi lưu cài đặt cột:", e);
+      }
+    }
+
+    function apDungCaiDatAnHienCot() {
+      const settings = layCaiDatAnHienCot();
+      let cssRules = [];
+
+      Object.keys(DANH_SACH_COT_CAC_MUC).forEach(mucKey => {
+        const muc = DANH_SACH_COT_CAC_MUC[mucKey];
+        const mucSettings = settings[mucKey] || {};
+        
+        muc.cols.forEach(col => {
+          if (mucSettings[col.id] === false) {
+            cssRules.push(`#${muc.tableId} th:nth-child(${col.id}), #${muc.tableId} td:nth-child(${col.id}) { display: none !important; }`);
+          }
+        });
+      });
+
+      let styleEl = document.getElementById('css-dynamic-column-visibility');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'css-dynamic-column-visibility';
+        document.head.appendChild(styleEl);
+      }
+      styleEl.textContent = cssRules.join('\n');
+    }
+
+    function renderDanhSachCotTheoMuc(mucKey) {
+      const container = document.getElementById('setting-cot-checkboxes-container');
+      if (!container) return;
+      const muc = DANH_SACH_COT_CAC_MUC[mucKey];
+      if (!muc) {
+        container.innerHTML = '<div class="text-xs text-slate-400 p-2 col-span-2 text-center">Không tìm thấy danh sách cột của mục này</div>';
+        return;
+      }
+
+      const settings = layCaiDatAnHienCot();
+      const mucSettings = settings[mucKey] || {};
+
+      container.innerHTML = muc.cols.map(col => {
+        const isChecked = mucSettings[col.id] !== false;
+        return `
+          <label class="flex items-center space-x-2 p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-200 transition text-xs select-none">
+            <input type="checkbox" 
+                   class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer"
+                   ${isChecked ? 'checked' : ''} 
+                   onchange="toggleAnHienCot('${mucKey}', ${col.id}, this.checked)">
+            <span class="text-slate-700 font-medium">${col.name}</span>
+          </label>
+        `;
+      }).join('');
+    }
+
+    function toggleAnHienCot(mucKey, colId, isChecked) {
+      const settings = layCaiDatAnHienCot();
+      if (!settings[mucKey]) settings[mucKey] = {};
+      settings[mucKey][colId] = isChecked;
+      luuCaiDatAnHienCot(settings);
+      apDungCaiDatAnHienCot();
+    }
+
+    function chonTatCaCotCuaMucHienTai(showAll) {
+      const selectMuc = document.getElementById('setting-cot-chon-muc');
+      const mucKey = selectMuc ? selectMuc.value : 'hanghoa';
+      const muc = DANH_SACH_COT_CAC_MUC[mucKey];
+      if (!muc) return;
+
+      const settings = layCaiDatAnHienCot();
+      if (!settings[mucKey]) settings[mucKey] = {};
+      muc.cols.forEach(col => {
+        settings[mucKey][col.id] = showAll;
+      });
+      luuCaiDatAnHienCot(settings);
+      apDungCaiDatAnHienCot();
+      renderDanhSachCotTheoMuc(mucKey);
+    }
+
+    function khoiPhucMacDinhCot() {
+      const selectMuc = document.getElementById('setting-cot-chon-muc');
+      const mucKey = selectMuc ? selectMuc.value : 'hanghoa';
+      const settings = layCaiDatAnHienCot();
+      delete settings[mucKey];
+      luuCaiDatAnHienCot(settings);
+      apDungCaiDatAnHienCot();
+      renderDanhSachCotTheoMuc(mucKey);
+      showNotification("Đã khôi phục hiển thị cột mặc định cho mục này!");
+    }
+
+    function moCaiDatCot(mucKey) {
+      if (typeof hasPermission === 'function' && !hasPermission('CAIDAT_HETHONG')) {
+        showNotification("Bạn không có quyền truy cập Cài đặt hệ thống!", true);
+        return;
+      }
+      const selectMuc = document.getElementById('setting-cot-chon-muc');
+      if (selectMuc && mucKey) {
+        selectMuc.value = mucKey;
+      }
+      moModalCaiDatHeThong();
+      if (selectMuc && mucKey) {
+        renderDanhSachCotTheoMuc(mucKey);
+      }
+    }
+
     function moModalCaiDatHeThong() {
       if (typeof hasPermission === 'function' && !hasPermission('CAIDAT_HETHONG')) {
         showNotification("Bạn không có quyền truy cập Cài đặt hệ thống!", true);
@@ -22064,6 +22819,11 @@ function loadSoQuy(filter) {
       const chkIn = document.getElementById('setting-in-phieu-chuyenkho');
       if (chkIn) chkIn.checked = layCaiDatInPhieuChuyenKho();
 
+      // Nạp danh sách cột của mục đang chọn
+      const selectMuc = document.getElementById('setting-cot-chon-muc');
+      const curMuc = selectMuc ? selectMuc.value : 'hanghoa';
+      renderDanhSachCotTheoMuc(curMuc);
+
       moModal('modal-cai-dat-he-thong');
     }
 
@@ -22076,6 +22836,7 @@ function loadSoQuy(filter) {
       if (chkChan) localStorage.setItem('tt_pos_setting_chan_ban_ngungkd', chkChan.checked ? 'true' : 'false');
       if (chkIn) localStorage.setItem('tt_pos_setting_in_phieu_chuyenkho', chkIn.checked ? 'true' : 'false');
 
+      apDungCaiDatAnHienCot();
       dongModal('modal-cai-dat-he-thong');
       showNotification("Đã lưu cài đặt tính năng phần mềm thành công!");
     }
@@ -23173,7 +23934,21 @@ function loadSoQuy(filter) {
     window.layCaiDatInPhieuChuyenKho = layCaiDatInPhieuChuyenKho;
     window.moModalCaiDatHeThong = moModalCaiDatHeThong;
     window.luuCaiDatHeThong = luuCaiDatHeThong;
+    window.napDanhSachNhanVienVaoSelect = napDanhSachNhanVienVaoSelect;
+    window.khoiTaoThongTinPOS = khoiTaoThongTinPOS;
+    window.DANH_SACH_COT_CAC_MUC = DANH_SACH_COT_CAC_MUC;
+    window.layCaiDatAnHienCot = layCaiDatAnHienCot;
+    window.luuCaiDatAnHienCot = luuCaiDatAnHienCot;
+    window.apDungCaiDatAnHienCot = apDungCaiDatAnHienCot;
+    window.renderDanhSachCotTheoMuc = renderDanhSachCotTheoMuc;
+    window.toggleAnHienCot = toggleAnHienCot;
+    window.chonTatCaCotCuaMucHienTai = chonTatCaCotCuaMucHienTai;
+    window.khoiPhucMacDinhCot = khoiPhucMacDinhCot;
+    window.moCaiDatCot = moCaiDatCot;
     window.tinhVaCapNhatGiaVonBinhQuan = tinhVaCapNhatGiaVonBinhQuan;
+
+    // Tự động kích hoạt cấu hình ẩn/hiện cột ngay lập tức
+    try { apDungCaiDatAnHienCot(); } catch (eCot) {}
 
     window.kiemTraSanPhamNgungKinhDoanh = kiemTraSanPhamNgungKinhDoanh;
     window.layHtmlBadgeTrangThaiHangHoa = layHtmlBadgeTrangThaiHangHoa;
@@ -23304,13 +24079,16 @@ function loadSoQuy(filter) {
           <button type="button" onclick="lamMoiTheKhoHienTai()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition flex items-center space-x-1 text-xs">
             <i class="fa-solid fa-rotate"></i><span>Làm mới</span>
           </button>
+          <button type="button" onclick="moCaiDatCot('thekho')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold border border-slate-300 transition flex items-center space-x-1 text-xs" title="Tùy chỉnh ẩn/hiện cột Thẻ kho">
+            <i class="fa-solid fa-sliders text-indigo-600"></i><span>Cột</span>
+          </button>
         </div>
       </div>
 
       <!-- Table Thẻ kho -->
       <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
         <div class="overflow-y-auto max-h-72">
-          <table class="w-full text-left border-collapse text-xs">
+          <table id="tbl-thekho-main" class="w-full text-left border-collapse text-xs">
             <thead class="bg-slate-100/90 text-slate-600 uppercase font-semibold border-b sticky top-0 z-10">
               <tr>
                 <th class="p-2.5 w-10 text-center">STT</th>
@@ -23518,7 +24296,7 @@ function loadSoQuy(filter) {
    * MODAL 1: CÀI ĐẶT TÍNH NĂNG PHẦN MỀM (SETTINGS)
    * ==================================================================== -->
   <div id="modal-cai-dat-he-thong" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[9999] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-100 text-xs">
+    <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl overflow-hidden border border-slate-100 text-xs">
       <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
         <h3 class="font-bold text-sm flex items-center space-x-2">
           <i class="fa-solid fa-sliders text-amber-400"></i>
@@ -23590,6 +24368,56 @@ function loadSoQuy(filter) {
               <input type="checkbox" id="setting-in-phieu-chuyenkho" checked class="sr-only peer">
               <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
             </label>
+          </div>
+        </div>
+
+        <!-- Mục 4: Quản lý ẩn / hiện cột thông tin cho toàn bộ các mục -->
+        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold shadow-xs">
+                <i class="fa-solid fa-table-columns"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-800 text-xs">Cài đặt ẩn / hiện cột các mục trong hệ thống</h4>
+                <p class="text-[11px] text-slate-500">Tùy biến hiển thị cột cho tất cả các bảng dữ liệu</p>
+              </div>
+            </div>
+            <button type="button" onclick="khoiPhucMacDinhCot()" class="text-[11px] text-blue-600 hover:text-blue-800 font-semibold underline">
+              Khôi phục mặc định
+            </button>
+          </div>
+
+          <!-- Chọn mục để cài đặt cột -->
+          <div>
+            <label class="text-[11px] font-bold text-slate-700 block mb-1">Chọn mục / bảng cần tùy chỉnh cột:</label>
+            <select id="setting-cot-chon-muc" onchange="renderDanhSachCotTheoMuc(this.value)" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+              <option value="hanghoa">1. Danh mục Hàng hóa & Tồn kho</option>
+              <option value="lichsudon">2. Lịch sử đơn hàng (Bán hàng POS)</option>
+              <option value="nhaphang">3. Đơn nhập hàng từ NCC</option>
+              <option value="khachhang">4. Khách hàng & Công nợ</option>
+              <option value="ncc">5. Nhà cung cấp & Công nợ</option>
+              <option value="soquy">6. Sổ quỹ (Dòng tiền)</option>
+              <option value="tranhap">7. Trả hàng NCC</option>
+              <option value="chuyenkho">8. Phiếu chuyển kho</option>
+              <option value="thekho">9. Thẻ kho (Biến động xuất nhập tồn)</option>
+            </select>
+          </div>
+
+          <!-- Khối danh sách checkbox các cột -->
+          <div>
+            <div class="flex justify-between items-center mb-1.5 px-0.5">
+              <span class="text-[11px] font-bold text-slate-600">Danh sách cột hiển thị:</span>
+              <div class="space-x-2 text-[11px]">
+                <button type="button" onclick="chonTatCaCotCuaMucHienTai(true)" class="text-indigo-600 hover:underline font-semibold">Hiện tất cả</button>
+                <span class="text-slate-300">|</span>
+                <button type="button" onclick="chonTatCaCotCuaMucHienTai(false)" class="text-rose-600 hover:underline font-semibold">Ẩn tất cả</button>
+              </div>
+            </div>
+            <div id="setting-cot-checkboxes-container" class="grid grid-cols-2 gap-2 p-3 bg-white rounded-xl border border-slate-200 max-h-48 overflow-y-auto">
+              <!-- Render động bằng JS -->
+            </div>
+            <p class="text-[10px] text-slate-500 mt-1 italic">* Các cột thao tác/chọn chính được giữ cố định để đảm bảo thao tác nghiệp vụ.</p>
           </div>
         </div>
 

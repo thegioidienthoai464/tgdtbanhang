@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Tải ứng dụng T&amp;T POS Mobile App (Android APK v1.1.5)</title>
+  <title>Tải ứng dụng T&amp;T POS Mobile App (Android APK &amp; iOS IPA)</title>
   <link rel="icon" type="image/png" href="logo.png">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
@@ -24,7 +24,7 @@
       backdrop-filter: blur(12px);
       border-radius: 24px;
       padding: 32px 24px;
-      max-width: 440px;
+      max-width: 460px;
       width: 100%;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     }
@@ -67,7 +67,41 @@
       font-weight: 700;
       font-size: 12px;
       border-radius: 20px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
+    }
+    .platform-tabs {
+      display: flex;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 4px;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #94a3b8;
+      border: none;
+      background: transparent;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      background: #f59e0b;
+      color: #000;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+    .tab-btn.active.ios {
+      background: #38bdf8;
+      color: #000;
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
     }
     .btn-download {
       display: flex;
@@ -78,16 +112,55 @@
       color: #000;
       font-weight: 800;
       font-size: 15px;
-      padding: 16px 24px;
+      padding: 16px 20px;
       border-radius: 16px;
       text-decoration: none;
       box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
       transition: all 0.2s ease;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
     .btn-download:hover, .btn-download:active {
       transform: translateY(-2px);
       box-shadow: 0 12px 30px rgba(245, 158, 11, 0.6);
+    }
+    .btn-download-ios {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+      color: #000;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 16px 20px;
+      border-radius: 16px;
+      text-decoration: none;
+      box-shadow: 0 8px 25px rgba(56, 189, 248, 0.4);
+      transition: all 0.2s ease;
+      margin-bottom: 12px;
+    }
+    .btn-download-ios:hover, .btn-download-ios:active {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(56, 189, 248, 0.6);
+    }
+    .btn-web-app {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f8fafc;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      margin-bottom: 12px;
+    }
+    .btn-web-app:hover {
+      background: rgba(255, 255, 255, 0.15);
     }
     .notes-box {
       margin-top: 24px;
@@ -108,7 +181,7 @@
       letter-spacing: 0.5px;
     }
     .step-list {
-      margin-top: 16px;
+      margin-top: 14px;
       padding: 14px;
       background: #0f172a;
       border-radius: 14px;
@@ -122,7 +195,7 @@
     .status-text {
       font-size: 12px;
       color: #38bdf8;
-      margin-top: 14px;
+      margin-top: 12px;
       font-weight: 600;
     }
   </style>
@@ -133,33 +206,74 @@
       <img src="logo.png?v=3" alt="T&T POS" onerror="this.parentElement.innerHTML='<span style=\'color:#f59e0b;font-weight:900;font-size:24px;\'>T&T</span>'">
     </div>
     <h1>T&amp;T POS Mobile App</h1>
-    <p class="subtitle">Hệ thống Quản lý Bán hàng &amp; Kho ERP</p>
+    <p class="subtitle">Hệ thống Quản lý Bán hàng &amp; Kho ERP (Android &amp; iOS)</p>
     <div>
-      <span class="badge-ver">Bản Cập Nhật Mới: v1.1.5 (Build 16)</span>
+      <span class="badge-ver">Phiên bản mới nhất: v1.1.5 (Build 16)</span>
     </div>
 
-    <a href="https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.5/TT_POS_v1.1.5.apk" class="btn-download" id="link-download">
-      <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-      <span>TẢI ỨNG DỤNG T&T POS APK v1.1.5</span>
-    </a>
-
-    <div style="margin-top: 10px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-      <a href="https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.5/TT_POS.apk" style="color: #94a3b8; font-size: 11px; text-decoration: underline;">Link tải dự phòng (TT_POS.apk)</a>
-      <span style="color: #64748b; font-size: 11px;">•</span>
-      <a href="https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.1.5" target="_blank" style="color: #94a3b8; font-size: 11px; text-decoration: underline;">Xem GitHub Release</a>
+    <!-- Chọn hệ điều hành -->
+    <div class="platform-tabs">
+      <button class="tab-btn active" id="tab-android" onclick="switchPlatform('android')">
+        <span>🤖 Android (APK)</span>
+      </button>
+      <button class="tab-btn" id="tab-ios" onclick="switchPlatform('ios')">
+        <span>🍏 iOS (iPhone / iPad)</span>
+      </button>
     </div>
 
-    <p class="status-text" id="status-msg">⏳ Đang tự động tải xuống file cài đặt T&amp;T POS APK v1.1.5...</p>
+    <!-- PHẦN DÀNH CHO ANDROID -->
+    <div id="section-android">
+      <a href="https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.5/TT_POS_v1.1.5.apk" class="btn-download" id="link-download">
+        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        <span>TẢI ỨNG DỤNG ANDROID (APK) v1.1.5</span>
+      </a>
 
-    <div class="step-list">
-      <p><b>Hướng dẫn cài đặt:</b></p>
-      <p>1. Nếu trình duyệt hỏi <i>"Tệp có thể gây hại"</i>, hãy chọn <b>"Vẫn tải xuống"</b>.</p>
-      <p>2. Khi tải xong, bấm vào thông báo hoặc mở file <b>TT_POS_v1.1.5.apk</b> trong thư mục <i>Download (Tải về)</i>.</p>
-      <p>3. Chọn <b>"Cài đặt"</b> (hoặc <b>"Cập nhật"</b> để cài đè lên app hiện tại mà không mất dữ liệu).</p>
+      <div style="margin-top: 8px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+        <a href="https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.5/TT_POS.apk" style="color: #94a3b8; font-size: 11px; text-decoration: underline;">Link tải dự phòng (TT_POS.apk)</a>
+        <span style="color: #64748b; font-size: 11px;">•</span>
+        <a href="https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.1.5" target="_blank" style="color: #94a3b8; font-size: 11px; text-decoration: underline;">Xem GitHub Release</a>
+      </div>
+
+      <p class="status-text" id="status-msg">⏳ Đang tự động tải xuống file cài đặt T&amp;T POS APK v1.1.5...</p>
+
+      <div class="step-list">
+        <p><b>Hướng dẫn cài đặt Android:</b></p>
+        <p>1. Nếu trình duyệt hỏi <i>"Tệp có thể gây hại"</i>, chọn <b>"Vẫn tải xuống"</b>.</p>
+        <p>2. Khi tải xong, mở file <b>TT_POS_v1.1.5.apk</b> trong thư mục <i>Download (Tải về)</i>.</p>
+        <p>3. Chọn <b>"Cài đặt"</b> (hoặc <b>"Cập nhật"</b> để giữ nguyên dữ liệu).</p>
+      </div>
     </div>
 
+    <!-- PHẦN DÀNH CHO IOS -->
+    <div id="section-ios" style="display: none;">
+      <!-- Khuyên dùng: Mở Web App thêm vào MH chính -->
+      <a href="./index.html" class="btn-download-ios">
+        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+        <span>MỞ APP TRÊN iPHONE / iPAD NGAY</span>
+      </a>
+
+      <!-- Tải file IPA -->
+      <a href="https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.5/TT_POS_v1.1.5.ipa" class="btn-web-app" id="link-download-ipa">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        <span>Tải file cài đặt iOS (.IPA) v1.1.5</span>
+      </a>
+
+      <div class="step-list">
+        <p><b>Cách dùng ngay trên iPhone / iPad (Khuyên dùng):</b></p>
+        <p>1. Mở trang này bằng trình duyệt <b>Safari</b>.</p>
+        <p>2. Bấm nút <b>Chia sẻ</b> (biểu tượng ⎋ ở thanh dưới cùng Safari).</p>
+        <p>3. Chọn <b>"Thêm vào MH chính"</b> (Add to Home Screen) -> Bấm <b>"Thêm"</b>.</p>
+        <p>🎉 App xuất hiện ngoài màn hình chính, mở độc lập toàn màn hình mượt mà!</p>
+        <div style="border-top: 1px dashed rgba(255,255,255,0.1); margin-top: 8px; padding-top: 8px;">
+          <p><b>Cách cài file .IPA qua máy tính:</b></p>
+          <p>Tải phần mềm miễn phí <b>Sideloadly</b> (sideloadly.io) trên PC -> Cắm cáp iPhone -> Kéo file <b>.ipa</b> vào và bấm Start.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- NỘI DUNG CẬP NHẬT -->
     <div class="notes-box">
-      <h3>Nội dung cập nhật v1.1.5:</h3>
+      <h3>Nội dung đồng bộ v1.1.5 (Android &amp; iOS):</h3>
       <p>• <b>Sửa giá & số lượng trong đơn hàng POS</b>: Màn hình bán hàng POS cho phép bấm vào từng sản phẩm trong giỏ hoặc tại bước thanh toán để chỉnh sửa đơn giá bán, số lượng đặt mua, gán mã IMEI và xóa mặt hàng linh hoạt.</p>
       <p>• <b>Chỉnh sửa & Thêm mới hàng hóa trong Kho</b>: Màn hình Kho & IMEI bổ sung nút <b>+ Thêm hàng hóa</b> và cho phép bấm vào bất kỳ sản phẩm nào để chỉnh sửa đầy đủ thông tin: tên, mã, nhóm hàng, đơn vị tính, giá vốn, giá bán, tồn kho, quản lý IMEI, chi nhánh.</p>
       <p>• <b>Chi tiết phiếu Sổ quỹ & 4 hành động chuyên sâu</b>: Bấm vào từng giao dịch thu/chi để xem chi tiết đầy đủ (mã phiếu, loại quỹ, ngày giờ, người nộp/nhận, chứng từ, ghi chú) cùng 4 nút thao tác: <b>In phiếu LAN</b>, <b>Chia sẻ phiếu (Zalo/SMS)</b>, <b>Sửa phiếu</b> và <b>Hủy phiếu</b>.</p>
@@ -168,20 +282,47 @@
   </div>
 
   <script>
-    // Tự động kích hoạt tải sau 600ms
-    setTimeout(function() {
-      try {
-        var a = document.createElement('a');
-        a.href = 'https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.5/TT_POS_v1.1.5.apk';
-        a.download = 'TT_POS_v1.1.5.apk';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        document.getElementById('status-msg').innerText = '✅ Đang tải file TT_POS_v1.1.5.apk! Vui lòng kiểm tra thanh thông báo.';
-      } catch (e) {
-        document.getElementById('status-msg').innerText = '👉 Hãy bấm nút màu cam ở trên để tải xuống.';
+    function switchPlatform(platform) {
+      var tabAndroid = document.getElementById('tab-android');
+      var tabIos = document.getElementById('tab-ios');
+      var secAndroid = document.getElementById('section-android');
+      var secIos = document.getElementById('section-ios');
+
+      if (platform === 'ios') {
+        tabAndroid.className = 'tab-btn';
+        tabIos.className = 'tab-btn active ios';
+        secAndroid.style.display = 'none';
+        secIos.style.display = 'block';
+      } else {
+        tabAndroid.className = 'tab-btn active';
+        tabIos.className = 'tab-btn';
+        secAndroid.style.display = 'block';
+        secIos.style.display = 'none';
       }
-    }, 600);
+    }
+
+    // Tự động nhận diện thiết bị iOS
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isIOS) {
+      switchPlatform('ios');
+    } else {
+      // Nếu là Android/PC, tự kích hoạt tải APK sau 800ms
+      setTimeout(function() {
+        try {
+          var a = document.createElement('a');
+          a.href = 'https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.5/TT_POS_v1.1.5.apk';
+          a.download = 'TT_POS_v1.1.5.apk';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          var status = document.getElementById('status-msg');
+          if (status) status.innerText = '✅ Đang tải file TT_POS_v1.1.5.apk! Vui lòng kiểm tra thanh thông báo.';
+        } catch (e) {
+          var status = document.getElementById('status-msg');
+          if (status) status.innerText = '👉 Hãy bấm nút màu cam ở trên để tải xuống.';
+        }
+      }, 800);
+    }
   </script>
 </body>
 </html>
