@@ -7741,6 +7741,12 @@ function formatVND(amount) {
         if (!laCungChiNhanh(d.chiNhanh, targetCN)) return;
         if (d.trangThai === 'Đã hủy') return;
 
+        const maDon = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
+        const nv = String(d.nhanVien || d.nhan_vien || '').trim();
+        const nvLower = nv.toLowerCase();
+        // Bỏ qua các phiếu nhập tồn đầu kỳ / phiếu hệ thống tự động, chỉ hiển thị giao dịch bán hàng thực tế
+        if (maDon.startsWith('PNH') || maDon.startsWith('DDH') || nvLower === 'hệ thống tự động' || nvLower === 'he thong tu dong') return;
+
         const dDate = String(d.ngayBan || d.ngay || '').slice(0, 10);
         const isToday = dDate === todayStr;
         const isTra = String(d.maDonHang || '').startsWith('TH') || String(d.trangThai || '').includes('Trả');
@@ -7757,8 +7763,8 @@ function formatVND(amount) {
         }
 
         if (!isTra) {
-          const nv = d.nhanVien || 'Quản trị viên';
-          topNV[nv] = (topNV[nv] || 0) + tien;
+          const nvKey = nv || 'Quản trị viên';
+          topNV[nvKey] = (topNV[nvKey] || 0) + tien;
           const items = Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : [];
           items.forEach(it => {
             const ten = it.tenHang || it.ten_hang || it.maHang || 'Sản phẩm';
@@ -14859,24 +14865,33 @@ let danhSachTamXuatExcel = [];
         supabaseClient.from('don_hang').select('*').order('ngay_ban', { ascending: false })
           .then(({ data, error }) => {
             if (!error && Array.isArray(data)) {
-              rawDonHangList = data.map(d => ({
-                maDonHang: d.ma_don_hang,
-                ngayBan: (d.ngay_ban || '').replace('T', ' ').slice(0, 19),
-                maKH: d.ma_kh || 'KL',
-                tenKH: d.ten_kh || 'Khách lẻ',
-                soDienThoai: d.so_dien_thoai || '',
-                chiNhanh: d.chi_nhanh || 'CN01: Trụ sở chính',
-                tongTien: Number(d.tong_tien) || 0,
-                giamGia: Number(d.giam_gia) || 0,
-                khachPhaiTra: Number(d.khach_phai_tra) || 0,
-                khachTra: Number(d.khach_tra) || 0,
-                hinhThucTT: d.hinh_thuc_tt || 'TIEN_MAT',
-                nganHangNhan: d.ngan_hang_nhan || '',
-                chiTietSanPham: d.chi_tiet_san_pham || [],
-                trangThai: d.trang_thai || 'Hoàn thành',
-                nhanVien: d.nhan_vien || 'Quản trị viên'
-              }));
+              rawDonHangList = data
+                .filter(d => {
+                  const ma = String(d.ma_don_hang || '').trim().toUpperCase();
+                  const nv = String(d.nhan_vien || '').trim().toLowerCase();
+                  if (ma.startsWith('PNH') || ma.startsWith('DDH')) return false;
+                  if (nv === 'hệ thống tự động' || nv === 'he thong tu dong') return false;
+                  return true;
+                })
+                .map(d => ({
+                  maDonHang: d.ma_don_hang,
+                  ngayBan: (d.ngay_ban || '').replace('T', ' ').slice(0, 19),
+                  maKH: d.ma_kh || 'KL',
+                  tenKH: d.ten_kh || 'Khách lẻ',
+                  soDienThoai: d.so_dien_thoai || '',
+                  chiNhanh: d.chi_nhanh || 'CN01: Trụ sở chính',
+                  tongTien: Number(d.tong_tien) || 0,
+                  giamGia: Number(d.giam_gia) || 0,
+                  khachPhaiTra: Number(d.khach_phai_tra) || 0,
+                  khachTra: Number(d.khach_tra) || 0,
+                  hinhThucTT: d.hinh_thuc_tt || 'TIEN_MAT',
+                  nganHangNhan: d.ngan_hang_nhan || '',
+                  chiTietSanPham: d.chi_tiet_san_pham || [],
+                  trangThai: d.trang_thai || 'Hoàn thành',
+                  nhanVien: d.nhan_vien || 'Quản trị viên'
+                }));
               locDanhSachDonHang();
+              if (typeof loadDashboard === 'function') loadDashboard();
               return;
             }
             napDonHangTuSheets();
@@ -14889,8 +14904,16 @@ let danhSachTamXuatExcel = [];
     function napDonHangTuSheets() {
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run.withSuccessHandler(function(list) {
-          rawDonHangList = list || [];
+          rawDonHangList = (list || [])
+            .filter(d => {
+              const ma = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
+              const nv = String(d.nhanVien || d.nhan_vien || '').trim().toLowerCase();
+              if (ma.startsWith('PNH') || ma.startsWith('DDH')) return false;
+              if (nv === 'hệ thống tự động' || nv === 'he thong tu dong') return false;
+              return true;
+            });
           locDanhSachDonHang();
+          if (typeof loadDashboard === 'function') loadDashboard();
         }).withFailureHandler(function(err) {
           console.error("❌ Lỗi kết nối lấy đơn hàng:", err);
         }).apiGetDanhSachDonHang();
@@ -15124,31 +15147,39 @@ function loadSoQuy(filter) {
         supabaseClient.from('don_hang').select('*').order('ngay_ban', { ascending: false })
           .then(({ data, error }) => {
             if (!error && data && data.length > 0) {
-              rawTraHangDonList = data.map(d => {
-                let chiTiet = [];
-                try {
-                  if (Array.isArray(d.chi_tiet_san_pham)) {
-                    chiTiet = d.chi_tiet_san_pham;
-                  } else if (typeof d.chi_tiet_san_pham === 'string') {
-                    chiTiet = JSON.parse(d.chi_tiet_san_pham || '[]');
-                  }
-                } catch(e) { chiTiet = []; }
-                return {
-                  maDonHang: d.ma_don_hang,
-                  ngayBan: d.ngay_ban ? String(d.ngay_ban).replace('T', ' ').replace(/\..+/, '') : '',
-                  maKH: d.ma_kh,
-                  tenKH: d.ten_kh,
-                  soDienThoai: d.so_dien_thoai || '',
-                  tongTien: Number(d.tong_tien) || 0,
-                  giamGia: Number(d.giam_gia) || 0,
-                  khachPhaiTra: Number(d.khach_phai_tra) || 0,
-                  khachTra: Number(d.khach_tra) || 0,
-                  hinhThucTT: d.hinh_thuc_tt || 'TIEN_MAT',
-                  chiTietSanPham: chiTiet,
-                  trangThai: d.trang_thai || 'Hoàn thành',
-                  nhanVien: d.nhan_vien || ''
-                };
-              });
+              rawTraHangDonList = data
+                .filter(d => {
+                  const ma = String(d.ma_don_hang || '').trim().toUpperCase();
+                  const nv = String(d.nhan_vien || '').trim().toLowerCase();
+                  if (ma.startsWith('PNH') || ma.startsWith('DDH')) return false;
+                  if (nv === 'hệ thống tự động' || nv === 'he thong tu dong') return false;
+                  return true;
+                })
+                .map(d => {
+                  let chiTiet = [];
+                  try {
+                    if (Array.isArray(d.chi_tiet_san_pham)) {
+                      chiTiet = d.chi_tiet_san_pham;
+                    } else if (typeof d.chi_tiet_san_pham === 'string') {
+                      chiTiet = JSON.parse(d.chi_tiet_san_pham || '[]');
+                    }
+                  } catch(e) { chiTiet = []; }
+                  return {
+                    maDonHang: d.ma_don_hang,
+                    ngayBan: d.ngay_ban ? String(d.ngay_ban).replace('T', ' ').replace(/\..+/, '') : '',
+                    maKH: d.ma_kh,
+                    tenKH: d.ten_kh,
+                    soDienThoai: d.so_dien_thoai || '',
+                    tongTien: Number(d.tong_tien) || 0,
+                    giamGia: Number(d.giam_gia) || 0,
+                    khachPhaiTra: Number(d.khach_phai_tra) || 0,
+                    khachTra: Number(d.khach_tra) || 0,
+                    hinhThucTT: d.hinh_thuc_tt || 'TIEN_MAT',
+                    chiTietSanPham: chiTiet,
+                    trangThai: d.trang_thai || 'Hoàn thành',
+                    nhanVien: d.nhan_vien || ''
+                  };
+                });
               if (typeof rawDonHangList !== 'undefined') rawDonHangList = rawTraHangDonList;
               locDonHangTraHang();
               return;
@@ -15169,8 +15200,14 @@ function loadSoQuy(filter) {
     function napDonHangTraHangTuSheets() {
       const tbody = document.getElementById('tbl-trahang-don-body');
       google.script.run.withSuccessHandler(function(list) {
-        rawTraHangDonList = list || [];
-        if (typeof rawDonHangList !== 'undefined') rawDonHangList = list || [];
+        rawTraHangDonList = (list || []).filter(d => {
+          const ma = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
+          const nv = String(d.nhanVien || d.nhan_vien || '').trim().toLowerCase();
+          if (ma.startsWith('PNH') || ma.startsWith('DDH')) return false;
+          if (nv === 'hệ thống tự động' || nv === 'he thong tu dong') return false;
+          return true;
+        });
+        if (typeof rawDonHangList !== 'undefined') rawDonHangList = rawTraHangDonList;
         locDonHangTraHang();
       }).withFailureHandler(function(err) {
         if (tbody && (!rawTraHangDonList || rawTraHangDonList.length === 0)) {
@@ -18162,7 +18199,10 @@ function loadSoQuy(filter) {
       allOrders.forEach(d => {
         let maDon = d.ma_don_hang || d.maDonHang || d.maDon;
         if (!maDon) return;
-        let isTra = String(d.trang_thai || d.trangThai || '').includes('Trả') || String(maDon).startsWith('PTH');
+        let maDonStr = String(maDon).toUpperCase().trim();
+        let nvStr = String(d.nhan_vien || d.nhanVien || '').toLowerCase().trim();
+        if (maDonStr.startsWith('PNH') || maDonStr.startsWith('DDH') || nvStr === 'hệ thống tự động' || nvStr === 'he thong tu dong') return;
+        let isTra = String(d.trang_thai || d.trangThai || '').includes('Trả') || maDonStr.startsWith('PTH');
         let tTien = Number(d.tong_tien || d.tongTien || d.khach_phai_tra || d.khachPhaiTra) || 0;
         let dTra = Number(d.khach_tra || d.khachTra) || 0;
 
