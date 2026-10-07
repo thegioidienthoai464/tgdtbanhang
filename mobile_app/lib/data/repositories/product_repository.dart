@@ -3,12 +3,24 @@ import '../services/supabase_service.dart';
 
 class ProductRepository {
   Future<List<ProductModel>> fetchProducts() async {
-    final response = await SupabaseService.client
-        .from('dm_hanghoa')
-        .select('*')
-        .order('id', ascending: true);
-    
-    final list = (response as List)
+    final List<dynamic> allRows = [];
+    int from = 0;
+    const int batchSize = 1000;
+
+    while (true) {
+      final response = await SupabaseService.client
+          .from('dm_hanghoa')
+          .select('*')
+          .order('id', ascending: false)
+          .range(from, from + batchSize - 1);
+
+      final chunk = response as List;
+      allRows.addAll(chunk);
+      if (chunk.length < batchSize) break;
+      from += batchSize;
+    }
+
+    final list = allRows
         .map((item) => ProductModel.fromJson(item as Map<String, dynamic>))
         .toList();
     return list;
