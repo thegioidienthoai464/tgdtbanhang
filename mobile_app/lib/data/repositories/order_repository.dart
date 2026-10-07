@@ -49,4 +49,15 @@ class OrderRepository {
         .update({'trang_thai': newStatus})
         .eq('ma_don_hang', maDonHang);
   }
+
+  Future<void> deleteOrder(String maDonHang) async {
+    await SupabaseService.client
+        .from('don_hang')
+        .delete()
+        .eq('ma_don_hang', maDonHang);
+    await SupabaseService.client
+        .from('so_quy')
+        .delete()
+        .eq('ma_chung_tu', maDonHang);
+  }
 }
