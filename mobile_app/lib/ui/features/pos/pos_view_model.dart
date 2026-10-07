@@ -134,16 +134,33 @@ class PosViewModel extends ChangeNotifier {
   }
 
   Future<PartnerModel?> createQuickCustomer(String name, String phone) async {
+    final now = DateTime.now();
+    final ma = "KH${now.millisecondsSinceEpoch.toString().substring(7)}";
+    return createFullCustomer(
+      maKH: ma,
+      tenKH: name,
+      soDienThoai: phone,
+    );
+  }
+
+  Future<PartnerModel?> createFullCustomer({
+    required String maKH,
+    required String tenKH,
+    String soDienThoai = '',
+    String diaChi = '',
+    double congNo = 0.0,
+    String ghiChu = '',
+  }) async {
     try {
-      final now = DateTime.now();
-      final ma = "KH${now.millisecondsSinceEpoch.toString().substring(7)}";
       final newCust = PartnerModel(
-        maDoiTac: ma,
-        tenDoiTac: name.trim(),
-        soDienThoai: phone.trim(),
+        maDoiTac: maKH.trim(),
+        tenDoiTac: tenKH.trim(),
+        soDienThoai: soDienThoai.trim(),
+        diaChi: diaChi.trim(),
         loaiDoiTac: 'KH',
-        congNo: 0,
+        congNo: congNo,
         trangThai: 'HoatDong',
+        ghiChu: ghiChu.trim(),
       );
       final created = await _partnerRepo.createCustomer(newCust);
       if (created != null) {
@@ -153,7 +170,7 @@ class PosViewModel extends ChangeNotifier {
         return created;
       }
     } catch (e) {
-      debugPrint("Lỗi tạo khách hàng nhanh: $e");
+      debugPrint("Lỗi tạo khách hàng: $e");
     }
     return null;
   }
@@ -202,7 +219,7 @@ class PosViewModel extends ChangeNotifier {
       final order = OrderModel(
         maDonHang: maDon,
         ngayBan: now,
-        maKH: _selectedCustomer?.maDoiTac ?? 'KL',
+        maKH: _selectedCustomer?.maDoiTac ?? 'KHACHLE',
         tenKH: _selectedCustomer?.tenDoiTac ?? 'Khách lẻ',
         soDienThoai: _selectedCustomer?.soDienThoai ?? '',
         chiNhanh: branch,
@@ -242,7 +259,7 @@ class PosViewModel extends ChangeNotifier {
           ngayGD: now,
           soTien: paid,
           doiTuong: 'Khách hàng',
-          maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KL',
+          maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KHACHLE',
           maChungTu: maDon,
           ghiChu: 'Thu tiền mặt bán hàng POS $maDon',
         );
@@ -257,7 +274,7 @@ class PosViewModel extends ChangeNotifier {
           ngayGD: now,
           soTien: paid,
           doiTuong: 'Khách hàng',
-          maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KL',
+          maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KHACHLE',
           maChungTu: maDon,
           ghiChu: 'Thu chuyển khoản bán hàng POS $maDon',
         );
@@ -274,7 +291,7 @@ class PosViewModel extends ChangeNotifier {
             ngayGD: now,
             soTien: cashAmount,
             doiTuong: 'Khách hàng',
-            maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KL',
+            maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KHACHLE',
             maChungTu: maDon,
             ghiChu: 'Thu tiền mặt đơn hàng $maDon (Thanh toán hỗn hợp)',
           );
@@ -290,7 +307,7 @@ class PosViewModel extends ChangeNotifier {
             ngayGD: now,
             soTien: bankTransferAmount,
             doiTuong: 'Khách hàng',
-            maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KL',
+            maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KHACHLE',
             maChungTu: maDon,
             ghiChu: 'Thu chuyển khoản đơn hàng $maDon (Thanh toán hỗn hợp)',
           );
