@@ -6,6 +6,7 @@ class PartnerModel {
   final String diaChi;
   final double congNo;
   final String trangThai;
+  final String ghiChu;
 
   PartnerModel({
     required this.maDoiTac,
@@ -15,6 +16,7 @@ class PartnerModel {
     this.diaChi = '',
     this.congNo = 0,
     this.trangThai = 'HoatDong',
+    this.ghiChu = '',
   });
 
   bool get isCustomer => loaiDoiTac == 'KH';
@@ -29,6 +31,7 @@ class PartnerModel {
       diaChi: json['dia_chi']?.toString() ?? '',
       congNo: (json['cong_no'] as num?)?.toDouble() ?? 0.0,
       trangThai: json['trang_thai']?.toString() ?? 'HoatDong',
+      ghiChu: json['ghi_chu']?.toString() ?? '',
     );
   }
 
@@ -41,6 +44,7 @@ class PartnerModel {
       'dia_chi': diaChi,
       'cong_no': congNo,
       'trang_thai': trangThai,
+      'ghi_chu': ghiChu,
     };
   }
 }
