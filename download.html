@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tải Bản Cập Nhật T&T POS v1.0.8</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 28px;
+      padding: 32px 24px;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    }
+    .logo-box {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #000;
+      border: 3px solid #f59e0b;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+    }
+    .logo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+      color: #ffffff;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 16px;
+    }
+    .badge-ver {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #fbbf24;
+      font-weight: 700;
+      font-size: 12px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+    }
+    .btn-download {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 15px;
+      border-radius: 18px;
+      box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+      transition: transform 0.1s, box-shadow 0.1s;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-download:active {
+      transform: scale(0.98);
+    }
+    .notes-box {
+      margin-top: 24px;
+      padding: 16px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid #334155;
+      border-radius: 16px;
+      text-align: left;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+    .notes-box h3 {
+      font-size: 12px;
+      font-weight: 800;
+      color: #f59e0b;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .step-list {
+      margin-top: 16px;
+      padding: 14px;
+      background: #0f172a;
+      border-radius: 14px;
+      border: 1px dashed #475569;
+      text-align: left;
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.6;
+    }
+    .step-list b { color: #f8fafc; }
+    .status-text {
+      font-size: 12px;
+      color: #38bdf8;
+      margin-top: 14px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-box">
+      <img src="logo.png" alt="T&T POS" onerror="this.parentElement.innerHTML='<span style=\'color:#f59e0b;font-weight:900;font-size:24px;\'>T&T</span>'">
+    </div>
+    <h1>T&amp;T POS Mobile App</h1>
+    <p class="subtitle">Hệ thống Quản lý Bán hàng &amp; Kho ERP</p>
+    <div>
+      <span class="badge-ver">Bản Cập Nhật Mới: v1.0.8 (Build 9)</span>
+    </div>
+
+    <a href="https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.0.8/app-release.apk" class="btn-download" id="link-download">
+      <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+      <span>TẢI BẢN CẬP NHẬT APK (32.9 MB)</span>
+    </a>
+
+    <div style="margin-top: 10px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+      <a href="app-release.apk" style="color: #94a3b8; font-size: 11px; text-decoration: underline;">Link tải dự phòng (Máy chủ phụ)</a>
+      <span style="color: #64748b; font-size: 11px;">•</span>
+      <a href="https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.0.8" target="_blank" style="color: #94a3b8; font-size: 11px; text-decoration: underline;">Xem GitHub Release</a>
+    </div>
+
+    <p class="status-text" id="status-msg">⏳ Đang tự động tải xuống file cài đặt APK...</p>
+
+    <div class="step-list">
+      <p><b>Hướng dẫn cài đặt:</b></p>
+      <p>1. Nếu trình duyệt hỏi <i>"Tệp có thể gây hại"</i>, hãy chọn <b>"Vẫn tải xuống"</b>.</p>
+      <p>2. Khi tải xong, bấm vào thông báo hoặc mở file <b>app-release.apk</b> trong thư mục <i>Download (Tải về)</i>.</p>
+      <p>3. Chọn <b>"Cập nhật"</b> để cài đè lên app hiện tại.</p>
+    </div>
+
+    <div class="notes-box">
+      <h3>Nội dung cập nhật v1.0.8:</h3>
+      <p>• Thêm mục chọn chi nhánh làm việc (Dashboard, Thu ngân POS, Cài đặt, Đơn hàng, Sổ quỹ, Kho).</p>
+      <p>• Tự động đồng bộ và lưu nhớ chi nhánh đã chọn khi khởi động lại ứng dụng.</p>
+      <p>• Ghi nhận chi nhánh vào từng đơn bán hàng POS và phiếu thu chi sổ quỹ.</p>
+      <p>• Hiển thị chi nhánh chi tiết trên từng hóa đơn và lịch sử giao dịch.</p>
+    </div>
+  </div>
+
+  <script>
+    // Tự động kích hoạt tải sau 600ms
+    setTimeout(function() {
+      try {
+        var a = document.createElement('a');
+        a.href = 'https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.0.8/app-release.apk';
+        a.download = 'app-release.apk';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        document.getElementById('status-msg').innerText = '✅ Đang tải file APK! Vui lòng kiểm tra thanh thông báo.';
+      } catch (e) {
+        document.getElementById('status-msg').innerText = '👉 Hãy bấm nút màu cam ở trên để tải xuống.';
+      }
+    }, 600);
+  </script>
+</body>
+</html>
