@@ -4,7 +4,9 @@ import '../../core/app_theme.dart';
 import '../../core/formatters.dart';
 import '../../../data/models/bank_model.dart';
 import '../branch/branch_view_model.dart';
+import '../branch/branch_filter_chips.dart';
 import 'cashbook_view_model.dart';
+
 
 class CashbookView extends StatefulWidget {
   const CashbookView({super.key});
@@ -27,6 +29,20 @@ class _CashbookViewState extends State<CashbookView> {
     final vm = context.watch<CashbookViewModel>();
     final branchVm = context.watch<BranchViewModel>();
 
+    final totalFund = branchVm.isAllSelected
+        ? vm.totalFund
+        : vm.filteredTotalFund(branchVm.matchesBranch);
+    final cashBalance = branchVm.isAllSelected
+        ? vm.cashBalance
+        : vm.filteredCashBalance(branchVm.matchesBranch);
+    final bankBalance = branchVm.isAllSelected
+        ? vm.bankBalance
+        : vm.filteredBankBalance(branchVm.matchesBranch);
+
+    final filteredTransactions = vm.transactions
+        .where((t) => branchVm.matchesBranch(t.chiNhanh))
+        .toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sổ quỹ thu chi'),
@@ -46,9 +62,15 @@ class _CashbookViewState extends State<CashbookView> {
       ),
       body: Column(
         children: [
+          // Bộ chọn chi nhánh cho sổ quỹ
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 2),
+            child: BranchFilterChips(showHeader: true, title: 'Chi nhánh sổ quỹ:'),
+          ),
+
           // Thẻ tổng hợp quỹ tài chính toàn diện
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
@@ -87,15 +109,16 @@ class _CashbookViewState extends State<CashbookView> {
                       ],
                     ),
                     Text(
-                      Formatters.formatCurrency(vm.totalFund),
+                      Formatters.formatCurrency(totalFund),
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: vm.totalFund >= 0 ? const Color(0xFF10B981) : Colors.redAccent,
+                        color: totalFund >= 0 ? const Color(0xFF10B981) : Colors.redAccent,
                       ),
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -119,7 +142,7 @@ class _CashbookViewState extends State<CashbookView> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              Formatters.formatCurrency(vm.cashBalance),
+                              Formatters.formatCurrency(cashBalance),
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -139,7 +162,7 @@ class _CashbookViewState extends State<CashbookView> {
                             Row(
                               children: [
                                 const Icon(Icons.account_balance_outlined, color: Color(0xFF38BDF8), size: 15),
-                                const SizedBox(width: 6),
+                                SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
                                     vm.selectedBankAccount != null
@@ -154,13 +177,14 @@ class _CashbookViewState extends State<CashbookView> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              Formatters.formatCurrency(vm.bankBalance),
+                              Formatters.formatCurrency(bankBalance),
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF38BDF8),
                                 fontSize: 14,
                               ),
                             ),
+
                           ],
                         ),
                       ),
@@ -251,14 +275,15 @@ class _CashbookViewState extends State<CashbookView> {
           Expanded(
             child: vm.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : vm.transactions.isEmpty
+                : filteredTransactions.isEmpty
                     ? const Center(child: Text('Chưa có giao dịch sổ quỹ nào'))
                     : ListView.separated(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        itemCount: vm.transactions.length,
+                        itemCount: filteredTransactions.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
-                          final t = vm.transactions[index];
+                          final t = filteredTransactions[index];
+
                           final isThu = t.isIncome;
                           final isTm = t.loaiQuy.toUpperCase() == 'TIEN_MAT' ||
                                        t.loaiQuy.toUpperCase().contains('TIỀN MẶT') ||
