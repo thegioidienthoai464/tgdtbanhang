@@ -5528,6 +5528,9 @@ function formatVND(amount) {
     }
 
     async function xacNhanThanhToanPOS() {
+      if (typeof hasPermission === 'function' && !hasPermission('BAN_HANG_THEM')) {
+        return showNotification("Bạn không có quyền Thanh toán đơn hàng POS! Vui lòng liên hệ Quản trị viên.", true);
+      }
       if (!posCart || !posCart.length) return showNotification("Giỏ hàng đang trống! Vui lòng chọn sản phẩm.", true);
       const maKH = document.getElementById('pos-makh')?.value || 'KHACHLE';
       
@@ -7411,6 +7414,11 @@ function formatVND(amount) {
       const vDanhSach = document.getElementById('view-nhaphang-danhsach');
       const vTaoDon = document.getElementById('view-nhaphang-tao-don');
       if (view === 'taodon') {
+        if (typeof hasPermission === 'function' && !hasPermission('NHAP_HANG_THEM')) {
+          return showNotification("Bạn không có quyền Lập đơn nhập hàng! Vui lòng liên hệ Quản trị viên.", true);
+        }
+      }
+      if (view === 'taodon') {
         if (vDanhSach) vDanhSach.classList.add('hidden');
         if (vTaoDon) vTaoDon.classList.remove('hidden');
         const cnDisplay = document.getElementById('nhap-chinhanh-display');
@@ -7778,6 +7786,9 @@ function formatVND(amount) {
     // HỦY ĐƠN NHẬP HÀNG (API & CONFIRM)
     // ====================================================================
     function xacNhanHuyDonNhap(maPhieu) {
+      if (typeof hasPermission === 'function' && !hasPermission('NHAP_HANG_XOA')) {
+        return showNotification("Bạn không có quyền Hủy đơn nhập hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const don = rawNhapHangList.find(d => d.maPhieu === maPhieu);
       if (!don) return showNotification("Không tìm thấy đơn hàng cần hủy!", true);
 
@@ -7824,6 +7835,9 @@ function formatVND(amount) {
     }
 
     function xacNhanHuyCacDonNhapDaChon() {
+      if (typeof hasPermission === 'function' && !hasPermission('NHAP_HANG_XOA')) {
+        return showNotification("Bạn không có quyền Hủy đơn nhập hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       if (!selectedNhapHangIds || selectedNhapHangIds.size === 0) {
         return showNotification("Vui lòng chọn ít nhất một đơn để hủy!", true);
       }
@@ -7856,6 +7870,9 @@ function formatVND(amount) {
     // SỬA ĐƠN NHẬP HÀNG (MODAL SỬA & NẠP VÀO GIỎ)
     // ====================================================================
     function moModalSuaDonNhap(maPhieu) {
+      if (typeof hasPermission === 'function' && !hasPermission('NHAP_HANG_SUA')) {
+        return showNotification("Bạn không có quyền Chỉnh sửa đơn nhập hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const don = rawNhapHangList.find(d => d.maPhieu === maPhieu);
       if (!don) return showNotification("Không tìm thấy đơn hàng cần sửa!", true);
       if (don.trangThai === 'Đã hủy' || don.trangThai === 'DaHuy') {
@@ -7939,6 +7956,9 @@ function formatVND(amount) {
     }
 
     async function xacNhanLuuSuaDonNhap() {
+      if (typeof hasPermission === 'function' && !hasPermission('NHAP_HANG_SUA')) {
+        return showNotification("Bạn không có quyền Chỉnh sửa đơn nhập hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const maPhieu = document.getElementById('sdn-maphieu')?.value;
       if (!maPhieu) return;
 
@@ -9474,6 +9494,11 @@ function formatVND(amount) {
       const ma = document.getElementById('form-mahang').value.trim().toUpperCase();
       const ten = document.getElementById('form-tenhang').value.trim();
       if (!ma || !ten) return showNotification("Vui lòng điền mã và tên hàng hóa!", true);
+      const isExistingHH = Array.isArray(rawHangHoa) && rawHangHoa.some(h => h.maHang === ma);
+      const reqPermHH = isExistingHH ? 'HANG_HOA_SUA' : 'HANG_HOA_THEM';
+      if (typeof hasPermission === 'function' && !hasPermission(reqPermHH)) {
+        return showNotification(`Bạn không có quyền ${isExistingHH ? 'Chỉnh sửa' : 'Thêm mới'} hàng hóa! Vui lòng liên hệ Quản trị viên.`, true);
+      }
 
       const targetCN = layMaChiNhanh(typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01');
       const gVon = Number(document.getElementById('form-giavon')?.value) || 0;
@@ -10203,6 +10228,9 @@ function formatVND(amount) {
 
     // Cập nhật giá một dòng trực tiếp từ ô nhập
     function capNhatGiaDong(maHang, val) {
+      if (typeof hasPermission === 'function' && !hasPermission('BANG_GIA_SUA')) {
+        return showNotification("Bạn không có quyền Chỉnh sửa bảng giá! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const curBang = document.getElementById('select-bang-gia')?.value || "Bảng giá bán lẻ chuẩn";
       const newPrice = Number(val) || 0;
 
@@ -10226,6 +10254,9 @@ function formatVND(amount) {
 
     // Modal tạo bảng giá mới
     function moModalBangGia() {
+      if (typeof hasPermission === 'function' && !hasPermission('BANG_GIA_THEM')) {
+        return showNotification("Bạn không có quyền Tạo bảng giá mới! Vui lòng liên hệ Quản trị viên.", true);
+      }
       document.getElementById('input-ten-banggia').value = "";
       const countEl = document.getElementById('modal-banggia-count');
       if (countEl) countEl.innerText = `${rawHangHoa.length} sản phẩm`;
@@ -10256,6 +10287,9 @@ function formatVND(amount) {
     // CÔNG THỨC THIẾT LẬP GIÁ (CÔNG CỤ TÍNH TOÁN THEO YÊU CẦU NGƯỜI DÙNG)
     // ====================================================================
     function moModalCongThucBangGia(target = 'CURRENT') {
+      if (typeof hasPermission === 'function' && !hasPermission('BANG_GIA_SUA')) {
+        return showNotification("Bạn không có quyền Áp dụng công thức tính giá! Vui lòng liên hệ Quản trị viên.", true);
+      }
       congThucTargetMode = target;
       
       let targetName = "Bảng giá bán lẻ chuẩn";
@@ -10963,6 +10997,9 @@ function formatVND(amount) {
 
     // 2. Mở màn hình lập phiếu kiểm kho mới
     function moLapPhieuKiemKho() {
+      if (typeof hasPermission === 'function' && !hasPermission('KIEM_KHO_THEM')) {
+        return showNotification("Bạn không có quyền Tạo phiếu kiểm kho! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const now = new Date();
       const y = now.getFullYear().toString().slice(-2);
       const m = ("0" + (now.getMonth() + 1)).slice(-2);
@@ -11416,6 +11453,9 @@ function formatVND(amount) {
 
     // 6. HOÀN TẤT & CÂN BẰNG TỒN KHO
     function xacNhanHoanTatKiemKho(laLuuTam = false) {
+      if (typeof hasPermission === 'function' && !hasPermission('KIEM_KHO_THEM')) {
+        return showNotification("Bạn không có quyền Lưu/Cân bằng phiếu kiểm kho! Vui lòng liên hệ Quản trị viên.", true);
+      }
       if (!danhSachKiemKhoItems.length) {
         return showNotification("Phiếu kiểm kho chưa có sản phẩm nào!", true);
       }
@@ -11649,6 +11689,9 @@ function formatVND(amount) {
     // XUẤT HỦY - LẬP PHIẾU
     // ============================================================
     function moLapPhieuXuatHuy() {
+      if (typeof hasPermission === 'function' && !hasPermission('XUAT_HUY_THEM')) {
+        return showNotification("Bạn không có quyền Lập phiếu xuất hủy! Vui lòng liên hệ Quản trị viên.", true);
+      }
       if (!rawHangHoa || !rawHangHoa.length) {
         if (typeof loadHangHoa === 'function') loadHangHoa();
       }
@@ -12105,6 +12148,9 @@ function formatVND(amount) {
     // SUBMIT PHIẾU
     // ============================================================
     function xacNhanHoanTatXuatHuy(laLuuTam) {
+      if (typeof hasPermission === 'function' && !hasPermission('XUAT_HUY_THEM')) {
+        return showNotification("Bạn không có quyền Lưu phiếu xuất hủy! Vui lòng liên hệ Quản trị viên.", true);
+      }
       try {
         if (!danhSachXuatHuyItems || !danhSachXuatHuyItems.length) {
           return showNotification('Chưa có sản phẩm nào trong phiếu xuất hủy!', true);
@@ -12516,6 +12562,9 @@ function formatVND(amount) {
     }
 
     function chuyenTrangThaiNCCDaChon(trangThaiMoi) {
+      if (typeof hasPermission === 'function' && !hasPermission('NCC_XOA')) {
+        return showNotification("Bạn không có quyền Thay đổi trạng thái/Xóa nhà cung cấp! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const count = selectedNCCSet.size;
       if (!count) return showNotification("Vui lòng chọn ít nhất 1 nhà cung cấp!", true);
 
@@ -12551,6 +12600,9 @@ function formatVND(amount) {
     }
 
     function chuyenTrangThaiMotNCC(maNCC, trangThaiMoi) {
+      if (typeof hasPermission === 'function' && !hasPermission('NCC_XOA')) {
+        return showNotification("Bạn không có quyền Thay đổi trạng thái/Xóa nhà cung cấp! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const ncc = rawNCCList.find(n => n.maDoiTac === maNCC);
       const ten = ncc ? ncc.tenDoiTac : maNCC;
       const tenTrangThai = trangThaiMoi === 'HoatDong' ? 'Đang hoạt động' : 'Ngừng hoạt động';
@@ -12844,6 +12896,9 @@ function formatVND(amount) {
     }
 
     function moModalThanhToanNoNCC(maNCC) {
+      if (typeof hasPermission === 'function' && !hasPermission('NCC_SUA')) {
+        return showNotification("Bạn không có quyền Thanh toán nợ Nhà cung cấp! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const ncc = rawNCCList.find(n => n.maDoiTac === maNCC) || (currentViewingNCC && currentViewingNCC.maDoiTac === maNCC ? currentViewingNCC : { maDoiTac: maNCC, tenDoiTac: maNCC, congNo: 0 });
       const congNo = Number(ncc.congNo) || 0;
 
@@ -13097,6 +13152,17 @@ function formatVND(amount) {
     }
 
     function moModalDoiTac(loai) {
+      loaiDoiTacDangTao = loai || 'NCC';
+      const isKHCheck = loaiDoiTacDangTao === 'KH';
+      if (isKHCheck) {
+        if (typeof hasPermission === 'function' && !hasPermission('KHACH_HANG_THEM')) {
+          return showNotification("Bạn không có quyền Thêm khách hàng mới! Vui lòng liên hệ Quản trị viên.", true);
+        }
+      } else {
+        if (typeof hasPermission === 'function' && !hasPermission('NCC_THEM')) {
+          return showNotification("Bạn không có quyền Thêm nhà cung cấp mới! Vui lòng liên hệ Quản trị viên.", true);
+        }
+      }
       loaiDoiTacDangTao = loai || 'NCC';
       const isKH = loaiDoiTacDangTao === 'KH';
       const titleEl = document.getElementById('doitac-modal-title');
@@ -13974,6 +14040,9 @@ function formatVND(amount) {
     }
 
     function moModalLapPhieuThu() {
+      if (typeof hasSoQuyPermission === 'function' && !hasSoQuyPermission('THEM')) {
+        return showNotification("Bạn không có quyền Lập phiếu thu tiền! Vui lòng liên hệ Quản trị viên.", true);
+      }
       dangSuaPhieuSoQuyMa = null;
       loaiPhieuDangLap = "THU";
       document.getElementById('sq-modal-title').innerText = "Lập Phiếu Thu Tiền";
@@ -14002,6 +14071,9 @@ function formatVND(amount) {
     }
 
     function moModalLapPhieuChi() {
+      if (typeof hasSoQuyPermission === 'function' && !hasSoQuyPermission('THEM')) {
+        return showNotification("Bạn không có quyền Lập phiếu chi tiền! Vui lòng liên hệ Quản trị viên.", true);
+      }
       dangSuaPhieuSoQuyMa = null;
       loaiPhieuDangLap = "CHI";
       document.getElementById('sq-modal-title').innerText = "Lập Phiếu Chi Tiền";
@@ -14038,6 +14110,9 @@ function formatVND(amount) {
     }
 
     function moModalSuaPhieuSoQuy(maPhieu) {
+      if (typeof hasSoQuyPermission === 'function' && !hasSoQuyPermission('SUA')) {
+        return showNotification("Bạn không có quyền Chỉnh sửa phiếu sổ quỹ! Vui lòng liên hệ Quản trị viên.", true);
+      }
       if (!window.rawSoQuyData || !window.rawSoQuyData.danhSach) return;
       const p = window.rawSoQuyData.danhSach.find(x => x.maPhieu === maPhieu);
       if (!p) return showNotification("Không tìm thấy thông tin phiếu: " + maPhieu, true);
@@ -14140,6 +14215,11 @@ function formatVND(amount) {
       const st = Number(document.getElementById('sq-input-sotien').value) || 0;
       const gc = document.getElementById('sq-input-ghichu').value.trim();
       if (st <= 0) return showNotification("Vui lòng nhập số tiền lớn hơn 0!", true);
+      const isEditingSQ = Boolean(dangSuaPhieuSoQuyMa);
+      const reqActSQ = isEditingSQ ? 'SUA' : 'THEM';
+      if (typeof hasSoQuyPermission === 'function' && !hasSoQuyPermission(reqActSQ)) {
+        return showNotification(`Bạn không có quyền ${isEditingSQ ? 'Chỉnh sửa' : 'Lập'} phiếu sổ quỹ! Vui lòng liên hệ Quản trị viên.`, true);
+      }
 
       const ngayVal = document.getElementById('sq-input-ngaygd')?.value;
       const ngayGD = ngayVal ? ngayVal.replace('T', ' ') + ':00' : new Date().toISOString().replace('T', ' ').slice(0, 19);
@@ -14638,6 +14718,9 @@ function formatVND(amount) {
     }
 
     function xoaMotPhieuSoQuy(maPhieu) {
+      if (typeof hasSoQuyPermission === 'function' && !hasSoQuyPermission('XOA')) {
+        return showNotification("Bạn không có quyền Xóa phiếu sổ quỹ! Vui lòng liên hệ Quản trị viên.", true);
+      }
       if (!maPhieu) return;
       showConfirm("Xác nhận xóa phiếu", `Bạn có chắc chắn muốn xóa phiếu [${maPhieu}] khỏi sổ quỹ?\nSố tiền của phiếu sẽ được tính lại vào công nợ của đối tượng liên quan (khách hàng / nhà cung cấp). Thao tác này không thể hoàn tác!`, () => {
         thucHienXoaDanhSachPhieuSoQuy([maPhieu]);
@@ -14645,6 +14728,9 @@ function formatVND(amount) {
     }
 
     function xoaCacPhieuSoQuyDaChon() {
+      if (typeof hasSoQuyPermission === 'function' && !hasSoQuyPermission('XOA')) {
+        return showNotification("Bạn không có quyền Xóa phiếu sổ quỹ! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const listMa = Array.from(selectedSoQuySet);
       if (!listMa.length) {
         return showNotification("Vui lòng chọn ít nhất 1 phiếu cần xóa!", true);
@@ -15973,17 +16059,17 @@ function formatVND(amount) {
         toggleChonTatCaPhanQuyen(true);
       } else {
         PERMISSION_CONFIG.forEach(item => {
+          const hasGranular = perms.some(p => typeof p === 'string' && p.startsWith(`${item.key}_`));
           PERMISSION_ACTIONS.forEach(act => {
             const actKey = `${item.key}_${act}`;
             let has = perms.includes(actKey);
 
-            // Tương thích ngược: nếu user có base key (vd: HANG_HOA) thì tự động có đủ Xem, Thêm, Sửa, Xóa
-            if (!has && perms.includes(item.key)) {
-              has = true;
-            }
-
-            // Tương thích ngược với quyền cũ dạng nhóm
-            if (!has) {
+            // Tương thích ngược: CHỈ KHI user CHƯA có cấu hình chi tiết (tài khoản cũ)
+            // thì mới tự động có đủ Xem, Thêm, Sửa, Xóa từ baseKey hoặc nhóm quyền cũ
+            if (!has && !hasGranular) {
+              if (perms.includes(item.key)) {
+                has = true;
+              }
               if (item.key === 'DASHBOARD' && perms.includes('DASHBOARD')) has = true;
               if (['BAN_HANG', 'DAT_HANG', 'TRA_HANG', 'KHACH_HANG', 'LICHSU_DONHANG'].includes(item.key) && perms.includes('DON_HANG')) has = true;
               if (item.key === 'KHACH_HANG' && perms.includes('KHACH_HANG')) has = true;
@@ -16342,6 +16428,7 @@ function formatVND(amount) {
             });
             locDanhSachNguoiDung(false);
             if (typeof khoiTaoThongTinPOS === 'function') khoiTaoThongTinPOS();
+            if (typeof dongBoCurrentUserTuDanhSach === 'function') dongBoCurrentUserTuDanhSach();
             return;
           }
         } catch (e) {
@@ -16358,6 +16445,7 @@ function formatVND(amount) {
           }));
           locDanhSachNguoiDung(false);
           if (typeof khoiTaoThongTinPOS === 'function') khoiTaoThongTinPOS();
+            if (typeof dongBoCurrentUserTuDanhSach === 'function') dongBoCurrentUserTuDanhSach();
         }).apiGetDanhSachNguoiDung();
       } else {
         if (!rawNguoiDungList || rawNguoiDungList.length === 0) {
@@ -16367,10 +16455,34 @@ function formatVND(amount) {
         }
         locDanhSachNguoiDung(false);
         if (typeof khoiTaoThongTinPOS === 'function') khoiTaoThongTinPOS();
+            if (typeof dongBoCurrentUserTuDanhSach === 'function') dongBoCurrentUserTuDanhSach();
       }
     }
     window.loadDanhSachNguoiDung = loadNguoiDung;
     window.loadNguoiDung = loadNguoiDung;
+
+    function dongBoCurrentUserTuDanhSach() {
+      if (!currentUser || !Array.isArray(rawNguoiDungList)) return;
+      const match = rawNguoiDungList.find(u => (u.maNV && u.maNV === currentUser.maNV) || (u.username && u.username === currentUser.username));
+      if (match) {
+        currentUser.permissions = match.permissions || [];
+        currentUser.chiNhanh = match.chiNhanh || ['ALL'];
+        currentUser.vaiTro = match.vaiTro || currentUser.vaiTro;
+        currentUser.hoTen = match.hoTen || currentUser.hoTen;
+        currentUser.trangThai = match.trangThai || currentUser.trangThai;
+        const userJson = JSON.stringify(currentUser);
+        sessionStorage.setItem("erp_logged_user", userJson);
+        sessionStorage.setItem("tt_pos_logged_user", userJson);
+        if (localStorage.getItem("erp_logged_user")) {
+          localStorage.setItem("erp_logged_user", userJson);
+          localStorage.setItem("tt_pos_logged_user", userJson);
+        }
+        if (typeof apDungPhuyenGiaoDien === 'function') {
+          apDungPhuyenGiaoDien(currentUser.permissions);
+        }
+      }
+    }
+    window.dongBoCurrentUserTuDanhSach = dongBoCurrentUserTuDanhSach;
 
     async function xacNhanLuuNguoiDung() {
       const ma = document.getElementById('user-input-manv').value.trim().toUpperCase();
@@ -16384,6 +16496,11 @@ function formatVND(amount) {
       const selectedBranches = layDanhSachChiNhanhDaChonUser();
 
       if (!ma || !user || !ten) return showNotification("Vui lòng điền đủ Mã NV, Username và Họ tên!", true);
+      const isExistingUser = Array.isArray(rawNguoiDungList) && rawNguoiDungList.some(u => u.maNV === ma || u.username === user);
+      const reqPermUser = isExistingUser ? 'NGUOI_DUNG_SUA' : 'NGUOI_DUNG_THEM';
+      if (typeof hasPermission === 'function' && !hasPermission(reqPermUser)) {
+        return showNotification(`Bạn không có quyền ${isExistingUser ? 'Chỉnh sửa' : 'Thêm mới'} tài khoản người dùng! Vui lòng liên hệ Quản trị viên.`, true);
+      }
 
       // Xác định quyền tính năng
       let perms = ["DASHBOARD", "BAN_HANG", "DAT_HANG", "TRA_HANG", "KHACH_HANG", "LICHSU_DONHANG", "SOQUY_TIENMAT"];
@@ -16489,6 +16606,9 @@ function formatVND(amount) {
     }
 
     async function doiTrangThaiNguoiDung(maNV) {
+      if (typeof hasPermission === 'function' && !hasPermission('NGUOI_DUNG_XOA')) {
+        return showNotification("Bạn không có quyền Khóa/Mở khóa tài khoản người dùng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const u = rawNguoiDungList.find(x => x.maNV === maNV);
       if (!u) return;
       if (u.username === 'admin') return showNotification("Không thể khóa tài khoản quản trị viên chính!", true);
@@ -16516,6 +16636,9 @@ function formatVND(amount) {
     }
 
     async function xacNhanLuuPhanQuyen() {
+      if (typeof hasPermission === 'function' && !hasPermission('PHAN_QUYEN_SUA')) {
+        return showNotification("Bạn không có quyền Cấu hình phân quyền người dùng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const maNV = document.getElementById('phanquyen-target-manv').value;
       const u = rawNguoiDungList.find(x => x.maNV === maNV);
       if (!u) return;
@@ -17082,7 +17205,7 @@ function formatVND(amount) {
 
     function hasPermission(permKey) {
       if (!currentUser) return false;
-      if (currentUser.vaiTro === 'Admin') return true;
+      if (currentUser.vaiTro === 'Admin' || currentUser.username === 'admin') return true;
       const perms = currentUser.permissions || [];
       if (perms.includes('ALL')) return true;
       if (perms.includes(permKey)) return true;
@@ -17128,7 +17251,14 @@ function formatVND(amount) {
         const baseKey = actionMatch[1];
         const actionType = actionMatch[2];
 
-        // Nếu user sở hữu baseKey (vd: HANG_HOA) -> Tự động có đủ quyền hành động đó
+        // Nếu user ĐÃ ĐƯỢC cấu hình chi tiết cho module này (tồn tại bất kỳ quyền baseKey_* nào):
+        // Thì TUYỆT ĐỐI KHÔNG fallback về baseKey, vì họ đã được phân quyền rõ ràng từng hành động!
+        const hasGranular = perms.some(p => typeof p === 'string' && p.startsWith(`${baseKey}_`));
+        if (hasGranular) {
+          return false;
+        }
+
+        // Chỉ khi user là tài khoản cũ CHƯA có cấu hình chi tiết cho baseKey này:
         if (perms.includes(baseKey)) return true;
 
         // Kiểm tra xem fallback của baseKey có được cấp không
@@ -17136,17 +17266,32 @@ function formatVND(amount) {
         if (baseFallbacks.some(fb => perms.includes(fb) || perms.includes(`${fb}_${actionType}`))) {
           return true;
         }
+        return false;
       } else {
         // 2. Nếu kiểm tra baseKey (vd: HANG_HOA khi hiển thị menu hoặc chuyển tab)
         // Nếu user có bất kỳ quyền hành động nào (Xem, Thêm, Sửa, Xóa) -> Cho phép truy cập
         const hasAnyAction = ['XEM', 'THEM', 'SUA', 'XOA'].some(act => perms.includes(`${permKey}_${act}`));
         if (hasAnyAction) return true;
-      }
 
-      const fallbacks = fallbackMap[permKey] || [];
-      return fallbacks.some(fb => perms.includes(fb));
+        if (perms.includes(permKey)) return true;
+        const fallbacks = fallbackMap[permKey] || [];
+        return fallbacks.some(fb => perms.includes(fb));
+      }
     }
     window.hasPermission = hasPermission;
+
+    function hasSoQuyPermission(act) {
+      if (!currentUser) return false;
+      if (currentUser.vaiTro === 'Admin' || currentUser.username === 'admin') return true;
+      const targetQuy = (typeof currentQuyDangXem !== 'undefined' && currentQuyDangXem) ? currentQuyDangXem : 'TIEN_MAT';
+      let permKey = 'SOQUY_TIENMAT_' + act;
+      if (targetQuy === 'NGAN_HANG') permKey = 'SOQUY_NGANHANG_' + act;
+      else if (targetQuy === 'ALL') permKey = 'SOQUY_TONGHOP_' + act;
+      if (hasPermission(permKey)) return true;
+      if (hasPermission('SOQUY_TIENMAT_' + act) || hasPermission('SOQUY_NGANHANG_' + act) || hasPermission('SOQUY_TONGHOP_' + act)) return true;
+      return false;
+    }
+    window.hasSoQuyPermission = hasSoQuyPermission;
 
     function apDungPhuyenGiaoDien(perms) {
       // Nếu là Admin hoặc có quyền ALL -> Hiển thị toàn bộ tất cả các menu và nút chức năng
@@ -17244,6 +17389,65 @@ function formatVND(amount) {
           }
         }
       }, 150);
+      // 4. Kiểm soát ẩn/hiện các nút thao tác Thêm, Sửa, Xóa trên màn hình theo phân quyền chi tiết
+      const actionBtnRules = [
+        // Hàng hóa
+        { selector: 'button[onclick*="moModalHangHoa"]', allowed: hasPermission('HANG_HOA_THEM') },
+        { selector: '#btn-xoa-hanghoa-batch, button[onclick*="xacNhanXoaHangHoaDaChon"]', allowed: hasPermission('HANG_HOA_XOA') },
+        
+        // POS
+        { selector: '#btn-thanh-toan-pos', allowed: hasPermission('BAN_HANG_THEM') },
+        
+        // Khách hàng
+        { selector: 'button[onclick*="moModalDoiTac(\'KH\')"], button[onclick*="moModalDoiTac(\"KH\")"]', allowed: hasPermission('KHACH_HANG_THEM') },
+        { selector: '#btn-batch-inactive-kh, #btn-batch-active-kh', allowed: hasPermission('KHACH_HANG_XOA') },
+        
+        // Lịch sử đơn hàng
+        { selector: '#btn-xoa-donhang-batch, button[onclick*="xoaCacDonHangChon"]', allowed: hasPermission('LICHSU_DONHANG_XOA') },
+        
+        // Nhà cung cấp
+        { selector: 'button[onclick*="moModalDoiTac(\'NCC\')"], button[onclick*="moModalDoiTac(\"NCC\")"]', allowed: hasPermission('NCC_THEM') },
+        { selector: '#btn-batch-inactive-ncc, #btn-batch-active-ncc', allowed: hasPermission('NCC_XOA') },
+        
+        // Nhập hàng
+        { selector: 'button[onclick*="chuyenViewNhapHang(\'taodon\')"], button[onclick*="chuyenViewNhapHang(\"taodon\")"]', allowed: hasPermission('NHAP_HANG_THEM') },
+        { selector: '#nhap-btn-huy-batch, button[onclick*="xacNhanHuyCacDonNhapDaChon"]', allowed: hasPermission('NHAP_HANG_XOA') },
+        
+        // Trả hàng NCC
+        { selector: 'button[onclick*="chuyenViewTraHangNCC(\'taodon\')"], button[onclick*="chuyenViewTraHangNCC(\"taodon\")"]', allowed: hasPermission('TRA_NHAP_THEM') },
+        
+        // Kiểm kho
+        { selector: 'button[onclick*="moLapPhieuKiemKho"]', allowed: hasPermission('KIEM_KHO_THEM') },
+        
+        // Xuất hủy
+        { selector: 'button[onclick*="moLapPhieuXuatHuy"]', allowed: hasPermission('XUAT_HUY_THEM') },
+        
+        // Chuyển kho
+        { selector: 'button[onclick*="moLapPhieuChuyenKho"]', allowed: hasPermission('CHUYEN_KHO_THEM') },
+        
+        // Sổ quỹ
+        { selector: 'button[onclick*="moModalLapPhieuThu"]', allowed: hasSoQuyPermission('THEM') },
+        { selector: 'button[onclick*="moModalLapPhieuChi"]', allowed: hasSoQuyPermission('THEM') },
+        { selector: '#sq-btn-xoa-batch, button[onclick*="xoaCacPhieuSoQuyDaChon"]', allowed: hasSoQuyPermission('XOA') },
+        
+        // Đặt hàng
+        { selector: 'button[onclick*="chuyenViewDatHang(\'taodon\')"], button[onclick*="chuyenViewDatHang(\"taodon\")"]', allowed: hasPermission('DAT_HANG_THEM') },
+        
+        // Bảng giá
+        { selector: 'button[onclick*="moModalBangGia"]', allowed: hasPermission('BANG_GIA_THEM') },
+        { selector: 'button[onclick*="moModalCongThucBangGia"]', allowed: hasPermission('BANG_GIA_SUA') },
+        
+        // Người dùng
+        { selector: 'button[onclick*="moModalNguoiDung()"]', allowed: hasPermission('NGUOI_DUNG_THEM') }
+      ];
+
+      actionBtnRules.forEach(rule => {
+        try {
+          document.querySelectorAll(rule.selector).forEach(btn => {
+            btn.style.display = rule.allowed ? '' : 'none';
+          });
+        } catch(e) {}
+      });
     }
     window.apDungPhuyenGiaoDien = apDungPhuyenGiaoDien;
  
@@ -18408,6 +18612,9 @@ let danhSachTamXuatExcel = [];
     }
 
     async function xoaMotDonHang(maDon) {
+      if (typeof hasPermission === 'function' && !hasPermission('LICHSU_DONHANG_XOA')) {
+        return showNotification("Bạn không có quyền Xóa đơn hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       showConfirm("Xác nhận xóa đơn hàng", `Bạn có chắc chắn muốn xóa đơn hàng [${maDon}] không? Thao tác này sẽ xóa đơn và phiếu thu liên quan.`, async () => {
         try {
           if (typeof supabaseClient !== 'undefined' && supabaseClient) {
@@ -18443,6 +18650,9 @@ let danhSachTamXuatExcel = [];
     }
 
     async function xoaCacDonHangChon() {
+      if (typeof hasPermission === 'function' && !hasPermission('LICHSU_DONHANG_XOA')) {
+        return showNotification("Bạn không có quyền Xóa đơn hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       if (!selectedDonHangIds.length) return showNotification("Vui lòng chọn ít nhất một đơn hàng để xóa!", true);
       const dsXoa = [...selectedDonHangIds];
       showConfirm("Xác nhận xóa hàng loạt", `Bạn có chắc chắn muốn xóa ${dsXoa.length} đơn hàng đã chọn không?`, async () => {
@@ -18945,6 +19155,9 @@ function loadSoQuy(filter) {
     }
 
     function moModalLapPhieuTraHang(maDon) {
+      if (typeof hasPermission === 'function' && !hasPermission('TRA_HANG_THEM')) {
+        return showNotification("Bạn không có quyền Lập phiếu trả hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const d = (rawTraHangDonList || []).find(x => x.maDonHang === maDon);
       if (!d) return showNotification("Không tìm thấy thông tin đơn hàng đã chọn!", true);
 
@@ -19124,6 +19337,9 @@ function loadSoQuy(filter) {
     }
 
     function xacNhanLuuPhieuTraHang() {
+      if (typeof hasPermission === 'function' && !hasPermission('TRA_HANG_THEM')) {
+        return showNotification("Bạn không có quyền Lưu phiếu trả hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       // 👉 CHẶN BẤM NHIỀU LẦN: Nếu đang xử lý thì chặn tuyệt đối mọi cú click tiếp theo
       if (window.isDangXuLyTraHang) {
         return;
@@ -19396,6 +19612,21 @@ function loadSoQuy(filter) {
         const ngaySinh = document.getElementById('doitac-input-ngaysinh')?.value || '';
 
         if (!ma || !ten) {
+        const isKHCheck = (typeof loaiDoiTacDangTao !== 'undefined' ? loaiDoiTacDangTao : 'NCC') === 'KH';
+        const isExistingPartner = isKHCheck 
+          ? (Array.isArray(rawKHList) && rawKHList.some(k => (k.maDoiTac || k.maKH) === ma))
+          : (Array.isArray(rawNCCList) && rawNCCList.some(n => (n.maDoiTac || n.maNCC) === ma));
+        if (isKHCheck) {
+          const reqP = isExistingPartner ? 'KHACH_HANG_SUA' : 'KHACH_HANG_THEM';
+          if (typeof hasPermission === 'function' && !hasPermission(reqP)) {
+            return showNotification(`Bạn không có quyền ${isExistingPartner ? 'Chỉnh sửa' : 'Thêm mới'} khách hàng! Vui lòng liên hệ Quản trị viên.`, true);
+          }
+        } else {
+          const reqP = isExistingPartner ? 'NCC_SUA' : 'NCC_THEM';
+          if (typeof hasPermission === 'function' && !hasPermission(reqP)) {
+            return showNotification(`Bạn không có quyền ${isExistingPartner ? 'Chỉnh sửa' : 'Thêm mới'} nhà cung cấp! Vui lòng liên hệ Quản trị viên.`, true);
+          }
+        }
           return showNotification("Vui lòng nhập đầy đủ Mã và Tên đối tác!", true);
         }
 
@@ -19627,6 +19858,9 @@ function loadSoQuy(filter) {
     }
 
     function xacNhanLuuPhieuNhap() {
+      if (typeof hasPermission === 'function' && !hasPermission('NHAP_HANG_THEM')) {
+        return showNotification("Bạn không có quyền Lập phiếu nhập hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       if (!nhapCart || !nhapCart.length) {
         return showNotification("Chưa có mặt hàng nào trong phiếu nhập!", true);
       }
@@ -19926,6 +20160,11 @@ function loadSoQuy(filter) {
     function chuyenViewTraHangNCC(view) {
       const listView = document.getElementById('view-tranhap-danhsach');
       const formView = document.getElementById('view-tranhap-tao-don');
+      if (view === 'taodon' || view === 'form') {
+        if (typeof hasPermission === 'function' && !hasPermission('TRA_NHAP_THEM')) {
+          return showNotification("Bạn không có quyền Lập phiếu trả hàng NCC! Vui lòng liên hệ Quản trị viên.", true);
+        }
+      }
       if (view === 'taodon' || view === 'form') {
         if (listView) listView.classList.add('hidden');
         if (formView) formView.classList.remove('hidden');
@@ -20273,6 +20512,9 @@ function loadSoQuy(filter) {
     }
 
     function xacNhanLuuPhieuTraNCC() {
+      if (typeof hasPermission === 'function' && !hasPermission('TRA_NHAP_THEM')) {
+        return showNotification("Bạn không có quyền Lập phiếu trả hàng NCC! Vui lòng liên hệ Quản trị viên.", true);
+      }
       if (!traNCCCart.length) return showNotification("Chưa có mặt hàng nào trong phiếu trả NCC!", true);
       const maNCC = document.getElementById('tranhap-mancc')?.value || '';
       const searchNCC = document.getElementById('tranhap-ncc-search')?.value || '';
@@ -20542,6 +20784,11 @@ function loadSoQuy(filter) {
       const listView = document.getElementById('view-dathang-danhsach');
       const formView = document.getElementById('view-dathang-tao-don');
       if (view === 'taodon') {
+        if (typeof hasPermission === 'function' && !hasPermission('DAT_HANG_THEM')) {
+          return showNotification("Bạn không có quyền Tạo đơn đặt hàng mới! Vui lòng liên hệ Quản trị viên.", true);
+        }
+      }
+      if (view === 'taodon') {
         if (listView) listView.classList.add('hidden');
         if (formView) formView.classList.remove('hidden');
         if (!window.dangSuaDonDatMaDon) {
@@ -20709,6 +20956,9 @@ function loadSoQuy(filter) {
     }
 
     function xacNhanLuuDonDatHangView() {
+      if (typeof hasPermission === 'function' && !hasPermission('DAT_HANG_THEM')) {
+        return showNotification("Bạn không có quyền Lưu đơn đặt hàng mới! Vui lòng liên hệ Quản trị viên.", true);
+      }
       if (!dathangCart.length) return showNotification("Chưa có mặt hàng nào trong đơn đặt hàng!", true);
       let tenKH = document.getElementById('dathang-kh-search')?.value.trim();
       let sdt = document.getElementById('dathang-sdt')?.value.trim();
@@ -21103,6 +21353,9 @@ function loadSoQuy(filter) {
     }
 
     function suaDonDatHang(maDon) {
+      if (typeof hasPermission === 'function' && !hasPermission('DAT_HANG_SUA')) {
+        return showNotification("Bạn không có quyền Chỉnh sửa đơn đặt hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const d = (rawDonDatHangList || []).find(x => (x.maDonDat || x.maDon) === maDon);
       if (!d) return showNotification("Không tìm thấy đơn đặt hàng: " + maDon, true);
       if (d.trangThai === 'Hoàn thành' || d.trangThai === 'Đã hủy') {
@@ -21126,6 +21379,9 @@ function loadSoQuy(filter) {
     }
 
     function huyDonDatHang(maDon) {
+      if (typeof hasPermission === 'function' && !hasPermission('DAT_HANG_XOA')) {
+        return showNotification("Bạn không có quyền Hủy đơn đặt hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const d = (rawDonDatHangList || []).find(x => (x.maDonDat || x.maDon) === maDon);
       if (!d) return showNotification("Không tìm thấy đơn đặt hàng: " + maDon, true);
       if (d.trangThai === 'Hoàn thành') {
@@ -21726,6 +21982,9 @@ function loadSoQuy(filter) {
     }
 
     function chuyenTrangThaiKHHangLoat(trangThaiMoi) {
+      if (typeof hasPermission === 'function' && !hasPermission('KHACH_HANG_XOA')) {
+        return showNotification("Bạn không có quyền Thay đổi trạng thái/Xóa khách hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       if (!selectedKHIds.size) return;
       const list = Array.from(selectedKHIds);
       rawKHList.forEach(k => {
@@ -21750,6 +22009,9 @@ function loadSoQuy(filter) {
     }
 
     function suaThongTinKHCurrent() {
+      if (typeof hasPermission === 'function' && !hasPermission('KHACH_HANG_SUA')) {
+        return showNotification("Bạn không có quyền Chỉnh sửa thông tin khách hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       if (!window.currentViewingKH) return;
       const k = window.currentViewingKH;
       dongModal('modal-chitiet-khachhang');
@@ -23192,6 +23454,9 @@ function loadSoQuy(filter) {
     }
 
     function moLapPhieuChuyenKho() {
+      if (typeof hasPermission === 'function' && !hasPermission('CHUYEN_KHO_THEM')) {
+        return showNotification("Bạn không có quyền Lập phiếu chuyển kho! Vui lòng liên hệ Quản trị viên.", true);
+      }
       const vDs = document.getElementById('view-chuyenkho-danhsach');
       const vLap = document.getElementById('view-chuyenkho-lap-phieu');
       if (vDs) vDs.classList.add('hidden');
@@ -23577,6 +23842,9 @@ function loadSoQuy(filter) {
     }
 
     async function xacNhanThucHienChuyenKho() {
+      if (typeof hasPermission === 'function' && !hasPermission('CHUYEN_KHO_THEM')) {
+        return showNotification("Bạn không có quyền Thực hiện chuyển kho! Vui lòng liên hệ Quản trị viên.", true);
+      }
       if (!danhSachChuyenKhoCart || danhSachChuyenKhoCart.length === 0) {
         return showNotification("Vui lòng chọn ít nhất 1 mặt hàng cần chuyển kho!", true);
       }
