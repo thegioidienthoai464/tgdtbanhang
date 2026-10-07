@@ -84,29 +84,37 @@ class _DashboardViewState extends State<DashboardView> {
           ],
         ),
         actions: [
-          // Nút chọn chi nhánh nhanh trên AppBar
-          TextButton.icon(
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              backgroundColor: AppTheme.primaryBlue.withOpacity(0.08),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          // Nút chọn chi nhánh trên AppBar (Vị trí số 1 duy nhất)
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade300),
             ),
-            icon: const Icon(Icons.location_on, size: 16, color: AppTheme.primaryBlue),
-            label: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  branchVm.isAllSelected
-                      ? 'Tất cả CN'
-                      : (branchVm.selectedBranchCodes.length == 1
-                          ? branchVm.selectedBranchCodes.first
-                          : '${branchVm.selectedBranchCodes.length} CN'),
-                  style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, fontSize: 13),
+            child: InkWell(
+              onTap: () => BranchViewModel.showBranchBottomSheet(context),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.location_on, size: 16, color: Colors.amber),
+                    const SizedBox(width: 4),
+                    Text(
+                      branchVm.isAllSelected
+                          ? 'Tất cả CN'
+                          : (branchVm.selectedBranchCodes.length == 1
+                              ? branchVm.selectedBranchCodes.first
+                              : '${branchVm.selectedBranchCodes.length} CN'),
+                      style: const TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    const Icon(Icons.arrow_drop_down, size: 18, color: Colors.black54),
+                  ],
                 ),
-                const Icon(Icons.arrow_drop_down, size: 18, color: AppTheme.primaryBlue),
-              ],
+              ),
             ),
-            onPressed: () => BranchViewModel.showBranchBottomSheet(context),
           ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -136,7 +144,7 @@ class _DashboardViewState extends State<DashboardView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Lời chào & Chi nhánh
+              // Banner thương hiệu
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -148,104 +156,32 @@ class _DashboardViewState extends State<DashboardView> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.35), width: 1.5),
                 ),
-                child: Column(
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.amber, width: 2),
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: Image.asset(
-                            'assets/images/logo.png',
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.storefront, color: Colors.amber, size: 28),
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('T&T POS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: 0.5)),
-                              SizedBox(height: 2),
-                              Text('Hệ thống Quản lý Bán hàng & Kho ERP', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                            ],
-                          ),
-                        ),
-                      ],
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.amber, width: 2),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.storefront, color: Colors.amber, size: 28),
+                      ),
                     ),
-                    const SizedBox(height: 14),
-                    // Mục chọn chi nhánh làm việc trực quan
-                    InkWell(
-                      onTap: () => BranchViewModel.showBranchBottomSheet(context),
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.amber.withOpacity(0.4)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.location_on_rounded, color: Colors.amber, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'CHI NHÁNH LÀM VIỆC & THEO DÕI',
-                                    style: TextStyle(
-                                      color: Colors.white60,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 1),
-                                  Text(
-                                    branchVm.summaryDisplayName,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.amber.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'Đổi',
-                                    style: TextStyle(
-                                      color: Colors.amber,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  Icon(Icons.arrow_drop_down, color: Colors.amber, size: 18),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('T&T POS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: 0.5)),
+                          SizedBox(height: 2),
+                          Text('Hệ thống Quản lý Bán hàng & Kho ERP', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                        ],
                       ),
                     ),
                   ],
