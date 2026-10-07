@@ -381,25 +381,45 @@ class _PosViewState extends State<PosView> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '${vm.totalItemCount} sản phẩm • ${vm.selectedCustomer?.tenDoiTac ?? "Khách lẻ"}',
-                            style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
-                          ),
-                          Text(
-                            Formatters.formatCurrency(vm.subtotal),
-                            style: const TextStyle(
-                              color: AppTheme.primaryBlue,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                      child: InkWell(
+                        onTap: () => _showCartBottomSheet(context, vm, branchVm),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  '${vm.totalItemCount} sản phẩm • ${vm.selectedCustomer?.tenDoiTac ?? "Khách lẻ"}',
+                                  style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.edit_note, size: 16, color: AppTheme.primaryBlue),
+                              ],
                             ),
-                          ),
-                        ],
+                            Text(
+                              Formatters.formatCurrency(vm.subtotal),
+                              style: const TextStyle(
+                                color: AppTheme.primaryBlue,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        side: const BorderSide(color: AppTheme.primaryBlue),
+                      ),
+                      icon: const Icon(Icons.format_list_bulleted, size: 18, color: AppTheme.primaryBlue),
+                      label: const Text('Xem giỏ', style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, fontSize: 12.5)),
+                      onPressed: () => _showCartBottomSheet(context, vm, branchVm),
+                    ),
+                    const SizedBox(width: 8),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.shopping_bag_outlined),
                       label: const Text('Thanh toán'),
@@ -910,32 +930,80 @@ class _PosViewState extends State<PosView> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Khối 2: Chi tiết giỏ hàng tóm tắt
+                    // Khối 2: Chi tiết giỏ hàng tóm tắt (Cho phép chỉnh sửa giá và số lượng trực tiếp)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Chi tiết sản phẩm đơn hàng:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        InkWell(
+                          onTap: () {
+                            Navigator.pop(context);
+                            _showCartBottomSheet(context, vm, branchVm);
+                          },
+                          child: const Row(
+                            children: [
+                              Icon(Icons.edit_note, size: 16, color: AppTheme.primaryBlue),
+                              SizedBox(width: 2),
+                              Text('Sửa giỏ', style: TextStyle(color: AppTheme.primaryBlue, fontSize: 12, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
                     ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 120),
+                      constraints: const BoxConstraints(maxHeight: 140),
                       child: ListView.builder(
                         shrinkWrap: true,
                         itemCount: vm.cart.length,
                         itemBuilder: (context, index) {
                           final item = vm.cart[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 3),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    item.tenHang, 
-                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                          return InkWell(
+                            onTap: () {
+                              _showEditCartItemDialog(context, vm, item, () {
+                                setModalState(() {
+                                  if (pMethod != 'CON_NO' && pMethod != 'HON_HOP') {
+                                    paidCtrl.text = vm.subtotal.toInt().toString();
+                                  }
+                                });
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.edit_outlined, size: 14, color: AppTheme.primaryBlue),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            item.tenHang, 
+                                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                Text('x${item.soLuong}  ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                Text(
-                                  Formatters.formatCurrency(item.thanhTien),
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                ),
-                              ],
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: Colors.grey.shade300),
+                                    ),
+                                    child: Text('x${item.soLuong}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    Formatters.formatCurrency(item.thanhTien),
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         },
