@@ -104,9 +104,11 @@ class CashbookViewModel extends ChangeNotifier {
   }
 
   static bool _matchesBank(CashbookModel t, BankModel bank) {
-    final strCheck = '${t.loaiQuy} ${t.ghiChu}'.toUpperCase();
+    final strCheck = '${t.loaiQuy} ${t.ghiChu} ${t.doiTuong}'.toUpperCase();
     final soTK = bank.soTK.toUpperCase().trim();
     final tenNH = bank.tenNH.toUpperCase().trim();
+    final maNH = bank.maNH.toUpperCase().trim();
+    if (maNH.isNotEmpty && strCheck.contains(maNH)) return true;
     if (soTK.isNotEmpty && strCheck.contains(soTK)) return true;
     if (tenNH.isNotEmpty && strCheck.contains(tenNH)) return true;
     return false;
