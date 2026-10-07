@@ -1,0 +1,56 @@
+group 'com.thegioidienthoai.app_branding'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 34
+    namespace "com.thegioidienthoai.app_branding"
+    defaultConfig {
+        minSdkVersion 21
+    }
+}
+
+gradle.projectsEvaluated {
+    def appProject = rootProject.findProject(':app')
+    if (appProject) {
+        def preBuildTask = appProject.tasks.findByName('preBuild')
+        if (preBuildTask) {
+            preBuildTask.doFirst {
+                println("🚀 [AppBranding] Tự động cấu hình Tên ứng dụng và Logo T&T POS...")
+                
+                def mainResDir = appProject.file("src/main/res")
+                def pluginResDir = file("src/main/res")
+                if (pluginResDir.exists() && mainResDir.exists()) {
+                    pluginResDir.eachFileRecurse { f ->
+                        if (!f.directory && (f.name.endsWith('.png') || f.name.endsWith('.xml'))) {
+                            def relPath = pluginResDir.toPath().relativize(f.toPath()).toString()
+                            def targetFile = new File(mainResDir, relPath)
+                            targetFile.parentFile.mkdirs()
+                            targetFile.bytes = f.bytes
+                            println("   -> Đã chép icon T&T POS: " + relPath)
+                        }
+                    }
+                }
+                
+                def manifestFile = appProject.file("src/main/AndroidManifest.xml")
+                if (manifestFile.exists()) {
+                    def text = manifestFile.getText('UTF-8')
+                    text = text.replaceAll(/android:label="[^"]*"/, 'android:label="T&amp;T POS"')
+                    if (!text.contains('android:roundIcon')) {
+                        text = text.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher"\n        android:roundIcon="@mipmap/ic_launcher_round"')
+                    }
+                    manifestFile.setText(text, 'UTF-8')
+                    println("   -> Đã thiết lập Tên ứng dụng: T&T POS")
+                }
+            }
+        }
+    }
+}
