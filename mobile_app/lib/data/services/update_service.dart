@@ -33,8 +33,11 @@ class UpdateInfo {
 
 class UpdateService {
   // Phiên bản hiện tại của App
-  static const String currentVersion = '1.0.8';
-  static const int currentBuildNumber = 9;
+  static const String currentVersion = '1.1.0';
+  static const int currentBuildNumber = 11;
+
+  // Cờ ghi nhớ người dùng đã từ chối cập nhật trong phiên hiện tại (tránh pop-up lặp lại liên tục)
+  static bool _dismissedInThisSession = false;
 
   // Danh sách nguồn kiểm tra phiên bản (Ưu tiên GitHub Raw và GitHub Pages luôn cập nhật mới nhất)
   static const List<String> versionCheckUrls = [
@@ -43,7 +46,11 @@ class UpdateService {
   ];
 
   // Kiểm tra xem có bản cập nhật mới không
-  static Future<UpdateInfo?> checkForUpdate() async {
+  static Future<UpdateInfo?> checkForUpdate({bool isManualCheck = false}) async {
+    if (!isManualCheck && _dismissedInThisSession) {
+      return null;
+    }
+
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     
     for (final baseUrl in versionCheckUrls) {
@@ -108,7 +115,10 @@ class UpdateService {
               if (!update.forceUpdate)
                 IconButton(
                   icon: const Icon(Icons.close, size: 20, color: AppTheme.textMuted),
-                  onPressed: () => Navigator.pop(dialogCtx),
+                  onPressed: () {
+                    _dismissedInThisSession = true;
+                    Navigator.pop(dialogCtx);
+                  },
                   tooltip: 'Đóng',
                 ),
             ],
@@ -157,7 +167,10 @@ class UpdateService {
               children: [
                 if (!update.forceUpdate)
                   TextButton(
-                    onPressed: () => Navigator.pop(dialogCtx),
+                    onPressed: () {
+                      _dismissedInThisSession = true;
+                      Navigator.pop(dialogCtx);
+                    },
                     child: const Text('Để sau', style: TextStyle(color: AppTheme.textMuted)),
                   ),
                 const SizedBox(width: 6),
