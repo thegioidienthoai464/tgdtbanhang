@@ -4,7 +4,9 @@ import '../../core/app_theme.dart';
 import '../../core/formatters.dart';
 import '../../../data/models/order_model.dart';
 import '../branch/branch_view_model.dart';
+import '../branch/branch_filter_chips.dart';
 import 'orders_view_model.dart';
+
 
 class OrdersView extends StatefulWidget {
   const OrdersView({super.key});
@@ -106,7 +108,12 @@ class _OrdersViewState extends State<OrdersView> with SingleTickerProviderStateM
               ),
             ),
           ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: BranchFilterChips(),
+          ),
           Expanded(
+
             child: vm.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : TabBarView(
