@@ -1,8 +1,9 @@
 {
-  "version": "1.0.5",
-  "build_number": 6,
-  "force_update": true,
-  "release_notes": "• Quản lý Tồn kho, Giao dịch (Bán hàng POS, Đơn nhập, Đơn đặt, Trả hàng, Kiểm kho) và Sổ quỹ độc lập, riêng biệt theo từng chi nhánh.\n• Dùng chung toàn hệ thống đối tác Khách hàng, Nhà cung cấp và Danh mục hàng hóa.\n• Bổ sung bảng phân bổ tồn kho đa chi nhánh và bộ lọc chi nhánh cho toàn bộ chứng từ.",
-  "download_url": "https://tgdtbanhang.netlify.app/app-release.apk",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/latest/download/app-release.apk"
+  "version": "1.0.8",
+  "build_number": 9,
+  "force_update": false,
+  "release_notes": "• Thêm mục chọn chi nhánh làm việc trực quan trên ứng dụng (Dashboard, Thu ngân POS, Cài đặt, Đơn hàng, Sổ quỹ, Kho).\n• Tự động đồng bộ danh sách chi nhánh từ Supabase & lưu nhớ chi nhánh đã chọn khi khởi động lại ứng dụng.\n• Tự động ghi nhận chi nhánh vào từng đơn bán hàng POS và phiếu thu chi sổ quỹ.\n• Hiển thị chi nhánh chi tiết trên từng hóa đơn bán hàng và lịch sử giao dịch.",
+  "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.0.8/app-release.apk",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.0.8"
 }
