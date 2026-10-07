@@ -36,8 +36,17 @@ class _DashboardViewState extends State<DashboardView> {
     final invVm = context.watch<InventoryViewModel>();
     final cashVm = context.watch<CashbookViewModel>();
 
-    final todaySales = ordersVm.salesOrders.fold(0.0, (sum, o) => sum + o.tongTien);
-    final preOrdersCount = ordersVm.preOrders.where((o) => o.trangThai != 'Đã hủy').length;
+    // Lọc theo 1 hoặc nhiều chi nhánh được chọn (hoặc Toàn hệ thống)
+    final filteredSalesOrders = ordersVm.salesOrders.where((o) => branchVm.matchesBranch(o.chiNhanh)).toList();
+    final filteredPreOrders = ordersVm.preOrders.where((o) => branchVm.matchesBranch(o.chiNhanh)).toList();
+
+    final todaySales = filteredSalesOrders.fold(0.0, (sum, o) => sum + o.tongTien);
+    final preOrdersCount = filteredPreOrders.where((o) => o.trangThai != 'Đã hủy').length;
+
+    // Tồn kho lọc theo chi nhánh
+    final currentStock = branchVm.isAllSelected
+        ? invVm.totalStock
+        : invVm.products.where((p) => branchVm.matchesBranch(p.chiNhanh)).fold(0.0, (sum, p) => sum + p.tonKho);
 
     return Scaffold(
       appBar: AppBar(
@@ -74,7 +83,11 @@ class _DashboardViewState extends State<DashboardView> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  branchVm.selectedBranch.maCN,
+                  branchVm.isAllSelected
+                      ? 'Tất cả CN'
+                      : (branchVm.selectedBranchCodes.length == 1
+                          ? branchVm.selectedBranchCodes.first
+                          : '${branchVm.selectedBranchCodes.length} CN'),
                   style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, fontSize: 13),
                 ),
                 const Icon(Icons.arrow_drop_down, size: 18, color: AppTheme.primaryBlue),
@@ -175,7 +188,7 @@ class _DashboardViewState extends State<DashboardView> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'CHI NHÁNH LÀM VIỆC HIỆN TẠI',
+                                    'CHI NHÁNH LÀM VIỆC & THEO DÕI',
                                     style: TextStyle(
                                       color: Colors.white60,
                                       fontSize: 10,
@@ -185,7 +198,7 @@ class _DashboardViewState extends State<DashboardView> {
                                   ),
                                   const SizedBox(height: 1),
                                   Text(
-                                    branchVm.selectedBranch.displayName,
+                                    branchVm.summaryDisplayName,
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
@@ -255,14 +268,14 @@ class _DashboardViewState extends State<DashboardView> {
                   ),
                   _buildKpiCard(
                     title: 'Tồn kho máy',
-                    value: '${invVm.totalStock.toInt()} sản phẩm',
+                    value: '${currentStock.toInt()} sản phẩm',
                     icon: Icons.inventory_2_outlined,
                     color: AppTheme.successGreen,
                     onTap: () => widget.onTabChange(3), // Tab Kho
                   ),
                   _buildKpiCard(
-                    title: 'Tồn quỹ tiền',
-                    value: Formatters.formatCurrency(cashVm.balance),
+                    title: 'Tổng tồn quỹ',
+                    value: Formatters.formatCurrency(cashVm.totalFund),
                     icon: Icons.account_balance_wallet_outlined,
                     color: const Color(0xFF8B5CF6),
                     onTap: () => widget.onTabChange(3), // Tab Sổ quỹ
