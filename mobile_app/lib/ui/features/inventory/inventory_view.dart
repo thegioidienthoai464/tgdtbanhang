@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../../core/app_theme.dart';
 import '../../core/formatters.dart';
 import '../branch/branch_view_model.dart';
+import '../branch/branch_filter_chips.dart';
 import 'inventory_view_model.dart';
+
 
 class InventoryView extends StatefulWidget {
   const InventoryView({super.key});
@@ -83,7 +85,12 @@ class _InventoryViewState extends State<InventoryView> {
               ),
             ),
           ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: BranchFilterChips(),
+          ),
           // Thống kê nhanh tổng tồn
+
           Container(
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
