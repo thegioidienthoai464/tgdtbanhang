@@ -7201,10 +7201,18 @@ function formatVND(amount) {
       
       // 1. Ưu tiên tải tức thì từ Supabase Cloud (hỗ trợ Netlify & standalone)
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-        supabaseClient.from('don_hang').select('*').like('ma_don_hang', 'PNH%').order('ngay_ban', { ascending: false })
+        supabaseClient.from('don_hang')
+          .select('*')
+          .like('ma_don_hang', 'PNH%')
+          .not('ma_don_hang', 'like', 'PNH_TON%')
+          .order('ngay_ban', { ascending: false })
           .then(({ data, error }) => {
             if (!error && Array.isArray(data)) {
-              rawNhapHangList = data.map(d => ({
+              const validOrders = data.filter(d => 
+                !String(d.ma_don_hang || '').startsWith('PNH_TON_') && 
+                String(d.nhan_vien || '').toLowerCase() !== 'hệ thống tự động'
+              );
+              rawNhapHangList = validOrders.map(d => ({
                 maPhieu: d.ma_don_hang,
                 ngayNhap: (d.ngay_ban || '').replace('T', ' ').slice(0, 19),
                 maNCC: d.ma_kh || '',
