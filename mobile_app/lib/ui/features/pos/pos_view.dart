@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../core/app_theme.dart';
 import '../../core/formatters.dart';
 import '../../../data/models/partner_model.dart';
@@ -130,13 +131,17 @@ class _PosViewState extends State<PosView> {
               children: [
                 CircleAvatar(
                   radius: 16,
-                  backgroundColor: vm.selectedCustomer != null 
+                  backgroundColor: (vm.selectedCustomer != null && vm.selectedCustomer!.maDoiTac.trim().toUpperCase() != 'KHACHLE')
                       ? AppTheme.primaryBlue.withOpacity(0.12) 
                       : Colors.grey.shade100,
                   child: Icon(
-                    vm.selectedCustomer != null ? Icons.person : Icons.person_outline,
+                    (vm.selectedCustomer != null && vm.selectedCustomer!.maDoiTac.trim().toUpperCase() != 'KHACHLE')
+                        ? Icons.person
+                        : Icons.storefront,
                     size: 18,
-                    color: vm.selectedCustomer != null ? AppTheme.primaryBlue : AppTheme.textMuted,
+                    color: (vm.selectedCustomer != null && vm.selectedCustomer!.maDoiTac.trim().toUpperCase() != 'KHACHLE')
+                        ? AppTheme.primaryBlue 
+                        : AppTheme.textMuted,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -150,14 +155,20 @@ class _PosViewState extends State<PosView> {
                         Row(
                           children: [
                             Text(
-                              vm.selectedCustomer?.tenDoiTac ?? 'Khách lẻ (Mặc định)',
+                              (vm.selectedCustomer == null || vm.selectedCustomer!.maDoiTac.trim().toUpperCase() == 'KHACHLE')
+                                  ? 'Khách lẻ (Mặc định)'
+                                  : vm.selectedCustomer!.tenDoiTac,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
-                                color: vm.selectedCustomer != null ? AppTheme.primaryBlue : Colors.black87,
+                                color: (vm.selectedCustomer == null || vm.selectedCustomer!.maDoiTac.trim().toUpperCase() == 'KHACHLE')
+                                    ? Colors.black87
+                                    : AppTheme.primaryBlue,
                               ),
                             ),
-                            if (vm.selectedCustomer != null && vm.selectedCustomer!.soDienThoai.isNotEmpty) ...[
+                            if (vm.selectedCustomer != null && 
+                                vm.selectedCustomer!.maDoiTac.trim().toUpperCase() != 'KHACHLE' &&
+                                vm.selectedCustomer!.soDienThoai.isNotEmpty) ...[
                               const SizedBox(width: 6),
                               Text(
                                 '• ${vm.selectedCustomer!.soDienThoai}',
@@ -166,7 +177,7 @@ class _PosViewState extends State<PosView> {
                             ],
                           ],
                         ),
-                        if (vm.selectedCustomer != null)
+                        if (vm.selectedCustomer != null && vm.selectedCustomer!.maDoiTac.trim().toUpperCase() != 'KHACHLE')
                           Text(
                             'Nợ hiện tại: ${Formatters.formatCurrency(vm.selectedCustomer!.congNo)}',
                             style: TextStyle(
@@ -177,14 +188,14 @@ class _PosViewState extends State<PosView> {
                           )
                         else
                           const Text(
-                            'Chạm để chọn khách quen hoặc ghi nhận nợ',
+                            'Mã: KHACHLE • Chạm để đổi khách quen hoặc ghi nợ',
                             style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
                           ),
                       ],
                     ),
                   ),
                 ),
-                if (vm.selectedCustomer != null)
+                if (vm.selectedCustomer != null && vm.selectedCustomer!.maDoiTac.trim().toUpperCase() != 'KHACHLE')
                   IconButton(
                     icon: const Icon(Icons.close, size: 18, color: AppTheme.textMuted),
                     tooltip: 'Đổi về Khách lẻ',
@@ -223,7 +234,7 @@ class _PosViewState extends State<PosView> {
             ),
           ),
 
-          // 3. Thanh tìm kiếm sản phẩm
+          // 3. Thanh tìm kiếm sản phẩm & Quét mã vạch
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: TextField(
@@ -231,9 +242,36 @@ class _PosViewState extends State<PosView> {
               decoration: InputDecoration(
                 hintText: 'Tìm kiếm tên, mã sản phẩm...',
                 prefixIcon: const Icon(Icons.search, color: AppTheme.textMuted),
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_searchCtrl.text.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.clear, size: 18, color: AppTheme.textMuted),
+                        tooltip: 'Xóa tìm kiếm',
+                        onPressed: () {
+                          _searchCtrl.clear();
+                          vm.searchProducts('');
+                          setState(() {});
+                        },
+                      ),
+                    Container(
+                      margin: const EdgeInsets.only(right: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryBlue.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.qr_code_scanner, color: AppTheme.primaryBlue, size: 22),
+                        tooltip: 'Quét mã vạch / QR sản phẩm',
+                        onPressed: () => _openBarcodeScanner(context, vm),
+                      ),
+                    ),
+                  ],
+                ),
                 filled: true,
                 fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(color: AppTheme.borderSubtle),
@@ -243,7 +281,10 @@ class _PosViewState extends State<PosView> {
                   borderSide: const BorderSide(color: AppTheme.borderSubtle),
                 ),
               ),
-              onChanged: vm.searchProducts,
+              onChanged: (val) {
+                vm.searchProducts(val);
+                setState(() {});
+              },
             ),
           ),
 
@@ -442,12 +483,12 @@ class _PosViewState extends State<PosView> {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: CircleAvatar(
-                      backgroundColor: Colors.grey.shade200,
-                      child: const Icon(Icons.person_off_outlined, color: Colors.grey),
+                      backgroundColor: Colors.blue.shade50,
+                      child: const Icon(Icons.storefront, color: AppTheme.primaryBlue),
                     ),
-                    title: const Text('Khách lẻ', style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: const Text('Mặc định (Không ghi nợ)', style: TextStyle(fontSize: 12)),
-                    trailing: vm.selectedCustomer == null 
+                    title: const Text('Khách lẻ (Mã: KHACHLE)', style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: const Text('Mặc định • Bán lẻ thu tiền ngay', style: TextStyle(fontSize: 12)),
+                    trailing: (vm.selectedCustomer == null || vm.selectedCustomer!.maDoiTac.trim().toUpperCase() == 'KHACHLE')
                         ? const Icon(Icons.check_circle, color: AppTheme.primaryBlue) 
                         : null,
                     onTap: () {
@@ -1286,6 +1327,335 @@ class _PosViewState extends State<PosView> {
           },
         );
       },
+    );
+  }
+
+  void _openBarcodeScanner(BuildContext context, PosViewModel vm) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dlgContext) => BarcodeScannerDialog(
+        onScanned: (code) {
+          _searchCtrl.text = code;
+          vm.searchProducts(code);
+          setState(() {});
+
+          final product = vm.findProductByBarcode(code);
+          if (product != null) {
+            vm.addToCart(product);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Đã thêm "${product.tenHang}" (${product.maHang}) vào đơn hàng!',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: AppTheme.successGreen,
+                duration: const Duration(seconds: 3),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.search, color: Colors.white, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text('Đã quét mã: "$code" (Đã lọc danh sách sản phẩm)'),
+                    ),
+                  ],
+                ),
+                backgroundColor: AppTheme.primaryBlue,
+                duration: const Duration(seconds: 3),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+}
+
+// Widget Modal Quét Mã Vạch / QR Sản Phẩm Bằng Camera
+class BarcodeScannerDialog extends StatefulWidget {
+  final Function(String code) onScanned;
+
+  const BarcodeScannerDialog({super.key, required this.onScanned});
+
+  @override
+  State<BarcodeScannerDialog> createState() => _BarcodeScannerDialogState();
+}
+
+class _BarcodeScannerDialogState extends State<BarcodeScannerDialog> {
+  final MobileScannerController _controller = MobileScannerController();
+  bool _isScanned = false;
+  bool _torchOn = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onDetect(BarcodeCapture capture) {
+    if (_isScanned) return;
+    for (final barcode in capture.barcodes) {
+      final code = barcode.rawValue;
+      if (code != null && code.trim().isNotEmpty) {
+        setState(() {
+          _isScanned = true;
+        });
+        widget.onScanned(code.trim());
+        Navigator.of(context).pop();
+        break;
+      }
+    }
+  }
+
+  void _showManualInputDialog() {
+    final textCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (mCtx) => AlertDialog(
+        title: const Text('Nhập mã sản phẩm', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: textCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Nhập mã vạch hoặc mã hàng...',
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(mCtx),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue, foregroundColor: Colors.white),
+            onPressed: () {
+              final val = textCtrl.text.trim();
+              if (val.isNotEmpty) {
+                Navigator.pop(mCtx);
+                widget.onScanned(val);
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Text('Xác nhận'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.black,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        height: 520,
+        child: Stack(
+          children: [
+            // 1. Camera Viewfinder
+            MobileScanner(
+              controller: _controller,
+              onDetect: _onDetect,
+            ),
+
+            // 2. Scan Frame Overlay
+            Center(
+              child: Container(
+                width: 260,
+                height: 260,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white.withOpacity(0.8), width: 1.5),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Stack(
+                  children: [
+                    // Corner accents
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            top: BorderSide(color: AppTheme.successGreen, width: 4),
+                            left: BorderSide(color: AppTheme.successGreen, width: 4),
+                          ),
+                          borderRadius: BorderRadius.only(topLeft: Radius.circular(16)),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            top: BorderSide(color: AppTheme.successGreen, width: 4),
+                            right: BorderSide(color: AppTheme.successGreen, width: 4),
+                          ),
+                          borderRadius: BorderRadius.only(topRight: Radius.circular(16)),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: AppTheme.successGreen, width: 4),
+                            left: BorderSide(color: AppTheme.successGreen, width: 4),
+                          ),
+                          borderRadius: BorderRadius.only(bottomLeft: Radius.circular(16)),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: AppTheme.successGreen, width: 4),
+                            right: BorderSide(color: AppTheme.successGreen, width: 4),
+                          ),
+                          borderRadius: BorderRadius.only(bottomRight: Radius.circular(16)),
+                        ),
+                      ),
+                    ),
+                    // Red laser guideline in center
+                    Center(
+                      child: Container(
+                        height: 2,
+                        width: 230,
+                        color: Colors.redAccent.withOpacity(0.85),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // 3. Top Control Bar
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                color: Colors.black.withOpacity(0.55),
+                child: Row(
+                  children: [
+                    const Icon(Icons.qr_code_scanner, color: Colors.white, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Quét mã vạch / QR sản phẩm',
+                        style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        _torchOn ? Icons.flash_on : Icons.flash_off,
+                        color: _torchOn ? Colors.amber : Colors.white,
+                        size: 20,
+                      ),
+                      tooltip: 'Bật/Tắt đèn Flash',
+                      onPressed: () async {
+                        try {
+                          await _controller.toggleTorch();
+                          if (mounted) {
+                            setState(() {
+                              _torchOn = !_torchOn;
+                            });
+                          }
+                        } catch (e) {
+                          debugPrint("Lỗi bật flash: $e");
+                        }
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.flip_camera_ios, color: Colors.white, size: 20),
+                      tooltip: 'Đổi Camera trước/sau',
+                      onPressed: () async {
+                        try {
+                          await _controller.switchCamera();
+                        } catch (e) {
+                          debugPrint("Lỗi đổi camera: $e");
+                        }
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white, size: 22),
+                      tooltip: 'Đóng',
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // 4. Bottom Instruction Bar & Manual Input Button
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                color: Colors.black.withOpacity(0.7),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Hướng máy ảnh vào mã vạch hoặc mã QR trên sản phẩm',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.white54),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        visualDensity: VisualDensity.compact,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      icon: const Icon(Icons.keyboard, size: 16),
+                      label: const Text('Nhập mã thủ công', style: TextStyle(fontSize: 12)),
+                      onPressed: _showManualInputDialog,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

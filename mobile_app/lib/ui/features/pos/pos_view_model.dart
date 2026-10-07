@@ -24,7 +24,17 @@ class PosViewModel extends ChangeNotifier {
   List<BankModel> _bankAccounts = [];
   final List<OrderItemModel> _cart = [];
   
-  PartnerModel? _selectedCustomer;
+  static final PartnerModel defaultCustomer = PartnerModel(
+    maDoiTac: 'KHACHLE',
+    tenDoiTac: 'Khách lẻ',
+    soDienThoai: '',
+    diaChi: '',
+    loaiDoiTac: 'KH',
+    congNo: 0.0,
+    trangThai: 'HoatDong',
+  );
+
+  PartnerModel? _selectedCustomer = defaultCustomer;
   BankModel? _selectedBank;
   
   bool _isLoading = false;
@@ -55,12 +65,41 @@ class PosViewModel extends ChangeNotifier {
       if (_bankAccounts.isNotEmpty && _selectedBank == null) {
         _selectedBank = _bankAccounts.first;
       }
+      // Đảm bảo khách hàng mặc định luôn là KHACHLE nếu chưa chọn khách quen
+      final khachLe = _customers.firstWhere(
+        (c) => c.maDoiTac.trim().toUpperCase() == 'KHACHLE',
+        orElse: () => defaultCustomer,
+      );
+      if (_selectedCustomer == null || _selectedCustomer!.maDoiTac.trim().toUpperCase() == 'KHACHLE') {
+        _selectedCustomer = khachLe;
+      }
     } catch (e) {
       debugPrint("Lỗi tải dữ liệu POS: $e");
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  ProductModel? findProductByBarcode(String barcode) {
+    final clean = barcode.trim().toLowerCase();
+    if (clean.isEmpty) return null;
+    for (final p in _allProducts) {
+      if (p.maHang.trim().toLowerCase() == clean) {
+        return p;
+      }
+    }
+    for (final p in _allProducts) {
+      if (p.maHang.trim().toLowerCase().contains(clean)) {
+        return p;
+      }
+    }
+    for (final p in _allProducts) {
+      if (p.tenHang.trim().toLowerCase().contains(clean)) {
+        return p;
+      }
+    }
+    return null;
   }
 
   void searchProducts(String query) {
@@ -119,7 +158,15 @@ class PosViewModel extends ChangeNotifier {
   }
 
   void setCustomer(PartnerModel? customer) {
-    _selectedCustomer = customer;
+    if (customer == null) {
+      final khachLe = _customers.firstWhere(
+        (c) => c.maDoiTac.trim().toUpperCase() == 'KHACHLE',
+        orElse: () => defaultCustomer,
+      );
+      _selectedCustomer = khachLe;
+    } else {
+      _selectedCustomer = customer;
+    }
     notifyListeners();
   }
 
@@ -177,7 +224,11 @@ class PosViewModel extends ChangeNotifier {
 
   void clearCart() {
     _cart.clear();
-    _selectedCustomer = null;
+    final khachLe = _customers.firstWhere(
+      (c) => c.maDoiTac.trim().toUpperCase() == 'KHACHLE',
+      orElse: () => defaultCustomer,
+    );
+    _selectedCustomer = khachLe;
     _paymentMethod = 'TIEN_MAT';
     notifyListeners();
   }
@@ -197,11 +248,14 @@ class PosViewModel extends ChangeNotifier {
     final paid = customerPaid;
     final debtDelta = total - paid; // > 0: khách thiếu nợ thêm; < 0: khách thừa
 
+    final isKhachLe = _selectedCustomer == null || 
+        _selectedCustomer!.maDoiTac.trim().toUpperCase() == 'KHACHLE';
+
     // Ràng buộc an toàn: Nếu khách thiếu nợ thì phải có thông tin khách hàng cụ thể
-    if (debtDelta > 0 && _selectedCustomer == null) {
+    if (debtDelta > 0 && isKhachLe) {
       return {
         'success': false, 
-        'message': 'Khách còn thiếu tiền nợ. Vui lòng chọn khách hàng cụ thể để ghi nhận công nợ!'
+        'message': 'Khách còn thiếu nợ. Vui lòng chọn khách hàng cụ thể (không phải Khách lẻ) để ghi nhận công nợ!'
       };
     }
 
@@ -239,8 +293,8 @@ class PosViewModel extends ChangeNotifier {
       // 1. Lưu đơn hàng lên Supabase
       await _orderRepo.saveOrder(order);
 
-      // 2. Cập nhật công nợ khách hàng (Thiếu nợ hoặc Trả thừa cấn trừ nợ)
-      if (_selectedCustomer != null) {
+      // 2. Cập nhật công nợ khách hàng (Thiếu nợ hoặc Trả thừa cấn trừ nợ) - không áp dụng cho Khách lẻ KHACHLE
+      if (_selectedCustomer != null && !isKhachLe) {
         if (debtDelta > 0) {
           // Khách trả thiếu -> cộng thêm vào công nợ
           final newDebt = _selectedCustomer!.congNo + debtDelta;
