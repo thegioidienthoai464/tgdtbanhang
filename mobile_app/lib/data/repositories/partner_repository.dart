@@ -32,4 +32,17 @@ class PartnerRepository {
         .update({'cong_no': newDebt})
         .eq('ma_doi_tac', maDoiTac);
   }
+
+  Future<PartnerModel?> createCustomer(PartnerModel customer) async {
+    try {
+      final res = await SupabaseService.client
+          .from('dm_doitac')
+          .insert(customer.toJson())
+          .select()
+          .single();
+      return PartnerModel.fromJson(res);
+    } catch (e) {
+      return null;
+    }
+  }
 }
