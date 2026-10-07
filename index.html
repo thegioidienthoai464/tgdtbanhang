@@ -6049,7 +6049,7 @@ function formatVND(amount) {
       const rawImeiMap = window.RAW_IMEI_3_CHI_NHANH || {};
 
       // Tự động dọn sạch cache tồn kho cũ khi hệ thống vừa nạp lại tồn kho mới
-      const RESET_INVENTORY_KEY = 'tt_pos_reset_inventory_v20261007_imported_all_v3';
+      const RESET_INVENTORY_KEY = 'tt_pos_reset_inventory_v20261007_imported_all_v4';
       try {
         if (!localStorage.getItem(RESET_INVENTORY_KEY)) {
           localStorage.removeItem('tt_pos_tonkho_chinhanh');
@@ -16587,23 +16587,77 @@ let danhSachTamXuatExcel = [];
       if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="p-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tổng hợp dữ liệu thẻ kho...</td></tr>';
       
       const targetMa = String(maHang || '').trim().toUpperCase();
-      let txList = [];
+      const txMap = new Map();
 
-      // 1. Quét tức thời từ các mảng local trong bộ nhớ
-      // A. Xuất hủy
+      // 1. Quét tức thời từ các mảng local trong bộ nhớ (hiển thị ngay < 1ms)
+      // A. Nhập hàng NCC (rawNhapHangList)
+      if (Array.isArray(rawNhapHangList)) {
+        rawNhapHangList.forEach((nh, i) => {
+          if (nh.trangThai === 'Đã hủy') return;
+          const items = Array.isArray(nh.chiTietSanPham) ? nh.chiTietSanPham : [];
+          items.forEach(it => {
+            if (String(it.maHang || it.ma_hang || '').trim().toUpperCase() === targetMa) {
+              const sl = Number(it.soLuong) || 0;
+              const maPhieu = nh.maPhieu || ('PNH' + i);
+              txMap.set(maPhieu, {
+                ngay: String(nh.ngayNhap || nh.ngayTao || ''),
+                maChungTu: maPhieu,
+                loaiGD: 'NhapHang',
+                tenLoaiGD: 'Nhập hàng NCC',
+                doiTac: nh.tenNCC || 'Nhà cung cấp',
+                chiNhanh: nh.chiNhanh || 'CN01',
+                soLuongThayDoi: sl,
+                donGia: Number(it.donGia || it.giaNhap || it.giaVon) || 0,
+                thanhTien: (Number(it.donGia || it.giaNhap || it.giaVon) || 0) * sl,
+                ghiChu: nh.ghiChu || 'Nhập kho từ NCC'
+              });
+            }
+          });
+        });
+      }
+
+      // B. Trả hàng NCC (rawTraHangNCCList)
+      if (Array.isArray(rawTraHangNCCList)) {
+        rawTraHangNCCList.forEach((tn, i) => {
+          if (tn.trangThai === 'Đã hủy') return;
+          const items = Array.isArray(tn.chiTietSanPham) ? tn.chiTietSanPham : [];
+          items.forEach(it => {
+            if (String(it.maHang || it.ma_hang || '').trim().toUpperCase() === targetMa) {
+              const sl = Number(it.soLuong) || 0;
+              const maPhieu = tn.maPhieu || ('PTN' + i);
+              txMap.set(maPhieu, {
+                ngay: String(tn.ngayTra || tn.ngayTao || ''),
+                maChungTu: maPhieu,
+                loaiGD: 'TraNCC',
+                tenLoaiGD: 'Trả hàng NCC',
+                doiTac: tn.tenNCC || 'Nhà cung cấp',
+                chiNhanh: tn.chiNhanh || 'CN01',
+                soLuongThayDoi: -sl,
+                donGia: Number(it.donGia || it.giaNhap || it.giaVon) || 0,
+                thanhTien: (Number(it.donGia || it.giaNhap || it.giaVon) || 0) * sl,
+                ghiChu: tn.ghiChu || 'Xuất trả hàng về NCC'
+              });
+            }
+          });
+        });
+      }
+
+      // C. Xuất hủy (rawXuatHuyList)
       if (Array.isArray(rawXuatHuyList)) {
         rawXuatHuyList.forEach((xh, i) => {
           if (xh.trangThai === 'Đã hủy') return;
           const items = Array.isArray(xh.chiTietSanPham) ? xh.chiTietSanPham : [];
           items.forEach(it => {
-            if (String(it.maHang || '').trim().toUpperCase() === targetMa) {
+            if (String(it.maHang || it.ma_hang || '').trim().toUpperCase() === targetMa) {
               const sl = Number(it.soLuong) || 0;
-              txList.push({
+              const maPXH = xh.maChungTu || ('PXH' + i);
+              txMap.set(maPXH, {
                 ngay: String(xh.ngayTao || ''),
-                maChungTu: xh.maChungTu || ('PXH' + i),
+                maChungTu: maPXH,
                 loaiGD: 'XuatHuy',
                 tenLoaiGD: 'Xuất hủy',
                 doiTac: xh.nhanVien || 'Admin',
+                chiNhanh: xh.chiNhanh || 'CN01',
                 soLuongThayDoi: -sl,
                 donGia: Number(it.giaVon) || 0,
                 thanhTien: (Number(it.giaVon) || 0) * sl,
@@ -16614,21 +16668,23 @@ let danhSachTamXuatExcel = [];
         });
       }
 
-      // B. Bán hàng & Khách trả hàng
-      const orders = Array.isArray(rawDonHangList) ? rawDonHangList : (Array.isArray(rawTraHangDonList) ? rawTraHangDonList : []);
+      // D. Bán hàng & Khách trả hàng (rawDonHangList & rawTraHangDonList)
+      const orders = Array.isArray(rawDonHangList) ? rawDonHangList : [];
       orders.forEach((dh, i) => {
         if (dh.trangThai === 'Đã hủy') return;
         const items = Array.isArray(dh.chiTietSanPham) ? dh.chiTietSanPham : [];
         const isKhachTra = String(dh.maDonHang || '').startsWith('TH') || String(dh.trangThai || '').includes('Khách trả');
         items.forEach(it => {
-          if (String(it.maHang || '').trim().toUpperCase() === targetMa) {
+          if (String(it.maHang || it.ma_hang || '').trim().toUpperCase() === targetMa) {
             const sl = Number(it.soLuong) || 0;
-            txList.push({
+            const maDH = dh.maDonHang || ('DH' + i);
+            txMap.set(maDH, {
               ngay: String(dh.ngayBan || dh.ngayTao || ''),
-              maChungTu: dh.maDonHang || ('DH' + i),
+              maChungTu: maDH,
               loaiGD: isKhachTra ? 'KhachTra' : 'BanHang',
               tenLoaiGD: isKhachTra ? 'Khách trả hàng' : 'Xuất bán POS',
               doiTac: dh.tenKH || 'Khách lẻ',
+              chiNhanh: dh.chiNhanh || 'CN01',
               soLuongThayDoi: isKhachTra ? sl : -sl,
               donGia: Number(it.donGia) || Number(it.giaBan) || 0,
               thanhTien: (Number(it.donGia) || Number(it.giaBan) || 0) * sl,
@@ -16638,19 +16694,46 @@ let danhSachTamXuatExcel = [];
         });
       });
 
-      // C. Kiểm kho
+      if (Array.isArray(rawTraHangDonList)) {
+        rawTraHangDonList.forEach((th, i) => {
+          if (th.trangThai === 'Đã hủy') return;
+          const items = Array.isArray(th.chiTietSanPham) ? th.chiTietSanPham : [];
+          items.forEach(it => {
+            if (String(it.maHang || it.ma_hang || '').trim().toUpperCase() === targetMa) {
+              const sl = Number(it.soLuong) || 0;
+              const maTH = th.maDonHang || th.maPhieu || ('TH' + i);
+              txMap.set(maTH, {
+                ngay: String(th.ngayTra || th.ngayTao || ''),
+                maChungTu: maTH,
+                loaiGD: 'KhachTra',
+                tenLoaiGD: 'Khách trả hàng',
+                doiTac: th.tenKH || 'Khách hoàn trả',
+                chiNhanh: th.chiNhanh || 'CN01',
+                soLuongThayDoi: sl,
+                donGia: Number(it.donGia) || Number(it.giaBan) || 0,
+                thanhTien: (Number(it.donGia) || Number(it.giaBan) || 0) * sl,
+                ghiChu: 'Khách hoàn trả'
+              });
+            }
+          });
+        });
+      }
+
+      // E. Kiểm kho
       if (Array.isArray(rawKiemKhoList)) {
         rawKiemKhoList.forEach((kk, i) => {
           const items = Array.isArray(kk.chiTietSanPham) ? kk.chiTietSanPham : [];
           items.forEach(it => {
-            if (String(it.maHang || '').trim().toUpperCase() === targetMa) {
+            if (String(it.maHang || it.ma_hang || '').trim().toUpperCase() === targetMa) {
               const diff = Number(it.chenhLech) || (Number(it.slThucTe || 0) - Number(it.slSoSach || 0));
-              txList.push({
+              const maPKK = kk.maChungTu || ('PKK' + i);
+              txMap.set(maPKK, {
                 ngay: String(kk.ngayTao || ''),
-                maChungTu: kk.maChungTu || ('PKK' + i),
+                maChungTu: maPKK,
                 loaiGD: 'KiemKho',
                 tenLoaiGD: 'Kiểm kho / Cân bằng',
                 doiTac: kk.nhanVien || 'Admin',
+                chiNhanh: kk.chiNhanh || 'CN01',
                 soLuongThayDoi: diff,
                 donGia: 0,
                 thanhTien: 0,
@@ -16661,16 +16744,92 @@ let danhSachTamXuatExcel = [];
         });
       }
 
-      // Xử lý dữ liệu ban đầu
-      xuLyVaHienThiTheKho(txList, targetMa);
+      // Hiển thị ngay tức thì từ bộ nhớ cache
+      xuLyVaHienThiTheKho(Array.from(txMap.values()), targetMa);
 
-      // Gọi server API để nạp đầy đủ lịch sử chính xác từ Sheets
+      // 2. Tải và tổng hợp đầy đủ từ Supabase Cloud
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        supabaseClient.from('don_hang')
+          .select('*')
+          .or(`chi_tiet_san_pham.cs.[{"maHang":"${targetMa}"}],chi_tiet_san_pham.cs.[{"ma_hang":"${targetMa}"}]`)
+          .order('ngay_ban', { ascending: true })
+          .then(({ data, error }) => {
+            if (!error && Array.isArray(data)) {
+              data.forEach((d, i) => {
+                if (d.trang_thai === 'Đã hủy') return;
+                const items = Array.isArray(d.chi_tiet_san_pham) ? d.chi_tiet_san_pham : [];
+                const maDH = d.ma_don_hang || ('DH' + i);
+                const isNhap = maDH.startsWith('PNH') && !maDH.startsWith('PNH_TON_');
+                const isTraNCC = maDH.startsWith('THNCC') || maDH.startsWith('TN');
+                const isKhachTra = maDH.startsWith('TH') || String(d.trang_thai || '').includes('Khách trả');
+
+                items.forEach(it => {
+                  if (String(it.maHang || it.ma_hang || '').trim().toUpperCase() === targetMa) {
+                    const sl = Number(it.soLuong) || 0;
+                    let loaiGD = 'BanHang';
+                    let tenLoaiGD = 'Xuất bán POS';
+                    let slThayDoi = -sl;
+                    let doiTac = d.ten_kh || 'Khách lẻ';
+                    let ghiChu = 'Bán lẻ thu ngân POS';
+                    let donGia = Number(it.donGia || it.giaBan || 0);
+
+                    if (isNhap) {
+                      loaiGD = 'NhapHang';
+                      tenLoaiGD = 'Nhập hàng NCC';
+                      slThayDoi = sl;
+                      doiTac = d.ten_kh || 'Nhà cung cấp';
+                      ghiChu = 'Nhập kho từ NCC';
+                      donGia = Number(it.donGia || it.giaNhap || it.giaVon || 0);
+                    } else if (isTraNCC) {
+                      loaiGD = 'TraNCC';
+                      tenLoaiGD = 'Trả hàng NCC';
+                      slThayDoi = -sl;
+                      doiTac = d.ten_kh || 'Nhà cung cấp';
+                      ghiChu = 'Xuất trả hàng về NCC';
+                      donGia = Number(it.donGia || it.giaNhap || it.giaVon || 0);
+                    } else if (isKhachTra) {
+                      loaiGD = 'KhachTra';
+                      tenLoaiGD = 'Khách trả hàng';
+                      slThayDoi = sl;
+                      doiTac = d.ten_kh || 'Khách hoàn trả';
+                      ghiChu = 'Khách hoàn trả sản phẩm';
+                    }
+
+                    txMap.set(maDH, {
+                      ngay: (d.ngay_ban || '').replace('T', ' ').slice(0, 19),
+                      maChungTu: maDH,
+                      loaiGD: loaiGD,
+                      tenLoaiGD: tenLoaiGD,
+                      doiTac: doiTac,
+                      chiNhanh: d.chi_nhanh || 'CN01',
+                      soLuongThayDoi: slThayDoi,
+                      donGia: donGia,
+                      thanhTien: donGia * sl,
+                      ghiChu: ghiChu
+                    });
+                  }
+                });
+              });
+
+              xuLyVaHienThiTheKho(Array.from(txMap.values()), targetMa);
+            }
+          }).catch(err => {
+            console.warn("Lỗi tải Thẻ kho Supabase:", err);
+          });
+      }
+
+      // 3. Tải từ Google Apps Script nếu chạy trong môi trường GAS
       const runner = (typeof google !== 'undefined' && google.script && google.script.run)
         ? google.script.run : window._mockGAS;
       if (runner && runner.apiGetTheKhoHangHoa) {
         runner.withSuccessHandler(function(res) {
           if (res && res.success && Array.isArray(res.history)) {
-            xuLyVaHienThiTheKho(res.history, targetMa);
+            res.history.forEach(tx => {
+              if (tx && tx.maChungTu && !txMap.has(tx.maChungTu)) {
+                txMap.set(tx.maChungTu, tx);
+              }
+            });
+            xuLyVaHienThiTheKho(Array.from(txMap.values()), targetMa);
           }
         }).withFailureHandler(function(err) {
           console.warn("Lỗi tải Thẻ kho từ server:", err);
@@ -16684,6 +16843,9 @@ let danhSachTamXuatExcel = [];
       // Sắp xếp theo ngày tăng dần
       historyList.sort((a, b) => new Date(a.ngay || 0) - new Date(b.ngay || 0));
 
+      const h = (rawHangHoa || []).find(x => String(x.maHang || '').trim().toUpperCase() === targetMa);
+      const targetCN = (typeof currentChiNhanh !== 'undefined' && currentChiNhanh) ? layMaChiNhanh(currentChiNhanh) : 'CN01';
+
       // Tính tổng metrics
       let tongNhap = 0;
       let tongBan = 0;
@@ -16691,7 +16853,15 @@ let danhSachTamXuatExcel = [];
       let tongTraNCC = 0;
       let tongXuatHuy = 0;
 
-      let tonLuyKe = 0;
+      // Xác định tồn đầu kỳ theo chi nhánh (từ RAW_TON_KHO_3_CHI_NHANH)
+      let tonDauKy = 0;
+      if (window.RAW_TON_KHO_3_CHI_NHANH && window.RAW_TON_KHO_3_CHI_NHANH[targetMa]) {
+        const rawTon = window.RAW_TON_KHO_3_CHI_NHANH[targetMa];
+        const idx = targetCN === 'CN01' ? 0 : (targetCN === 'CN02' ? 1 : (targetCN === 'CN03' ? 2 : -1));
+        if (idx >= 0) tonDauKy = Number(rawTon[idx]) || 0;
+      }
+
+      let tonLuyKe = tonDauKy;
       historyList.forEach(tx => {
         const sl = Number(tx.soLuongThayDoi) || 0;
         tonLuyKe += sl;
@@ -16704,8 +16874,19 @@ let danhSachTamXuatExcel = [];
         else if (tx.loaiGD === 'XuatHuy') tongXuatHuy += Math.abs(sl);
       });
 
-      const h = (rawHangHoa || []).find(x => String(x.maHang || '').trim().toUpperCase() === targetMa);
-      const tonHienTai = h ? Number(h.tonKho) || 0 : tonLuyKe;
+      // Lấy tồn kho hiện tại
+      let tonHienTai = (typeof layTonKhoSanPhamTaiChiNhanh === 'function') 
+        ? layTonKhoSanPhamTaiChiNhanh(targetMa, targetCN) 
+        : (h ? Number(h.tonKho) || 0 : tonLuyKe);
+
+      // Nếu có lịch sử giao dịch và tonHienTai bị lệch với lũy kế (ví dụ dữ liệu tồn cũ trước đây), đồng bộ theo lũy kế
+      if (historyList.length > 0 && Math.abs(tonHienTai - tonLuyKe) > 0) {
+        tonHienTai = Math.max(0, tonLuyKe);
+        if (h) h.tonKho = tonHienTai;
+        if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[targetMa]) {
+          window.tonKhoChiNhanhMap[targetMa][targetCN] = tonHienTai;
+        }
+      }
 
       // Cập nhật thẻ metrics
       const elNhap = document.getElementById('tk-metric-nhap');
@@ -16722,25 +16903,46 @@ let danhSachTamXuatExcel = [];
       if (elXH) elXH.innerText = '-' + tongXuatHuy.toLocaleString();
       if (elTon) elTon.innerText = tonHienTai.toLocaleString() + ' ' + ((h && h.donViTinh) || 'Cái');
 
+      // Danh sách hiển thị: nếu có tồn đầu kỳ > 0, thêm dòng Tồn đầu kỳ
+      const displayList = historyList.slice();
+      if (tonDauKy > 0) {
+        displayList.unshift({
+          ngay: '07/10/2026 00:00',
+          maChungTu: 'DK-' + targetMa,
+          loaiGD: 'KhoiTao',
+          tenLoaiGD: 'Tồn đầu kỳ',
+          doiTac: 'Kiểm kê kho',
+          chiNhanh: targetCN,
+          soLuongThayDoi: tonDauKy,
+          tonSauGD: tonDauKy,
+          donGia: Number(h ? h.giaVon : 0),
+          thanhTien: tonDauKy * Number(h ? h.giaVon : 0),
+          ghiChu: 'Số dư tồn kho đầu kỳ'
+        });
+      }
+
       // Đảo ngược lại để hiển thị giao dịch mới nhất lên đầu bảng
-      currentTheKhoList = historyList.slice().reverse();
+      currentTheKhoList = displayList.reverse();
       locTheKhoTable();
     }
 
     function locTheKhoTable() {
       const loai = (document.getElementById('tk-filter-loai')?.value || 'ALL');
       const kw = (document.getElementById('tk-search-kw')?.value || '').toLowerCase().trim();
+      const cnFilter = (document.getElementById('tk-filter-chinhanh')?.value || 'ALL');
       const tbody = document.getElementById('tbl-thekho-body');
       if (!tbody) return;
 
       const filtered = (currentTheKhoList || []).filter(tx => {
         const matchLoai = (loai === 'ALL') || (tx.loaiGD === loai);
+        const matchCN = (cnFilter === 'ALL') || !tx.chiNhanh || (layMaChiNhanh(tx.chiNhanh) === layMaChiNhanh(cnFilter));
         const matchKw = !kw || 
           String(tx.maChungTu || '').toLowerCase().includes(kw) || 
           String(tx.doiTac || '').toLowerCase().includes(kw) || 
           String(tx.ghiChu || '').toLowerCase().includes(kw) ||
-          String(tx.tenLoaiGD || '').toLowerCase().includes(kw);
-        return matchLoai && matchKw;
+          String(tx.tenLoaiGD || '').toLowerCase().includes(kw) ||
+          String(tx.chiNhanh || '').toLowerCase().includes(kw);
+        return matchLoai && matchCN && matchKw;
       });
 
       if (!filtered.length) {
@@ -16777,9 +16979,14 @@ let danhSachTamXuatExcel = [];
           badgeClass = 'bg-indigo-100 text-indigo-800';
           slColor = Number(tx.soLuongThayDoi) >= 0 ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold';
           icon = 'fa-scale-balanced';
+        } else if (tx.loaiGD === 'KhoiTao') {
+          badgeClass = 'bg-slate-200 text-slate-800';
+          slColor = 'text-blue-700 font-bold';
+          icon = 'fa-warehouse';
         }
 
         const slHienThi = Number(tx.soLuongThayDoi) > 0 ? ('+' + tx.soLuongThayDoi) : tx.soLuongThayDoi;
+        const cnTag = tx.chiNhanh ? layMaChiNhanh(tx.chiNhanh) : '';
 
         return `
           <tr class="hover:bg-slate-50 border-b transition">
@@ -16790,7 +16997,10 @@ let danhSachTamXuatExcel = [];
                 <i class="fa-solid ${icon} text-[9px]"></i><span>${tx.tenLoaiGD || tx.loaiGD}</span>
               </span>
             </td>
-            <td class="p-2.5 font-mono font-bold text-blue-600">${tx.maChungTu || '-'}</td>
+            <td class="p-2.5 font-mono font-bold text-blue-600">
+              ${tx.maChungTu || '-'}
+              ${cnTag ? `<span class="block text-[10px] font-normal text-slate-500">${cnTag}</span>` : ''}
+            </td>
             <td class="p-2.5 text-slate-800">${tx.doiTac || '-'}</td>
             <td class="p-2.5 text-center font-mono ${slColor}">${slHienThi}</td>
             <td class="p-2.5 text-right font-mono font-semibold text-slate-800">${Number(tx.tonSauGD || 0).toLocaleString()}</td>
@@ -22174,6 +22384,12 @@ function loadSoQuy(filter) {
       <!-- Controls: Filter by Type & Search -->
       <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-200/70">
         <div class="flex flex-wrap items-center gap-2">
+          <select id="tk-filter-chinhanh" onchange="locTheKhoTable()" class="border border-slate-300 rounded-xl px-2.5 py-1 text-xs bg-white font-medium">
+            <option value="ALL">-- Tất cả chi nhánh --</option>
+            <option value="CN01">CN01: Trụ sở chính Thanh Miện</option>
+            <option value="CN02">CN02: Chi nhánh 2</option>
+            <option value="CN03">CN03: Chi nhánh 3</option>
+          </select>
           <select id="tk-filter-loai" onchange="locTheKhoTable()" class="border border-slate-300 rounded-xl px-2.5 py-1 text-xs bg-white">
             <option value="ALL">-- Tất cả loại giao dịch --</option>
             <option value="NhapHang">📥 Nhập hàng NCC (+)</option>
