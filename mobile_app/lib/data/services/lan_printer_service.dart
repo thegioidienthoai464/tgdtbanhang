@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/order_model.dart';
+import '../models/cashbook_model.dart';
 import '../../ui/core/formatters.dart';
 
 class LanPrinterService {
@@ -262,6 +263,108 @@ class LanPrinterService {
     } catch (e) {
       debugPrint("Lỗi in bill: $e");
       return {'success': false, 'message': 'Không in được qua máy in LAN ($ip:$port). Lỗi: $e'};
+    }
+  }
+
+  // Hàm in phiếu thu / chi sổ quỹ ra máy in LAN
+  static Future<Map<String, dynamic>> printCashReceipt(CashbookModel tx) async {
+    final ip = await getPrinterIp();
+    final port = await getPrinterPort();
+    final paperSize = await getPaperSize();
+    final is80mm = paperSize == '80mm';
+
+    final prefs = await SharedPreferences.getInstance();
+    final storeName = prefs.getString(_keyStoreName) ?? 'THE GIOI DIEN THOAI 464';
+    final storeAddress = prefs.getString(_keyStoreAddress) ?? '464 Le Van Khuong, P. Thoi An, Q.12';
+    final storePhone = prefs.getString(_keyStorePhone) ?? 'Hotline: 0989.xxx.xxx';
+
+    final divider = is80mm 
+        ? "------------------------------------------------\n" 
+        : "--------------------------------\n";
+
+    final isThu = tx.isIncome;
+    final title = isThu ? "PHIEU THU TIEN" : "PHIEU CHI TIEN";
+
+    try {
+      final socket = await Socket.connect(
+        ip,
+        port,
+        timeout: const Duration(seconds: 4),
+      );
+
+      final bytes = <int>[];
+
+      // 1. Khởi tạo máy in
+      bytes.addAll([0x1B, 0x40]); // ESC @
+
+      // 2. Tiêu đề cửa hàng
+      bytes.addAll([0x1B, 0x61, 0x01]); // Căn giữa
+      bytes.addAll([0x1B, 0x45, 0x01]); // In đậm
+      bytes.addAll([0x1D, 0x21, 0x11]); // Chữ to
+      bytes.addAll(utf8.encode("${removeDiacritics(storeName)}\n"));
+
+      // 3. Thông tin địa chỉ & hotline
+      bytes.addAll([0x1D, 0x21, 0x00]);
+      bytes.addAll([0x1B, 0x45, 0x00]);
+      bytes.addAll(utf8.encode("${removeDiacritics(storeAddress)}\n"));
+      bytes.addAll(utf8.encode("$storePhone\n"));
+      bytes.addAll(utf8.encode(divider));
+
+      // 4. Tiêu đề Phiếu
+      bytes.addAll([0x1B, 0x45, 0x01]);
+      bytes.addAll([0x1D, 0x21, 0x01]); // Cao gấp đôi
+      bytes.addAll(utf8.encode("$title\n"));
+      bytes.addAll([0x1D, 0x21, 0x00]);
+      bytes.addAll([0x1B, 0x45, 0x00]);
+
+      // 5. Thông tin chi tiết phiếu
+      bytes.addAll([0x1B, 0x61, 0x00]); // Căn trái
+      bytes.addAll(utf8.encode("Ma phieu    : ${tx.maPhieu}\n"));
+      bytes.addAll(utf8.encode("Ngay gio    : ${Formatters.formatDateTime(tx.ngayGD)}\n"));
+      bytes.addAll(utf8.encode("Chi nhanh   : ${removeDiacritics(tx.chiNhanh)}\n"));
+      if (tx.doiTuong.isNotEmpty) {
+        bytes.addAll(utf8.encode("${isThu ? 'Nguoi nop' : 'Nguoi nhan'}: ${removeDiacritics(tx.doiTuong)}\n"));
+      }
+      bytes.addAll(utf8.encode("Hinh thuc   : ${removeDiacritics(tx.loaiQuy)}\n"));
+      if (tx.maChungTu.isNotEmpty) {
+        bytes.addAll(utf8.encode("Chung tu goc: ${tx.maChungTu}\n"));
+      }
+      if (tx.ghiChu.isNotEmpty) {
+        bytes.addAll(utf8.encode("Ly do       : ${removeDiacritics(tx.ghiChu)}\n"));
+      }
+      bytes.addAll(utf8.encode(divider));
+
+      // 6. Số tiền nổi bật
+      final soTienStr = Formatters.formatCurrency(tx.soTien);
+      bytes.addAll([0x1B, 0x45, 0x01]); // In đậm
+      bytes.addAll([0x1D, 0x21, 0x11]); // Chữ to
+      bytes.addAll([0x1B, 0x61, 0x01]); // Căn giữa
+      bytes.addAll(utf8.encode("SO TIEN: $soTienStr\n"));
+      bytes.addAll([0x1D, 0x21, 0x00]);
+      bytes.addAll([0x1B, 0x45, 0x00]);
+      bytes.addAll(utf8.encode(divider));
+
+      // 7. Chữ ký 2 bên
+      bytes.addAll([0x1B, 0x61, 0x00]); // Căn trái
+      if (is80mm) {
+        bytes.addAll(utf8.encode("      Nguoi nop/nhan                  Nguoi lap phieu\n"));
+        bytes.addAll(utf8.encode("       (Ky & ghi ro ho ten)             (Ky & ghi ro ho ten)\n\n\n\n"));
+      } else {
+        bytes.addAll(utf8.encode("   Nguoi nop/nhan          Nguoi lap phieu\n"));
+        bytes.addAll(utf8.encode("  (Ky & ghi ro ho ten)     (Ky & ghi ro ho ten)\n\n\n\n"));
+      }
+
+      // 8. Cắt giấy
+      bytes.addAll([0x1D, 0x56, 0x42, 0x00]); // GS V B 0
+
+      socket.add(bytes);
+      await socket.flush();
+      await socket.close();
+
+      return {'success': true, 'message': 'Đã in phiếu thu chi thành công ra máy in LAN ($ip:$port)!'};
+    } catch (e) {
+      debugPrint("Lỗi in phiếu thu chi: $e");
+      return {'success': false, 'message': 'Không in được phiếu qua máy in LAN ($ip:$port). Lỗi: $e'};
     }
   }
 }

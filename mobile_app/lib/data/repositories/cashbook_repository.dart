@@ -23,4 +23,18 @@ class CashbookRepository {
         .from('so_quy')
         .upsert(transaction.toJson());
   }
+
+  Future<void> updateTransaction(CashbookModel transaction) async {
+    await SupabaseService.client
+        .from('so_quy')
+        .update(transaction.toJson())
+        .eq('ma_phieu', transaction.maPhieu);
+  }
+
+  Future<void> deleteTransaction(String maPhieu) async {
+    await SupabaseService.client
+        .from('so_quy')
+        .delete()
+        .eq('ma_phieu', maPhieu);
+  }
 }

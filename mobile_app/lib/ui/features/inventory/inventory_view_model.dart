@@ -47,4 +47,64 @@ class InventoryViewModel extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  Future<bool> addProduct(ProductModel product) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final created = await _productRepo.createProduct(product);
+      if (created != null) {
+        _allProducts.insert(0, created);
+        _applyFilter();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint("Lỗi thêm hàng hóa: $e");
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> editProduct(ProductModel product) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final updated = await _productRepo.updateProduct(product);
+      if (updated != null) {
+        final idx = _allProducts.indexWhere((p) => p.maHang == product.maHang);
+        if (idx >= 0) {
+          _allProducts[idx] = updated;
+        }
+        _applyFilter();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint("Lỗi cập nhật hàng hóa: $e");
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> deleteProduct(String maHang) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _productRepo.deleteProduct(maHang);
+      _allProducts.removeWhere((p) => p.maHang == maHang);
+      _applyFilter();
+      return true;
+    } catch (e) {
+      debugPrint("Lỗi xóa hàng hóa: $e");
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

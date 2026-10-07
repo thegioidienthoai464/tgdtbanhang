@@ -1,10 +1,10 @@
 {
-  "version": "1.1.4",
-  "build_number": 15,
+  "version": "1.1.5",
+  "build_number": 16,
   "force_update": false,
-  "release_notes": "• Sửa lỗi hiển thị số tiền Tổng tồn quỹ trên thẻ Sổ quỹ: số tiền hiển thị riêng hàng lớn, rõ ràng và không bị tràn viền.\n• Giao diện màn hình Tổng quan: Chỉ hiển thị 1 vị trí chọn chi nhánh duy nhất trên thanh tiêu đề AppBar (Vị trí số 1).\n• Quét mã vạch Barcode/QR bằng Camera trực tiếp ngay ô tìm kiếm sản phẩm trên màn hình POS.\n• Mặc định bán cho khách lẻ mã KHACHLE trên cả điện thoại và máy tính khi không chọn khách cụ thể.\n• Đổi tài khoản ngân hàng hiển thị 1 tài khoản hoặc tất cả trong Sổ quỹ.\n• Thẻ tổng hợp quỹ tài chính hiển thị đầy đủ Tổng tồn quỹ (Tiền mặt + Ngân hàng).",
+  "release_notes": "• Màn hình bán hàng POS: Cho phép chỉnh sửa đơn giá bán và số lượng sản phẩm trực tiếp trong giỏ hàng và tại bước xác nhận thanh toán.\n• Màn hình Kho hàng: Bổ sung tính năng thêm mới hàng hóa (+ Thêm hàng hóa) và bấm vào từng sản phẩm để xem/chỉnh sửa thông tin, giá vốn, giá bán, tồn kho, quản lý IMEI.\n• Màn hình Sổ quỹ: Bổ sung màn hình chi tiết phiếu thu chi khi bấm vào từng giao dịch, hỗ trợ 4 tính năng: In phiếu ra máy in LAN, Chia sẻ phiếu (Zalo/SMS), Sửa thông tin phiếu, Hủy phiếu (hoàn trả quỹ).\n• Màn hình Tổng quan: Thay thế hành động quét barcode bằng tính năng 'Truy cập báo cáo' đầy đủ 5 phân hệ báo cáo kinh doanh chuẩn như trên bản PC (Bán hàng, Hàng hóa & tồn kho, Khách hàng & công nợ, Nhà cung cấp, Tài chính & dòng tiền).",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.4/TT_POS_v1.1.4.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.4/TT_POS_v1.1.4.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.1.4"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.5/TT_POS_v1.1.5.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.5/TT_POS_v1.1.5.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.1.5"
 }

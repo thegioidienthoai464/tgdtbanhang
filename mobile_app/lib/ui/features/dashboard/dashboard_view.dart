@@ -28,6 +28,7 @@ class _DashboardViewState extends State<DashboardView> {
       context.read<OrdersViewModel>().fetchOrders();
       context.read<InventoryViewModel>().fetchInventory();
       context.read<CashbookViewModel>().fetchTransactions();
+      context.read<PosViewModel>().initData();
     });
   }
 
@@ -37,6 +38,7 @@ class _DashboardViewState extends State<DashboardView> {
     final ordersVm = context.watch<OrdersViewModel>();
     final invVm = context.watch<InventoryViewModel>();
     final cashVm = context.watch<CashbookViewModel>();
+    final posVm = context.watch<PosViewModel>();
 
     // Lọc theo 1 hoặc nhiều chi nhánh được chọn (hoặc Toàn hệ thống)
     final filteredSalesOrders = ordersVm.salesOrders.where((o) => branchVm.matchesBranch(o.chiNhanh)).toList();
@@ -129,6 +131,7 @@ class _DashboardViewState extends State<DashboardView> {
               ordersVm.fetchOrders();
               invVm.fetchInventory();
               cashVm.fetchTransactions();
+              posVm.initData();
             },
           ),
         ],
@@ -138,6 +141,7 @@ class _DashboardViewState extends State<DashboardView> {
           await ordersVm.fetchOrders();
           await invVm.fetchInventory();
           await cashVm.fetchTransactions();
+          await posVm.initData();
         },
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -304,10 +308,10 @@ class _DashboardViewState extends State<DashboardView> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildActionTile(
-                      icon: Icons.qr_code_scanner,
-                      label: 'Quét Barcode',
-                      color: AppTheme.successGreen,
-                      onTap: () => widget.onTabChange(1),
+                      icon: Icons.bar_chart_rounded,
+                      label: 'Truy cập báo cáo',
+                      color: const Color(0xFF8B5CF6),
+                      onTap: () => _showReportsBottomSheet(context, branchVm, ordersVm, invVm, cashVm, posVm),
                     ),
                   ),
                 ],
@@ -425,6 +429,306 @@ class _DashboardViewState extends State<DashboardView> {
             Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13)),
           ],
         ),
+      ),
+    );
+  }
+
+  // Modal Trung tâm báo cáo chuẩn như trên bản PC (Index.html - Mục 6. Báo cáo)
+  void _showReportsBottomSheet(
+    BuildContext context,
+    BranchViewModel branchVm,
+    OrdersViewModel ordersVm,
+    InventoryViewModel invVm,
+    CashbookViewModel cashVm,
+    PosViewModel posVm,
+  ) {
+    // 6.1 Dữ liệu bán hàng
+    final filteredSalesOrders = ordersVm.salesOrders.where((o) => branchVm.matchesBranch(o.chiNhanh)).toList();
+    final totalSales = filteredSalesOrders.fold(0.0, (sum, o) => sum + o.tongTien);
+    final totalOrdersCount = filteredSalesOrders.length;
+    final avgOrderValue = totalOrdersCount > 0 ? (totalSales / totalOrdersCount) : 0.0;
+
+    // 6.2 Dữ liệu tồn kho
+    final filteredProducts = branchVm.isAllSelected
+        ? invVm.products
+        : invVm.products.where((p) => branchVm.matchesBranch(p.chiNhanh)).toList();
+    final totalStockQty = filteredProducts.fold(0.0, (sum, p) => sum + p.tonKho);
+    final totalStockCost = filteredProducts.fold(0.0, (sum, p) => sum + (p.tonKho * p.giaVon));
+    final lowStockCount = filteredProducts.where((p) => p.tonKho > 0 && p.tonKho <= 2).length;
+    final outOfStockCount = filteredProducts.where((p) => p.tonKho == 0).length;
+
+    // 6.3 Dữ liệu khách hàng & công nợ
+    final customers = posVm.customers;
+    final totalCustomerDebt = customers.fold(0.0, (sum, c) => sum + c.congNo);
+    final debtCustomerCount = customers.where((c) => c.congNo > 0).length;
+
+    // 6.4 Dữ liệu nhà cung cấp & nhập hàng
+    final preOrdersCount = ordersVm.preOrders.where((o) => branchVm.matchesBranch(o.chiNhanh)).length;
+
+    // 6.5 Dữ liệu tài chính & dòng tiền
+    final totalCash = branchVm.isAllSelected ? cashVm.cashBalance : cashVm.filteredCashBalance(branchVm.matchesBranch);
+    final totalBank = branchVm.isAllSelected ? cashVm.bankBalance : cashVm.filteredBankBalance(branchVm.matchesBranch);
+    final totalFund = branchVm.isAllSelected ? cashVm.totalFund : cashVm.filteredTotalFund(branchVm.matchesBranch);
+    final totalIncome = cashVm.transactions.where((t) => t.isIncome && branchVm.matchesBranch(t.chiNhanh)).fold(0.0, (sum, t) => sum + t.soTien);
+    final totalExpense = cashVm.transactions.where((t) => t.isExpense && branchVm.matchesBranch(t.chiNhanh)).fold(0.0, (sum, t) => sum + t.soTien);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.88),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            children: [
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.analytics_rounded, color: Color(0xFF8B5CF6), size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'TRUNG TÂM BÁO CÁO ERP',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF0F172A)),
+                        ),
+                        Text(
+                          'Áp dụng: ${branchVm.summaryDisplayName} • Đồng bộ chuẩn PC',
+                          style: const TextStyle(fontSize: 11.5, color: AppTheme.textMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20, color: AppTheme.textMuted),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const Divider(height: 20),
+
+              // Danh sách 5 module báo cáo
+              Expanded(
+                child: ListView(
+                  children: [
+                    // 6.1 BÁO CÁO BÁN HÀNG
+                    _buildReportCard(
+                      ctx,
+                      code: '6.1',
+                      title: 'Báo cáo bán hàng',
+                      subtitle: 'Doanh số, số lượng đơn & giá trị trung bình',
+                      icon: Icons.point_of_sale,
+                      color: AppTheme.primaryBlue,
+                      items: [
+                        _buildReportMetric('Tổng doanh thu bán', Formatters.formatCurrency(totalSales), isBold: true, valueColor: AppTheme.primaryBlue),
+                        _buildReportMetric('Số lượng đơn bán', '$totalOrdersCount đơn'),
+                        _buildReportMetric('Giá trị TB / đơn', Formatters.formatCurrency(avgOrderValue)),
+                      ],
+                      actionLabel: 'Xem danh sách đơn hàng',
+                      onAction: () {
+                        Navigator.pop(ctx);
+                        widget.onTabChange(2); // Chuyển Tab Đơn hàng
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 6.2 BÁO CÁO HÀNG HÓA & TỒN KHO
+                    _buildReportCard(
+                      ctx,
+                      code: '6.2',
+                      title: 'Báo cáo hàng hóa & tồn kho',
+                      subtitle: 'Kiểm soát tồn kho, giá trị vốn & cảnh báo hết hàng',
+                      icon: Icons.inventory_2_outlined,
+                      color: AppTheme.successGreen,
+                      items: [
+                        _buildReportMetric('Tổng tồn kho máy', '${totalStockQty.toInt()} cái', isBold: true, valueColor: AppTheme.successGreen),
+                        _buildReportMetric('Tổng giá trị vốn kho', Formatters.formatCurrency(totalStockCost)),
+                        _buildReportMetric('Cảnh báo hàng', '$outOfStockCount hết • $lowStockCount sắp hết', valueColor: outOfStockCount > 0 ? AppTheme.dangerRed : Colors.black87),
+                      ],
+                      actionLabel: 'Quản lý kho hàng',
+                      onAction: () {
+                        Navigator.pop(ctx);
+                        widget.onTabChange(3); // Chuyển Tab Kho
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 6.3 BÁO CÁO KHÁCH HÀNG & CÔNG NỢ
+                    _buildReportCard(
+                      ctx,
+                      code: '6.3',
+                      title: 'Báo cáo khách hàng & công nợ',
+                      subtitle: 'Theo dõi tổng dư nợ khách hàng cần thu hồi',
+                      icon: Icons.people_alt_outlined,
+                      color: AppTheme.warningOrange,
+                      items: [
+                        _buildReportMetric('Tổng công nợ phải thu', Formatters.formatCurrency(totalCustomerDebt), isBold: true, valueColor: totalCustomerDebt > 0 ? AppTheme.dangerRed : AppTheme.successGreen),
+                        _buildReportMetric('Số khách hàng còn nợ', '$debtCustomerCount / ${customers.length} khách'),
+                      ],
+                      actionLabel: 'Bán hàng & Thu nợ',
+                      onAction: () {
+                        Navigator.pop(ctx);
+                        widget.onTabChange(1); // Chuyển Tab POS
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 6.4 BÁO CÁO NHÀ CUNG CẤP & NHẬP HÀNG
+                    _buildReportCard(
+                      ctx,
+                      code: '6.4',
+                      title: 'Báo cáo nhà cung cấp & nhập hàng',
+                      subtitle: 'Đơn vị phân phối thiết bị, đặt hàng chờ nhập',
+                      icon: Icons.local_shipping_outlined,
+                      color: Colors.teal,
+                      items: [
+                        _buildReportMetric('Đơn đặt hàng chờ nhập', '$preOrdersCount đơn hàng'),
+                        _buildReportMetric('Đối tác liên kết', 'Đồng bộ từ hệ thống web ERP'),
+                      ],
+                      actionLabel: 'Xem đơn đặt hàng',
+                      onAction: () {
+                        Navigator.pop(ctx);
+                        widget.onTabChange(2);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 6.5 BÁO CÁO TÀI CHÍNH & DÒNG TIỀN
+                    _buildReportCard(
+                      ctx,
+                      code: '6.5',
+                      title: 'Báo cáo tài chính & dòng tiền',
+                      subtitle: 'Tổng thu, tổng chi, quỹ tiền mặt và ngân hàng',
+                      icon: Icons.account_balance_wallet_outlined,
+                      color: const Color(0xFF8B5CF6),
+                      items: [
+                        _buildReportMetric('Tổng tồn quỹ ròng', Formatters.formatCurrency(totalFund), isBold: true, valueColor: totalFund >= 0 ? AppTheme.successGreen : AppTheme.dangerRed),
+                        _buildReportMetric('Quỹ tiền mặt', Formatters.formatCurrency(totalCash)),
+                        _buildReportMetric('Quỹ ngân hàng', Formatters.formatCurrency(totalBank)),
+                        _buildReportMetric('Tổng dòng tiền thu', '+${Formatters.formatCurrency(totalIncome)}', valueColor: AppTheme.successGreen),
+                        _buildReportMetric('Tổng dòng tiền chi', '-${Formatters.formatCurrency(totalExpense)}', valueColor: AppTheme.dangerRed),
+                      ],
+                      actionLabel: 'Mở sổ quỹ chi tiết',
+                      onAction: () {
+                        Navigator.pop(ctx);
+                        widget.onTabChange(4); // Chuyển Tab Sổ quỹ
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildReportCard(
+    BuildContext context, {
+    required String code,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required List<Widget> items,
+    required String actionLabel,
+    required VoidCallback onAction,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    code,
+                    style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 11),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5),
+                  ),
+                ),
+                Icon(icon, color: color, size: 20),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(subtitle, style: const TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+            const Divider(height: 16),
+            ...items,
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  foregroundColor: color,
+                ),
+                icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                label: Text(actionLabel, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                onPressed: onAction,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReportMetric(String label, String value, {bool isBold = false, Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 12.5, color: isBold ? Colors.black87 : AppTheme.textMuted, fontWeight: isBold ? FontWeight.w600 : FontWeight.normal)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: isBold ? 14 : 13,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+              color: valueColor ?? Colors.black87,
+            ),
+          ),
+        ],
       ),
     );
   }

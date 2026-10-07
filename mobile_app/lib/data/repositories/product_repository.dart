@@ -45,4 +45,30 @@ class ProductRepository {
         .where((s) => s.isNotEmpty)
         .toList();
   }
+
+  Future<ProductModel?> createProduct(ProductModel product) async {
+    final response = await SupabaseService.client
+        .from('dm_hanghoa')
+        .insert(product.toJson())
+        .select()
+        .single();
+    return ProductModel.fromJson(response);
+  }
+
+  Future<ProductModel?> updateProduct(ProductModel product) async {
+    final response = await SupabaseService.client
+        .from('dm_hanghoa')
+        .update(product.toJson())
+        .eq('ma_hang', product.maHang)
+        .select()
+        .single();
+    return ProductModel.fromJson(response);
+  }
+
+  Future<void> deleteProduct(String maHang) async {
+    await SupabaseService.client
+        .from('dm_hanghoa')
+        .delete()
+        .eq('ma_hang', maHang);
+  }
 }

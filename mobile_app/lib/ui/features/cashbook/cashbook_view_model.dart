@@ -196,4 +196,36 @@ class CashbookViewModel extends ChangeNotifier {
     await _cashbookRepo.saveTransaction(tx);
     await fetchTransactions();
   }
+
+  Future<bool> editTransaction(CashbookModel tx) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _cashbookRepo.updateTransaction(tx);
+      await fetchTransactions();
+      return true;
+    } catch (e) {
+      debugPrint("Lỗi cập nhật phiếu thu chi: $e");
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> cancelTransaction(String maPhieu) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _cashbookRepo.deleteTransaction(maPhieu);
+      await fetchTransactions();
+      return true;
+    } catch (e) {
+      debugPrint("Lỗi hủy phiếu thu chi: $e");
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

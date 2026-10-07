@@ -5,6 +5,7 @@ import '../../core/app_theme.dart';
 import '../../core/formatters.dart';
 import '../../../data/models/partner_model.dart';
 import '../../../data/models/bank_model.dart';
+import '../../../data/models/order_model.dart';
 import '../branch/branch_view_model.dart';
 import '../settings/settings_view.dart';
 import 'pos_view_model.dart';
@@ -1450,6 +1451,313 @@ class _PosViewState extends State<PosView> {
           }
         },
       ),
+    );
+  }
+
+  // Dialog chỉnh sửa giá bán và số lượng của 1 mặt hàng trong giỏ
+  void _showEditCartItemDialog(BuildContext context, PosViewModel vm, OrderItemModel item, [VoidCallback? onUpdated]) {
+    final qtyCtrl = TextEditingController(text: item.soLuong.toString());
+    final priceCtrl = TextEditingController(text: item.donGia.toInt().toString());
+    final imeiCtrl = TextEditingController(text: item.imeiStr);
+
+    showDialog(
+      context: context,
+      builder: (dCtx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryBlue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.edit_note_rounded, color: AppTheme.primaryBlue, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  item.tenHang,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Mã sản phẩm: ${item.maHang}', style: const TextStyle(fontSize: 12, color: AppTheme.textMuted)),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: priceCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Đơn giá bán (VNĐ)',
+                    hintText: 'Nhập giá bán mới...',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.monetization_on_outlined, size: 20),
+                    isDense: true,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: qtyCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Số lượng đặt mua',
+                    hintText: 'Nhập số lượng...',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.numbers_outlined, size: 20),
+                    isDense: true,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: imeiCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'IMEI / Serial (tùy chọn)',
+                    hintText: 'Nhập IMEI gắn với máy...',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.qr_code_2_outlined, size: 20),
+                    isDense: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton.icon(
+              icon: const Icon(Icons.delete_outline, color: AppTheme.dangerRed, size: 18),
+              label: const Text('Xóa khỏi giỏ', style: TextStyle(color: AppTheme.dangerRed)),
+              onPressed: () {
+                vm.removeFromCart(item.maHang);
+                Navigator.pop(dCtx);
+                if (onUpdated != null) onUpdated();
+              },
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryBlue,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                final newQty = int.tryParse(qtyCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
+                final newPrice = double.tryParse(priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? item.donGia;
+                final newImei = imeiCtrl.text.trim();
+
+                vm.updateCartItem(
+                  item.maHang,
+                  quantity: newQty,
+                  price: newPrice,
+                  imeiStr: newImei,
+                );
+                Navigator.pop(dCtx);
+                if (onUpdated != null) onUpdated();
+              },
+              child: const Text('Lưu thay đổi'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // BottomSheet chi tiết giỏ hàng: xem, đổi số lượng, sửa đơn giá, xóa mặt hàng
+  void _showCartBottomSheet(BuildContext context, PosViewModel vm, BranchViewModel branchVm) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Container(
+              constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.8),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.shopping_cart_outlined, color: AppTheme.primaryBlue),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Giỏ hàng (${vm.totalItemCount} sản phẩm)',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  if (vm.cart.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: Center(child: Text('Giỏ hàng đang trống')),
+                    )
+                  else
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: vm.cart.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (ctx, idx) {
+                          final item = vm.cart[idx];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.tenHang,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      InkWell(
+                                        onTap: () {
+                                          _showEditCartItemDialog(context, vm, item, () {
+                                            setSheetState(() {});
+                                          });
+                                        },
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              'Đơn giá: ${Formatters.formatCurrency(item.donGia)}',
+                                              style: const TextStyle(
+                                                color: AppTheme.primaryBlue,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 12.5,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            const Icon(Icons.edit_outlined, size: 14, color: AppTheme.primaryBlue),
+                                          ],
+                                        ),
+                                      ),
+                                      if (item.imeiStr.isNotEmpty)
+                                        Text('IMEI: ${item.imeiStr}', style: const TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                                    ],
+                                  ),
+                                ),
+                                // Bộ tăng giảm số lượng & sửa trực tiếp
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.remove_circle_outline, color: AppTheme.textMuted, size: 22),
+                                      onPressed: () {
+                                        vm.updateQuantity(item.maHang, -1);
+                                        setSheetState(() {});
+                                      },
+                                    ),
+                                    InkWell(
+                                      onTap: () {
+                                        _showEditCartItemDialog(context, vm, item, () {
+                                          setSheetState(() {});
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(color: Colors.grey.shade300),
+                                          borderRadius: BorderRadius.circular(6),
+                                          color: Colors.grey.shade50,
+                                        ),
+                                        child: Text(
+                                          '${item.soLuong}',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.add_circle_outline, color: AppTheme.primaryBlue, size: 22),
+                                      onPressed: () {
+                                        vm.updateQuantity(item.maHang, 1);
+                                        setSheetState(() {});
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      Formatters.formatCurrency(item.thanhTien),
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline, size: 20, color: AppTheme.dangerRed),
+                                      tooltip: 'Xóa',
+                                      onPressed: () {
+                                        vm.removeFromCart(item.maHang);
+                                        setSheetState(() {});
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Tổng thanh toán:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      Text(
+                        Formatters.formatCurrency(vm.subtotal),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.primaryBlue),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: AppTheme.primaryBlue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.shopping_bag_outlined),
+                      label: const Text('TIẾN HÀNH THANH TOÁN', style: TextStyle(fontWeight: FontWeight.bold)),
+                      onPressed: vm.cart.isEmpty
+                          ? null
+                          : () {
+                              Navigator.pop(ctx);
+                              _showCheckoutModal(context, vm, branchVm);
+                            },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
