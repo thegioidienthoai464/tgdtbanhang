@@ -1,5 +1,5 @@
-name: smart_erp_mobile
-description: "Hệ Thống Quản Lý Bán Hàng & Kho ERP - Mobile App (Android & iOS)"
+name: tt_pos
+description: "T&T POS - Hệ Thống Quản Lý Bán Hàng & Kho ERP - Mobile App (Android & iOS)"
 publish_to: 'none'
 version: 1.0.9+10
 
@@ -9,6 +9,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  
+  # Plugin cấu hình tự động Logo thương hiệu và Tên ứng dụng T&T POS
+  app_branding:
+    path: ./app_branding
   
   # Kết nối Supabase PostgreSQL Cloud chung với Web
   supabase_flutter: ^2.8.0
