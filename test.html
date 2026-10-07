@@ -104,10 +104,10 @@
     <option value="CN03">CN03: Chi nhánh Bình Giang</option>
     <option value="CN04">CN04: Bán Online</option>
   </select>
-  <button type="button" onclick="moModalQuanLyChiNhanh()" title="Quản lý chi nhánh" class="p-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl transition flex-shrink-0 shadow-md">
+  <button type="button" id="btn-header-ql-chinhanh" onclick="moModalQuanLyChiNhanh()" title="Quản lý chi nhánh" class="p-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl transition flex-shrink-0 shadow-md">
     <i class="fa-solid fa-gear text-xs"></i>
   </button>
-  <button type="button" onclick="moModalCaiDatHeThong()" title="Cài đặt tính năng phần mềm" class="p-2 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-xl transition flex-shrink-0 shadow-md border border-slate-700">
+  <button type="button" id="btn-header-caidat-hethong-gear" onclick="moModalCaiDatHeThong()" title="Cài đặt tính năng phần mềm" class="p-2 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-xl transition flex-shrink-0 shadow-md border border-slate-700">
     <i class="fa-solid fa-sliders text-xs"></i>
   </button>
 </div>
@@ -289,7 +289,7 @@
           <i class="fa-brands fa-apple text-xs text-slate-800"></i>
           <span>App iPhone/iPad</span>
         </button>
-        <button type="button" onclick="moModalCaiDatHeThong()" title="Cài đặt tính năng phần mềm (Giá vốn bình quân, Chặn bán ngừng KD...)" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-full text-[11px] font-bold flex items-center space-x-1.5 transition shadow-xs">
+        <button type="button" id="btn-header-caidat-hethong-top" onclick="moModalCaiDatHeThong()" title="Cài đặt tính năng phần mềm (Giá vốn bình quân, Chặn bán ngừng KD...)" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-full text-[11px] font-bold flex items-center space-x-1.5 transition shadow-xs">
           <i class="fa-solid fa-sliders text-blue-600"></i>
           <span>Cài đặt</span>
         </button>
@@ -2428,63 +2428,54 @@
             <table class="w-full text-left text-xs border-collapse">
               <thead class="bg-slate-100 uppercase text-slate-600 font-semibold border-b">
                 <tr>
-                  <th class="p-3">Phân hệ chức năng</th>
-                  <th class="p-3 text-center">Admin (Toàn quyền)</th>
+                  <th class="p-3">Phân hệ & Chức năng chi tiết</th>
+                  <th class="p-3 text-center">Admin</th>
+                  <th class="p-3 text-center">Quản Lý Chi Nhánh</th>
                   <th class="p-3 text-center">Quản Lý Kho</th>
-                  <th class="p-3 text-center">Thu Ngân / Bán Hàng</th>
+                  <th class="p-3 text-center">Thu Ngân / POS</th>
                   <th class="p-3 text-center">Kế Toán</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-100 font-medium">
-                <tr class="hover:bg-slate-50">
-                  <td class="p-3 font-semibold text-slate-700">1. Tổng quan & KPI kinh doanh</td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                  <td class="p-3 text-center text-slate-300"><i class="fa-solid fa-circle-xmark text-sm"></i></td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                </tr>
-                <tr class="hover:bg-slate-50">
-                  <td class="p-3 font-semibold text-slate-700">2. Hàng hóa (Danh mục, Bảng giá, Kiểm kho, Xuất hủy)</td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                  <td class="p-3 text-center text-slate-500">Xem giá</td>
-                  <td class="p-3 text-center text-slate-500">Xem giá</td>
-                </tr>
-                <tr class="hover:bg-slate-50">
-                  <td class="p-3 font-semibold text-slate-700">3. Mua hàng (Nhà cung cấp, Nhập kho, Trả hàng NCC)</td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                  <td class="p-3 text-center text-slate-300"><i class="fa-solid fa-circle-xmark text-sm"></i></td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                </tr>
-                <tr class="hover:bg-slate-50">
-                  <td class="p-3 font-semibold text-slate-700">4. Đơn hàng (POS bán lẻ, Đặt hàng, Khách trả, Khách hàng)</td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                  <td class="p-3 text-center text-slate-300"><i class="fa-solid fa-circle-xmark text-sm"></i></td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                </tr>
-                <tr class="hover:bg-slate-50">
-                  <td class="p-3 font-semibold text-slate-700">5. Sổ quỹ (Quỹ tiền mặt, Quỹ tài khoản, Phiếu thu/chi)</td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                  <td class="p-3 text-center text-slate-300"><i class="fa-solid fa-circle-xmark text-sm"></i></td>
-                  <td class="p-3 text-center text-slate-500">Chỉ thu POS</td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                </tr>
-                <tr class="hover:bg-slate-50">
-                  <td class="p-3 font-semibold text-slate-700">6. Báo cáo & Tài chính chuyên sâu</td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                  <td class="p-3 text-center text-slate-500">BC Hàng hóa</td>
-                  <td class="p-3 text-center text-slate-500">BC Bán hàng</td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                </tr>
-                <tr class="hover:bg-slate-50">
-                  <td class="p-3 font-semibold text-slate-700">7. Quản trị Người dùng & Phân quyền</td>
-                  <td class="p-3 text-center text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-sm"></i></td>
-                  <td class="p-3 text-center text-slate-300"><i class="fa-solid fa-circle-xmark text-sm"></i></td>
-                  <td class="p-3 text-center text-slate-300"><i class="fa-solid fa-circle-xmark text-sm"></i></td>
-                  <td class="p-3 text-center text-slate-300"><i class="fa-solid fa-circle-xmark text-sm"></i></td>
-                </tr>
+              <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                <tr class="bg-slate-50/70 font-bold text-slate-900"><td colspan="6" class="p-2.5 text-blue-700"><i class="fa-solid fa-chart-pie mr-1.5"></i>1. TỔNG QUAN</td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">1.1 Tổng quan & Dashboard KPI kinh doanh</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td></tr>
+                
+                <tr class="bg-slate-50/70 font-bold text-slate-900"><td colspan="6" class="p-2.5 text-cyan-700"><i class="fa-solid fa-cart-shopping mr-1.5"></i>2. ĐƠN HÀNG (POS)</td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">2.1 Thu ngân POS bán lẻ</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">2.2 Quản lý Đặt hàng</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">2.3 Khách trả hàng</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">2.4 Khách hàng & Công nợ</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">2.5 Lịch sử đơn hàng</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
+
+                <tr class="bg-slate-50/70 font-bold text-slate-900"><td colspan="6" class="p-2.5 text-emerald-700"><i class="fa-solid fa-boxes-stacked mr-1.5"></i>3. HÀNG HÓA & KHO</td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">3.1 Danh mục hàng & tồn kho</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">3.2 Thiết lập bảng giá</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">3.3 Kiểm kho & Cân bằng tồn</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">3.4 Xuất hủy hàng hỏng lỗi</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">3.5 Chuyển hàng giữa chi nhánh</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
+
+                <tr class="bg-slate-50/70 font-bold text-slate-900"><td colspan="6" class="p-2.5 text-amber-700"><i class="fa-solid fa-truck-ramp-box mr-1.5"></i>4. MUA HÀNG</td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">4.1 Quản lý Nhà cung cấp</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">4.2 Lập đơn nhập hàng</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">4.3 Trả hàng Nhà cung cấp</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
+
+                <tr class="bg-slate-50/70 font-bold text-slate-900"><td colspan="6" class="p-2.5 text-purple-700"><i class="fa-solid fa-wallet mr-1.5"></i>5. SỔ QUỸ DÒNG TIỀN</td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">5.1 Sổ quỹ tiền mặt</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">5.2 Sổ quỹ tài khoản ngân hàng</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">5.3 Tổng hợp dòng tiền (Thu / Chi)</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td></tr>
+
+                <tr class="bg-slate-50/70 font-bold text-slate-900"><td colspan="6" class="p-2.5 text-rose-700"><i class="fa-solid fa-chart-line mr-1.5"></i>6. BÁO CÁO & TÀI CHÍNH</td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">6.1 Báo cáo bán hàng & doanh thu</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">6.2 Báo cáo hàng hóa & tồn kho</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">6.3 Báo cáo khách hàng & công nợ</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">6.4 Báo cáo nhà cung cấp & nhập hàng</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">6.5 Báo cáo tài chính & lợi nhuận</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td></tr>
+
+                <tr class="bg-slate-50/70 font-bold text-slate-900"><td colspan="6" class="p-2.5 text-teal-700"><i class="fa-solid fa-users-gear mr-1.5"></i>7. QUẢN TRỊ & CẤU HÌNH</td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">7.1 Quản lý người dùng</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">7.2 Ma trận phân quyền</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">Quản lý cấu hình chi nhánh</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-2.5 pl-6">Cài đặt thông số hệ thống</td><td class="p-2 text-center text-emerald-600"><i class="fa-solid fa-circle-check"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td><td class="p-2 text-center text-slate-300"><i class="fa-solid fa-circle-xmark"></i></td></tr>
               </tbody>
             </table>
           </div>
@@ -4290,93 +4281,272 @@
 
   <!-- MODAL: PHÂN QUYỀN (7.2) -->
   <div id="modal-phanquyen-user" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] overflow-y-auto scrollbar-thin">
-      <div class="flex justify-between items-center border-b pb-2">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[92vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center border-b pb-3 flex-shrink-0">
         <div>
-          <h3 class="font-bold text-sm text-slate-800 flex items-center space-x-1.5">
-            <i class="fa-solid fa-user-shield text-indigo-600"></i>
-            <span>Phân Quyền Chi Tiết Cho Người Dùng</span>
+          <h3 class="font-extrabold text-base text-slate-800 flex items-center space-x-2">
+            <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm shadow-xs">
+              <i class="fa-solid fa-user-shield"></i>
+            </span>
+            <span>Phân Quyền Chi Tiết Từng Tính Năng Cho Người Dùng</span>
           </h3>
-          <p class="text-slate-400 mt-0.5" id="phanquyen-user-subtitle">Đang chỉnh sửa quyền: -</p>
+          <p class="text-slate-500 mt-1 text-xs" id="phanquyen-user-subtitle">Đang chỉnh sửa quyền: -</p>
         </div>
-        <button type="button" onclick="dongModal('modal-phanquyen-user')" class="text-slate-400 hover:text-slate-600 text-base"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" onclick="dongModal('modal-phanquyen-user')" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
       </div>
 
       <input type="hidden" id="phanquyen-target-manv" value="">
 
-      <div class="p-3 bg-slate-50 rounded-xl border flex items-center justify-between">
-        <span class="font-semibold text-slate-700">Mẫu quyền nhanh:</span>
-        <div class="flex space-x-1.5">
-          <button type="button" onclick="apDungMauQuyen('Admin')" class="px-2.5 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg font-semibold text-[11px]">Admin</button>
-          <button type="button" onclick="apDungMauQuyen('Kho')" class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg font-semibold text-[11px]">Kho</button>
-          <button type="button" onclick="apDungMauQuyen('ThuNgan')" class="px-2.5 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg font-semibold text-[11px]">Thu ngân</button>
-          <button type="button" onclick="apDungMauQuyen('KeToan')" class="px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg font-semibold text-[11px]">Kế toán</button>
+      <!-- Quick presets bar -->
+      <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
+        <div class="flex items-center space-x-1.5 flex-wrap">
+          <span class="font-bold text-slate-700 mr-1 flex items-center"><i class="fa-solid fa-wand-magic-sparkles text-amber-500 mr-1.5"></i>Mẫu quyền:</span>
+          <button type="button" onclick="apDungMauQuyen('Admin')" class="px-2.5 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg font-bold text-[11px] transition">Admin (Toàn quyền)</button>
+          <button type="button" onclick="apDungMauQuyen('QuanLy')" class="px-2.5 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg font-bold text-[11px] transition">Quản lý chi nhánh</button>
+          <button type="button" onclick="apDungMauQuyen('Kho')" class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg font-bold text-[11px] transition">Quản lý kho</button>
+          <button type="button" onclick="apDungMauQuyen('ThuNgan')" class="px-2.5 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg font-bold text-[11px] transition">Thu ngân / POS</button>
+          <button type="button" onclick="apDungMauQuyen('KeToan')" class="px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg font-bold text-[11px] transition">Kế toán</button>
+        </div>
+        <div class="flex items-center space-x-1.5">
+          <button type="button" onclick="toggleChonTatCaPhanQuyen(true)" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-semibold text-[11px] transition">Chọn tất cả</button>
+          <button type="button" onclick="toggleChonTatCaPhanQuyen(false)" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-semibold text-[11px] transition">Bỏ chọn hết</button>
         </div>
       </div>
 
-      <div class="space-y-2.5 pt-1">
-        <div class="p-2.5 border rounded-xl hover:bg-slate-50/50">
-          <label class="flex items-center space-x-2 font-bold text-slate-800 cursor-pointer">
-            <input type="checkbox" id="perm-tongquan" class="w-4 h-4 text-blue-600 rounded">
-            <span>1. Phân hệ Tổng quan & KPI kinh doanh</span>
-          </label>
-        </div>
-        <div class="p-2.5 border rounded-xl hover:bg-slate-50/50">
-          <label class="flex items-center space-x-2 font-bold text-slate-800 cursor-pointer mb-1.5">
-            <input type="checkbox" id="perm-donhang" class="w-4 h-4 text-blue-600 rounded">
-            <span>2. Phân hệ Đơn hàng & POS</span>
-          </label>
-          <div class="pl-6 grid grid-cols-2 gap-2 text-slate-600">
-            <label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" id="perm-dh-pos" class="rounded"><span>2.1 Quầy thu ngân POS</span></label>
-            <label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" id="perm-dh-khachhang" class="rounded"><span>2.4 Khách hàng & Công nợ</span></label>
+      <!-- Permission Modules Container (Scrollable) -->
+      <div class="space-y-3 overflow-y-auto pr-1 flex-1 scrollbar-thin">
+        
+        <!-- Module 1: Tổng quan -->
+        <div class="p-3 border border-slate-200 rounded-2xl bg-white hover:border-blue-300 transition shadow-xs">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <label class="flex items-center space-x-2 font-bold text-slate-800 cursor-pointer">
+              <input type="checkbox" id="perm-grp-1" onchange="toggleNhomPhanQuyen(1, this.checked)" class="w-4 h-4 text-blue-600 rounded">
+              <span class="text-xs text-blue-700 font-extrabold flex items-center space-x-1.5">
+                <i class="fa-solid fa-chart-pie text-blue-500"></i>
+                <span>1. Phân hệ Tổng quan & Chỉ số kinh doanh</span>
+              </span>
+            </label>
+            <span class="text-[10px] text-slate-400 font-medium">1 tính năng</span>
+          </div>
+          <div class="pt-2 pl-6">
+            <label class="flex items-center space-x-2 cursor-pointer text-slate-700 hover:text-blue-600">
+              <input type="checkbox" id="perm-tongquan" data-group="1" onchange="dongBoNhomPhanQuyen(1)" class="w-3.5 h-3.5 text-blue-600 rounded">
+              <span>1.1 Tổng quan & Dashboard KPI kinh doanh</span>
+            </label>
           </div>
         </div>
-        <div class="p-2.5 border rounded-xl hover:bg-slate-50/50">
-          <label class="flex items-center space-x-2 font-bold text-slate-800 cursor-pointer mb-1.5">
-            <input type="checkbox" id="perm-hanghoa" class="w-4 h-4 text-blue-600 rounded">
-            <span>3. Phân hệ Hàng hóa & Bảng giá</span>
-          </label>
-          <div class="pl-6 grid grid-cols-2 gap-2 text-slate-600">
-            <label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" id="perm-hh-danhmuc" class="rounded"><span>3.1 Danh mục & Tồn kho</span></label>
-            <label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" id="perm-hh-banggia" class="rounded"><span>3.2 Thiết lập bảng giá</span></label>
-            <label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" id="perm-hh-kiemkho" class="rounded"><span>3.3 Kiểm kho & Cân bằng</span></label>
-            <label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" id="perm-hh-xuathuy" class="rounded"><span>3.4 Xuất hủy hàng hỏng</span></label>
+
+        <!-- Module 2: Đơn hàng & POS -->
+        <div class="p-3 border border-slate-200 rounded-2xl bg-white hover:border-cyan-300 transition shadow-xs">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <label class="flex items-center space-x-2 font-bold text-slate-800 cursor-pointer">
+              <input type="checkbox" id="perm-grp-2" onchange="toggleNhomPhanQuyen(2, this.checked)" class="w-4 h-4 text-cyan-600 rounded">
+              <span class="text-xs text-cyan-700 font-extrabold flex items-center space-x-1.5">
+                <i class="fa-solid fa-cart-shopping text-cyan-500"></i>
+                <span>2. Phân hệ Đơn hàng & Quầy POS</span>
+              </span>
+            </label>
+            <span class="text-[10px] text-slate-400 font-medium">5 tính năng</span>
+          </div>
+          <div class="pt-2.5 pl-6 grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700">
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-cyan-600">
+              <input type="checkbox" id="perm-dh-pos" data-group="2" onchange="dongBoNhomPhanQuyen(2)" class="w-3.5 h-3.5 text-cyan-600 rounded">
+              <span>2.1 Thu ngân POS bán lẻ</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-cyan-600">
+              <input type="checkbox" id="perm-dh-dathang" data-group="2" onchange="dongBoNhomPhanQuyen(2)" class="w-3.5 h-3.5 text-cyan-600 rounded">
+              <span>2.2 Quản lý Đặt hàng</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-cyan-600">
+              <input type="checkbox" id="perm-dh-trahang" data-group="2" onchange="dongBoNhomPhanQuyen(2)" class="w-3.5 h-3.5 text-cyan-600 rounded">
+              <span>2.3 Khách trả hàng</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-cyan-600">
+              <input type="checkbox" id="perm-dh-khachhang" data-group="2" onchange="dongBoNhomPhanQuyen(2)" class="w-3.5 h-3.5 text-cyan-600 rounded">
+              <span>2.4 Khách hàng & Công nợ</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-cyan-600">
+              <input type="checkbox" id="perm-dh-lichsu" data-group="2" onchange="dongBoNhomPhanQuyen(2)" class="w-3.5 h-3.5 text-cyan-600 rounded">
+              <span>2.5 Lịch sử đơn hàng</span>
+            </label>
           </div>
         </div>
-        <div class="p-2.5 border rounded-xl hover:bg-slate-50/50">
-          <label class="flex items-center space-x-2 font-bold text-slate-800 cursor-pointer mb-1.5">
-            <input type="checkbox" id="perm-muahang" class="w-4 h-4 text-blue-600 rounded">
-            <span>4. Phân hệ Mua hàng</span>
-          </label>
-          <div class="pl-6 grid grid-cols-2 gap-2 text-slate-600">
-            <label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" id="perm-mh-ncc" class="rounded"><span>4.1 Nhà cung cấp</span></label>
-            <label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" id="perm-mh-nhaphang" class="rounded"><span>4.2 Lập đơn nhập hàng</span></label>
-            <label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" id="perm-mh-tranhap" class="rounded"><span>4.3 Trả hàng nhà cung cấp</span></label>
+
+        <!-- Module 3: Hàng hóa & Kho bãi -->
+        <div class="p-3 border border-slate-200 rounded-2xl bg-white hover:border-emerald-300 transition shadow-xs">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <label class="flex items-center space-x-2 font-bold text-slate-800 cursor-pointer">
+              <input type="checkbox" id="perm-grp-3" onchange="toggleNhomPhanQuyen(3, this.checked)" class="w-4 h-4 text-emerald-600 rounded">
+              <span class="text-xs text-emerald-700 font-extrabold flex items-center space-x-1.5">
+                <i class="fa-solid fa-boxes-stacked text-emerald-500"></i>
+                <span>3. Phân hệ Hàng hóa & Kho bãi</span>
+              </span>
+            </label>
+            <span class="text-[10px] text-slate-400 font-medium">5 tính năng</span>
+          </div>
+          <div class="pt-2.5 pl-6 grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700">
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-emerald-600">
+              <input type="checkbox" id="perm-hh-danhmuc" data-group="3" onchange="dongBoNhomPhanQuyen(3)" class="w-3.5 h-3.5 text-emerald-600 rounded">
+              <span>3.1 Danh mục hàng & tồn kho</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-emerald-600">
+              <input type="checkbox" id="perm-hh-banggia" data-group="3" onchange="dongBoNhomPhanQuyen(3)" class="w-3.5 h-3.5 text-emerald-600 rounded">
+              <span>3.2 Thiết lập bảng giá theo công thức</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-emerald-600">
+              <input type="checkbox" id="perm-hh-kiemkho" data-group="3" onchange="dongBoNhomPhanQuyen(3)" class="w-3.5 h-3.5 text-emerald-600 rounded">
+              <span>3.3 Lịch sử kiểm kho & cân bằng tồn</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-emerald-600">
+              <input type="checkbox" id="perm-hh-xuathuy" data-group="3" onchange="dongBoNhomPhanQuyen(3)" class="w-3.5 h-3.5 text-emerald-600 rounded">
+              <span>3.4 Xuất hủy hàng hỏng lỗi</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-emerald-600">
+              <input type="checkbox" id="perm-hh-chuyenkho" data-group="3" onchange="dongBoNhomPhanQuyen(3)" class="w-3.5 h-3.5 text-emerald-600 rounded">
+              <span>3.5 Chuyển hàng giữa các chi nhánh</span>
+            </label>
           </div>
         </div>
-        <div class="p-2.5 border rounded-xl hover:bg-slate-50/50">
-          <label class="flex items-center space-x-2 font-bold text-slate-800 cursor-pointer">
-            <input type="checkbox" id="perm-soquy" class="w-4 h-4 text-blue-600 rounded">
-            <span>5. Phân hệ Sổ quỹ dòng tiền (Thu / Chi)</span>
-          </label>
+
+        <!-- Module 4: Mua hàng & Nhà cung cấp -->
+        <div class="p-3 border border-slate-200 rounded-2xl bg-white hover:border-amber-300 transition shadow-xs">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <label class="flex items-center space-x-2 font-bold text-slate-800 cursor-pointer">
+              <input type="checkbox" id="perm-grp-4" onchange="toggleNhomPhanQuyen(4, this.checked)" class="w-4 h-4 text-amber-600 rounded">
+              <span class="text-xs text-amber-700 font-extrabold flex items-center space-x-1.5">
+                <i class="fa-solid fa-truck-ramp-box text-amber-500"></i>
+                <span>4. Phân hệ Mua hàng & Nhà cung cấp</span>
+              </span>
+            </label>
+            <span class="text-[10px] text-slate-400 font-medium">3 tính năng</span>
+          </div>
+          <div class="pt-2.5 pl-6 grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700">
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-amber-600">
+              <input type="checkbox" id="perm-mh-ncc" data-group="4" onchange="dongBoNhomPhanQuyen(4)" class="w-3.5 h-3.5 text-amber-600 rounded">
+              <span>4.1 Quản lý Nhà cung cấp</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-amber-600">
+              <input type="checkbox" id="perm-mh-nhaphang" data-group="4" onchange="dongBoNhomPhanQuyen(4)" class="w-3.5 h-3.5 text-amber-600 rounded">
+              <span>4.2 Lập đơn nhập hàng NCC</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-amber-600">
+              <input type="checkbox" id="perm-mh-tranhap" data-group="4" onchange="dongBoNhomPhanQuyen(4)" class="w-3.5 h-3.5 text-amber-600 rounded">
+              <span>4.3 Trả hàng Nhà cung cấp</span>
+            </label>
+          </div>
         </div>
-        <div class="p-2.5 border rounded-xl hover:bg-slate-50/50">
-          <label class="flex items-center space-x-2 font-bold text-slate-800 cursor-pointer">
-            <input type="checkbox" id="perm-baocao" class="w-4 h-4 text-blue-600 rounded">
-            <span>6. Báo cáo & Tài chính chuyên sâu</span>
-          </label>
+
+        <!-- Module 5: Sổ quỹ dòng tiền -->
+        <div class="p-3 border border-slate-200 rounded-2xl bg-white hover:border-purple-300 transition shadow-xs">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <label class="flex items-center space-x-2 font-bold text-slate-800 cursor-pointer">
+              <input type="checkbox" id="perm-grp-5" onchange="toggleNhomPhanQuyen(5, this.checked)" class="w-4 h-4 text-purple-600 rounded">
+              <span class="text-xs text-purple-700 font-extrabold flex items-center space-x-1.5">
+                <i class="fa-solid fa-wallet text-purple-500"></i>
+                <span>5. Phân hệ Sổ quỹ & Quản lý dòng tiền</span>
+              </span>
+            </label>
+            <span class="text-[10px] text-slate-400 font-medium">3 tính năng</span>
+          </div>
+          <div class="pt-2.5 pl-6 grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700">
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-purple-600">
+              <input type="checkbox" id="perm-sq-tienmat" data-group="5" onchange="dongBoNhomPhanQuyen(5)" class="w-3.5 h-3.5 text-purple-600 rounded">
+              <span>5.1 Sổ quỹ tiền mặt</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-purple-600">
+              <input type="checkbox" id="perm-sq-nganhang" data-group="5" onchange="dongBoNhomPhanQuyen(5)" class="w-3.5 h-3.5 text-purple-600 rounded">
+              <span>5.2 Sổ quỹ tài khoản ngân hàng</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-purple-600">
+              <input type="checkbox" id="perm-sq-tonghop" data-group="5" onchange="dongBoNhomPhanQuyen(5)" class="w-3.5 h-3.5 text-purple-600 rounded">
+              <span>5.3 Tổng hợp dòng tiền (Thu / Chi)</span>
+            </label>
+          </div>
         </div>
-        <div class="p-2.5 border rounded-xl hover:bg-slate-50/50">
-          <label class="flex items-center space-x-2 font-bold text-slate-800 cursor-pointer">
-            <input type="checkbox" id="perm-hethong" class="w-4 h-4 text-blue-600 rounded">
-            <span>7. Quản lý Người dùng & Phân quyền</span>
-          </label>
+
+        <!-- Module 6: Báo cáo & Tài chính -->
+        <div class="p-3 border border-slate-200 rounded-2xl bg-white hover:border-rose-300 transition shadow-xs">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <label class="flex items-center space-x-2 font-bold text-slate-800 cursor-pointer">
+              <input type="checkbox" id="perm-grp-6" onchange="toggleNhomPhanQuyen(6, this.checked)" class="w-4 h-4 text-rose-600 rounded">
+              <span class="text-xs text-rose-700 font-extrabold flex items-center space-x-1.5">
+                <i class="fa-solid fa-chart-line text-rose-500"></i>
+                <span>6. Phân hệ Báo cáo & Phân tích tài chính</span>
+              </span>
+            </label>
+            <span class="text-[10px] text-slate-400 font-medium">5 tính năng</span>
+          </div>
+          <div class="pt-2.5 pl-6 grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700">
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-rose-600">
+              <input type="checkbox" id="perm-bc-banhang" data-group="6" onchange="dongBoNhomPhanQuyen(6)" class="w-3.5 h-3.5 text-rose-600 rounded">
+              <span>6.1 Báo cáo bán hàng & doanh thu</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-rose-600">
+              <input type="checkbox" id="perm-bc-hanghoa" data-group="6" onchange="dongBoNhomPhanQuyen(6)" class="w-3.5 h-3.5 text-rose-600 rounded">
+              <span>6.2 Báo cáo hàng hóa & tồn kho</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-rose-600">
+              <input type="checkbox" id="perm-bc-khachhang" data-group="6" onchange="dongBoNhomPhanQuyen(6)" class="w-3.5 h-3.5 text-rose-600 rounded">
+              <span>6.3 Báo cáo khách hàng & công nợ</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-rose-600">
+              <input type="checkbox" id="perm-bc-ncc" data-group="6" onchange="dongBoNhomPhanQuyen(6)" class="w-3.5 h-3.5 text-rose-600 rounded">
+              <span>6.4 Báo cáo nhà cung cấp & nhập hàng</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-rose-600">
+              <input type="checkbox" id="perm-bc-taichinh" data-group="6" onchange="dongBoNhomPhanQuyen(6)" class="w-3.5 h-3.5 text-rose-600 rounded">
+              <span>6.5 Báo cáo tài chính & lợi nhuận</span>
+            </label>
+          </div>
         </div>
+
+        <!-- Module 7: Quản trị & Cấu hình -->
+        <div class="p-3 border border-slate-200 rounded-2xl bg-white hover:border-teal-300 transition shadow-xs">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <label class="flex items-center space-x-2 font-bold text-slate-800 cursor-pointer">
+              <input type="checkbox" id="perm-grp-7" onchange="toggleNhomPhanQuyen(7, this.checked)" class="w-4 h-4 text-teal-600 rounded">
+              <span class="text-xs text-teal-700 font-extrabold flex items-center space-x-1.5">
+                <i class="fa-solid fa-users-gear text-teal-500"></i>
+                <span>7. Phân hệ Quản trị hệ thống & Cấu hình</span>
+              </span>
+            </label>
+            <span class="text-[10px] text-slate-400 font-medium">4 tính năng</span>
+          </div>
+          <div class="pt-2.5 pl-6 grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700">
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-teal-600">
+              <input type="checkbox" id="perm-ht-nguoidung" data-group="7" onchange="dongBoNhomPhanQuyen(7)" class="w-3.5 h-3.5 text-teal-600 rounded">
+              <span>7.1 Danh sách người dùng</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-teal-600">
+              <input type="checkbox" id="perm-ht-phanquyen" data-group="7" onchange="dongBoNhomPhanQuyen(7)" class="w-3.5 h-3.5 text-teal-600 rounded">
+              <span>7.2 Ma trận phân quyền hệ thống</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-teal-600">
+              <input type="checkbox" id="perm-ht-chinhanh" data-group="7" onchange="dongBoNhomPhanQuyen(7)" class="w-3.5 h-3.5 text-teal-600 rounded">
+              <span>Quản lý danh mục Chi nhánh</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer hover:text-teal-600">
+              <input type="checkbox" id="perm-ht-caidat" data-group="7" onchange="dongBoNhomPhanQuyen(7)" class="w-3.5 h-3.5 text-teal-600 rounded">
+              <span>Cài đặt thông số tính năng hệ thống</span>
+            </label>
+          </div>
+        </div>
+
       </div>
 
-      <div class="flex justify-end space-x-2 pt-2 border-t">
-        <button type="button" onclick="dongModal('modal-phanquyen-user')" class="px-4 py-2 border rounded-xl font-semibold text-slate-600">Hủy</button>
-        <button type="button" onclick="xacNhanLuuPhanQuyen()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow">Lưu phân quyền</button>
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-between pt-3 border-t border-slate-200 flex-shrink-0">
+        <span class="text-[11px] text-slate-500 font-medium" id="phanquyen-count-selected">Đã chọn: 0 chức năng</span>
+        <div class="flex space-x-2">
+          <button type="button" onclick="dongModal('modal-phanquyen-user')" class="px-4 py-2 border border-slate-300 hover:bg-slate-50 rounded-xl font-semibold text-slate-600 transition">Hủy bỏ</button>
+          <button type="button" onclick="xacNhanLuuPhanQuyen()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-floppy-disk text-xs"></i>
+            <span>Lưu phân quyền</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -5999,6 +6169,10 @@ function formatVND(amount) {
     }
 
     function moModalQuanLyChiNhanh() {
+      if (typeof hasPermission === 'function' && !hasPermission('QL_CHINHANH')) {
+        showNotification("Bạn không có quyền truy cập Quản lý chi nhánh!", true);
+        return;
+      }
       const container = document.getElementById('ds-chinhanh-modal-container');
       if (!container) return;
       
@@ -6610,6 +6784,41 @@ function formatVND(amount) {
 
   function switchTab(tabId) {
       console.log("Switching tab to:", tabId);
+      
+      // Kiểm tra quyền hạn trước khi chuyển tab
+      const tabPermMap = {
+        'tab-tongquan': 'DASHBOARD',
+        'tab-banhang': 'BAN_HANG',
+        'tab-pos': 'BAN_HANG',
+        'tab-dathang': 'DAT_HANG',
+        'tab-trahang': 'TRA_HANG',
+        'tab-khachhang': 'KHACH_HANG',
+        'tab-lichsudonhang': 'LICHSU_DONHANG',
+        'tab-hanghoa': 'HANG_HOA',
+        'tab-thietlapgia': 'BANG_GIA',
+        'tab-kiemkho': 'KIEM_KHO',
+        'tab-xuathuy': 'XUAT_HUY',
+        'tab-chuyenkho': 'CHUYEN_KHO',
+        'tab-ncc': 'NCC',
+        'tab-nhaphang': 'NHAP_HANG',
+        'tab-tranhap': 'TRA_NHAP',
+        'tab-soquy-tienmat': 'SOQUY_TIENMAT',
+        'tab-soquy-taikhoan': 'SOQUY_NGANHANG',
+        'tab-soquy': 'SOQUY_TONGHOP',
+        'tab-bc-banhang': 'BC_BANHANG',
+        'tab-bc-hanghoa': 'BC_HANGHOA',
+        'tab-bc-khachhang': 'BC_KHACHHANG',
+        'tab-bc-ncc': 'BC_NCC',
+        'tab-bc-taichinh': 'BC_TAICHINH',
+        'tab-baocao-chung': 'BC_BANHANG',
+        'tab-nguoidung': 'NGUOI_DUNG',
+        'tab-phanquyen': 'PHAN_QUYEN'
+      };
+      const reqPerm = tabPermMap[tabId];
+      if (reqPerm && typeof hasPermission === 'function' && !hasPermission(reqPerm)) {
+        showNotification("Bạn không có quyền truy cập chức năng này!", true);
+        return;
+      }
       
       // Determine which top-level section to show
       let targetSectionId = tabId;
@@ -13252,7 +13461,7 @@ function formatVND(amount) {
         const perms = u.permissions || [];
         const isAll = perms.includes("ALL");
         const badgeQuyen = isAll ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700">Toàn quyền Admin</span>'
-                                 : `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-100">${perms.length} nhóm quyền</span>`;
+                                 : `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-100">${perms.length} tính năng</span>`;
 
         const roleColors = { 'Admin': 'bg-purple-100 text-purple-700', 'Quản lý kho': 'bg-amber-100 text-amber-700', 'Thu ngân': 'bg-blue-100 text-blue-700', 'Kế toán': 'bg-emerald-100 text-emerald-700' };
         const isLocked = u.trangThai === 'TamKhoa';
@@ -13329,6 +13538,77 @@ function formatVND(amount) {
     
   
 
+    // Cấu hình danh mục 24 phân quyền chi tiết của toàn bộ hệ thống
+    const PERMISSION_CONFIG = [
+      { id: 'perm-tongquan', key: 'DASHBOARD', group: 1, label: '1.1 Tổng quan & Dashboard' },
+      
+      { id: 'perm-dh-pos', key: 'BAN_HANG', group: 2, label: '2.1 Thu ngân POS bán lẻ' },
+      { id: 'perm-dh-dathang', key: 'DAT_HANG', group: 2, label: '2.2 Quản lý Đặt hàng' },
+      { id: 'perm-dh-trahang', key: 'TRA_HANG', group: 2, label: '2.3 Khách trả hàng' },
+      { id: 'perm-dh-khachhang', key: 'KHACH_HANG', group: 2, label: '2.4 Khách hàng & Công nợ' },
+      { id: 'perm-dh-lichsu', key: 'LICHSU_DONHANG', group: 2, label: '2.5 Lịch sử đơn hàng' },
+      
+      { id: 'perm-hh-danhmuc', key: 'HANG_HOA', group: 3, label: '3.1 Danh mục hàng & tồn kho' },
+      { id: 'perm-hh-banggia', key: 'BANG_GIA', group: 3, label: '3.2 Thiết lập bảng giá' },
+      { id: 'perm-hh-kiemkho', key: 'KIEM_KHO', group: 3, label: '3.3 Kiểm kho & Cân bằng tồn' },
+      { id: 'perm-hh-xuathuy', key: 'XUAT_HUY', group: 3, label: '3.4 Xuất hủy hàng hỏng lỗi' },
+      { id: 'perm-hh-chuyenkho', key: 'CHUYEN_KHO', group: 3, label: '3.5 Chuyển hàng chi nhánh' },
+      
+      { id: 'perm-mh-ncc', key: 'NCC', group: 4, label: '4.1 Quản lý Nhà cung cấp' },
+      { id: 'perm-mh-nhaphang', key: 'NHAP_HANG', group: 4, label: '4.2 Đơn nhập hàng NCC' },
+      { id: 'perm-mh-tranhap', key: 'TRA_NHAP', group: 4, label: '4.3 Trả hàng Nhà cung cấp' },
+      
+      { id: 'perm-sq-tienmat', key: 'SOQUY_TIENMAT', group: 5, label: '5.1 Sổ quỹ tiền mặt' },
+      { id: 'perm-sq-nganhang', key: 'SOQUY_NGANHANG', group: 5, label: '5.2 Sổ quỹ tài khoản NH' },
+      { id: 'perm-sq-tonghop', key: 'SOQUY_TONGHOP', group: 5, label: '5.3 Tổng hợp dòng tiền' },
+      
+      { id: 'perm-bc-banhang', key: 'BC_BANHANG', group: 6, label: '6.1 Báo cáo bán hàng doanh thu' },
+      { id: 'perm-bc-hanghoa', key: 'BC_HANGHOA', group: 6, label: '6.2 Báo cáo hàng hóa & tồn' },
+      { id: 'perm-bc-khachhang', key: 'BC_KHACHHANG', group: 6, label: '6.3 Báo cáo khách hàng & nợ' },
+      { id: 'perm-bc-ncc', key: 'BC_NCC', group: 6, label: '6.4 Báo cáo NCC & nhập hàng' },
+      { id: 'perm-bc-taichinh', key: 'BC_TAICHINH', group: 6, label: '6.5 Báo cáo tài chính & lãi' },
+      
+      { id: 'perm-ht-nguoidung', key: 'NGUOI_DUNG', group: 7, label: '7.1 Danh sách người dùng' },
+      { id: 'perm-ht-phanquyen', key: 'PHAN_QUYEN', group: 7, label: '7.2 Ma trận phân quyền' },
+      { id: 'perm-ht-chinhanh', key: 'QL_CHINHANH', group: 7, label: 'Quản lý cấu hình Chi nhánh' },
+      { id: 'perm-ht-caidat', key: 'CAIDAT_HETHONG', group: 7, label: 'Cài đặt thông số hệ thống' }
+    ];
+
+    function toggleNhomPhanQuyen(groupId, checked) {
+      document.querySelectorAll(`#modal-phanquyen-user input[type="checkbox"][data-group="${groupId}"]`).forEach(cb => {
+        cb.checked = checked;
+      });
+      capNhatDemPhanQuyen();
+    }
+
+    function dongBoNhomPhanQuyen(groupId) {
+      const cbs = document.querySelectorAll(`#modal-phanquyen-user input[type="checkbox"][data-group="${groupId}"]`);
+      const grpCb = document.getElementById(`perm-grp-${groupId}`);
+      if (grpCb && cbs.length > 0) {
+        const checkedCount = Array.from(cbs).filter(c => c.checked).length;
+        grpCb.checked = (checkedCount === cbs.length);
+        grpCb.indeterminate = (checkedCount > 0 && checkedCount < cbs.length);
+      }
+      capNhatDemPhanQuyen();
+    }
+
+    function capNhatDemPhanQuyen() {
+      const itemCbs = document.querySelectorAll('#modal-phanquyen-user input[type="checkbox"][data-group]');
+      const checkedCount = Array.from(itemCbs).filter(c => c.checked).length;
+      const countLabel = document.getElementById('phanquyen-count-selected');
+      if (countLabel) {
+        countLabel.innerText = `Đã chọn: ${checkedCount} / ${itemCbs.length} tính năng`;
+      }
+    }
+
+    function toggleChonTatCaPhanQuyen(checked) {
+      document.querySelectorAll('#modal-phanquyen-user input[type="checkbox"]').forEach(cb => {
+        cb.checked = checked;
+        cb.indeterminate = false;
+      });
+      capNhatDemPhanQuyen();
+    }
+
     function moModalPhanQuyen(maNV) {
       const u = rawNguoiDungList.find(x => x.maNV === maNV);
       if (!u) return;
@@ -13337,63 +13617,97 @@ function formatVND(amount) {
       document.getElementById('phanquyen-user-subtitle').innerText = `Đang cấu hình: ${u.hoTen} (${u.username}) - Vai trò: ${u.vaiTro}`;
 
       const perms = u.permissions || [];
-      const isAll = perms.includes("ALL");
+      const isAll = perms.includes("ALL") || u.vaiTro === 'Admin';
 
-      document.querySelectorAll('#modal-phanquyen-user input[type="checkbox"]').forEach(cb => cb.checked = false);
+      toggleChonTatCaPhanQuyen(false);
 
       if (isAll) {
-        document.querySelectorAll('#modal-phanquyen-user input[type="checkbox"]').forEach(cb => cb.checked = true);
+        toggleChonTatCaPhanQuyen(true);
       } else {
-        if (perms.includes("DASHBOARD")) document.getElementById('perm-tongquan').checked = true;
-        if (perms.includes("HANG_HOA")) {
-          document.getElementById('perm-hanghoa').checked = true;
-          document.getElementById('perm-hh-danhmuc').checked = true;
+        PERMISSION_CONFIG.forEach(item => {
+          let has = perms.includes(item.key);
+          // Tương thích ngược với quyền cũ dạng nhóm
+          if (!has) {
+            if (item.key === 'DASHBOARD' && perms.includes('DASHBOARD')) has = true;
+            if (['BAN_HANG', 'DAT_HANG', 'TRA_HANG', 'KHACH_HANG', 'LICHSU_DONHANG'].includes(item.key) && perms.includes('DON_HANG')) has = true;
+            if (item.key === 'KHACH_HANG' && perms.includes('KHACH_HANG')) has = true;
+            if (['HANG_HOA', 'BANG_GIA', 'KIEM_KHO', 'XUAT_HUY', 'CHUYEN_KHO'].includes(item.key) && perms.includes('HANG_HOA')) has = true;
+            if (item.key === 'BANG_GIA' && perms.includes('BANG_GIA')) has = true;
+            if (item.key === 'KIEM_KHO' && perms.includes('KIEM_KHO')) has = true;
+            if (item.key === 'XUAT_HUY' && perms.includes('XUAT_HUY')) has = true;
+            if (item.key === 'CHUYEN_KHO' && perms.includes('CHUYEN_KHO')) has = true;
+            if (['NCC', 'NHAP_HANG', 'TRA_NHAP'].includes(item.key) && perms.includes('MUA_HANG')) has = true;
+            if (['SOQUY_TIENMAT', 'SOQUY_NGANHANG', 'SOQUY_TONGHOP'].includes(item.key) && perms.includes('SO_QUY')) has = true;
+            if (['BC_BANHANG', 'BC_HANGHOA', 'BC_KHACHHANG', 'BC_NCC', 'BC_TAICHINH'].includes(item.key) && perms.includes('BAO_CAO')) has = true;
+            if (['NGUOI_DUNG', 'PHAN_QUYEN', 'QL_CHINHANH', 'CAIDAT_HETHONG'].includes(item.key) && perms.includes('HETHONG')) has = true;
+          }
+          const el = document.getElementById(item.id);
+          if (el) el.checked = has;
+        });
+
+        for (let g = 1; g <= 7; g++) {
+          dongBoNhomPhanQuyen(g);
         }
-        if (perms.includes("BANG_GIA")) document.getElementById('perm-hh-banggia').checked = true;
-        if (perms.includes("KIEM_KHO")) document.getElementById('perm-hh-kiemkho').checked = true;
-        if (perms.includes("XUAT_HUY")) document.getElementById('perm-hh-xuathuy').checked = true;
-        if (perms.includes("MUA_HANG")) {
-          document.getElementById('perm-muahang').checked = true;
-          document.getElementById('perm-mh-ncc').checked = true;
-          document.getElementById('perm-mh-nhaphang').checked = true;
-          document.getElementById('perm-mh-tranhap').checked = true;
-        }
-        if (perms.includes("DON_HANG")) {
-          document.getElementById('perm-donhang').checked = true;
-          document.getElementById('perm-dh-pos').checked = true;
-        }
-        if (perms.includes("KHACH_HANG")) document.getElementById('perm-dh-khachhang').checked = true;
-        if (perms.includes("SO_QUY")) document.getElementById('perm-soquy').checked = true;
-        if (perms.includes("BAO_CAO")) document.getElementById('perm-baocao').checked = true;
-        if (perms.includes("HETHONG")) document.getElementById('perm-hethong').checked = true;
       }
 
       moModal('modal-phanquyen-user');
     }
 
     function apDungMauQuyen(loai) {
-      document.querySelectorAll('#modal-phanquyen-user input[type="checkbox"]').forEach(cb => cb.checked = false);
+      toggleChonTatCaPhanQuyen(false);
       if (loai === 'Admin') {
-        document.querySelectorAll('#modal-phanquyen-user input[type="checkbox"]').forEach(cb => cb.checked = true);
+        toggleChonTatCaPhanQuyen(true);
+      } else if (loai === 'QuanLy') {
+        const allowed = [
+          'DASHBOARD', 'BAN_HANG', 'DAT_HANG', 'TRA_HANG', 'KHACH_HANG', 'LICHSU_DONHANG',
+          'HANG_HOA', 'BANG_GIA', 'KIEM_KHO', 'XUAT_HUY', 'CHUYEN_KHO',
+          'NCC', 'NHAP_HANG', 'TRA_NHAP',
+          'SOQUY_TIENMAT', 'SOQUY_NGANHANG', 'SOQUY_TONGHOP',
+          'BC_BANHANG', 'BC_HANGHOA', 'BC_KHACHHANG', 'BC_NCC', 'BC_TAICHINH',
+          'QL_CHINHANH'
+        ];
+        PERMISSION_CONFIG.forEach(item => {
+          if (allowed.includes(item.key)) {
+            const el = document.getElementById(item.id);
+            if (el) el.checked = true;
+          }
+        });
       } else if (loai === 'Kho') {
-        document.getElementById('perm-hanghoa').checked = true;
-        document.getElementById('perm-hh-danhmuc').checked = true;
-        document.getElementById('perm-hh-kiemkho').checked = true;
-        document.getElementById('perm-hh-xuathuy').checked = true;
-        document.getElementById('perm-muahang').checked = true;
-        document.getElementById('perm-mh-nhaphang').checked = true;
-        document.getElementById('perm-baocao').checked = true;
+        const allowed = [
+          'HANG_HOA', 'BANG_GIA', 'KIEM_KHO', 'XUAT_HUY', 'CHUYEN_KHO',
+          'NCC', 'NHAP_HANG', 'TRA_NHAP',
+          'BC_HANGHOA', 'BC_NCC'
+        ];
+        PERMISSION_CONFIG.forEach(item => {
+          if (allowed.includes(item.key)) {
+            const el = document.getElementById(item.id);
+            if (el) el.checked = true;
+          }
+        });
       } else if (loai === 'ThuNgan') {
-        document.getElementById('perm-tongquan').checked = true;
-        document.getElementById('perm-donhang').checked = true;
-        document.getElementById('perm-dh-pos').checked = true;
-        document.getElementById('perm-dh-khachhang').checked = true;
+        const allowed = ['DASHBOARD', 'BAN_HANG', 'DAT_HANG', 'TRA_HANG', 'KHACH_HANG', 'LICHSU_DONHANG', 'SOQUY_TIENMAT'];
+        PERMISSION_CONFIG.forEach(item => {
+          if (allowed.includes(item.key)) {
+            const el = document.getElementById(item.id);
+            if (el) el.checked = true;
+          }
+        });
       } else if (loai === 'KeToan') {
-        document.getElementById('perm-tongquan').checked = true;
-        document.getElementById('perm-mh-ncc').checked = true;
-        document.getElementById('perm-dh-khachhang').checked = true;
-        document.getElementById('perm-soquy').checked = true;
-        document.getElementById('perm-baocao').checked = true;
+        const allowed = [
+          'DASHBOARD', 'KHACH_HANG', 'NCC',
+          'SOQUY_TIENMAT', 'SOQUY_NGANHANG', 'SOQUY_TONGHOP',
+          'BC_BANHANG', 'BC_HANGHOA', 'BC_KHACHHANG', 'BC_NCC', 'BC_TAICHINH'
+        ];
+        PERMISSION_CONFIG.forEach(item => {
+          if (allowed.includes(item.key)) {
+            const el = document.getElementById(item.id);
+            if (el) el.checked = true;
+          }
+        });
+      }
+
+      for (let g = 1; g <= 7; g++) {
+        dongBoNhomPhanQuyen(g);
       }
       showNotification(`Đã áp dụng mẫu quyền [${loai}]!`);
     }
@@ -13440,10 +13754,26 @@ function formatVND(amount) {
 
       if (!ma || !user || !ten) return showNotification("Vui lòng điền đủ Mã NV, Username và Họ tên!", true);
 
-      let perms = ["DASHBOARD", "DON_HANG", "KHACH_HANG"];
+      let perms = ["DASHBOARD", "BAN_HANG", "DAT_HANG", "TRA_HANG", "KHACH_HANG", "LICHSU_DONHANG", "SOQUY_TIENMAT"];
       if (vaiTro === 'Admin') perms = ["ALL"];
-      else if (vaiTro === 'Quản lý kho') perms = ["HANG_HOA", "KIEM_KHO", "XUAT_HUY", "MUA_HANG"];
-      else if (vaiTro === 'Kế toán') perms = ["SO_QUY", "BAO_CAO", "CONG_NO"];
+      else if (vaiTro === 'Quản lý chi nhánh') perms = [
+        "DASHBOARD", "BAN_HANG", "DAT_HANG", "TRA_HANG", "KHACH_HANG", "LICHSU_DONHANG",
+        "HANG_HOA", "BANG_GIA", "KIEM_KHO", "XUAT_HUY", "CHUYEN_KHO",
+        "NCC", "NHAP_HANG", "TRA_NHAP",
+        "SOQUY_TIENMAT", "SOQUY_NGANHANG", "SOQUY_TONGHOP",
+        "BC_BANHANG", "BC_HANGHOA", "BC_KHACHHANG", "BC_NCC", "BC_TAICHINH",
+        "QL_CHINHANH"
+      ];
+      else if (vaiTro === 'Quản lý kho') perms = [
+        "HANG_HOA", "BANG_GIA", "KIEM_KHO", "XUAT_HUY", "CHUYEN_KHO",
+        "NCC", "NHAP_HANG", "TRA_NHAP",
+        "BC_HANGHOA", "BC_NCC"
+      ];
+      else if (vaiTro === 'Kế toán') perms = [
+        "DASHBOARD", "KHACH_HANG", "NCC",
+        "SOQUY_TIENMAT", "SOQUY_NGANHANG", "SOQUY_TONGHOP",
+        "BC_BANHANG", "BC_HANGHOA", "BC_KHACHHANG", "BC_NCC", "BC_TAICHINH"
+      ];
 
       const payload = {
         maNV: ma,
@@ -13515,40 +13845,67 @@ function formatVND(amount) {
       const u = rawNguoiDungList.find(x => x.maNV === maNV);
       if (!u) return;
 
-      const checked = Array.from(document.querySelectorAll('#modal-phanquyen-user input[type="checkbox"]:checked'));
-      const total = document.querySelectorAll('#modal-phanquyen-user input[type="checkbox"]').length;
+      const itemCbs = document.querySelectorAll('#modal-phanquyen-user input[type="checkbox"][data-group]');
+      const total = itemCbs.length;
+      const checkedItems = Array.from(itemCbs).filter(c => c.checked);
 
       let perms = [];
-      if (checked.length === total) {
+      if (checkedItems.length === total) {
         perms = ["ALL"];
       } else {
-        if (document.getElementById('perm-tongquan').checked) perms.push("DASHBOARD");
-        if (document.getElementById('perm-hanghoa').checked || document.getElementById('perm-hh-danhmuc').checked) perms.push("HANG_HOA");
-        if (document.getElementById('perm-hh-banggia').checked) perms.push("BANG_GIA");
-        if (document.getElementById('perm-hh-kiemkho').checked) perms.push("KIEM_KHO");
-        if (document.getElementById('perm-hh-xuathuy').checked) perms.push("XUAT_HUY");
-        if (document.getElementById('perm-muahang').checked || document.getElementById('perm-mh-nhaphang').checked) perms.push("MUA_HANG");
-        if (document.getElementById('perm-donhang').checked || document.getElementById('perm-dh-pos').checked) perms.push("DON_HANG");
-        if (document.getElementById('perm-dh-khachhang').checked) perms.push("KHACH_HANG");
-        if (document.getElementById('perm-soquy').checked) perms.push("SO_QUY");
-        if (document.getElementById('perm-baocao').checked) perms.push("BAO_CAO");
-        if (document.getElementById('perm-hethong').checked) perms.push("HETHONG");
+        PERMISSION_CONFIG.forEach(item => {
+          const el = document.getElementById(item.id);
+          if (el && el.checked) {
+            perms.push(item.key);
+          }
+        });
       }
 
-      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-        supabaseClient.from('nguoi_dung').update({ quyen_han: perms }).eq('ma_nv', maNV);
+      // Giữ toàn quyền cho tài khoản root admin
+      if (u.username === 'admin' && !perms.includes('ALL')) {
+        perms = ["ALL"];
+        showNotification("Tài khoản quản trị viên chính (admin) luôn giữ toàn quyền hệ thống!", false);
       }
 
-      google.script.run.withSuccessHandler(function(res) {
-        if (res.success) {
-          u.permissions = perms;
-          dongModal('modal-phanquyen-user');
-          showNotification(`Đã lưu phân quyền người dùng thành công!`);
-          locDanhSachNguoiDung();
-        } else {
-          showNotification("Lỗi: " + res.error, true);
+      // Cập nhật bộ nhớ cục bộ
+      u.permissions = perms;
+
+      // Nếu đang chỉnh sửa quyền của chính tài khoản đang đăng nhập
+      if (currentUser && (currentUser.maNV === maNV || currentUser.username === u.username)) {
+        currentUser.permissions = perms;
+        const userJson = JSON.stringify(currentUser);
+        sessionStorage.setItem("erp_logged_user", userJson);
+        sessionStorage.setItem("tt_pos_logged_user", userJson);
+        if (localStorage.getItem("erp_logged_user")) {
+          localStorage.setItem("erp_logged_user", userJson);
+          localStorage.setItem("tt_pos_logged_user", userJson);
         }
-      }).apiCapNhatTrangThaiVaQuyenNguoiDung({ maNV: maNV, permissions: perms });
+        apDungPhuyenGiaoDien(perms);
+      }
+
+      // Đồng bộ trực tiếp lên Supabase PostgreSQL
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+          supabaseClient.from('nguoi_dung').update({ quyen_han: perms }).eq('ma_nv', maNV).then(({ error }) => {
+            if (error) console.warn("Lỗi lưu quyền Supabase:", error);
+          });
+        } catch (sbErr) {
+          console.warn("Lỗi gọi supabase update:", sbErr);
+        }
+      }
+
+      // Đồng bộ lên Google Apps Script
+      if (typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run.apiCapNhatTrangThaiVaQuyenNguoiDung === 'function') {
+        google.script.run.withSuccessHandler(function(res) {
+          if (res && !res.success) {
+            console.warn("Lỗi Google Script sync quyen:", res.error);
+          }
+        }).apiCapNhatTrangThaiVaQuyenNguoiDung({ maNV: maNV, permissions: perms });
+      }
+
+      dongModal('modal-phanquyen-user');
+      showNotification(`Đã lưu phân quyền chi tiết cho tài khoản [${u.username}] thành công!`);
+      locDanhSachNguoiDung();
     }
 
     function xuatExcelNguoiDung() {
@@ -14009,52 +14366,114 @@ function formatVND(amount) {
       apDungPhuyenGiaoDien(currentUser.permissions || []);
     }
 
-function apDungPhuyenGiaoDien(perms) {
-      // Nếu là Admin hoặc có quyền ALL -> Hiển thị toàn bộ tất cả các menu
-      if (!perms || perms.includes("ALL")) {
+    function hasPermission(permKey) {
+      if (!currentUser) return false;
+      if (currentUser.vaiTro === 'Admin') return true;
+      const perms = currentUser.permissions || [];
+      if (perms.includes('ALL')) return true;
+      if (perms.includes(permKey)) return true;
+
+      // Ánh xạ tương thích ngược quyền cũ dạng nhóm
+      const fallbackMap = {
+        'DASHBOARD': ['DASHBOARD'],
+        'BAN_HANG': ['DON_HANG'],
+        'DAT_HANG': ['DON_HANG'],
+        'TRA_HANG': ['DON_HANG'],
+        'KHACH_HANG': ['DON_HANG', 'KHACH_HANG'],
+        'LICHSU_DONHANG': ['DON_HANG'],
+        
+        'HANG_HOA': ['HANG_HOA'],
+        'BANG_GIA': ['HANG_HOA', 'BANG_GIA'],
+        'KIEM_KHO': ['HANG_HOA', 'KIEM_KHO'],
+        'XUAT_HUY': ['HANG_HOA', 'XUAT_HUY'],
+        'CHUYEN_KHO': ['HANG_HOA', 'CHUYEN_KHO'],
+        
+        'NCC': ['MUA_HANG', 'NCC'],
+        'NHAP_HANG': ['MUA_HANG', 'NHAP_HANG'],
+        'TRA_NHAP': ['MUA_HANG', 'TRA_NHAP'],
+        
+        'SOQUY_TIENMAT': ['SO_QUY'],
+        'SOQUY_NGANHANG': ['SO_QUY'],
+        'SOQUY_TONGHOP': ['SO_QUY'],
+        
+        'BC_BANHANG': ['BAO_CAO', 'DON_HANG'],
+        'BC_HANGHOA': ['BAO_CAO', 'HANG_HOA'],
+        'BC_KHACHHANG': ['BAO_CAO'],
+        'BC_NCC': ['BAO_CAO', 'MUA_HANG'],
+        'BC_TAICHINH': ['BAO_CAO'],
+        
+        'NGUOI_DUNG': ['HETHONG'],
+        'PHAN_QUYEN': ['HETHONG'],
+        'QL_CHINHANH': ['HETHONG'],
+        'CAIDAT_HETHONG': ['HETHONG']
+      };
+
+      const fallbacks = fallbackMap[permKey] || [];
+      return fallbacks.some(fb => perms.includes(fb));
+    }
+    window.hasPermission = hasPermission;
+
+    function apDungPhuyenGiaoDien(perms) {
+      // Nếu là Admin hoặc có quyền ALL -> Hiển thị toàn bộ tất cả các menu và nút chức năng
+      if (!perms || perms.includes("ALL") || (currentUser && currentUser.vaiTro === 'Admin')) {
         document.querySelectorAll('aside nav > div, aside nav > button').forEach(el => el.style.display = 'block');
+        const btnCn = document.getElementById('btn-header-ql-chinhanh');
+        if (btnCn) btnCn.style.display = 'block';
+        const btnCdGear = document.getElementById('btn-header-caidat-hethong-gear');
+        if (btnCdGear) btnCdGear.style.display = 'block';
+        const btnCdTop = document.getElementById('btn-header-caidat-hethong-top');
+        if (btnCdTop) btnCdTop.style.display = 'flex';
         return;
       }
 
-      // Danh sách ánh xạ từng nút menu con với mã quyền tương ứng trong hệ thống
+      // Danh sách ánh xạ 24 chức năng chi tiết và các nút header
       const permissionRules = {
-        'nav-tongquan': perms.includes("DASHBOARD"),
-        'nav-hanghoa': perms.includes("HANG_HOA"),
-        'nav-thietlapgia': perms.includes("BANG_GIA") || perms.includes("HANG_HOA"),
-        'nav-kiemkho': perms.includes("KIEM_KHO"),
-        'nav-xuathuy': perms.includes("XUAT_HUY"),
+        'nav-tongquan': hasPermission('DASHBOARD'),
         
-        'nav-ncc': perms.includes("MUA_HANG"),
-        'nav-nhaphang': perms.includes("MUA_HANG"),
-        'nav-tranhap': perms.includes("MUA_HANG"),
+        'nav-banhang': hasPermission('BAN_HANG'),
+        'nav-dathang': hasPermission('DAT_HANG'),
+        'nav-trahang': hasPermission('TRA_HANG'),
+        'nav-khachhang': hasPermission('KHACH_HANG'),
+        'nav-lichsudonhang': hasPermission('LICHSU_DONHANG'),
         
-        'nav-dathang': perms.includes("DON_HANG"),
-        'nav-banhang': perms.includes("DON_HANG"),
-        'nav-trahang': perms.includes("DON_HANG"),
-        'nav-khachhang': perms.includes("KHACH_HANG") || perms.includes("DON_HANG"),
+        'nav-hanghoa': hasPermission('HANG_HOA'),
+        'nav-thietlapgia': hasPermission('BANG_GIA'),
+        'nav-kiemkho': hasPermission('KIEM_KHO'),
+        'nav-xuathuy': hasPermission('XUAT_HUY'),
+        'nav-chuyenkho': hasPermission('CHUYEN_KHO'),
         
-        'nav-soquy-tienmat': perms.includes("SO_QUY"),
-        'nav-soquy-taikhoan': perms.includes("SO_QUY"),
-        'nav-soquy': perms.includes("SO_QUY"),
+        'nav-ncc': hasPermission('NCC'),
+        'nav-nhaphang': hasPermission('NHAP_HANG'),
+        'nav-tranhap': hasPermission('TRA_NHAP'),
         
-        'nav-bc-banhang': perms.includes("BAO_CAO") || perms.includes("DON_HANG"),
-        'nav-bc-hanghoa': perms.includes("BAO_CAO") || perms.includes("HANG_HOA"),
-        'nav-bc-khachhang': perms.includes("BAO_CAO"),
-        'nav-bc-ncc': perms.includes("BAO_CAO") || perms.includes("MUA_HANG"),
-        'nav-bc-taichinh': perms.includes("BAO_CAO"),
+        'nav-soquy-tienmat': hasPermission('SOQUY_TIENMAT'),
+        'nav-soquy-taikhoan': hasPermission('SOQUY_NGANHANG'),
+        'nav-soquy': hasPermission('SOQUY_TONGHOP'),
         
-        'nav-nguoidung': perms.includes("HETHONG"),
-        'nav-phanquyen': perms.includes("HETHONG")
+        'nav-bc-banhang': hasPermission('BC_BANHANG'),
+        'nav-bc-hanghoa': hasPermission('BC_HANGHOA'),
+        'nav-bc-khachhang': hasPermission('BC_KHACHHANG'),
+        'nav-bc-ncc': hasPermission('BC_NCC'),
+        'nav-bc-taichinh': hasPermission('BC_TAICHINH'),
+        
+        'nav-nguoidung': hasPermission('NGUOI_DUNG'),
+        'nav-phanquyen': hasPermission('PHAN_QUYEN'),
+
+        'btn-header-ql-chinhanh': hasPermission('QL_CHINHANH'),
+        'btn-header-caidat-hethong-gear': hasPermission('CAIDAT_HETHONG'),
+        'btn-header-caidat-hethong-top': hasPermission('CAIDAT_HETHONG')
       };
 
-      // 1. Duyệt qua từng nút menu con và ẩn/hiện dựa trên quyền
-      let hasAnyVisibleChild = false;
+      // 1. Duyệt qua từng nút menu con và nút header để ẩn/hiện theo quyền
       Object.keys(permissionRules).forEach(navId => {
         const btn = document.getElementById(navId);
         if (btn) {
           const allowed = permissionRules[navId];
-          btn.style.display = allowed ? 'block' : 'none';
-          if (allowed) hasAnyVisibleChild = true;
+          if (navId === 'btn-header-caidat-hethong-top') {
+            btn.style.display = allowed ? 'flex' : 'none';
+          } else {
+            btn.style.display = allowed ? 'block' : 'none';
+          }
         }
       });
 
@@ -14066,20 +14485,32 @@ function apDungPhuyenGiaoDien(perms) {
           subButtons.forEach(sub => {
             if (sub.style.display !== 'none') visibleSubCount++;
           });
-          // Nếu nhóm có ít nhất 1 mục con được phép xem thì hiện nhóm cha, ngược lại ẩn đi
           groupDiv.style.display = visibleSubCount > 0 ? 'block' : 'none';
         }
       });
 
-      // 3. Tự động chuyển hướng về tab đầu tiên hợp lệ mà user này được xem
+      // 3. Tự động chuyển hướng về tab đầu tiên hợp lệ nếu tab hiện tại bị ẩn
       setTimeout(() => {
         const firstVisibleBtn = document.querySelector('aside nav button[id^="nav-"]:not([style*="display: none"])');
         if (firstVisibleBtn) {
-          const tabMatch = firstVisibleBtn.id.replace('nav-', '');
-          switchTab('tab-' + tabMatch);
+          const activeSec = document.querySelector('main > section:not(.hidden)');
+          let needRedirect = false;
+          if (!activeSec) {
+            needRedirect = true;
+          } else {
+            const currentNavBtn = document.getElementById('nav-' + activeSec.id.replace('tab-', ''));
+            if (currentNavBtn && currentNavBtn.style.display === 'none') {
+              needRedirect = true;
+            }
+          }
+          if (needRedirect) {
+            const tabMatch = firstVisibleBtn.id.replace('nav-', '');
+            switchTab('tab-' + tabMatch);
+          }
         }
       }, 150);
     }
+    window.apDungPhuyenGiaoDien = apDungPhuyenGiaoDien;
  
     function dangXuatHeThong() {
       sessionStorage.removeItem("erp_logged_user");
@@ -18761,6 +19192,10 @@ function loadSoQuy(filter) {
     }
 
     function moModalCaiDatHeThong() {
+      if (typeof hasPermission === 'function' && !hasPermission('CAIDAT_HETHONG')) {
+        showNotification("Bạn không có quyền truy cập Cài đặt hệ thống!", true);
+        return;
+      }
       const chkGV = document.getElementById('setting-giavon-binhquan');
       if (chkGV) chkGV.checked = layCaiDatTinhGiaVonTB();
 
