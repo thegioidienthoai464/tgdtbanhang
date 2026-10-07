@@ -1967,6 +1967,11 @@ function getDashboardData(period, chiNhanh) {
           const rTT = colTT > -1 ? String(rows[i][colTT] || "") : "";
           if (rTT.includes("Hủy") || rTT.includes("Huy")) continue;
 
+          const rMa = colMa > -1 ? String(rows[i][colMa] || "").trim().toUpperCase() : "";
+          const rNV = colNV > -1 ? String(rows[i][colNV] || "").trim() : "";
+          const rNVLower = rNV.toLowerCase();
+          if (rMa.startsWith("PNH") || rMa.startsWith("DDH") || rNVLower === "hệ thống tự động" || rNVLower === "he thong tu dong") continue;
+
           let rNgay = colNgay > -1 ? rows[i][colNgay] : null;
           let rDateStr = "";
           if (rNgay instanceof Date) {
@@ -1975,7 +1980,6 @@ function getDashboardData(period, chiNhanh) {
             rDateStr = String(rNgay).slice(0, 10);
           }
 
-          const rMa = colMa > -1 ? String(rows[i][colMa] || "") : "";
           const isTra = rMa.startsWith("TH") || rTT.includes("Trả");
           const tien = colTien > -1 ? (Number(rows[i][colTien]) || 0) : 0;
 
@@ -2392,6 +2396,8 @@ function apiGetDanhSachDonHang() {
           if (!r || !r[0]) continue;
           let maDon = String(r[0] || "").trim();
           if (!maDon) continue;
+          let rNV = String(r[11] || "").trim().toLowerCase();
+          if (maDon.toUpperCase().startsWith("PNH") || maDon.toUpperCase().startsWith("DDH") || rNV === "hệ thống tự động" || rNV === "he thong tu dong") continue;
           seenMaDon.add(maDon.toUpperCase());
 
           let chiTiet = [];
@@ -3689,7 +3695,12 @@ function apiGetBaoCaoTongHop(filter) {
       }
 
       if (pass) {
-        let isTra = String(d.trangThai || "").includes("Trả") || String(d.maDonHang || "").startsWith("TH");
+        let maDon = String(d.maDonHang || "").trim().toUpperCase();
+        let nv = String(d.nhanVien || "Admin").trim();
+        let nvLower = nv.toLowerCase();
+        if (maDon.startsWith("PNH") || maDon.startsWith("DDH") || nvLower === "hệ thống tự động" || nvLower === "he thong tu dong") return;
+
+        let isTra = String(d.trangThai || "").includes("Trả") || maDon.startsWith("TH");
         let tt = Number(d.khachPhaiTra || d.tongTien || 0);
 
         if (isTra) {
