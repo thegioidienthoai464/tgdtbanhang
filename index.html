@@ -1721,7 +1721,7 @@
             </div>
             <div>
               <h2 class="font-extrabold text-slate-800 text-sm flex items-center space-x-2">
-                <span>4.3 Tiếp nhận Khách trả hàng & Hoàn tiền</span>
+                <span>2.3 Tiếp nhận Khách trả hàng & Hoàn tiền</span>
               </h2>
               <p class="text-[11px] text-slate-500">Tìm kiếm đơn hàng đã bán theo 7 tiêu chí để xử lý trả hàng và hoàn tiền tự động</p>
             </div>
@@ -1775,7 +1775,7 @@
               <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] font-bold sticky top-0 z-10 border-b border-slate-200">
                 <tr>
                   <th class="p-3 w-36">Mã Đơn / Ngày Bán</th>
-                  <th class="p-3 w-36">Chi Nhánh</th>
+                  <th class="p-3 w-48">Chi Nhánh</th>
                   <th class="p-3 w-48">Khách Hàng</th>
                   <th class="p-3">Sản Phẩm Trong Đơn & Serial/IMEI</th>
                   <th class="p-3 text-right w-32">Tổng Tiền</th>
@@ -5769,9 +5769,29 @@ function formatVND(amount) {
     function layTenChiNhanhDayDu(maHoacTen) {
       if (!maHoacTen) return rawChiNhanhList[0] ? `${rawChiNhanhList[0].ma}: ${rawChiNhanhList[0].ten}` : 'CN01: Trụ sở chính Thanh Miện';
       const str = String(maHoacTen).trim();
-      const found = (rawChiNhanhList || []).find(x => x.ma === str || `${x.ma}: ${x.ten}` === str || x.ten === str);
+      const cleanMa = layMaChiNhanh(str);
+      const found = (rawChiNhanhList || []).find(x => x.ma === str || x.ma === cleanMa || `${x.ma}: ${x.ten}` === str || x.ten === str || (str.includes(x.ma) && str.length > 2));
       if (found) return `${found.ma}: ${found.ten}`;
+      const matchColon = str.match(/^([A-Za-z0-9]+)\s*[:\-]\s*(.+)$/);
+      if (matchColon) return `${matchColon[1].toUpperCase()}: ${matchColon[2].trim()}`;
       return str;
+    }
+
+    // Lấy thông tin chi nhánh tách biệt (mã, tên rõ ràng, tên đầy đủ)
+    function layThongTinChiNhanh(maHoacTen) {
+      const dayDu = layTenChiNhanhDayDu(maHoacTen);
+      const cleanMa = layMaChiNhanh(maHoacTen || dayDu);
+      const found = (rawChiNhanhList || []).find(x => x.ma === cleanMa || x.ma === String(maHoacTen || '').trim());
+      let ten = found ? found.ten : '';
+      if (!ten) {
+        const parts = dayDu.split(/:\s*|\s+-\s+/);
+        ten = parts.length > 1 ? parts.slice(1).join(' - ') : dayDu;
+      }
+      return {
+        ma: cleanMa || 'CN01',
+        ten: ten || 'Trụ sở chính Thanh Miện',
+        dayDu: `${cleanMa || 'CN01'}: ${ten || 'Trụ sở chính Thanh Miện'}`
+      };
     }
 
     // 3. So khớp 2 chi nhánh có cùng thuộc 1 chi nhánh không
@@ -6255,6 +6275,24 @@ function formatVND(amount) {
       const cnObj = rawChiNhanhList.find(x => x.ma === currentChiNhanh) || rawChiNhanhList[0];
       const tenHienThi = cnObj ? `${cnObj.ma}: ${cnObj.ten}` : "CN01: Trụ sở chính Thanh Miện";
       const tenHienThiNgan = cnObj ? cnObj.ten : "Trụ sở chính";
+
+      // Cập nhật bộ lọc chi nhánh ở tab 2.3 Khách trả hàng
+      const filterTraHang = document.getElementById('filter-trahang-chinhanh');
+      if (filterTraHang) {
+        const curVal = filterTraHang.value || 'ALL';
+        filterTraHang.innerHTML = `
+          <option value="ALL">🌐 Tất cả chi nhánh</option>
+          <option value="CURRENT">📍 Chi nhánh hiện tại (${tenHienThi})</option>
+          ${allowedBranches.map(cn => `
+            <option value="${cn.ma}">🏢 ${cn.ma}: ${cn.ten}</option>
+          `).join('')}
+        `;
+        if ([...filterTraHang.options].some(o => o.value === curVal)) {
+          filterTraHang.value = curVal;
+        } else {
+          filterTraHang.value = 'ALL';
+        }
+      }
 
       // Cập nhật text hiển thị chi nhánh trên các chứng từ, form, dashboard, sổ quỹ
       ['nhap-chinhanh-display', 'tranhap-chinhanh-display', 'dathang-chinhanh-display', 'pos-chinhanh-display'].forEach(id => {
@@ -16451,11 +16489,17 @@ function loadSoQuy(filter) {
     }
 
     function initTraHangView() {
-      // 1. Reset ô tìm kiếm về trống để luôn hiển thị toàn bộ đơn hàng đã bán ngay khi mở mục 4.3
+      // 1. Đồng bộ dropdown bộ lọc chi nhánh nếu có dữ liệu chi nhánh
+      const filterCNEl = document.getElementById('filter-trahang-chinhanh');
+      if (filterCNEl && typeof rawChiNhanhList !== 'undefined' && rawChiNhanhList.length > 0) {
+        if (typeof capNhatDropdownChiNhanhToanHeThong === 'function') capNhatDropdownChiNhanhToanHeThong();
+      }
+
+      // 2. Reset ô tìm kiếm về trống để luôn hiển thị toàn bộ đơn hàng đã bán ngay khi mở mục 2.3
       const searchInput = document.getElementById('search-trahang-don');
       if (searchInput) searchInput.value = '';
 
-      // 2. Hiển thị ngay lập tức toàn bộ đơn hàng nếu đã có dữ liệu cache từ trước
+      // 3. Hiển thị ngay lập tức toàn bộ đơn hàng nếu đã có dữ liệu cache từ trước
       if (rawTraHangDonList && rawTraHangDonList.length > 0) {
         locDonHangTraHang();
       } else if (typeof rawDonHangList !== 'undefined' && rawDonHangList && rawDonHangList.length > 0) {
@@ -16463,7 +16507,7 @@ function loadSoQuy(filter) {
         locDonHangTraHang();
       }
 
-      // 3. Tải dữ liệu đơn hàng mới nhất từ Google Sheets
+      // 4. Tải dữ liệu đơn hàng mới nhất từ Google Sheets / Supabase
       taiLaiDonHangTraHang();
     }
 
@@ -16620,7 +16664,10 @@ function loadSoQuy(filter) {
         // 1. Mã đơn
         if (String(don.maDonHang || '').toLowerCase().includes(kwLower)) return true;
 
-        // 2. Chi nhánh
+        // 2. Chi nhánh (tìm cả theo mã chi nhánh và tên đầy đủ có dấu / không dấu)
+        const cnDayDu = typeof layTenChiNhanhDayDu === 'function' ? layTenChiNhanhDayDu(don.chiNhanh) : String(don.chiNhanh || '');
+        const cnNorm = removeVietnameseTones(cnDayDu);
+        if (cnDayDu.toLowerCase().includes(kwLower) || cnNorm.includes(kwClean)) return true;
         if (String(don.chiNhanh || '').toLowerCase().includes(kwLower)) return true;
 
         // 3. Mã khách
@@ -16694,6 +16741,9 @@ function loadSoQuy(filter) {
       }
 
       tbody.innerHTML = filtered.map(d => {
+        const cnInfo = typeof layThongTinChiNhanh === 'function' 
+          ? layThongTinChiNhanh(d.chiNhanh) 
+          : { ma: 'CN01', ten: 'Trụ sở chính Thanh Miện', dayDu: 'CN01: Trụ sở chính Thanh Miện' };
         let spHtml = '';
         if (Array.isArray(d.chiTietSanPham) && d.chiTietSanPham.length > 0) {
           spHtml = d.chiTietSanPham.map(sp => {
@@ -16733,10 +16783,15 @@ function loadSoQuy(filter) {
               <div class="text-[11px] text-slate-400 font-mono mt-0.5"><i class="fa-regular fa-clock mr-1"></i>${escapeHtml(d.ngayBan || 'N/A')}</div>
               ${d.nhanVien ? `<div class="text-[10px] text-slate-400 mt-0.5"><i class="fa-regular fa-user mr-1"></i>${escapeHtml(d.nhanVien)}</div>` : ''}
             </td>
-            <td class="p-3 align-top">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                <i class="fa-solid fa-store mr-1 text-[9px] text-blue-600"></i>${escapeHtml(d.chiNhanh || 'CN01')}
-              </span>
+            <td class="p-3 align-top" title="${escapeHtml(cnInfo.dayDu)}">
+              <div class="space-y-1">
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                  <i class="fa-solid fa-store mr-1 text-[9px] text-blue-500"></i>${escapeHtml(cnInfo.ma)}
+                </span>
+                <div class="text-xs font-bold text-slate-800 leading-snug">
+                  ${escapeHtml(cnInfo.ten)}
+                </div>
+              </div>
             </td>
             <td class="p-3 align-top">
               <div class="font-bold text-slate-800 text-xs">${escapeHtml(d.tenKH || 'Khách lẻ')}</div>
@@ -16786,6 +16841,8 @@ function loadSoQuy(filter) {
       document.getElementById('th-modal-madon').innerText = d.maDonHang;
       document.getElementById('th-modal-khachhang').innerText = `${d.tenKH} (${d.maKH || 'Khách lẻ'})`;
       document.getElementById('th-modal-sdt').innerText = d.soDienThoai || 'Chưa cập nhật';
+      const elModalCN = document.getElementById('th-modal-chinhanh');
+      if (elModalCN) elModalCN.innerText = typeof layTenChiNhanhDayDu === 'function' ? layTenChiNhanhDayDu(d.chiNhanh) : (d.chiNhanh || 'CN01');
       document.getElementById('th-modal-ngaymua').innerText = d.ngayBan || 'N/A';
       document.getElementById('th-modal-thungan').innerText = d.nhanVien || 'Quản trị viên';
       document.getElementById('th-modal-phi-khautru').value = 0;
@@ -17011,7 +17068,9 @@ function loadSoQuy(filter) {
       const lyDoChon = document.getElementById('th-modal-lydo-select')?.value || '';
       const ghiChuThem = document.getElementById('th-modal-ghichu')?.value.trim() || '';
       const lyDoTra = lyDoChon + (ghiChuThem ? ` (${ghiChuThem})` : '');
-      const chiNhanhHienTai = document.getElementById('select-chinhanh')?.value || 'CN01: Trụ sở chính Thanh Miện';
+      const chiNhanhHienTai = (typeof layTenChiNhanhDayDu === 'function' && currentChiNhanh)
+        ? layTenChiNhanhDayDu(currentChiNhanh)
+        : (document.getElementById('select-chinhanh')?.value || 'CN01: Trụ sở chính Thanh Miện');
       const maPhieuTraMoi = "TH" + Date.now().toString().slice(-6);
 
       const payload = {
@@ -17102,7 +17161,7 @@ function loadSoQuy(filter) {
       document.getElementById('in-th-madongoc').innerText = payload.maDonHangGoc;
       document.getElementById('in-th-ngay').innerText = res.ngayTra || new Date().toLocaleString();
       document.getElementById('in-th-khachhang').innerText = `${payload.tenKH} ${payload.soDienThoai ? ' - SĐT: ' + payload.soDienThoai : ''}`;
-      document.getElementById('in-th-chinhanh').innerText = payload.chiNhanh;
+      document.getElementById('in-th-chinhanh').innerText = typeof layTenChiNhanhDayDu === 'function' ? layTenChiNhanhDayDu(payload.chiNhanh) : (payload.chiNhanh || '');
       document.getElementById('in-th-nguoilap').innerText = payload.nhanVien;
       document.getElementById('in-th-hinhthuc').innerText = payload.hinhThucTT === 'TIEN_MAT' ? 'Tiền mặt' : `Chuyển khoản (${payload.nganHangChi || 'Ngân hàng'})`;
       document.getElementById('in-th-lydo').innerText = payload.lyDoTra || 'Khách trả hàng';
@@ -22025,7 +22084,7 @@ function loadSoQuy(filter) {
           </div>
 
           <!-- Thông tin tóm tắt đơn gốc -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200 flex-shrink-0 text-xs">
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200 flex-shrink-0 text-xs">
             <div>
               <span class="text-slate-400 block text-[11px]">Khách hàng:</span>
               <span id="th-modal-khachhang" class="font-bold text-slate-800"></span>
@@ -22033,6 +22092,10 @@ function loadSoQuy(filter) {
             <div>
               <span class="text-slate-400 block text-[11px]">Số điện thoại:</span>
               <span id="th-modal-sdt" class="font-semibold text-emerald-600 font-mono"></span>
+            </div>
+            <div>
+              <span class="text-slate-400 block text-[11px]">Chi nhánh mua:</span>
+              <span id="th-modal-chinhanh" class="font-bold text-blue-700"></span>
             </div>
             <div>
               <span class="text-slate-400 block text-[11px]">Ngày bán gốc:</span>
