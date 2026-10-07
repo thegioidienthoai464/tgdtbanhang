@@ -4525,32 +4525,46 @@
 
         queryBuilder.update = function(values) {
           console.log(`[SANDBOX TEST] Intercepted update vào [${tableName}]:`, values);
+          const makeP = () => Promise.resolve({ data: [values], error: null });
           return {
             eq: function(col, val) {
               updateInSandboxCache(tableName, col, val, values);
-              return Promise.resolve({ data: [values], error: null });
+              return makeP();
             },
             in: function(col, vals) {
-              return Promise.resolve({ data: [values], error: null });
+              return makeP();
             },
-            then: function(cb) {
-              return Promise.resolve({ data: [values], error: null }).then(cb);
+            then: function(onSuccess, onError) {
+              return makeP().then(onSuccess, onError);
+            },
+            catch: function(onError) {
+              return makeP().catch(onError);
+            },
+            finally: function(onFinally) {
+              return makeP().finally(onFinally);
             }
           };
         };
 
         queryBuilder.delete = function() {
           console.log(`[SANDBOX TEST] Intercepted delete từ [${tableName}]`);
+          const makeP = () => Promise.resolve({ data: [], error: null });
           return {
             eq: function(col, val) {
               deleteInSandboxCache(tableName, col, val);
-              return Promise.resolve({ data: [], error: null });
+              return makeP();
             },
             in: function(col, vals) {
-              return Promise.resolve({ data: [], error: null });
+              return makeP();
             },
-            then: function(cb) {
-              return Promise.resolve({ data: [], error: null }).then(cb);
+            then: function(onSuccess, onError) {
+              return makeP().then(onSuccess, onError);
+            },
+            catch: function(onError) {
+              return makeP().catch(onError);
+            },
+            finally: function(onFinally) {
+              return makeP().finally(onFinally);
             }
           };
         };
@@ -4599,10 +4613,40 @@
       key: "sb_publishable_kiCUjPVYWcQP7oyrsg3K7g_xySklDFY"
     };
 
+    function patchSupabasePrototypes(client) {
+      if (!client) return;
+      try {
+        const dummyQuery = client.from('__dummy__');
+        const dummyFilter = dummyQuery.select('*');
+        [dummyQuery, dummyFilter].forEach(builder => {
+          let proto = Object.getPrototypeOf(builder);
+          while (proto && proto !== Object.prototype) {
+            if (!proto.catch && typeof proto.then === 'function') {
+              proto.catch = function(rejectFn) {
+                return this.then(null, rejectFn);
+              };
+            }
+            if (!proto.finally && typeof proto.then === 'function') {
+              proto.finally = function(finallyFn) {
+                return this.then(
+                  res => Promise.resolve(finallyFn()).then(() => res),
+                  err => Promise.resolve(finallyFn()).then(() => { throw err; })
+                );
+              };
+            }
+            proto = Object.getPrototypeOf(proto);
+          }
+        });
+      } catch (e) {
+        console.warn("Lỗi patch prototype Supabase:", e);
+      }
+    }
+
     var supabaseClient = null;
     try {
       if (typeof supabase !== 'undefined' && supabase.createClient) {
         const rawClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+        patchSupabasePrototypes(rawClient);
         supabaseClient = wrapSupabaseWithSandbox(rawClient);
         console.log("⚡ Supabase Client đã được khởi tạo thành công!");
       }
@@ -5256,7 +5300,11 @@ function formatVND(amount) {
             sp.tonKho = Math.max(0, (Number(sp.tonKho) || 0) - (Number(item.soLuong) || 1));
             // Cập nhật tồn kho trên Supabase ngay lập tức
             if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-              supabaseClient.from('dm_hanghoa').update({ ton_kho: sp.tonKho }).eq('ma_hang', sp.maHang).catch(e => console.error("Lỗi cập nhật tồn kho Supabase:", e));
+              try {
+                supabaseClient.from('dm_hanghoa').update({ ton_kho: sp.tonKho }).eq('ma_hang', sp.maHang).then(() => {}, e => console.error("Lỗi cập nhật tồn kho Supabase:", e));
+              } catch(e) {
+                console.error("Lỗi cập nhật tồn kho Supabase:", e);
+              }
             }
           }
         });
@@ -5271,7 +5319,11 @@ function formatVND(amount) {
             }
           });
           if (soldImeis.length > 0) {
-            supabaseClient.from('kho_imei').update({ trang_thai: 'DaBan', ngay_xuat: ngayBanStr }).in('imei', soldImeis).catch(e => console.warn(e));
+            try {
+              supabaseClient.from('kho_imei').update({ trang_thai: 'DaBan', ngay_xuat: ngayBanStr }).in('imei', soldImeis).then(() => {}, e => console.warn(e));
+            } catch(e) {
+              console.warn(e);
+            }
           }
         }
 
@@ -5279,29 +5331,37 @@ function formatVND(amount) {
         if (kh && chenhLech !== 0) {
           kh.congNo = (Number(kh.congNo) || 0) + chenhLech;
           if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-            supabaseClient.from('dm_doitac').update({ cong_no: kh.congNo }).eq('ma_doi_tac', kh.maDoiTac).catch(e => console.warn("Lỗi update công nợ:", e));
+            try {
+              supabaseClient.from('dm_doitac').update({ cong_no: kh.congNo }).eq('ma_doi_tac', kh.maDoiTac).then(() => {}, e => console.warn("Lỗi update công nợ:", e));
+            } catch(e) {
+              console.warn("Lỗi update công nợ:", e);
+            }
           }
         }
 
         // 4. Lưu đơn hàng vào Supabase
         if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-          await supabaseClient.from('don_hang').upsert([{
-            ma_don_hang: String(orderPayload.maDonHang).slice(0, 50),
-            ngay_ban: ngayBanISO,
-            ma_kh: String(orderPayload.maKH || 'KL').slice(0, 50),
-            ten_kh: String(orderPayload.tenKH || 'Khách lẻ').slice(0, 255),
-            so_dien_thoai: String(orderPayload.soDienThoai || '').slice(0, 50),
-            chi_nhanh: String(orderPayload.chiNhanh || '').slice(0, 100),
-            tong_tien: Number(orderPayload.tongTien) || 0,
-            giam_gia: Number(orderPayload.giamGia) || 0,
-            khach_phai_tra: Number(orderPayload.khachPhaiTra) || 0,
-            khach_tra: Number(orderPayload.khachTra) || 0,
-            hinh_thuc_tt: String(orderPayload.hinhThucTT || 'TIEN_MAT').slice(0, 50),
-            ngan_hang_nhan: String(orderPayload.nganHangNhan || '').slice(0, 255),
-            chi_tiet_san_pham: orderPayload.chiTietSanPham || [],
-            trang_thai: "Hoàn thành",
-            nhan_vien: String(orderPayload.nhanVien || '').slice(0, 100)
-          }]).catch(e => console.error("Lỗi sync đơn Supabase:", e));
+          try {
+            await supabaseClient.from('don_hang').upsert([{
+              ma_don_hang: String(orderPayload.maDonHang).slice(0, 50),
+              ngay_ban: ngayBanISO,
+              ma_kh: String(orderPayload.maKH || 'KL').slice(0, 50),
+              ten_kh: String(orderPayload.tenKH || 'Khách lẻ').slice(0, 255),
+              so_dien_thoai: String(orderPayload.soDienThoai || '').slice(0, 50),
+              chi_nhanh: String(orderPayload.chiNhanh || '').slice(0, 100),
+              tong_tien: Number(orderPayload.tongTien) || 0,
+              giam_gia: Number(orderPayload.giamGia) || 0,
+              khach_phai_tra: Number(orderPayload.khachPhaiTra) || 0,
+              khach_tra: Number(orderPayload.khachTra) || 0,
+              hinh_thuc_tt: String(orderPayload.hinhThucTT || 'TIEN_MAT').slice(0, 50),
+              ngan_hang_nhan: String(orderPayload.nganHangNhan || '').slice(0, 255),
+              chi_tiet_san_pham: orderPayload.chiTietSanPham || [],
+              trang_thai: "Hoàn thành",
+              nhan_vien: String(orderPayload.nhanVien || '').slice(0, 100)
+            }]);
+          } catch(e) {
+            console.error("Lỗi sync đơn Supabase:", e);
+          }
         }
 
         // 5. GHI NHẬN SỔ QUỸ (Phiếu Thu) cho khoản tiền khách thanh toán
@@ -5355,7 +5415,11 @@ function formatVND(amount) {
 
         // Lưu phiếu thu vào Supabase / Sandbox
         if (listPhieuThu.length > 0 && typeof supabaseClient !== 'undefined' && supabaseClient) {
-          await supabaseClient.from('so_quy').upsert(listPhieuThu).catch(e => console.error("Lỗi sync so_quy:", e));
+          try {
+            await supabaseClient.from('so_quy').upsert(listPhieuThu);
+          } catch(e) {
+            console.error("Lỗi sync so_quy:", e);
+          }
         }
 
         // Cập nhật Sổ Quỹ bộ nhớ client ngay tức khắc
@@ -5391,7 +5455,9 @@ function formatVND(amount) {
         // Cập nhật Đơn Đặt Hàng nếu có liên kết
         if (typeof donDatHangDangXuLy !== 'undefined' && donDatHangDangXuLy) {
           if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-            supabaseClient.from('don_hang').update({ trang_thai: 'Hoàn thành' }).eq('ma_don_hang', donDatHangDangXuLy).catch(e => {});
+            try {
+              supabaseClient.from('don_hang').update({ trang_thai: 'Hoàn thành' }).eq('ma_don_hang', donDatHangDangXuLy).then(() => {}, e => {});
+            } catch(e) {}
           }
           if (typeof google !== 'undefined' && google?.script?.run && typeof google.script.run.apiCapNhatTrangThaiDonDatHang === 'function') {
             google.script.run.apiCapNhatTrangThaiDonDatHang(donDatHangDangXuLy, 'Hoàn thành');
@@ -7889,7 +7955,7 @@ function formatVND(amount) {
               ten_nhom: tenCha,
               ma_nhom_cha: "",
               ghi_chu: "Tự động tạo từ nhập hàng"
-            }]).catch(e => console.warn("Lỗi lưu nhóm cha:", e));
+            }]).then(() => {}, e => console.warn("Lỗi lưu nhóm cha:", e));
           }
           if (typeof google !== 'undefined' && google.script && google.script.run) {
             google.script.run.apiLuuNhomHang({ maNhom: newMaCha, tenNhom: tenCha, maNhomCha: "", ghiChu: "" });
@@ -7924,7 +7990,7 @@ function formatVND(amount) {
               ten_nhom: tenCon,
               ma_nhom_cha: maChaId,
               ghi_chu: "Tự động tạo từ nhập hàng"
-            }]).catch(e => console.warn("Lỗi lưu nhóm con:", e));
+            }]).then(() => {}, e => console.warn("Lỗi lưu nhóm con:", e));
           }
           if (typeof google !== 'undefined' && google.script && google.script.run) {
             google.script.run.apiLuuNhomHang({ maNhom: newMaCon, tenNhom: tenCon, maNhomCha: maChaId, ghiChu: "" });
@@ -8076,9 +8142,9 @@ function formatVND(amount) {
           // 1. Xóa trên Supabase
           if (supabaseClient) {
             supabaseClient.from('dm_hanghoa').delete().in('ma_hang', maList)
-              .catch(err => console.error("Lỗi xóa hàng hóa Supabase:", err));
+              .then(() => {}, err => console.error("Lỗi xóa hàng hóa Supabase:", err));
             supabaseClient.from('kho_imei').delete().in('ma_hang', maList)
-              .catch(err => console.error("Lỗi xóa IMEI Supabase:", err));
+              .then(() => {}, err => console.error("Lỗi xóa IMEI Supabase:", err));
           }
 
           // 2. Xóa trên Google Sheets
@@ -8146,7 +8212,7 @@ function formatVND(amount) {
       // 1. Cập nhật trên Supabase
       if (supabaseClient) {
         supabaseClient.from('dm_hanghoa').update({ ma_nhom: maNhomMoi }).in('ma_hang', maList)
-          .catch(err => console.error("Lỗi chuyển nhóm hàng Supabase:", err));
+          .then(() => {}, err => console.error("Lỗi chuyển nhóm hàng Supabase:", err));
       }
 
       // 2. Cập nhật trên Google Sheets
@@ -8407,7 +8473,7 @@ function formatVND(amount) {
               chi_nhanh: targetCN,
               trang_thai: 'TrongKho'
             }));
-            supabaseClient.from('kho_imei').upsert(imeiRows, { onConflict: 'imei' }).catch(e => console.warn("Lỗi lưu IMEI:", e));
+            supabaseClient.from('kho_imei').upsert(imeiRows, { onConflict: 'imei' }).then(() => {}, e => console.warn("Lỗi lưu IMEI:", e));
           }
         } catch(e) {}
       }
@@ -12664,7 +12730,7 @@ function formatVND(amount) {
               ma_chung_tu: String(payload.maChungTu || "").slice(0, 50),
               trang_thai: "DaThanhToan",
               ghi_chu: payload.ghiChu || ""
-            }]).catch(e => console.error("Lỗi sync phiếu sổ quỹ Supabase:", e));
+            }]).then(() => {}, e => console.error("Lỗi sync phiếu sổ quỹ Supabase:", e));
           }
           dongModal('modal-phieu-soquy');
           showNotification("Đã lưu phiếu sổ quỹ thành công!");
@@ -15578,7 +15644,7 @@ function loadSoQuy(filter) {
                 });
               });
               if (restoredImeis.length > 0) {
-                supabaseClient.from('kho_imei').upsert(restoredImeis, { onConflict: 'imei' }).catch(e => console.warn("Lỗi hoàn IMEI:", e));
+                supabaseClient.from('kho_imei').upsert(restoredImeis, { onConflict: 'imei' }).then(() => {}, e => console.warn("Lỗi hoàn IMEI:", e));
               }
             }
 
@@ -16174,7 +16240,7 @@ function loadSoQuy(filter) {
             }
           });
           if (imeiInserts.length > 0) {
-            supabaseClient.from('kho_imei').upsert(imeiInserts, { onConflict: 'imei' }).catch(e => console.warn("Lỗi lưu kho_imei:", e));
+            supabaseClient.from('kho_imei').upsert(imeiInserts, { onConflict: 'imei' }).then(() => {}, e => console.warn("Lỗi lưu kho_imei:", e));
           }
         }
       }
