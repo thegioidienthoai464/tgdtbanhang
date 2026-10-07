@@ -57,10 +57,46 @@ class CashbookViewModel extends ChangeNotifier {
   // 3. TỔNG TỒN QUỸ (Bao gồm Tiền mặt + Tiền tài khoản ngân hàng)
   double get totalFund => cashBalance + bankBalance;
 
+  // Tính số dư theo bộ lọc 1 hoặc nhiều chi nhánh
+  double filteredCashBalance(bool Function(String?) matchesBranch) {
+    final inc = _allTransactions
+        .where((t) => t.isIncome && _isTienMat(t.loaiQuy) && matchesBranch(t.chiNhanh))
+        .fold(0.0, (sum, t) => sum + t.soTien);
+    final exp = _allTransactions
+        .where((t) => t.isExpense && _isTienMat(t.loaiQuy) && matchesBranch(t.chiNhanh))
+        .fold(0.0, (sum, t) => sum + t.soTien);
+    return inc - exp;
+  }
+
+  double filteredBankBalance(bool Function(String?) matchesBranch) {
+    final inc = _allTransactions.where((t) {
+      if (!t.isIncome || _isTienMat(t.loaiQuy) || !matchesBranch(t.chiNhanh)) return false;
+      if (_selectedBankAccount != null) {
+        return _matchesBank(t, _selectedBankAccount!);
+      }
+      return true;
+    }).fold(0.0, (sum, t) => sum + t.soTien);
+
+    final exp = _allTransactions.where((t) {
+      if (!t.isExpense || _isTienMat(t.loaiQuy) || !matchesBranch(t.chiNhanh)) return false;
+      if (_selectedBankAccount != null) {
+        return _matchesBank(t, _selectedBankAccount!);
+      }
+      return true;
+    }).fold(0.0, (sum, t) => sum + t.soTien);
+
+    return inc - exp;
+  }
+
+  double filteredTotalFund(bool Function(String?) matchesBranch) {
+    return filteredCashBalance(matchesBranch) + filteredBankBalance(matchesBranch);
+  }
+
   // Thu chi theo danh sách đang hiển thị
   double get totalIncome => _displayedTransactions.where((t) => t.isIncome).fold(0.0, (sum, t) => sum + t.soTien);
   double get totalExpense => _displayedTransactions.where((t) => t.isExpense).fold(0.0, (sum, t) => sum + t.soTien);
   double get balance => totalIncome - totalExpense;
+
 
   static bool _isTienMat(String loaiQuy) {
     final up = loaiQuy.toUpperCase();
