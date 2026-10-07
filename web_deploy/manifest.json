@@ -1,0 +1,25 @@
+{
+  "name": "T&T POS - Quản Lý Bán Hàng & Kho",
+  "short_name": "T&T POS",
+  "description": "Hệ Thống Quản Lý Bán Hàng & Kho ERP T&T POS",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#d97706",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
