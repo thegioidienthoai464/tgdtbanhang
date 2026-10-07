@@ -239,7 +239,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.0.5</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.0.8</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -11978,9 +11978,10 @@ function timKiemKhachHangPOS(kw) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.0.5";
-    const APP_CLIENT_BUILD = 6;
+    const APP_CLIENT_VERSION = "1.0.8";
+    const APP_CLIENT_BUILD = 9;
     let dangHienThiModalCapNhat = false;
+    let thongTinPhienBanMoi = null;
 
     async function kiemTraCapNhatPhienBan(isManual = false) {
       try {
@@ -11996,8 +11997,15 @@ function timKiemKhachHangPOS(kw) {
         const data = await res.json();
         if (!data || typeof data.build_number !== 'number') return;
 
+        // Kiểm tra xem người dùng đã bỏ qua hoặc đã cập nhật bản build này trong phiên làm việc chưa
+        const dismissedBuild = parseInt(sessionStorage.getItem('tt_pos_dismissed_build') || '0', 10);
+
         // Nếu bản trên server mới hơn bản đang chạy trên trình duyệt
         if (data.build_number > APP_CLIENT_BUILD) {
+          if (!isManual && dismissedBuild >= data.build_number) {
+            // Đã cập nhật/bỏ qua trong phiên này, không lặp lại popup tự động để tránh kẹt người dùng
+            return;
+          }
           hienThiModalCapNhat(data);
         } else if (isManual) {
           showNotification(`Phần mềm đang ở phiên bản mới nhất (${APP_CLIENT_VERSION})!`);
@@ -12011,6 +12019,7 @@ function timKiemKhachHangPOS(kw) {
     function hienThiModalCapNhat(info) {
       if (dangHienThiModalCapNhat) return;
       dangHienThiModalCapNhat = true;
+      thongTinPhienBanMoi = info;
 
       const modal = document.getElementById('modal-capnhat-hethong');
       if (!modal) return;
@@ -12031,18 +12040,25 @@ function timKiemKhachHangPOS(kw) {
 
       const btnDismiss = document.getElementById('btn-update-dismiss');
       if (btnDismiss) {
-        if (info.force_update) {
-          btnDismiss.classList.add('hidden');
-        } else {
-          btnDismiss.classList.remove('hidden');
-        }
+        btnDismiss.classList.remove('hidden');
       }
 
       modal.classList.remove('hidden');
     }
 
+    function dongModalCapNhat() {
+      dangHienThiModalCapNhat = false;
+      if (thongTinPhienBanMoi && thongTinPhienBanMoi.build_number) {
+        sessionStorage.setItem('tt_pos_dismissed_build', String(thongTinPhienBanMoi.build_number));
+      }
+      const modal = document.getElementById('modal-capnhat-hethong');
+      if (modal) modal.classList.add('hidden');
+    }
+
     function thucHienCapNhatNgay() {
       showNotification("Đang làm mới và cập nhật phiên bản mới nhất...");
+      const targetBuild = (thongTinPhienBanMoi && thongTinPhienBanMoi.build_number) ? thongTinPhienBanMoi.build_number : 9;
+      sessionStorage.setItem('tt_pos_dismissed_build', String(targetBuild));
       if ('caches' in window) {
         caches.keys().then(names => {
           for (let n of names) caches.delete(n);
@@ -18267,6 +18283,11 @@ function loadSoQuy(filter) {
 <!-- ==================================================================== -->
 <div id="modal-capnhat-hethong" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[9999999] flex items-center justify-center p-4 hidden">
   <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-amber-300 relative text-xs">
+    <!-- Nút đóng nhanh (X) góc phải để không bao giờ bị kẹt -->
+    <button type="button" onclick="dongModalCapNhat()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition cursor-pointer" title="Đóng và tiếp tục sử dụng">
+      <i class="fa-solid fa-xmark text-sm"></i>
+    </button>
+
     <div class="text-center space-y-2">
       <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-amber-500/30">
         <i class="fa-solid fa-arrows-rotate text-2xl animate-spin" style="animation-duration: 4s;"></i>
@@ -18276,7 +18297,7 @@ function loadSoQuy(filter) {
           <i class="fa-solid fa-sparkles mr-1 text-amber-600"></i> PHIÊN BẢN MỚI
         </div>
         <h3 class="text-lg font-black text-slate-900 tracking-tight">Yêu Cầu Cập Nhật Hệ Thống</h3>
-        <p class="text-xs text-slate-500 font-medium">Đã có phiên bản mới <span id="update-modal-version" class="font-bold text-amber-600 font-mono">v1.0.3</span></p>
+        <p class="text-xs text-slate-500 font-medium">Đã có phiên bản mới <span id="update-modal-version" class="font-bold text-amber-600 font-mono">v1.0.8</span></p>
       </div>
     </div>
 
@@ -18301,8 +18322,8 @@ function loadSoQuy(filter) {
         <span>CẬP NHẬT NGAY (LÀM MỚI PHẦN MỀM)</span>
       </button>
 
-      <button type="button" id="btn-update-dismiss" onclick="dongModal('modal-capnhat-hethong')" class="w-full py-2.5 text-slate-400 hover:text-slate-600 text-[11px] font-semibold transition hidden">
-        Để sau (Không khuyến nghị)
+      <button type="button" id="btn-update-dismiss" onclick="dongModalCapNhat()" class="w-full py-2.5 text-slate-500 hover:text-slate-800 text-[11px] font-semibold rounded-xl hover:bg-slate-100 transition cursor-pointer">
+        Tiếp tục sử dụng phần mềm (Để sau)
       </button>
     </div>
   </div>
