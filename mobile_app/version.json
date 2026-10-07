@@ -1,9 +1,9 @@
 {
-  "version": "1.1.1",
-  "build_number": 12,
+  "version": "1.1.2",
+  "build_number": 13,
   "force_update": false,
-  "release_notes": "• Cho phép chọn 1 hoặc nhiều chi nhánh trực quan ngay tại mục Chỉ số hoạt động.\n• Bổ sung thanh nút chọn chi nhánh (Toàn hệ thống, CN01, CN02, CN03) trên Tổng quan, Kho, Đơn hàng, Sổ quỹ.\n• Lọc số dư quỹ, doanh số và tồn kho chính xác theo tổ hợp chi nhánh được chọn.\n• Form thêm khách hàng mới đầy đủ thông tin.\n• Mặc định bán cho khách lẻ mã KHACHLE trên cả điện thoại và máy tính.",
+  "release_notes": "• Tạo form thêm khách hàng mới đầy đủ thông tin (Mã KH, Tên KH, SĐT, Địa chỉ, Công nợ, Ghi chú) trực tiếp ngay trên POS.\n• Mặc định bán cho khách lẻ mã KHACHLE trên cả điện thoại và máy tính khi không nhập thông tin khách.\n• Chọn 1 hoặc nhiều chi nhánh để xem Tổng quan, Kho hàng, Đơn hàng, Sổ quỹ.\n• Đổi tài khoản ngân hàng hiển thị 1 tài khoản hoặc tất cả trong Sổ quỹ.\n• Thẻ tổng hợp quỹ tài chính hiển thị đầy đủ Tổng tồn quỹ (Tiền mặt + Ngân hàng).",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.1/TT_POS_v1.1.1.apk",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.1.1"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.2/TT_POS_v1.1.2.apk",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.1.2"
 }
