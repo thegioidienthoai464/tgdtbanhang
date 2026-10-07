@@ -13241,31 +13241,75 @@ let danhSachTamXuatExcel = [];
       if (el) el.innerText = selectedDonHangIds.length;
     }
 
-    function xoaMotDonHang(maDon) {
-      showConfirm("Xác nhận xóa đơn hàng", `Bạn có chắc chắn muốn xóa đơn hàng [${maDon}] không?`, () => {
-        google.script.run.withSuccessHandler(function(res) {
-          if (res && res.success) {
-            showNotification("Đã xóa đơn hàng thành công!");
-            loadLichSuDonHang();
-          } else {
-            showNotification("Lỗi: " + (res?.error || "Không xác định"), true);
+    async function xoaMotDonHang(maDon) {
+      showConfirm("Xác nhận xóa đơn hàng", `Bạn có chắc chắn muốn xóa đơn hàng [${maDon}] không? Thao tác này sẽ xóa đơn và phiếu thu liên quan.`, async () => {
+        try {
+          if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+            const { error: errDH } = await supabaseClient.from('don_hang').delete().eq('ma_don_hang', maDon);
+            if (errDH) console.warn("Lỗi xóa đơn Supabase:", errDH);
+            await supabaseClient.from('so_quy').delete().eq('ma_chung_tu', maDon);
           }
-        }).apiXoaDonHang([maDon]);
+        } catch (e) {
+          console.warn("Lỗi Supabase:", e);
+        }
+
+        if (typeof google !== 'undefined' && google?.script?.run) {
+          google.script.run.withSuccessHandler(function() {
+            finishDelete();
+          }).withFailureHandler(function() {
+            finishDelete();
+          }).apiXoaDonHang([maDon]);
+          return;
+        }
+
+        finishDelete();
+
+        function finishDelete() {
+          rawDonHangList = rawDonHangList.filter(d => d.maDonHang !== maDon);
+          const idx = selectedDonHangIds.indexOf(maDon);
+          if (idx > -1) selectedDonHangIds.splice(idx, 1);
+          showNotification(`Đã xóa đơn hàng [${maDon}] thành công!`);
+          locDanhSachDonHang();
+          if (typeof loadDashboard === 'function') loadDashboard();
+          if (typeof loadSoQuy === 'function') loadSoQuy();
+        }
       });
     }
 
-    function xoaCacDonHangChon() {
+    async function xoaCacDonHangChon() {
       if (!selectedDonHangIds.length) return showNotification("Vui lòng chọn ít nhất một đơn hàng để xóa!", true);
-      showConfirm("Xác nhận xóa hàng loạt", `Bạn có chắc chắn muốn xóa ${selectedDonHangIds.length} đơn hàng đã chọn không?`, () => {
-        google.script.run.withSuccessHandler(function(res) {
-          if (res && res.success) {
-            showNotification(`Đã xóa thành công ${res.count} đơn hàng!`);
-            selectedDonHangIds = [];
-            loadLichSuDonHang();
-          } else {
-            showNotification("Lỗi: " + (res?.error || "Không xác định"), true);
+      const dsXoa = [...selectedDonHangIds];
+      showConfirm("Xác nhận xóa hàng loạt", `Bạn có chắc chắn muốn xóa ${dsXoa.length} đơn hàng đã chọn không?`, async () => {
+        try {
+          if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+            for (const ma of dsXoa) {
+              await supabaseClient.from('don_hang').delete().eq('ma_don_hang', ma);
+              await supabaseClient.from('so_quy').delete().eq('ma_chung_tu', ma);
+            }
           }
-        }).apiXoaDonHang(selectedDonHangIds);
+        } catch (e) {
+          console.warn("Lỗi Supabase:", e);
+        }
+
+        if (typeof google !== 'undefined' && google?.script?.run) {
+          google.script.run.withSuccessHandler(function() {
+            finishBatch();
+          }).withFailureHandler(function() {
+            finishBatch();
+          }).apiXoaDonHang(dsXoa);
+          return;
+        }
+
+        finishBatch();
+
+        function finishBatch() {
+          rawDonHangList = rawDonHangList.filter(d => !dsXoa.includes(d.maDonHang));
+          selectedDonHangIds = [];
+          showNotification(`Đã xóa thành công ${dsXoa.length} đơn hàng!`);
+          locDanhSachDonHang();
+          if (typeof loadDashboard === 'function') loadDashboard();
+          if (typeof loadSoQuy === 'function') loadSoQuy();
+        }
       });
     }
 
