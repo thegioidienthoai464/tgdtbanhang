@@ -3,10 +3,12 @@ import '../../../data/models/order_model.dart';
 import '../../../data/models/product_model.dart';
 import '../../../data/models/partner_model.dart';
 import '../../../data/models/cashbook_model.dart';
+import '../../../data/models/bank_model.dart';
 import '../../../data/repositories/product_repository.dart';
 import '../../../data/repositories/order_repository.dart';
 import '../../../data/repositories/partner_repository.dart';
 import '../../../data/repositories/cashbook_repository.dart';
+import '../../../data/repositories/bank_repository.dart';
 import '../../../data/services/lan_printer_service.dart';
 
 class PosViewModel extends ChangeNotifier {
@@ -14,21 +16,27 @@ class PosViewModel extends ChangeNotifier {
   final OrderRepository _orderRepo = OrderRepository();
   final PartnerRepository _partnerRepo = PartnerRepository();
   final CashbookRepository _cashbookRepo = CashbookRepository();
+  final BankRepository _bankRepo = BankRepository();
 
   List<ProductModel> _allProducts = [];
   List<ProductModel> _filteredProducts = [];
   List<PartnerModel> _customers = [];
+  List<BankModel> _bankAccounts = [];
   final List<OrderItemModel> _cart = [];
+  
   PartnerModel? _selectedCustomer;
+  BankModel? _selectedBank;
   
   bool _isLoading = false;
   String _searchQuery = '';
-  String _paymentMethod = 'TIEN_MAT'; // 'TIEN_MAT', 'TAI_KHOAN', 'CON_NO'
+  String _paymentMethod = 'TIEN_MAT'; // 'TIEN_MAT', 'TAI_KHOAN', 'HON_HOP', 'CON_NO'
 
   List<ProductModel> get products => _filteredProducts;
   List<PartnerModel> get customers => _customers;
+  List<BankModel> get bankAccounts => _bankAccounts;
   List<OrderItemModel> get cart => _cart;
   PartnerModel? get selectedCustomer => _selectedCustomer;
+  BankModel? get selectedBank => _selectedBank;
   bool get isLoading => _isLoading;
   String get paymentMethod => _paymentMethod;
 
@@ -43,6 +51,10 @@ class PosViewModel extends ChangeNotifier {
       _allProducts = await _productRepo.fetchProducts();
       _filteredProducts = List.from(_allProducts);
       _customers = await _partnerRepo.fetchCustomers();
+      _bankAccounts = await _bankRepo.fetchBankAccounts();
+      if (_bankAccounts.isNotEmpty && _selectedBank == null) {
+        _selectedBank = _bankAccounts.first;
+      }
     } catch (e) {
       debugPrint("Lỗi tải dữ liệu POS: $e");
     } finally {
@@ -111,9 +123,39 @@ class PosViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSelectedBank(BankModel? bank) {
+    _selectedBank = bank;
+    notifyListeners();
+  }
+
   void setPaymentMethod(String method) {
     _paymentMethod = method;
     notifyListeners();
+  }
+
+  Future<PartnerModel?> createQuickCustomer(String name, String phone) async {
+    try {
+      final now = DateTime.now();
+      final ma = "KH${now.millisecondsSinceEpoch.toString().substring(7)}";
+      final newCust = PartnerModel(
+        maDoiTac: ma,
+        tenDoiTac: name.trim(),
+        soDienThoai: phone.trim(),
+        loaiDoiTac: 'KH',
+        congNo: 0,
+        trangThai: 'HoatDong',
+      );
+      final created = await _partnerRepo.createCustomer(newCust);
+      if (created != null) {
+        _customers.insert(0, created);
+        _selectedCustomer = created;
+        notifyListeners();
+        return created;
+      }
+    } catch (e) {
+      debugPrint("Lỗi tạo khách hàng nhanh: $e");
+    }
+    return null;
   }
 
   void clearCart() {
@@ -123,18 +165,39 @@ class PosViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Map<String, dynamic>> checkout({String? chiNhanh}) async {
+  Future<Map<String, dynamic>> checkout({
+    String? chiNhanh,
+    required double customerPaid,
+    required String paymentMethod,
+    BankModel? bankAccount,
+    double cashAmount = 0.0,
+    double bankTransferAmount = 0.0,
+    bool applySurplusToDebt = true,
+  }) async {
     if (_cart.isEmpty) return {'success': false, 'message': 'Giỏ hàng đang trống'};
+    
+    final total = subtotal;
+    final paid = customerPaid;
+    final debtDelta = total - paid; // > 0: khách thiếu nợ thêm; < 0: khách thừa
+
+    // Ràng buộc an toàn: Nếu khách thiếu nợ thì phải có thông tin khách hàng cụ thể
+    if (debtDelta > 0 && _selectedCustomer == null) {
+      return {
+        'success': false, 
+        'message': 'Khách còn thiếu tiền nợ. Vui lòng chọn khách hàng cụ thể để ghi nhận công nợ!'
+      };
+    }
+
     _isLoading = true;
     notifyListeners();
 
     try {
       final now = DateTime.now();
       final maDon = "HD${now.millisecondsSinceEpoch.toString().substring(5)}";
-      final tongTien = subtotal;
-      final daTra = _paymentMethod == 'CON_NO' ? 0.0 : tongTien;
-      final khachPhaiTra = tongTien;
       final branch = chiNhanh ?? 'CN01: Trụ sở chính';
+      final bankName = (paymentMethod == 'TAI_KHOAN' || paymentMethod == 'HON_HOP')
+          ? (bankAccount?.displayName ?? _selectedBank?.displayName)
+          : null;
 
       final order = OrderModel(
         maDonHang: maDon,
@@ -143,10 +206,11 @@ class PosViewModel extends ChangeNotifier {
         tenKH: _selectedCustomer?.tenDoiTac ?? 'Khách lẻ',
         soDienThoai: _selectedCustomer?.soDienThoai ?? '',
         chiNhanh: branch,
-        tongTien: tongTien,
-        khachPhaiTra: khachPhaiTra,
-        khachTra: daTra,
-        hinhThucTT: _paymentMethod,
+        tongTien: total,
+        khachPhaiTra: total,
+        khachTra: paid,
+        hinhThucTT: paymentMethod,
+        nganHangNhan: bankName,
         chiTietSanPham: List.from(_cart),
         trangThai: 'Hoàn thành',
       );
@@ -154,33 +218,92 @@ class PosViewModel extends ChangeNotifier {
       // 1. Lưu đơn hàng lên Supabase
       await _orderRepo.saveOrder(order);
 
-      // 2. Nếu khách nợ -> cập nhật công nợ
-      if (_paymentMethod == 'CON_NO' && _selectedCustomer != null) {
-        final newDebt = _selectedCustomer!.congNo + tongTien;
-        await _partnerRepo.updateDebt(_selectedCustomer!.maDoiTac, newDebt);
+      // 2. Cập nhật công nợ khách hàng (Thiếu nợ hoặc Trả thừa cấn trừ nợ)
+      if (_selectedCustomer != null) {
+        if (debtDelta > 0) {
+          // Khách trả thiếu -> cộng thêm vào công nợ
+          final newDebt = _selectedCustomer!.congNo + debtDelta;
+          await _partnerRepo.updateDebt(_selectedCustomer!.maDoiTac, newDebt);
+        } else if (debtDelta < 0 && applySurplusToDebt) {
+          // Khách trả thừa và chọn tính vào công nợ -> trừ bớt nợ cũ
+          final newDebt = _selectedCustomer!.congNo + debtDelta; // debtDelta là số âm
+          await _partnerRepo.updateDebt(_selectedCustomer!.maDoiTac, newDebt);
+        }
       }
 
-      // 3. Nếu khách trả tiền -> Ghi nhận vào Sổ Quỹ
-      if (daTra > 0) {
+      // 3. Ghi nhận vào Sổ Quỹ (so_quy)
+      if (paymentMethod == 'TIEN_MAT' && paid > 0) {
         final maPT = "PT${now.millisecondsSinceEpoch.toString().substring(6)}";
         final phieuThu = CashbookModel(
           maPhieu: maPT,
           chiNhanh: branch,
           loaiPhieu: 'THU',
-          loaiQuy: _paymentMethod,
+          loaiQuy: 'TIEN_MAT',
           ngayGD: now,
-          soTien: daTra,
+          soTien: paid,
           doiTuong: 'Khách hàng',
           maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KL',
           maChungTu: maDon,
-          ghiChu: 'Thu tiền bán hàng POS $maDon',
+          ghiChu: 'Thu tiền mặt bán hàng POS $maDon',
         );
         await _cashbookRepo.saveTransaction(phieuThu);
+      } else if (paymentMethod == 'TAI_KHOAN' && paid > 0) {
+        final maPT = "PT${now.millisecondsSinceEpoch.toString().substring(6)}";
+        final phieuThu = CashbookModel(
+          maPhieu: maPT,
+          chiNhanh: branch,
+          loaiPhieu: 'THU',
+          loaiQuy: bankName ?? 'TAI_KHOAN',
+          ngayGD: now,
+          soTien: paid,
+          doiTuong: 'Khách hàng',
+          maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KL',
+          maChungTu: maDon,
+          ghiChu: 'Thu chuyển khoản bán hàng POS $maDon',
+        );
+        await _cashbookRepo.saveTransaction(phieuThu);
+      } else if (paymentMethod == 'HON_HOP') {
+        // Thanh toán hỗn hợp: tách riêng phiếu thu tiền mặt và chuyển khoản
+        if (cashAmount > 0) {
+          final maPT1 = "PT${now.millisecondsSinceEpoch.toString().substring(6)}A";
+          final phieuThuTienMat = CashbookModel(
+            maPhieu: maPT1,
+            chiNhanh: branch,
+            loaiPhieu: 'THU',
+            loaiQuy: 'TIEN_MAT',
+            ngayGD: now,
+            soTien: cashAmount,
+            doiTuong: 'Khách hàng',
+            maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KL',
+            maChungTu: maDon,
+            ghiChu: 'Thu tiền mặt đơn hàng $maDon (Thanh toán hỗn hợp)',
+          );
+          await _cashbookRepo.saveTransaction(phieuThuTienMat);
+        }
+        if (bankTransferAmount > 0) {
+          final maPT2 = "PT${now.millisecondsSinceEpoch.toString().substring(6)}B";
+          final phieuThuBank = CashbookModel(
+            maPhieu: maPT2,
+            chiNhanh: branch,
+            loaiPhieu: 'THU',
+            loaiQuy: bankName ?? 'TAI_KHOAN',
+            ngayGD: now,
+            soTien: bankTransferAmount,
+            doiTuong: 'Khách hàng',
+            maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KL',
+            maChungTu: maDon,
+            ghiChu: 'Thu chuyển khoản đơn hàng $maDon (Thanh toán hỗn hợp)',
+          );
+          await _cashbookRepo.saveTransaction(phieuThuBank);
+        }
       }
 
       // 4. Trừ tồn kho sản phẩm
       for (final item in _cart) {
-        final prod = _allProducts.firstWhere((p) => p.maHang == item.maHang, orElse: () => ProductModel(maHang: item.maHang, tenHang: item.tenHang));
+        final prod = _allProducts.firstWhere(
+          (p) => p.maHang == item.maHang, 
+          orElse: () => ProductModel(maHang: item.maHang, tenHang: item.tenHang),
+        );
         final newStock = (prod.tonKho - item.soLuong).clamp(0.0, 999999.0);
         await _productRepo.updateStock(item.maHang, newStock);
       }
