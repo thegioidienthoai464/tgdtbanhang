@@ -5110,8 +5110,24 @@ function formatVND(amount) {
       });
     }
 
+    function resetPosSearchFields() {
+      const inpSearch = document.getElementById('pos-search');
+      if (inpSearch) inpSearch.value = '';
+      const dropSearch = document.getElementById('pos-search-dropdown');
+      if (dropSearch) { dropSearch.classList.add('hidden'); dropSearch.innerHTML = ''; }
+
+      const inpKH = document.getElementById('pos-kh-search');
+      if (inpKH) inpKH.value = '';
+      const inpMaKH = document.getElementById('pos-makh');
+      if (inpMaKH) inpMaKH.value = 'KL';
+      const dropKH = document.getElementById('pos-kh-dropdown');
+      if (dropKH) { dropKH.classList.add('hidden'); dropKH.innerHTML = ''; }
+      const inpHidden = document.getElementById('pos-makh-hidden');
+      if (inpHidden) inpHidden.value = '';
+    }
+
     function thayDoiKieuThanhToanPOS(type) {
-      const total = posCart.reduce((a, b) => a + (b.soLuong * b.donGia), 0);
+      const total = (posCart || []).reduce((a, b) => a + (b.soLuong * b.donGia), 0);
       const discount = Number(document.getElementById('pos-giamgia')?.value) || 0;
       const finalPrice = Math.max(0, total - discount);
       
@@ -5119,43 +5135,59 @@ function formatVND(amount) {
       const input = document.getElementById('pos-khachtra');
       
       if (type === 'FULL') {
-        box.classList.remove('hidden');
-        input.value = finalPrice;
-        input.disabled = true;
+        if (box) box.classList.remove('hidden');
+        if (input) {
+          input.value = finalPrice;
+          input.disabled = false; // Luôn cho phép thu ngân sửa đổi số tiền
+        }
       } else if (type === 'PARTIAL') {
-        box.classList.remove('hidden');
-        input.value = Math.round(finalPrice / 2); // Mặc định gợi ý trả trước 50%
-        input.disabled = false;
+        if (box) box.classList.remove('hidden');
+        if (input) {
+          input.value = Math.round(finalPrice / 2); // Mặc định gợi ý trả trước 50%
+          input.disabled = false;
+        }
       } else {
-        box.classList.add('hidden');
-        input.value = 0;
+        // Ghi nợ toàn bộ (DEBT)
+        if (box) box.classList.remove('hidden');
+        if (input) {
+          input.value = 0;
+          input.disabled = false;
+        }
       }
     }
 
     function tinhTienPOS() {
-      const total = posCart.reduce((a, b) => a + (b.soLuong * b.donGia), 0);
+      const total = (posCart || []).reduce((a, b) => a + (b.soLuong * b.donGia), 0);
       const discount = Number(document.getElementById('pos-giamgia')?.value) || 0;
       const finalPrice = Math.max(0, total - discount);
       
-      document.getElementById('pos-tongtien').innerText = total.toLocaleString() + ' đ';
-      document.getElementById('pos-khachphaitra').innerText = finalPrice.toLocaleString() + ' đ';
+      const elTong = document.getElementById('pos-tongtien');
+      if (elTong) elTong.innerText = total.toLocaleString() + ' đ';
+      const elPhaiTra = document.getElementById('pos-khachphaitra');
+      if (elPhaiTra) elPhaiTra.innerText = finalPrice.toLocaleString() + ' đ';
       
       const paymentType = document.getElementById('pos-loai-thanhtoan')?.value || 'FULL';
-      if (paymentType === 'FULL') {
-        const inputPay = document.getElementById('pos-khachtra');
-        if (inputPay) inputPay.value = finalPrice;
+      const inputPay = document.getElementById('pos-khachtra');
+      if (inputPay) {
+        if (paymentType === 'FULL') {
+          inputPay.value = finalPrice;
+        } else if (paymentType === 'DEBT') {
+          inputPay.value = 0;
+        }
+        inputPay.disabled = false;
       }
     }
 
-    function xacNhanThanhToanPOS() {
-      if (!posCart.length) return showNotification("Giỏ hàng đang trống!", true);
+    async function xacNhanThanhToanPOS() {
+      if (!posCart || !posCart.length) return showNotification("Giỏ hàng đang trống! Vui lòng chọn sản phẩm.", true);
       const maKH = document.getElementById('pos-makh')?.value || 'KL';
       
       const total = posCart.reduce((a, b) => a + (b.soLuong * b.donGia), 0);
       const discount = Number(document.getElementById('pos-giamgia')?.value) || 0;
       const finalPrice = Math.max(0, total - discount);
+      const loaiTT = document.getElementById('pos-loai-thanhtoan')?.value || 'FULL';
       let pay = Number(document.getElementById('pos-khachtra')?.value) || 0;
-      const hinhThucTTVal = document.getElementById('pos-hinhthuc').value;
+      const hinhThucTTVal = document.getElementById('pos-hinhthuc')?.value || 'TIEN_MAT';
 
       let tienMatHonHop = 0;
       let chuyenKhoanHonHop = 0;
@@ -5163,13 +5195,11 @@ function formatVND(amount) {
         tienMatHonHop = Number(document.getElementById('pos-tienmat-val')?.value) || 0;
         chuyenKhoanHonHop = Number(document.getElementById('pos-chuyenkhoan-val')?.value) || 0;
         pay = tienMatHonHop + chuyenKhoanHonHop;
-      }
-      
-      if (pay > finalPrice) {
-        return showNotification("Số tiền khách thanh toán không được lớn hơn tổng tiền phải trả!", true);
+      } else if (loaiTT === 'DEBT') {
+        pay = 0;
       }
 
-      // Khóa nút thanh toán
+      // Khóa nút thanh toán tránh bấm trùng
       const btnSubmit = document.getElementById('btn-thanh-toan-pos');
       if (btnSubmit) {
         btnSubmit.disabled = true;
@@ -5181,16 +5211,22 @@ function formatVND(amount) {
         ? (document.getElementById('pos-nganhang-nhan')?.value || 'Chuyển khoản ngân hàng') 
         : '';
 
-      const kh = (localData.doiTac || rawKHList || []).find(k => k.maDoiTac === maKH);
+      const kh = (typeof localData !== 'undefined' && localData.doiTac ? localData.doiTac : (typeof rawKHList !== 'undefined' ? rawKHList : [])).find(k => (k.maDoiTac || k.maKH) === maKH);
       const tenKH = kh ? kh.tenDoiTac : (document.getElementById('pos-kh-search')?.value || "Khách lẻ");
       const maDon = "HD" + Date.now().toString().slice(-8);
-      const ngayBan = new Date().toISOString().replace('T', ' ').slice(0, 19);
+      const ngayBanISO = new Date().toISOString();
+      const ngayBanStr = ngayBanISO.replace('T', ' ').slice(0, 19);
+
+      // Chênh lệch tiền (tiền thiếu hoặc thừa tính vào công nợ)
+      const chenhLech = finalPrice - pay; // > 0: nợ thêm, < 0: trả dư
 
       const orderPayload = {
         maDonHang: maDon,
-        ngayBan: ngayBan,
+        ngayBan: ngayBanStr,
         maKH: maKH,
         tenKH: tenKH,
+        soDienThoai: kh ? (kh.soDienThoai || '') : '',
+        chiNhanh: chiNhanhHienTai,
         tongTien: total,
         giamGia: discount,
         khachPhaiTra: finalPrice,
@@ -5201,161 +5237,234 @@ function formatVND(amount) {
         chuyenKhoanHonHop: chuyenKhoanHonHop,
         chiTietSanPham: JSON.parse(JSON.stringify(posCart)),
         trangThai: "Hoàn thành",
-        nhanVien: currentUser ? currentUser.hoTen : "Quản trị viên",
-        chiNhanh: chiNhanhHienTai
+        nhanVien: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.hoTen : "Quản trị viên"
       };
 
-      // 1. Trừ tồn kho sản phẩm local & theo chi nhánh bán hàng
-      const targetCNOrder = layMaChiNhanh(chiNhanhHienTai);
-      posCart.forEach(item => {
-        dieuChinhTonKhoChiNhanh(item.maHang, targetCNOrder, -item.soLuong);
-      });
-
-      // Cập nhật trạng thái IMEI đã bán trong Supabase kho_imei nếu có
-      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-        const soldImeis = [];
-        posCart.forEach(it => {
-          if (it.imeiStr) {
-            it.imeiStr.split(',').map(s => s.trim()).filter(Boolean).forEach(im => soldImeis.push(im));
+      try {
+        // 1. TRỪ TỒN KHO: Cả theo chi nhánh, bộ nhớ và Supabase
+        const targetCNOrder = (typeof layMaChiNhanh === 'function') ? layMaChiNhanh(chiNhanhHienTai) : 'CN01';
+        posCart.forEach(item => {
+          if (typeof dieuChinhTonKhoChiNhanh === 'function') {
+            dieuChinhTonKhoChiNhanh(item.maHang, targetCNOrder, -item.soLuong);
+          }
+          const cleanMa = String(item.maHang || '').trim().toUpperCase();
+          const sp = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) 
+            ? rawHangHoa.find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa) 
+            : null;
+          if (sp) {
+            sp.tonKho = Math.max(0, (Number(sp.tonKho) || 0) - (Number(item.soLuong) || 1));
+            // Cập nhật tồn kho trên Supabase ngay lập tức
+            if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+              supabaseClient.from('dm_hanghoa').update({ ton_kho: sp.tonKho }).eq('ma_hang', sp.maHang).catch(e => console.error("Lỗi cập nhật tồn kho Supabase:", e));
+            }
           }
         });
-        if (soldImeis.length > 0) {
-          supabaseClient.from('kho_imei').update({ trang_thai: 'DaBan', ngay_xuat: ngayBan }).in('imei', soldImeis).then(() => {});
-        }
-      }
+        if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
 
-      // 2. Cập nhật công nợ nếu khách còn thiếu
-      const noConLai = finalPrice - pay;
-      if (noConLai > 0 && kh) {
-        kh.congNo = (Number(kh.congNo) || 0) + noConLai;
-      }
-
-      // 3. Gửi đơn hàng lên Google Sheets & Sổ Quỹ
-      google.script.run.withSuccessHandler(function(res) {
-        if (btnSubmit) {
-          btnSubmit.disabled = false;
-          btnSubmit.innerHTML = '<i class="fa-solid fa-print mr-1.5"></i><span>THANH TOÁN & IN HÓA ĐƠN</span>';
-        }
-
-        if (res && res.success) {
-          showNotification(`Thanh toán thành công đơn [${maDon}]! ${noConLai > 0 ? '(Ghi nợ: ' + noConLai.toLocaleString() + ' đ)' : ''}`);
-
-          // Nếu đơn hàng này xuất phát từ Đơn Đặt Hàng (4.1), chuyển trạng thái Đơn Đặt Hàng sang 'Hoàn thành'
-          if (donDatHangDangXuLy) {
-            if (supabaseClient) {
-              supabaseClient.from('don_hang').update({ trang_thai: 'Hoàn thành' }).eq('ma_don_hang', donDatHangDangXuLy).then(() => {});
+        // 2. Cập nhật IMEI đã bán trong Supabase kho_imei
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          const soldImeis = [];
+          posCart.forEach(it => {
+            if (it.imeiStr) {
+              it.imeiStr.split(',').map(s => s.trim()).filter(Boolean).forEach(im => soldImeis.push(im));
             }
-            if (typeof google !== 'undefined' && google.script && google.script.run) {
-              google.script.run.apiCapNhatTrangThaiDonDatHang(donDatHangDangXuLy, 'Hoàn thành');
-            }
-            const ddh = (rawDonDatHangList || []).find(d => (d.maDonDat || d.maDon) === donDatHangDangXuLy);
-            if (ddh) ddh.trangThai = 'Hoàn thành';
-            donDatHangDangXuLy = null;
+          });
+          if (soldImeis.length > 0) {
+            supabaseClient.from('kho_imei').update({ trang_thai: 'DaBan', ngay_xuat: ngayBanStr }).in('imei', soldImeis).catch(e => console.warn(e));
           }
+        }
 
-          // Đồng bộ Supabase DonHang & SoQuy
-          if (supabaseClient) {
-            supabaseClient.from('don_hang').upsert([{
-              ma_don_hang: String(orderPayload.maDonHang).slice(0, 50),
-              ngay_ban: orderPayload.ngayBan || new Date().toISOString(),
-              ma_kh: String(orderPayload.maKH || 'KL').slice(0, 50),
-              ten_kh: String(orderPayload.tenKH || 'Khách lẻ').slice(0, 255),
-              so_dien_thoai: String(orderPayload.soDienThoai || '').slice(0, 50),
+        // 3. Cập nhật công nợ nếu khách nợ hoặc trả dư
+        if (kh && chenhLech !== 0) {
+          kh.congNo = (Number(kh.congNo) || 0) + chenhLech;
+          if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+            supabaseClient.from('dm_doitac').update({ cong_no: kh.congNo }).eq('ma_doi_tac', kh.maDoiTac).catch(e => console.warn("Lỗi update công nợ:", e));
+          }
+        }
+
+        // 4. Lưu đơn hàng vào Supabase
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          await supabaseClient.from('don_hang').upsert([{
+            ma_don_hang: String(orderPayload.maDonHang).slice(0, 50),
+            ngay_ban: ngayBanISO,
+            ma_kh: String(orderPayload.maKH || 'KL').slice(0, 50),
+            ten_kh: String(orderPayload.tenKH || 'Khách lẻ').slice(0, 255),
+            so_dien_thoai: String(orderPayload.soDienThoai || '').slice(0, 50),
+            chi_nhanh: String(orderPayload.chiNhanh || '').slice(0, 100),
+            tong_tien: Number(orderPayload.tongTien) || 0,
+            giam_gia: Number(orderPayload.giamGia) || 0,
+            khach_phai_tra: Number(orderPayload.khachPhaiTra) || 0,
+            khach_tra: Number(orderPayload.khachTra) || 0,
+            hinh_thuc_tt: String(orderPayload.hinhThucTT || 'TIEN_MAT').slice(0, 50),
+            ngan_hang_nhan: String(orderPayload.nganHangNhan || '').slice(0, 255),
+            chi_tiet_san_pham: orderPayload.chiTietSanPham || [],
+            trang_thai: "Hoàn thành",
+            nhan_vien: String(orderPayload.nhanVien || '').slice(0, 100)
+          }]).catch(e => console.error("Lỗi sync đơn Supabase:", e));
+        }
+
+        // 5. GHI NHẬN SỔ QUỸ (Phiếu Thu) cho khoản tiền khách thanh toán
+        const listPhieuThu = [];
+        if (hinhThucTTVal === 'HON_HOP') {
+          if (tienMatHonHop > 0) {
+            listPhieuThu.push({
               chi_nhanh: String(orderPayload.chiNhanh || '').slice(0, 100),
-              tong_tien: Number(orderPayload.tongTien) || 0,
-              giam_gia: Number(orderPayload.giamGia) || 0,
-              khach_phai_tra: Number(orderPayload.khachPhaiTra) || 0,
-              khach_tra: Number(orderPayload.khachTra) || 0,
-              hinh_thuc_tt: String(orderPayload.hinhThucTT || 'TIEN_MAT').slice(0, 50),
-              ngan_hang_nhan: String(orderPayload.nganHangNhan || '').slice(0, 255),
-              chi_tiet_san_pham: orderPayload.chiTietSanPham || [],
-              trang_thai: "Hoàn thành",
-              nhanVien: String(orderPayload.nhanVien || '').slice(0, 100)
-            }]).catch(e => console.error("Lỗi sync đơn Supabase:", e));
-
-            // Sync Sổ Quỹ (nếu thanh toán hỗn hợp -> 2 phiếu; nếu đơn -> 1 phiếu)
-            if (hinhThucTTVal === 'HON_HOP') {
-              if (tienMatHonHop > 0) {
-                supabaseClient.from('so_quy').upsert([{
-                  chi_nhanh: String(orderPayload.chiNhanh || '').slice(0, 100),
-                  ma_phieu: ("PT" + Date.now().toString().slice(-6) + "M").slice(0, 50),
-                  loai_phieu: "THU",
-                  loai_quy: "TIEN_MAT",
-                  ngay_gd: new Date().toISOString(),
-                  so_tien: tienMatHonHop,
-                  doi_tuong: "Khách hàng",
-                  ma_doi_tuong: orderPayload.maKH || "KL",
-                  ma_chung_tu: orderPayload.maDonHang,
-                  trang_thai: "DaThanhToan",
-                  ghi_chu: `Thu tiền mặt đơn hàng ${orderPayload.maDonHang} - KH: ${orderPayload.tenKH}`
-                }]).catch(e => console.error("Lỗi sync so_quy TM:", e));
-              }
-              if (chuyenKhoanHonHop > 0) {
-                supabaseClient.from('so_quy').upsert([{
-                  chi_nhanh: String(orderPayload.chiNhanh || '').slice(0, 100),
-                  ma_phieu: ("PT" + (Date.now()+1).toString().slice(-6) + "B").slice(0, 50),
-                  loai_phieu: "THU",
-                  loai_quy: "TAI_KHOAN",
-                  ngay_gd: new Date().toISOString(),
-                  so_tien: chuyenKhoanHonHop,
-                  doi_tuong: "Khách hàng",
-                  ma_doi_tuong: orderPayload.maKH || "KL",
-                  ma_chung_tu: orderPayload.maDonHang,
-                  trang_thai: "DaThanhToan",
-                  ghi_chu: `Thu chuyển khoản [${nganHangNhanChon}] đơn hàng ${orderPayload.maDonHang} - KH: ${orderPayload.tenKH}`
-                }]).catch(e => console.error("Lỗi sync so_quy NH:", e));
-              }
-            } else if (pay > 0) {
-              supabaseClient.from('so_quy').upsert([{
-                chi_nhanh: String(orderPayload.chiNhanh || '').slice(0, 100),
-                ma_phieu: ("PT" + Date.now().toString().slice(-6)).slice(0, 50),
-                loai_phieu: "THU",
-                loai_quy: hinhThucTTVal,
-                ngay_gd: new Date().toISOString(),
-                so_tien: pay,
-                doi_tuong: "Khách hàng",
-                ma_doi_tuong: orderPayload.maKH || "KL",
-                ma_chung_tu: orderPayload.maDonHang,
-                trang_thai: "DaThanhToan",
-                ghi_chu: `Thu tiền bán hàng đơn ${orderPayload.maDonHang} - KH: ${orderPayload.tenKH}` + (nganHangNhanChon ? ` [${nganHangNhanChon}]` : '')
-              }]).catch(e => console.error("Lỗi sync so_quy:", e));
-            }
+              ma_phieu: ("PT" + Date.now().toString().slice(-6) + "M").slice(0, 50),
+              loai_phieu: "THU",
+              loai_quy: "TIEN_MAT",
+              ngay_gd: ngayBanISO,
+              so_tien: tienMatHonHop,
+              doi_tuong: "Khách hàng",
+              ma_doi_tuong: orderPayload.maKH || "KL",
+              ma_chung_tu: orderPayload.maDonHang,
+              trang_thai: "DaThanhToan",
+              ghi_chu: `Thu tiền mặt đơn hàng ${orderPayload.maDonHang} - KH: ${orderPayload.tenKH}`
+            });
           }
-
-          // 👉 RESET GIAO DIỆN POS HOÀN TOÀN VỀ TRẠNG THÁI CHỜ NHẬP
-          posCart = [];
-          renderPosCart();
-          const inpKhSearch = document.getElementById('pos-kh-search');
-          if (inpKhSearch) inpKhSearch.value = '';
-          const inpMaKH = document.getElementById('pos-makh');
-          if (inpMaKH) inpMaKH.value = 'KL';
-          const inpHidden = document.getElementById('pos-makh-hidden');
-          if (inpHidden) inpHidden.value = '';
-          const inpBarcode = document.getElementById('pos-barcode-input') || document.getElementById('pos-search-item');
-          if (inpBarcode) inpBarcode.value = '';
-          const inpGiamGia = document.getElementById('pos-giamgia');
-          if (inpGiamGia) inpGiamGia.value = 0;
-          const inpKhachTra = document.getElementById('pos-khachtra');
-          if (inpKhachTra) inpKhachTra.value = 0;
-          const inpTM = document.getElementById('pos-tienmat-val');
-          if (inpTM) inpTM.value = 0;
-          const inpCK = document.getElementById('pos-chuyenkhoan-val');
-          if (inpCK) inpCK.value = 0;
-          document.getElementById('pos-hinhthuc').value = 'TIEN_MAT';
-          onChangeHinhThucTT('TIEN_MAT');
-        } else {
-          showNotification(res.error || "Lỗi thanh toán đơn hàng", true);
+          if (chuyenKhoanHonHop > 0) {
+            listPhieuThu.push({
+              chi_nhanh: String(orderPayload.chiNhanh || '').slice(0, 100),
+              ma_phieu: ("PT" + (Date.now()+1).toString().slice(-6) + "B").slice(0, 50),
+              loai_phieu: "THU",
+              loai_quy: "TAI_KHOAN",
+              ngay_gd: ngayBanISO,
+              so_tien: chuyenKhoanHonHop,
+              doi_tuong: "Khách hàng",
+              ma_doi_tuong: orderPayload.maKH || "KL",
+              ma_chung_tu: orderPayload.maDonHang,
+              trang_thai: "DaThanhToan",
+              ghi_chu: `Thu chuyển khoản [${nganHangNhanChon}] đơn hàng ${orderPayload.maDonHang} - KH: ${orderPayload.tenKH}`
+            });
+          }
+        } else if (pay > 0) {
+          listPhieuThu.push({
+            chi_nhanh: String(orderPayload.chiNhanh || '').slice(0, 100),
+            ma_phieu: ("PT" + Date.now().toString().slice(-6)).slice(0, 50),
+            loai_phieu: "THU",
+            loai_quy: hinhThucTTVal,
+            ngay_gd: ngayBanISO,
+            so_tien: pay,
+            doi_tuong: "Khách hàng",
+            ma_doi_tuong: orderPayload.maKH || "KL",
+            ma_chung_tu: orderPayload.maDonHang,
+            trang_thai: "DaThanhToan",
+            ghi_chu: `Thu tiền bán hàng đơn ${orderPayload.maDonHang} - KH: ${orderPayload.tenKH}` + (nganHangNhanChon ? ` [${nganHangNhanChon}]` : '')
+          });
         }
-      }).withFailureHandler(function(err) {
+
+        // Lưu phiếu thu vào Supabase / Sandbox
+        if (listPhieuThu.length > 0 && typeof supabaseClient !== 'undefined' && supabaseClient) {
+          await supabaseClient.from('so_quy').upsert(listPhieuThu).catch(e => console.error("Lỗi sync so_quy:", e));
+        }
+
+        // Cập nhật Sổ Quỹ bộ nhớ client ngay tức khắc
+        window.rawSoQuyAllRecords = window.rawSoQuyAllRecords || [];
+        listPhieuThu.forEach(pt => {
+          window.rawSoQuyAllRecords.unshift({
+            chiNhanh: pt.chi_nhanh,
+            maPhieu: pt.ma_phieu,
+            loaiPhieu: pt.loai_phieu,
+            loaiQuy: pt.loai_quy,
+            quyNguon: pt.loai_quy,
+            ngayGiaoDich: ngayBanStr,
+            ngayGD: ngayBanStr,
+            soTien: pt.so_tien,
+            doiTuong: pt.doi_tuong,
+            maDoiTuong: pt.ma_doi_tuong,
+            maChungTu: pt.ma_chung_tu,
+            trangThai: pt.trang_thai,
+            ghiChu: pt.ghi_chu,
+            lyDoThuChi: pt.ghi_chu
+          });
+        });
+        if (typeof loadDuLieuSoQuy === 'function') {
+          const currentQuy = typeof currentLoaiQuy !== 'undefined' ? currentLoaiQuy : (typeof currentQuyDangXem !== 'undefined' ? currentQuyDangXem : 'ALL');
+          loadDuLieuSoQuy(currentQuy);
+        }
+
+        // Thêm đơn hàng vào lịch sử client
+        if (typeof rawLichSuDonHang !== 'undefined' && Array.isArray(rawLichSuDonHang)) {
+          rawLichSuDonHang.unshift(orderPayload);
+        }
+
+        // Cập nhật Đơn Đặt Hàng nếu có liên kết
+        if (typeof donDatHangDangXuLy !== 'undefined' && donDatHangDangXuLy) {
+          if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+            supabaseClient.from('don_hang').update({ trang_thai: 'Hoàn thành' }).eq('ma_don_hang', donDatHangDangXuLy).catch(e => {});
+          }
+          if (typeof google !== 'undefined' && google?.script?.run && typeof google.script.run.apiCapNhatTrangThaiDonDatHang === 'function') {
+            google.script.run.apiCapNhatTrangThaiDonDatHang(donDatHangDangXuLy, 'Hoàn thành');
+          }
+          if (typeof rawDonDatHangList !== 'undefined' && Array.isArray(rawDonDatHangList)) {
+            const ddh = rawDonDatHangList.find(d => (d.maDonDat || d.maDon) === donDatHangDangXuLy);
+            if (ddh) ddh.trangThai = 'Hoàn thành';
+          }
+          donDatHangDangXuLy = null;
+        }
+
+        // Background sync lên Google Sheets
+        if (typeof google !== 'undefined' && google?.script?.run && typeof google.script.run.apiLuuDonHang === 'function') {
+          google.script.run
+            .withSuccessHandler(function() {})
+            .withFailureHandler(function(err) { console.warn("Lỗi sync background GAS:", err); })
+            .apiLuuDonHang(orderPayload);
+        }
+
+        // 👉 RESET GIAO DIỆN POS HOÀN TOÀN VỀ TRẠNG THÁI CHỜ NHẬP MỚI
+        posCart = [];
+        if (typeof renderPOSCart === 'function') renderPOSCart();
+
+        resetPosSearchFields();
+
+        const inpGiamGia = document.getElementById('pos-giamgia');
+        if (inpGiamGia) inpGiamGia.value = 0;
+        const inpKhachTra = document.getElementById('pos-khachtra');
+        if (inpKhachTra) {
+          inpKhachTra.value = 0;
+          inpKhachTra.disabled = false;
+        }
+        const inpTM = document.getElementById('pos-tienmat-val');
+        if (inpTM) inpTM.value = 0;
+        const inpCK = document.getElementById('pos-chuyenkhoan-val');
+        if (inpCK) inpCK.value = 0;
+        const elTong = document.getElementById('pos-tongtien');
+        if (elTong) elTong.innerText = '0 đ';
+        const elPhaiTra = document.getElementById('pos-khachphaitra');
+        if (elPhaiTra) elPhaiTra.innerText = '0 đ';
+
+        const selHinhThuc = document.getElementById('pos-hinhthuc');
+        if (selHinhThuc) {
+          selHinhThuc.value = 'TIEN_MAT';
+          if (typeof onChangeHinhThucTT === 'function') onChangeHinhThucTT('TIEN_MAT');
+        }
+        const selLoaiTT = document.getElementById('pos-loai-thanhtoan');
+        if (selLoaiTT) selLoaiTT.value = 'FULL';
+
+        // THÔNG BÁO THÀNH CÔNG RÕ RÀNG
+        let thongBao = `Đã thanh toán thành công đơn hàng [${maDon}]!`;
+        if (chenhLech > 0) {
+          thongBao += ` (Ghi nợ: ${chenhLech.toLocaleString()} đ)`;
+        } else if (chenhLech < 0) {
+          thongBao += ` (Tiền thừa: ${Math.abs(chenhLech).toLocaleString()} đ)`;
+        }
+        showNotification(thongBao, false);
+
+      } catch (errPOS) {
+        console.error("Lỗi trong quá trình thanh toán POS:", errPOS);
+        showNotification("Lỗi xử lý thanh toán: " + (errPOS.message || errPOS), true);
+      } finally {
         if (btnSubmit) {
           btnSubmit.disabled = false;
           btnSubmit.innerHTML = '<i class="fa-solid fa-print mr-1.5"></i><span>THANH TOÁN & IN HÓA ĐƠN</span>';
         }
-        showNotification("Lỗi kết nối máy chủ: " + err.message, true);
-      }).apiLuuDonHang(orderPayload);
+      }
     }
 
-function timKiemKhachHangPOS(kw) {
+    window.renderPosCart = function() {
+      if (typeof renderPOSCart === 'function') renderPOSCart();
+    };
+
+    function timKiemKhachHangPOS(kw) {
       const box = document.getElementById('pos-kh-dropdown');
       if (!box) return;
       
@@ -5371,10 +5480,26 @@ function timKiemKhachHangPOS(kw) {
         box.innerHTML = '<div class="p-3 text-slate-400 text-center text-xs">Đang tải danh sách khách hàng...</div>';
         box.classList.remove('hidden');
         
-        google.script.run.withSuccessHandler(function(list) {
-          rawKHList = list || [];
-          timKiemKhachHangPOS(kw); 
-        }).apiGetDanhSachDoiTac("KH");
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          supabaseClient.from('dm_doitac').select('*').eq('loai_doi_tac', 'KH').then(({ data }) => {
+            if (data && data.length > 0) {
+              rawKHList = data.map(d => ({
+                maDoiTac: d.ma_doi_tac,
+                tenDoiTac: d.ten_doi_tac,
+                soDienThoai: d.so_dien_thoai,
+                diaChi: d.dia_chi,
+                congNo: Number(d.cong_no) || 0
+              }));
+              timKiemKhachHangPOS(kw);
+            }
+          });
+        }
+        if (typeof google !== 'undefined' && google?.script?.run && typeof google.script.run.apiGetDanhSachDoiTac === 'function') {
+          google.script.run.withSuccessHandler(function(list) {
+            rawKHList = list || [];
+            timKiemKhachHangPOS(kw); 
+          }).apiGetDanhSachDoiTac("KH");
+        }
         return;
       }
 
@@ -5419,14 +5544,11 @@ function timKiemKhachHangPOS(kw) {
     }
 
     function nhanhThemMoiKhachHang(kw) {
-      // 1. Ẩn khung dropdown tìm kiếm
       const box = document.getElementById('pos-kh-dropdown');
       if (box) box.classList.add('hidden');
 
-      // 2. Mở modal thêm đối tác với phân loại là Khách hàng ('KH')
       moModalDoiTac('KH');
 
-      // 3. Tự động nhận diện từ khóa: Nếu là số thì điền vào SĐT, nếu là chữ thì điền vào Tên khách hàng
       const isNumberOnly = /^[0-9+\s-]+$/.test(kw);
       if (isNumberOnly) {
         document.getElementById('doitac-input-sdt').value = kw;
@@ -5438,26 +5560,32 @@ function timKiemKhachHangPOS(kw) {
     }
 
     function initPOSView() {
+      resetPosSearchFields();
       if (!rawKHList || rawKHList.length === 0) {
-        google.script.run.withSuccessHandler(function(list) {
-          rawKHList = list || [];
-          chonKhachHangMacDinhHoacDauTien();
-        }).apiGetDanhSachDoiTac("KH");
-      } else {
-        chonKhachHangMacDinhHoacDauTien();
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          supabaseClient.from('dm_doitac').select('*').eq('loai_doi_tac', 'KH').then(({ data }) => {
+            if (data && data.length > 0) {
+              rawKHList = data.map(d => ({
+                maDoiTac: d.ma_doi_tac,
+                tenDoiTac: d.ten_doi_tac,
+                soDienThoai: d.so_dien_thoai,
+                diaChi: d.dia_chi,
+                congNo: Number(d.cong_no) || 0
+              }));
+            }
+          });
+        }
+        if (typeof google !== 'undefined' && google?.script?.run && typeof google.script.run.apiGetDanhSachDoiTac === 'function') {
+          google.script.run.withSuccessHandler(function(list) {
+            rawKHList = list || [];
+          }).apiGetDanhSachDoiTac("KH");
+        }
       }
       if (typeof renderPOSCart === 'function') renderPOSCart();
     }
 
     function chonKhachHangMacDinhHoacDauTien() {
-      if (rawKHList && rawKHList.length > 0) {
-        const defaultKH = rawKHList.find(k => k.maDoiTac === 'KH0001') || rawKHList[0];
-        document.getElementById('pos-makh').value = defaultKH.maDoiTac;
-        document.getElementById('pos-kh-search').value = `${defaultKH.tenDoiTac} - ${defaultKH.soDienThoai} (${defaultKH.maDoiTac})`;
-      } else {
-        document.getElementById('pos-makh').value = "";
-        document.getElementById('pos-kh-search').value = "";
-      }
+      resetPosSearchFields();
     }
 
     let currentChiNhanh = "CN01"; // Mặc định luôn là chi nhánh chính CN01
@@ -6508,7 +6636,8 @@ function timKiemKhachHangPOS(kw) {
           if (typeof chuyenViewTraHangNCC === 'function') chuyenViewTraHangNCC('danhsach');
         } else if (tabId === 'tab-dathang') {
           if (typeof taiDanhSachDonDatHang === 'function') taiDanhSachDonDatHang();
-        } else if (tabId === 'tab-banhang') {
+        } else if (tabId === 'tab-banhang' || tabId === 'tab-pos') {
+          if (typeof resetPosSearchFields === 'function') resetPosSearchFields();
           if (typeof initPOSView === 'function') initPOSView();
         } else if (tabId === 'tab-trahang') {
           if (typeof initTraHangView === 'function') initTraHangView();
@@ -11944,29 +12073,13 @@ function timKiemKhachHangPOS(kw) {
 
 
     /* 4.2 POS Thu ngân */
-   function initPOSView() {
-      // Tự động tải danh sách khách hàng từ Google Sheets nếu bộ nhớ đang trống
-      if (!rawKHList || rawKHList.length === 0) {
-        google.script.run.withSuccessHandler(function(list) {
-          rawKHList = list || [];
-          // Sau khi tải xong, thiết lập mặc định khách hàng đầu tiên nếu có
-          chonKhachHangMacDinhHoacDauTien();
-        }).apiGetDanhSachDoiTac("KH");
-      } else {
-        chonKhachHangMacDinhHoacDauTien();
-      }
-      renderPOSCart();
+    function initPOSView() {
+      resetPosSearchFields();
+      if (typeof renderPOSCart === 'function') renderPOSCart();
     }
 
     function chonKhachHangMacDinhHoacDauTien() {
-      if (rawKHList && rawKHList.length > 0) {
-        const defaultKH = rawKHList.find(k => k.maDoiTac === 'KH0001') || rawKHList[0];
-        document.getElementById('pos-makh').value = defaultKH.maDoiTac;
-        document.getElementById('pos-kh-search').value = `${defaultKH.tenDoiTac} - ${defaultKH.soDienThoai} (${defaultKH.maDoiTac})`;
-      } else {
-        document.getElementById('pos-makh').value = "";
-        document.getElementById('pos-kh-search').value = "";
-      }
+      resetPosSearchFields();
     }
 
     function timKiemHangHoaPOS(kw) {
@@ -12250,13 +12363,25 @@ function timKiemKhachHangPOS(kw) {
     }
 
     function tinhTienPOS() {
-      const total = posCart.reduce((a, b) => a + (b.soLuong * b.donGia), 0);
+      const total = (posCart || []).reduce((a, b) => a + (b.soLuong * b.donGia), 0);
       const discount = Number(document.getElementById('pos-giamgia')?.value) || 0;
       const finalPrice = Math.max(0, total - discount);
 
-      document.getElementById('pos-tongtien').innerText = total.toLocaleString() + ' đ';
-      document.getElementById('pos-khachphaitra').innerText = finalPrice.toLocaleString() + ' đ';
-      document.getElementById('pos-khachtra').value = finalPrice;
+      const elTong = document.getElementById('pos-tongtien');
+      if (elTong) elTong.innerText = total.toLocaleString() + ' đ';
+      const elPhaiTra = document.getElementById('pos-khachphaitra');
+      if (elPhaiTra) elPhaiTra.innerText = finalPrice.toLocaleString() + ' đ';
+      
+      const type = document.getElementById('pos-loai-thanhtoan')?.value || 'FULL';
+      const inputPay = document.getElementById('pos-khachtra');
+      if (inputPay) {
+        if (type === 'FULL') {
+          inputPay.value = finalPrice;
+        } else if (type === 'DEBT') {
+          inputPay.value = 0;
+        }
+        inputPay.disabled = false;
+      }
     }
 
     /* 5. Sổ quỹ */
@@ -13932,6 +14057,10 @@ function apDungPhuyenGiaoDien(perms) {
       if (!e.target.closest('#nhap-ncc-search') && !e.target.closest('#nhap-ncc-dropdown')) {
         const dropNCC = document.getElementById('nhap-ncc-dropdown');
         if (dropNCC) dropNCC.classList.add('hidden');
+      }
+      if (!e.target.closest('#pos-search') && !e.target.closest('#pos-search-dropdown')) {
+        const dropPosSP = document.getElementById('pos-search-dropdown');
+        if (dropPosSP) dropPosSP.classList.add('hidden');
       }
       if (!e.target.closest('#pos-kh-search') && !e.target.closest('#pos-kh-dropdown')) {
         const dropKH = document.getElementById('pos-kh-dropdown');
