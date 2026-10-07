@@ -131,20 +131,68 @@ class _OrdersViewState extends State<OrdersView> with SingleTickerProviderStateM
                         fontFamily: 'monospace',
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusBg,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        o.trangThai,
-                        style: TextStyle(
-                          color: statusFg,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: statusBg,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            o.trangThai,
+                            style: TextStyle(
+                              color: statusFg,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, size: 20, color: AppTheme.dangerRed),
+                          tooltip: 'Xóa đơn hàng',
+                          constraints: const BoxConstraints(),
+                          padding: const EdgeInsets.all(4),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (dCtx) => AlertDialog(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                title: const Text('Xác nhận xóa đơn', style: TextStyle(fontWeight: FontWeight.bold)),
+                                content: Text('Bạn có chắc chắn muốn xóa đơn hàng [${o.maDonHang}] không? Thao tác này sẽ xóa đơn và phiếu thu liên quan.'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(dCtx),
+                                    child: const Text('Hủy', style: TextStyle(color: AppTheme.textMuted)),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppTheme.dangerRed,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                    onPressed: () async {
+                                      Navigator.pop(dCtx);
+                                      final ok = await context.read<OrdersViewModel>().deleteOrder(o.maDonHang);
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(ok ? 'Đã xóa đơn hàng ${o.maDonHang} thành công!' : 'Lỗi xóa đơn hàng!'),
+                                            backgroundColor: ok ? AppTheme.successGreen : AppTheme.dangerRed,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: const Text('Xóa đơn'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),
