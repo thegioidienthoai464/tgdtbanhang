@@ -7976,24 +7976,16 @@ function formatVND(amount) {
           if (typeof chuyenTabSoQuy === 'function') chuyenTabSoQuy('TAI_KHOAN');
         } else if (tabId === 'tab-soquy') {
           if (typeof chuyenTabSoQuy === 'function') chuyenTabSoQuy('ALL');
-        } else if (tabId === 'tab-baocao-chung') {
+        } else if (tabId === 'tab-baocao-chung' || tabId === 'tab-bc-banhang') {
           if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('banhang');
-          if (typeof loadBaoCao === 'function') loadBaoCao();
-        } else if (tabId === 'tab-bc-banhang') {
-          if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('banhang');
-          if (typeof loadBaoCao === 'function') loadBaoCao();
         } else if (tabId === 'tab-bc-hanghoa') {
           if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('hanghoa');
-          if (typeof loadBaoCao === 'function') loadBaoCao();
         } else if (tabId === 'tab-bc-khachhang') {
           if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('khachhang');
-          if (typeof loadBaoCao === 'function') loadBaoCao();
         } else if (tabId === 'tab-bc-ncc') {
           if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('ncc');
-          if (typeof loadBaoCao === 'function') loadBaoCao();
         } else if (tabId === 'tab-bc-taichinh') {
           if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('taichinh');
-          if (typeof loadBaoCao === 'function') loadBaoCao();
         } else if (tabId === 'tab-nguoidung') {
           if (typeof loadNguoiDung === 'function') loadNguoiDung();
           else if (typeof loadDanhSachNguoiDung === 'function') loadDanhSachNguoiDung();
@@ -15706,13 +15698,17 @@ function formatVND(amount) {
 
       // Kích hoạt tính toán và render theo phân hệ chuyên biệt
       if (subBc === 'banhang') {
-        if (typeof tinhToanVaRenderBaoCaoBanHang === 'function') tinhToanVaRenderBaoCaoBanHang();
+        if (!rawDonHangList || rawDonHangList.length === 0) loadBaoCao();
+        else if (typeof tinhToanVaRenderBaoCaoBanHang === 'function') tinhToanVaRenderBaoCaoBanHang();
       } else if (subBc === 'hanghoa') {
-        if (typeof tinhToanVaRenderBaoCaoHangHoa === 'function') tinhToanVaRenderBaoCaoHangHoa();
+        if (!rawHangHoa || rawHangHoa.length === 0 || !rawDonHangList || rawDonHangList.length === 0) loadBaoCao();
+        else if (typeof tinhToanVaRenderBaoCaoHangHoa === 'function') tinhToanVaRenderBaoCaoHangHoa();
       } else if (subBc === 'khachhang') {
-        if (typeof tinhToanVaRenderBaoCaoKhachHang === 'function') tinhToanVaRenderBaoCaoKhachHang();
+        if (!rawKHList || rawKHList.length === 0 || !rawDonHangList || rawDonHangList.length === 0) loadBaoCao();
+        else if (typeof tinhToanVaRenderBaoCaoKhachHang === 'function') tinhToanVaRenderBaoCaoKhachHang();
       } else if (subBc === 'ncc') {
-        if (typeof tinhToanVaRenderBaoCaoNCC === 'function') tinhToanVaRenderBaoCaoNCC();
+        if (!rawNCCList || rawNCCList.length === 0) loadBaoCao();
+        else if (typeof tinhToanVaRenderBaoCaoNCC === 'function') tinhToanVaRenderBaoCaoNCC();
       } else if (subBc === 'taichinh') {
         if (!rawBaoCaoData) loadBaoCao();
         else renderBaoCaoDuLieu(rawBaoCaoData);
@@ -16081,7 +16077,7 @@ function formatVND(amount) {
             `).join('');
           }
         }
-        locBangBaoCaoHangHoa();
+        if (typeof tinhToanVaRenderBaoCaoHangHoa === 'function') tinhToanVaRenderBaoCaoHangHoa();
       }
 
       // 6.3 BÁO CÁO KHÁCH HÀNG & CÔNG NỢ
@@ -16093,7 +16089,7 @@ function formatVND(amount) {
         if (elTongMuaKH) elTongMuaKH.innerText = (data.banHang?.tongBan || 0).toLocaleString('vi-VN') + ' đ';
         const elTongNoKH = document.getElementById('bc-kh-tongno');
         if (elTongNoKH) elTongNoKH.innerText = (kh.tongCongNoKH || 0).toLocaleString('vi-VN') + ' đ';
-        locBangBaoCaoKhachHang();
+        if (typeof tinhToanVaRenderBaoCaoKhachHang === 'function') tinhToanVaRenderBaoCaoKhachHang();
       }
 
       // 6.4 BÁO CÁO NHÀ CUNG CẤP & PHẢI TRẢ
@@ -16105,7 +16101,7 @@ function formatVND(amount) {
         if (elTongNhapNCC) elTongNhapNCC.innerText = (nc.tongNhapHang || 0).toLocaleString('vi-VN') + ' đ';
         const elTongNoNCC = document.getElementById('bc-ncc-tongno');
         if (elTongNoNCC) elTongNoNCC.innerText = (nc.tongNoNCC || 0).toLocaleString('vi-VN') + ' đ';
-        locBangBaoCaoNCC();
+        if (typeof tinhToanVaRenderBaoCaoNCC === 'function') tinhToanVaRenderBaoCaoNCC();
       }
 
       // 6.5 BÁO CÁO TÀI CHÍNH & LỢI NHUẬN
@@ -18766,6 +18762,17 @@ function formatVND(amount) {
       }
     }
 
+    // Định nghĩa hàm tương thích ngược (aliases)
+    function locBangBaoCaoHangHoa() {
+      if (typeof tinhToanVaRenderBaoCaoHangHoa === 'function') tinhToanVaRenderBaoCaoHangHoa();
+    }
+    function locBangBaoCaoKhachHang() {
+      if (typeof tinhToanVaRenderBaoCaoKhachHang === 'function') tinhToanVaRenderBaoCaoKhachHang();
+    }
+    function locBangBaoCaoNCC() {
+      if (typeof tinhToanVaRenderBaoCaoNCC === 'function') tinhToanVaRenderBaoCaoNCC();
+    }
+
     // Đăng ký toàn cục lên window để gọi từ onclick và các module khác
     window.chuyenPhanMucBaoCao = chuyenPhanMucBaoCao;
     window.loadBaoCao = loadBaoCao;
@@ -18773,18 +18780,31 @@ function formatVND(amount) {
     window.locBangBaoCaoHangHoa = locBangBaoCaoHangHoa;
     window.locBangBaoCaoKhachHang = locBangBaoCaoKhachHang;
     window.locBangBaoCaoNCC = locBangBaoCaoNCC;
+    window.tinhToanVaRenderBaoCaoBanHang = tinhToanVaRenderBaoCaoBanHang;
+    window.tinhToanVaRenderBaoCaoHangHoa = tinhToanVaRenderBaoCaoHangHoa;
+    window.tinhToanVaRenderBaoCaoKhachHang = tinhToanVaRenderBaoCaoKhachHang;
+    window.tinhToanVaRenderBaoCaoNCC = tinhToanVaRenderBaoCaoNCC;
+    window.renderChartBaoCaoBanHang = renderChartBaoCaoBanHang;
+    window.renderChartBaoCaoHangHoa = renderChartBaoCaoHangHoa;
+    window.renderChartBaoCaoKhachHang = renderChartBaoCaoKhachHang;
+    window.renderChartBaoCaoNCC = renderChartBaoCaoNCC;
+    window.renderBangBaoCaoBanHangChiTiet = renderBangBaoCaoBanHangChiTiet;
+    window.renderBangBaoCaoHangHoaChiTiet = renderBangBaoCaoHangHoaChiTiet;
+    window.renderBangBaoCaoKhachHangChiTiet = renderBangBaoCaoKhachHangChiTiet;
+    window.renderBangBaoCaoNCCChiTiet = renderBangBaoCaoNCCChiTiet;
+    window.inBaoCaoBanHangKiot = inBaoCaoBanHangKiot;
+    window.inBaoCaoHangHoaKiot = inBaoCaoHangHoaKiot;
+    window.inBaoCaoKhachHangKiot = inBaoCaoKhachHangKiot;
+    window.inBaoCaoNCCKiot = inBaoCaoNCCKiot;
+    window.xuatExcelBaoCaoBanHangKiot = xuatExcelBaoCaoBanHangKiot;
+    window.xuatExcelBaoCaoHangHoaKiot = xuatExcelBaoCaoHangHoaKiot;
+    window.xuatExcelBaoCaoKhachHangKiot = xuatExcelBaoCaoKhachHangKiot;
+    window.xuatExcelBaoCaoNCCKiot = xuatExcelBaoCaoNCCKiot;
     window.xuatExcelBaoCaoHienTai = xuatExcelBaoCaoHienTai;
     window.datKieuHienThiBaoCao = datKieuHienThiBaoCao;
     window.thayDoiMoiQuanTamBaoCao = thayDoiMoiQuanTamBaoCao;
     window.thayDoiCheDoThoiGianBaoCao = thayDoiCheDoThoiGianBaoCao;
     window.thayDoiPresetThoiGianBaoCao = thayDoiPresetThoiGianBaoCao;
-    window.kichHoatLocBaoCaoBanHang = kichHoatLocBaoCaoBanHang;
-    window.tinhToanVaRenderBaoCaoBanHang = tinhToanVaRenderBaoCaoBanHang;
-    window.renderChartBaoCaoBanHang = renderChartBaoCaoBanHang;
-    window.renderBangBaoCaoBanHangChiTiet = renderBangBaoCaoBanHangChiTiet;
-    window.locBangBaoCaoBanHangChiTiet = locBangBaoCaoBanHangChiTiet;
-    window.xuatExcelBaoCaoBanHangKiot = xuatExcelBaoCaoBanHangKiot;
-    window.inBaoCaoBanHangKiot = inBaoCaoBanHangKiot;
 
     /* 7.1 Người dùng & 7.2 Phân quyền */
   
