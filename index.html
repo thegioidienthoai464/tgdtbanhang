@@ -4161,7 +4161,7 @@
 
         <div>
           <label class="font-semibold text-slate-700">Chi nhánh chi tiền:</label>
-          <select id="ttno-ncc-chinhanh" class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 mt-1 font-medium">
+          <select id="ttno-ncc-chinhanh" onchange="xuLyDoiChiNhanhThanhToanNCC(this.value)" class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 mt-1 font-medium">
             <option value="CN01" selected>CN01: Trụ sở chính Thanh Miện</option>
             <option value="CN02">CN02: Chi nhánh Thanh Giang</option>
             <option value="CN03">CN03: Chi nhánh Bình Giang</option>
@@ -4397,7 +4397,7 @@
 
         <div>
           <label class="font-semibold text-slate-700">Chi nhánh thu tiền:</label>
-          <select id="thuno-kh-chinhanh" class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 mt-1 font-medium">
+          <select id="thuno-kh-chinhanh" onchange="xuLyDoiChiNhanhThuNoKH(this.value)" class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 mt-1 font-medium">
             <option value="CN01" selected>CN01: Trụ sở chính Thanh Miện</option>
             <option value="CN02">CN02: Chi nhánh Thanh Giang</option>
             <option value="CN03">CN03: Chi nhánh Bình Giang</option>
@@ -5284,12 +5284,21 @@ function formatVND(amount) {
               tenNH: n.ten_nh,
               soTK: n.so_tk,
               chuTK: n.chu_tk,
+              tenNganHang: n.ten_nh,
+              soTaiKhoan: n.so_tk,
+              chuTaiKhoan: n.chu_tk,
               ghiChu: n.ghi_chu,
               chiNhanh: tachChiNhanhNganHang(n.ghi_chu)
             }));
             renderFilterNganHangTab52();
             renderSelectNganHangPOS();
             renderBangModalNganHang();
+            if (typeof napDanhSachNganHangVaoSelect === 'function') {
+              const bKH = document.getElementById('box-thuno-kh-nganhang');
+              if (bKH && !bKH.classList.contains('hidden')) napDanhSachNganHangVaoSelect('thuno-kh-nganhang');
+              const bNCC = document.getElementById('box-ttno-ncc-nganhang');
+              if (bNCC && !bNCC.classList.contains('hidden')) napDanhSachNganHangVaoSelect('ttno-ncc-nganhang');
+            }
             return;
           }
         } catch(e) {
@@ -5301,22 +5310,37 @@ function formatVND(amount) {
         google.script.run.withSuccessHandler(function(list) {
           rawNganHangList = (list || []).map(n => ({
             ...n,
+            tenNganHang: n.tenNH || n.tenNganHang,
+            soTaiKhoan: n.soTK || n.soTaiKhoan,
+            chuTaiKhoan: n.chuTK || n.chuTaiKhoan,
             chiNhanh: n.chiNhanh || tachChiNhanhNganHang(n.ghiChu)
           }));
           renderFilterNganHangTab52();
           renderSelectNganHangPOS();
           renderBangModalNganHang();
+          if (typeof napDanhSachNganHangVaoSelect === 'function') {
+            const bKH = document.getElementById('box-thuno-kh-nganhang');
+            if (bKH && !bKH.classList.contains('hidden')) napDanhSachNganHangVaoSelect('thuno-kh-nganhang');
+            const bNCC = document.getElementById('box-ttno-ncc-nganhang');
+            if (bNCC && !bNCC.classList.contains('hidden')) napDanhSachNganHangVaoSelect('ttno-ncc-nganhang');
+          }
         }).apiGetDanhSachNganHang();
       } else {
         if (!rawNganHangList || rawNganHangList.length === 0) {
           rawNganHangList = [
-            { maNH: 'VCB', tenNH: 'Ngân hàng Vietcombank', soTK: '3170231368', chuTK: 'HKD THẾ GIỚI ĐIỆN THOẠI', ghiChu: '[ALL] Tài khoản chính kinh doanh', chiNhanh: ['ALL'] },
-            { maNH: 'vcb1', tenNH: 'Ngân hàng Vietcombank', soTK: '341006999593', chuTK: 'PHẠM HÙNG MẠNH', ghiChu: '[ALL] TM.DT KHÁCH CK KHD', chiNhanh: ['ALL'] }
+            { maNH: 'VCB', tenNH: 'Ngân hàng Vietcombank', soTK: '3170231368', chuTK: 'HKD THẾ GIỚI ĐIỆN THOẠI', tenNganHang: 'Ngân hàng Vietcombank', soTaiKhoan: '3170231368', chuTaiKhoan: 'HKD THẾ GIỚI ĐIỆN THOẠI', ghiChu: '[ALL] Tài khoản chính kinh doanh', chiNhanh: ['ALL'] },
+            { maNH: 'vcb1', tenNH: 'Ngân hàng Vietcombank', soTK: '341006999593', chuTK: 'PHẠM HÙNG MẠNH', tenNganHang: 'Ngân hàng Vietcombank', soTaiKhoan: '341006999593', chuTaiKhoan: 'PHẠM HÙNG MẠNH', ghiChu: '[ALL] TM.DT KHÁCH CK KHD', chiNhanh: ['ALL'] }
           ];
         }
         renderFilterNganHangTab52();
         renderSelectNganHangPOS();
         renderBangModalNganHang();
+        if (typeof napDanhSachNganHangVaoSelect === 'function') {
+          const bKH = document.getElementById('box-thuno-kh-nganhang');
+          if (bKH && !bKH.classList.contains('hidden')) napDanhSachNganHangVaoSelect('thuno-kh-nganhang');
+          const bNCC = document.getElementById('box-ttno-ncc-nganhang');
+          if (bNCC && !bNCC.classList.contains('hidden')) napDanhSachNganHangVaoSelect('ttno-ncc-nganhang');
+        }
       }
     }
 
@@ -13175,6 +13199,9 @@ function formatVND(amount) {
       if (quySel) quySel.value = 'TIEN_MAT';
       const boxBank = document.getElementById('box-ttno-ncc-nganhang');
       if (boxBank) boxBank.classList.add('hidden');
+      if (typeof napDanhSachNganHangVaoSelect === 'function') {
+        napDanhSachNganHangVaoSelect('ttno-ncc-nganhang', cnSel ? cnSel.value : null);
+      }
 
       moModal('modal-thanhtoan-no-ncc');
     }
@@ -13192,18 +13219,28 @@ function formatVND(amount) {
       if (val === 'TAI_KHOAN') {
         if (boxBank) boxBank.classList.remove('hidden');
         if (typeof napDanhSachNganHangVaoSelect === 'function') {
-          napDanhSachNganHangVaoSelect('ttno-ncc-nganhang');
+          const cnVal = document.getElementById('ttno-ncc-chinhanh')?.value;
+          napDanhSachNganHangVaoSelect('ttno-ncc-nganhang', cnVal);
         }
       } else {
         if (boxBank) boxBank.classList.add('hidden');
       }
     }
 
+    function xuLyDoiChiNhanhThanhToanNCC(maCN) {
+      const val = document.getElementById('ttno-ncc-loaiquy')?.value;
+      if (val === 'TAI_KHOAN' && typeof napDanhSachNganHangVaoSelect === 'function') {
+        napDanhSachNganHangVaoSelect('ttno-ncc-nganhang', maCN);
+      }
+    }
+    window.xuLyDoiChiNhanhThanhToanNCC = xuLyDoiChiNhanhThanhToanNCC;
+
     function xacNhanThanhToanNoNCC() {
       const maNCC = document.getElementById('ttno-ncc-mancc').value;
       const tenNCC = document.getElementById('ttno-ncc-tenncc').value;
       const soTien = Number(document.getElementById('ttno-ncc-sotien').value) || 0;
       const loaiQuy = document.getElementById('ttno-ncc-loaiquy').value;
+      const nganHang = document.getElementById('ttno-ncc-nganhang')?.value || '';
       const chiNhanh = document.getElementById('ttno-ncc-chinhanh').value;
       const ghiChu = document.getElementById('ttno-ncc-ghichu').value.trim();
 
@@ -13245,6 +13282,7 @@ function formatVND(amount) {
           tenNCC: tenNCC,
           soTien: soTien,
           loaiQuy: loaiQuy,
+          nganHang: nganHang,
           chiNhanh: chiNhanh,
           nguoiChi: nguoiChi,
           nguoiNhan: nguoiChi,
@@ -13314,6 +13352,7 @@ function formatVND(amount) {
                 trangThai: "DaThanhToan",
                 nhanVien: nguoiChi,
                 nguoiThuChi: nguoiChi,
+                taiKhoanNH: payload.nganHang || '',
                 ghiChu: payload.ghiChu,
                 lyDoThuChi: payload.ghiChu
               });
@@ -19191,7 +19230,9 @@ function loadSoQuy(filter) {
 
       // Nạp danh sách tài khoản ngân hàng để sẵn sàng nếu hoàn tiền qua ngân hàng
       if (!rawNganHangList || !rawNganHangList.length) {
-        if (supabaseClient) {
+        if (typeof loadDanhSachNganHang === 'function') {
+          loadDanhSachNganHang();
+        } else if (supabaseClient) {
           supabaseClient.from('dm_nganhang').select('*')
             .then(({ data, error }) => {
               if (!error && data && data.length > 0) {
@@ -19200,7 +19241,11 @@ function loadSoQuy(filter) {
                   tenNH: n.ten_nh,
                   soTK: n.so_tk,
                   chuTK: n.chu_tk,
-                  ghiChu: n.ghi_chu
+                  tenNganHang: n.ten_nh,
+                  soTaiKhoan: n.so_tk,
+                  chuTaiKhoan: n.chu_tk,
+                  ghiChu: n.ghi_chu,
+                  chiNhanh: typeof tachChiNhanhNganHang === 'function' ? tachChiNhanhNganHang(n.ghi_chu) : ['ALL']
                 }));
               } else {
                 napNganHangTuSheets();
@@ -19262,8 +19307,18 @@ function loadSoQuy(filter) {
     }
 
     function napNganHangTuSheets() {
+      if (typeof loadDanhSachNganHang === 'function') {
+        loadDanhSachNganHang();
+        return;
+      }
       google.script.run.withSuccessHandler(function(data) {
-        rawNganHangList = data || [];
+        rawNganHangList = (data || []).map(n => ({
+          ...n,
+          tenNganHang: n.tenNH || n.tenNganHang,
+          soTaiKhoan: n.soTK || n.soTaiKhoan,
+          chuTaiKhoan: n.chuTK || n.chuTaiKhoan,
+          chiNhanh: n.chiNhanh || (typeof tachChiNhanhNganHang === 'function' ? tachChiNhanhNganHang(n.ghiChu) : ['ALL'])
+        }));
       }).apiGetDanhSachNganHang();
     }
 
@@ -19913,25 +19968,64 @@ function loadSoQuy(filter) {
     window.traNCCCart = window.traNCCCart || [];
     window.dathangCart = window.dathangCart || [];
 
-    // Helper: Populate Bank Options into any select
-    function napDanhSachNganHangVaoSelect(selectId) {
+    // Helper: Populate Bank Options into any select with branch filtering and fallback
+    function napDanhSachNganHangVaoSelect(selectId, branchCode) {
       const sel = document.getElementById(selectId);
       if (!sel) return;
       sel.innerHTML = '';
-      const banks = (typeof rawNganHangList !== 'undefined' && Array.isArray(rawNganHangList) && rawNganHangList.length > 0)
+
+      let targetBranch = branchCode;
+      if (!targetBranch) {
+        if (selectId === 'thuno-kh-nganhang') {
+          targetBranch = document.getElementById('thuno-kh-chinhanh')?.value || (typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01');
+        } else if (selectId === 'ttno-ncc-nganhang') {
+          targetBranch = document.getElementById('ttno-ncc-chinhanh')?.value || (typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01');
+        } else if (selectId === 'nhap-nganhang-select') {
+          targetBranch = document.getElementById('nhap-chinhanh-select')?.value || (typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01');
+        } else if (selectId === 'tranhap-nganhang-select') {
+          targetBranch = document.getElementById('tranhap-chinhanh-select')?.value || (typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01');
+        } else if (selectId === 'dathang-nganhang-select') {
+          targetBranch = document.getElementById('dathang-chinhanh-select')?.value || (typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01');
+        } else {
+          targetBranch = (typeof currentChiNhanh !== 'undefined' && currentChiNhanh) ? currentChiNhanh : 'CN01';
+        }
+      }
+      const targetCN = (typeof layMaChiNhanh === 'function') ? layMaChiNhanh(targetBranch) : String(targetBranch || 'CN01').slice(0, 4);
+
+      if ((!rawNganHangList || !rawNganHangList.length) && typeof loadDanhSachNganHang === 'function') {
+        loadDanhSachNganHang();
+      }
+
+      const allBanks = (typeof rawNganHangList !== 'undefined' && Array.isArray(rawNganHangList) && rawNganHangList.length > 0)
         ? rawNganHangList
         : [
-            { tenNganHang: 'Vietcombank', soTaiKhoan: '9999888877', chuTaiKhoan: 'CONG TY CP KINH DOANH' },
-            { tenNganHang: 'MBBank', soTaiKhoan: '8888666699', chuTaiKhoan: 'NGUYEN VAN A' },
-            { tenNganHang: 'Techcombank', soTaiKhoan: '19033334444', chuTaiKhoan: 'CONG TY CP KINH DOANH' }
+            { maNH: 'VCB', tenNH: 'Ngân hàng Vietcombank', soTK: '3170231368', chuTK: 'HKD THẾ GIỚI ĐIỆN THOẠI', tenNganHang: 'Ngân hàng Vietcombank', soTaiKhoan: '3170231368', chuTaiKhoan: 'HKD THẾ GIỚI ĐIỆN THOẠI', ghiChu: '[ALL] Tài khoản chính kinh doanh', chiNhanh: ['ALL'] },
+            { maNH: 'vcb1', tenNH: 'Ngân hàng Vietcombank', soTK: '341006999593', chuTK: 'PHẠM HÙNG MẠNH', tenNganHang: 'Ngân hàng Vietcombank', soTaiKhoan: '341006999593', chuTaiKhoan: 'PHẠM HÙNG MẠNH', ghiChu: '[ALL] TM.DT KHÁCH CK KHD', chiNhanh: ['ALL'] }
           ];
+
+      let banks = allBanks.filter(item => {
+        if (typeof isBankAllowedForBranch === 'function') {
+          return isBankAllowedForBranch(item, targetCN);
+        }
+        const bChiNhanh = item.chiNhanh || (typeof tachChiNhanhNganHang === 'function' ? tachChiNhanhNganHang(item.ghiChu || '') : ['ALL']);
+        return bChiNhanh.includes('ALL') || bChiNhanh.includes(targetCN);
+      });
+
+      if (!banks.length) {
+        banks = allBanks;
+      }
+
       banks.forEach(b => {
+        const name = b.tenNH || b.tenNganHang || b.ten_nh || 'Ngân hàng';
+        const stk = b.soTK || b.soTaiKhoan || b.so_tk || '';
+        const chu = b.chuTK || b.chuTaiKhoan || b.chu_tk || '';
         const opt = document.createElement('option');
-        opt.value = b.tenNganHang + ' - ' + b.soTaiKhoan;
-        opt.text = '🏦 ' + b.tenNganHang + ' - ' + b.soTaiKhoan + (b.chuTaiKhoan ? ' (' + b.chuTaiKhoan + ')' : '');
+        opt.value = stk ? `${name} - ${stk}` : name;
+        opt.text = '🏦 ' + name + (stk ? ' - STK: ' + stk : '') + (chu ? ' (' + chu + ')' : '');
         sel.appendChild(opt);
       });
     }
+    window.napDanhSachNganHangVaoSelect = napDanhSachNganHangVaoSelect;
 
     // -------------------------------------------------------------------------
     // 1. MODULE 3.1 & MODAL DOI TAC: Nút lưu khóa 1 lần + tiến trình + sync
@@ -22983,7 +23077,7 @@ function loadSoQuy(filter) {
       const boxBank = document.getElementById('box-thuno-kh-nganhang');
       if (boxBank) boxBank.classList.add('hidden');
       if (typeof napDanhSachNganHangVaoSelect === 'function') {
-        napDanhSachNganHangVaoSelect('thuno-kh-nganhang');
+        napDanhSachNganHangVaoSelect('thuno-kh-nganhang', cnSel ? cnSel.value : null);
       }
 
       modal.classList.remove('hidden');
@@ -23000,12 +23094,21 @@ function loadSoQuy(filter) {
       if (val === 'TAI_KHOAN') {
         if (boxBank) boxBank.classList.remove('hidden');
         if (typeof napDanhSachNganHangVaoSelect === 'function') {
-          napDanhSachNganHangVaoSelect('thuno-kh-nganhang');
+          const cnVal = document.getElementById('thuno-kh-chinhanh')?.value;
+          napDanhSachNganHangVaoSelect('thuno-kh-nganhang', cnVal);
         }
       } else {
         if (boxBank) boxBank.classList.add('hidden');
       }
     }
+
+    function xuLyDoiChiNhanhThuNoKH(maCN) {
+      const val = document.getElementById('thuno-kh-loaiquy')?.value;
+      if (val === 'TAI_KHOAN' && typeof napDanhSachNganHangVaoSelect === 'function') {
+        napDanhSachNganHangVaoSelect('thuno-kh-nganhang', maCN);
+      }
+    }
+    window.xuLyDoiChiNhanhThuNoKH = xuLyDoiChiNhanhThuNoKH;
 
     function xacNhanThuNoKH() {
       const ma = document.getElementById('thuno-kh-makh')?.value;
