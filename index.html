@@ -3994,6 +3994,24 @@
           <input type="number" id="ttno-ncc-sotien" class="w-full border border-slate-300 rounded-xl p-2.5 bg-slate-50 mt-1 font-mono font-bold text-base text-blue-600 focus:bg-white focus:outline-none focus:border-blue-500" placeholder="0">
         </div>
 
+        <!-- Ngày giờ & Người chi / thanh toán -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold text-slate-700 flex items-center gap-1">
+              <i class="fa-regular fa-clock text-blue-500"></i> Ngày giờ thanh toán (*):
+            </label>
+            <input type="datetime-local" id="ttno-ncc-ngaygio" class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 mt-1 font-medium focus:bg-white focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 flex items-center gap-1">
+              <i class="fa-solid fa-user-check text-blue-500"></i> Người chi / thanh toán (*):
+            </label>
+            <select id="ttno-ncc-nguoinhan" onchange="xuLyChonNguoiNhan(this, 'ttno-ncc-nguoinhan-custom')" class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 mt-1 font-medium focus:bg-white focus:outline-none focus:border-blue-500">
+            </select>
+            <input type="text" id="ttno-ncc-nguoinhan-custom" class="hidden w-full border border-blue-300 rounded-xl p-2 bg-blue-50/50 mt-1 font-medium placeholder-slate-400 focus:bg-white focus:outline-none focus:border-blue-500" placeholder="Nhập họ tên người chi/thanh toán...">
+          </div>
+        </div>
+
         <div>
           <label class="font-semibold text-slate-700">Nguồn tiền thanh toán (*):</label>
           <select id="ttno-ncc-loaiquy" onchange="thayDoiLoaiQuyThanhToanNCC(this.value)" class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 mt-1 font-medium">
@@ -4210,6 +4228,24 @@
         <div>
           <label class="font-semibold text-slate-700">Số tiền thu (*) (VNĐ):</label>
           <input type="number" id="thuno-kh-sotien" class="w-full border border-slate-300 rounded-xl p-2.5 bg-slate-50 mt-1 font-mono font-bold text-base text-emerald-600 focus:bg-white focus:outline-none focus:border-emerald-500" placeholder="0">
+        </div>
+
+        <!-- Ngày giờ & Người nhận thanh toán -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold text-slate-700 flex items-center gap-1">
+              <i class="fa-regular fa-clock text-emerald-500"></i> Ngày giờ thanh toán (*):
+            </label>
+            <input type="datetime-local" id="thuno-kh-ngaygio" class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 mt-1 font-medium focus:bg-white focus:outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 flex items-center gap-1">
+              <i class="fa-solid fa-user-check text-emerald-500"></i> Người nhận thanh toán (*):
+            </label>
+            <select id="thuno-kh-nguoinhan" onchange="xuLyChonNguoiNhan(this, 'thuno-kh-nguoinhan-custom')" class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 mt-1 font-medium focus:bg-white focus:outline-none focus:border-emerald-500">
+            </select>
+            <input type="text" id="thuno-kh-nguoinhan-custom" class="hidden w-full border border-emerald-300 rounded-xl p-2 bg-emerald-50/50 mt-1 font-medium placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-500" placeholder="Nhập họ tên người nhận thanh toán...">
+          </div>
         </div>
 
         <div>
@@ -12905,11 +12941,44 @@ function formatVND(amount) {
       document.getElementById('ttno-ncc-mancc').value = ncc.maDoiTac;
       document.getElementById('ttno-ncc-tenncc').value = ncc.tenDoiTac || '';
       document.getElementById('ttno-ncc-subtitle').innerText = `${ncc.tenDoiTac} (${ncc.maDoiTac})`;
-      document.getElementById('ttno-ncc-conno-display').innerText = congNo.toLocaleString() + ' đ';
+      document.getElementById('ttno-ncc-conno-display').innerText = congNo.toLocaleString('vi-VN') + ' đ';
       
-      // Default payment amount = current remaining debt (or 0 if debt <= 0)
+      // Mặc định số tiền = dư nợ hiện tại (nếu > 0)
       document.getElementById('ttno-ncc-sotien').value = congNo > 0 ? congNo : '';
       document.getElementById('ttno-ncc-ghichu').value = `Chi thanh toán công nợ tiền hàng cho NCC ${ncc.tenDoiTac || ncc.maDoiTac}`;
+
+      // Cài đặt ngày giờ hiện tại
+      if (typeof datGiaTriNgayGioHienTai === 'function') {
+        datGiaTriNgayGioHienTai('ttno-ncc-ngaygio');
+      }
+
+      // Nạp danh sách nhân viên vào người chi/thanh toán
+      if (typeof napDanhSachNhanVienVaoSelect === 'function') {
+        napDanhSachNhanVienVaoSelect('ttno-ncc-nguoinhan', (typeof currentUser !== 'undefined' && currentUser) ? currentUser.hoTen : '', true);
+      }
+      const customInp = document.getElementById('ttno-ncc-nguoinhan-custom');
+      if (customInp) {
+        customInp.value = '';
+        customInp.classList.add('hidden');
+      }
+
+      // Pre-select chi nhánh hiện tại
+      const cnSel = document.getElementById('ttno-ncc-chinhanh');
+      if (cnSel && typeof currentChiNhanh !== 'undefined' && currentChiNhanh) {
+        const maCN = typeof layMaChiNhanh === 'function' ? layMaChiNhanh(currentChiNhanh) : currentChiNhanh;
+        for (let opt of cnSel.options) {
+          if (opt.value === maCN || opt.text.indexOf(maCN) > -1) {
+            cnSel.value = opt.value;
+            break;
+          }
+        }
+      }
+
+      // Reset quỹ & ngân hàng
+      const quySel = document.getElementById('ttno-ncc-loaiquy');
+      if (quySel) quySel.value = 'TIEN_MAT';
+      const boxBank = document.getElementById('box-ttno-ncc-nganhang');
+      if (boxBank) boxBank.classList.add('hidden');
 
       moModal('modal-thanhtoan-no-ncc');
     }
@@ -12919,6 +12988,18 @@ function formatVND(amount) {
       const ncc = rawNCCList.find(n => n.maDoiTac === maNCC) || currentViewingNCC;
       if (ncc) {
         document.getElementById('ttno-ncc-sotien').value = Number(ncc.congNo) || 0;
+      }
+    }
+
+    function thayDoiLoaiQuyThanhToanNCC(val) {
+      const boxBank = document.getElementById('box-ttno-ncc-nganhang');
+      if (val === 'TAI_KHOAN') {
+        if (boxBank) boxBank.classList.remove('hidden');
+        if (typeof napDanhSachNganHangVaoSelect === 'function') {
+          napDanhSachNganHangVaoSelect('ttno-ncc-nganhang');
+        }
+      } else {
+        if (boxBank) boxBank.classList.add('hidden');
       }
     }
 
@@ -12933,7 +13014,30 @@ function formatVND(amount) {
       if (!maNCC) return showNotification("Mã nhà cung cấp không hợp lệ!", true);
       if (soTien <= 0) return showNotification("Vui lòng nhập số tiền thanh toán lớn hơn 0!", true);
 
-      showConfirm("Xác nhận thanh toán nợ", `Xác nhận chi số tiền ${soTien.toLocaleString()} đ để thanh toán nợ cho NCC [${tenNCC || maNCC}]?`, function() {
+      // Lấy ngày giờ thanh toán
+      let dtInfo = typeof layThongTinNgayGioInput === 'function' ? layThongTinNgayGioInput('ttno-ncc-ngaygio') : null;
+      let ngayGD_ISO = dtInfo ? dtInfo.iso : new Date().toISOString();
+      let ngayGD_Str = dtInfo ? dtInfo.formatted : ngayGD_ISO.replace('T', ' ').slice(0, 19);
+
+      // Lấy người chi / thanh toán
+      let nguoiChi = document.getElementById('ttno-ncc-nguoinhan')?.value || '';
+      if (nguoiChi === 'OTHER') {
+        nguoiChi = document.getElementById('ttno-ncc-nguoinhan-custom')?.value.trim() || '';
+      }
+      if (!nguoiChi) {
+        if (typeof currentUser !== 'undefined' && currentUser && currentUser.hoTen) {
+          nguoiChi = currentUser.hoTen;
+        } else {
+          nguoiChi = 'Quản trị viên';
+        }
+      }
+
+      let fullGhiChu = ghiChu || `Chi thanh toán tiền hàng cho NCC ${tenNCC || maNCC}`;
+      if (nguoiChi && fullGhiChu.indexOf(nguoiChi) === -1) {
+        fullGhiChu = `[Người chi: ${nguoiChi}] ` + fullGhiChu;
+      }
+
+      showConfirm("Xác nhận thanh toán nợ", `Xác nhận chi số tiền ${soTien.toLocaleString('vi-VN')} đ để thanh toán nợ cho NCC [${tenNCC || maNCC}]?`, function() {
         const btn = document.getElementById('btn-xacnhan-tt-ncc');
         if (btn) {
           btn.disabled = true;
@@ -12946,7 +13050,10 @@ function formatVND(amount) {
           soTien: soTien,
           loaiQuy: loaiQuy,
           chiNhanh: chiNhanh,
-          ghiChu: ghiChu
+          nguoiChi: nguoiChi,
+          nguoiNhan: nguoiChi,
+          ngayGD: ngayGD_Str,
+          ghiChu: fullGhiChu
         };
 
         google.script.run.withSuccessHandler(function(res) {
@@ -12957,8 +13064,6 @@ function formatVND(amount) {
 
           if (res && res.success) {
             const maPhieuChi = String(res.maPhieu || ("PC" + Date.now().toString().slice(-6)));
-            const ngayNowISO = new Date().toISOString();
-            const ngayNowStr = ngayNowISO.replace('T', ' ').slice(0, 19);
 
             // 1. Cập nhật công nợ trong local data NCC
             const ncc = rawNCCList.find(n => n.maDoiTac === maNCC);
@@ -12977,13 +13082,13 @@ function formatVND(amount) {
                 ma_phieu: maPhieuChi.slice(0, 50),
                 loai_phieu: "CHI",
                 loai_quy: String(payload.loaiQuy || "TIEN_MAT").slice(0, 100),
-                ngay_gd: ngayNowISO,
+                ngay_gd: ngayGD_ISO,
                 so_tien: Number(payload.soTien) || 0,
                 doi_tuong: "Nhà cung cấp",
                 ma_doi_tuong: String(payload.maNCC || "").slice(0, 50),
                 ma_chung_tu: "TT_CONG_NO",
                 trang_thai: "DaThanhToan",
-                ghi_chu: payload.ghiChu || `Chi thanh toán tiền hàng cho NCC ${tenNCC || maNCC}`
+                ghi_chu: payload.ghiChu
               }]).then(() => {
                 if (typeof loadDuLieuSoQuy === 'function') {
                   loadDuLieuSoQuy(typeof currentLoaiQuy !== 'undefined' ? currentLoaiQuy : (typeof currentQuyDangXem !== 'undefined' ? currentQuyDangXem : 'ALL'));
@@ -13003,15 +13108,18 @@ function formatVND(amount) {
                 loaiPhieu: "CHI",
                 loaiQuy: payload.loaiQuy || "TIEN_MAT",
                 quyNguon: payload.loaiQuy || "TIEN_MAT",
-                ngayGiaoDich: ngayNowStr,
-                ngayGD: ngayNowStr,
+                ngayGiaoDich: ngayGD_Str,
+                ngayGD: ngayGD_Str,
+                ngay: ngayGD_ISO,
                 soTien: Number(payload.soTien) || 0,
                 doiTuong: "Nhà cung cấp",
                 maDoiTuong: payload.maNCC,
                 maChungTu: "TT_CONG_NO",
                 trangThai: "DaThanhToan",
-                ghiChu: payload.ghiChu || `Chi thanh toán tiền hàng cho NCC ${tenNCC || maNCC}`,
-                lyDoThuChi: payload.ghiChu || `Chi thanh toán tiền hàng cho NCC ${tenNCC || maNCC}`
+                nhanVien: nguoiChi,
+                nguoiThuChi: nguoiChi,
+                ghiChu: payload.ghiChu,
+                lyDoThuChi: payload.ghiChu
               });
               window.rawSoQuyData.tongChi = (window.rawSoQuyData.tongChi || 0) + Number(payload.soTien);
               window.rawSoQuyData.tonQuy = (window.rawSoQuyData.tongThu || 0) - window.rawSoQuyData.tongChi;
@@ -13022,7 +13130,7 @@ function formatVND(amount) {
 
             dongModal('modal-thanhtoan-no-ncc');
             locDanhSachNCC(false);
-            showNotification(`Đã thanh toán thành công ${soTien.toLocaleString()} đ cho NCC [${tenNCC || maNCC}]! Mã phiếu chi: ${maPhieuChi}`);
+            showNotification(`Đã thanh toán thành công ${soTien.toLocaleString('vi-VN')} đ cho NCC [${tenNCC || maNCC}]! Mã phiếu chi: ${maPhieuChi}`);
           } else {
             showNotification(res ? res.error : "Lỗi khi thực hiện thanh toán!", true);
           }
@@ -13048,6 +13156,7 @@ function formatVND(amount) {
     window.locLichSuGiaoDichNCCTable = locLichSuGiaoDichNCCTable;
     window.xuatExcelLichSuNCCHienTai = xuatExcelLichSuNCCHienTai;
     window.taiLaiLichSuNCCHienTai = taiLaiLichSuNCCHienTai;
+    window.thayDoiLoaiQuyThanhToanNCC = thayDoiLoaiQuyThanhToanNCC;
     window.moModalThanhToanNoNCCHienTai = moModalThanhToanNoNCCHienTai;
     window.moModalThanhToanNoNCC = moModalThanhToanNoNCC;
     window.dienToanBoSoNoNCC = dienToanBoSoNoNCC;
@@ -22540,6 +22649,9 @@ function loadSoQuy(filter) {
     }
 
     function moModalThuNoKHCurrent() {
+      if (typeof hasPermission === 'function' && !hasPermission('KHACH_HANG_SUA')) {
+        return showNotification("Bạn không có quyền Thu nợ khách hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
       if (!window.currentViewingKH) return;
       const k = window.currentViewingKH;
       const modal = document.getElementById('modal-thuno-khachhang');
@@ -22551,10 +22663,49 @@ function loadSoQuy(filter) {
 
       document.getElementById('thuno-kh-makh').value = ma;
       document.getElementById('thuno-kh-tenkh').value = ten;
+      const subEl = document.getElementById('thuno-kh-subtitle');
+      if (subEl) subEl.innerText = `${ten} (${ma})`;
       document.getElementById('thuno-kh-conno-display').innerText = no.toLocaleString('vi-VN') + ' đ';
       document.getElementById('thuno-kh-sotien').value = no > 0 ? no : '';
+      const ghiChuInp = document.getElementById('thuno-kh-ghichu');
+      if (ghiChuInp) ghiChuInp.value = `Thu tiền nợ khách hàng ${ten} (${ma})`;
 
-      napDanhSachNganHangVaoSelect('thuno-kh-nganhang');
+      // Cài đặt ngày giờ hiện tại
+      if (typeof datGiaTriNgayGioHienTai === 'function') {
+        datGiaTriNgayGioHienTai('thuno-kh-ngaygio');
+      }
+
+      // Nạp danh sách nhân viên vào người nhận thanh toán
+      if (typeof napDanhSachNhanVienVaoSelect === 'function') {
+        napDanhSachNhanVienVaoSelect('thuno-kh-nguoinhan', (typeof currentUser !== 'undefined' && currentUser) ? currentUser.hoTen : '', true);
+      }
+      const customInp = document.getElementById('thuno-kh-nguoinhan-custom');
+      if (customInp) {
+        customInp.value = '';
+        customInp.classList.add('hidden');
+      }
+
+      // Pre-select chi nhánh hiện tại
+      const cnSel = document.getElementById('thuno-kh-chinhanh');
+      if (cnSel && typeof currentChiNhanh !== 'undefined' && currentChiNhanh) {
+        const maCN = typeof layMaChiNhanh === 'function' ? layMaChiNhanh(currentChiNhanh) : currentChiNhanh;
+        for (let opt of cnSel.options) {
+          if (opt.value === maCN || opt.text.indexOf(maCN) > -1) {
+            cnSel.value = opt.value;
+            break;
+          }
+        }
+      }
+
+      // Reset loại quỹ & ngân hàng
+      const quySel = document.getElementById('thuno-kh-loaiquy');
+      if (quySel) quySel.value = 'TIEN_MAT';
+      const boxBank = document.getElementById('box-thuno-kh-nganhang');
+      if (boxBank) boxBank.classList.add('hidden');
+      if (typeof napDanhSachNganHangVaoSelect === 'function') {
+        napDanhSachNganHangVaoSelect('thuno-kh-nganhang');
+      }
+
       modal.classList.remove('hidden');
     }
 
@@ -22568,7 +22719,9 @@ function loadSoQuy(filter) {
       const boxBank = document.getElementById('box-thuno-kh-nganhang');
       if (val === 'TAI_KHOAN') {
         if (boxBank) boxBank.classList.remove('hidden');
-        napDanhSachNganHangVaoSelect('thuno-kh-nganhang');
+        if (typeof napDanhSachNganHangVaoSelect === 'function') {
+          napDanhSachNganHangVaoSelect('thuno-kh-nganhang');
+        }
       } else {
         if (boxBank) boxBank.classList.add('hidden');
       }
@@ -22580,8 +22733,35 @@ function loadSoQuy(filter) {
       const soTien = Number(document.getElementById('thuno-kh-sotien')?.value) || 0;
       const hinhThuc = document.getElementById('thuno-kh-loaiquy')?.value || 'TIEN_MAT';
       const nganHang = document.getElementById('thuno-kh-nganhang')?.value || '';
+      const chiNhanh = document.getElementById('thuno-kh-chinhanh')?.value || (typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01: Trụ sở chính');
 
+      if (!ma) return showNotification("Mã khách hàng không hợp lệ!", true);
       if (soTien <= 0) return showNotification("Vui lòng nhập số tiền thu nợ lớn hơn 0!", true);
+
+      // Lấy ngày giờ thanh toán
+      let dtInfo = typeof layThongTinNgayGioInput === 'function' ? layThongTinNgayGioInput('thuno-kh-ngaygio') : null;
+      let ngayGD_ISO = dtInfo ? dtInfo.iso : new Date().toISOString();
+      let ngayGD_Str = dtInfo ? dtInfo.formatted : ngayGD_ISO.replace('T', ' ').slice(0, 19);
+
+      // Lấy người nhận thanh toán
+      let nguoiNhan = document.getElementById('thuno-kh-nguoinhan')?.value || '';
+      if (nguoiNhan === 'OTHER') {
+        nguoiNhan = document.getElementById('thuno-kh-nguoinhan-custom')?.value.trim() || '';
+      }
+      if (!nguoiNhan) {
+        if (typeof currentUser !== 'undefined' && currentUser && currentUser.hoTen) {
+          nguoiNhan = currentUser.hoTen;
+        } else {
+          nguoiNhan = 'Quản trị viên';
+        }
+      }
+
+      let ghiChuUser = document.getElementById('thuno-kh-ghichu')?.value.trim() || '';
+      let defaultGhiChu = `Thu tiền nợ khách hàng ${ten} (${ma})`;
+      let fullGhiChu = ghiChuUser || defaultGhiChu;
+      if (nguoiNhan && fullGhiChu.indexOf(nguoiNhan) === -1) {
+        fullGhiChu = `[Người nhận: ${nguoiNhan}] ` + fullGhiChu;
+      }
 
       const k = (rawKHList || []).find(x => (x.maDoiTac || x.maKH) === ma);
       let newNo = 0;
@@ -22600,8 +22780,9 @@ function loadSoQuy(filter) {
       if (typeof rawSoQuyData !== 'undefined' && Array.isArray(rawSoQuyData.danhSach)) {
         rawSoQuyData.danhSach.unshift({
           maPhieu: maPT,
-          ngayGD: new Date().toISOString(),
-          ngay: new Date().toISOString(),
+          ngayGD: ngayGD_Str,
+          ngayGiaoDich: ngayGD_Str,
+          ngay: ngayGD_ISO,
           loaiPhieu: "THU",
           loaiQuy: hinhThuc,
           quyNguon: hinhThuc,
@@ -22609,12 +22790,15 @@ function loadSoQuy(filter) {
           doiTuong: "Khách hàng",
           maDoiTuong: ma,
           maChungTu: "THU_NO_KH",
-          lyDoThuChi: "Thu tiền nợ khách hàng " + ten + " (" + ma + ")",
-          ghiChu: "Thu tiền nợ khách hàng " + ten + " (" + ma + ")",
+          lyDoThuChi: fullGhiChu,
+          ghiChu: fullGhiChu,
+          nhanVien: nguoiNhan,
+          nguoiThuChi: nguoiNhan,
+          chiNhanh: chiNhanh,
           taiKhoanNH: nganHang
         });
         rawSoQuyData.tongThu = (rawSoQuyData.tongThu || 0) + soTien;
-        rawSoQuyData.tonQuy = (rawSoQuyData.tonQuy || 0) + soTien;
+        rawSoQuyData.tonQuy = (rawSoQuyData.tongThu || 0) - (rawSoQuyData.tongChi || 0);
         if (typeof hienThiBangSoQuy === 'function') {
           hienThiBangSoQuy(rawSoQuyData);
         }
@@ -22624,23 +22808,27 @@ function loadSoQuy(filter) {
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         supabaseClient.from('dm_doitac').update({ cong_no: newNo }).eq('ma_doi_tac', ma).then(() => {});
         supabaseClient.from('so_quy').upsert([{
-          chi_nhanh: "CN01: Trụ sở chính",
+          chi_nhanh: chiNhanh,
           ma_phieu: maPT,
           loai_phieu: "THU",
           loai_quy: hinhThuc,
-          ngay_gd: new Date().toISOString(),
+          ngay_gd: ngayGD_ISO,
           so_tien: soTien,
           doi_tuong: "Khách hàng",
           ma_doi_tuong: ma,
           ma_chung_tu: "THU_NO_KH",
           trang_thai: "DaThanhToan",
-          ghi_chu: `Thu tiền nợ khách hàng ${ten} (${ma})`
-        }]).then(() => {});
+          ghi_chu: fullGhiChu
+        }]).then(() => {
+          if (typeof loadDuLieuSoQuy === 'function') {
+            loadDuLieuSoQuy(typeof currentLoaiQuy !== 'undefined' ? currentLoaiQuy : (typeof currentQuyDangXem !== 'undefined' ? currentQuyDangXem : 'ALL'));
+          }
+        }).catch(e => console.error("Lỗi sync sổ quỹ Supabase:", e));
       }
 
       dongModal('modal-thuno-khachhang');
       locDanhSachKH(false);
-      showNotification("Đã thu tiền nợ " + soTien.toLocaleString('vi-VN') + " đ từ khách hàng [" + ten + "] thành công!");
+      showNotification("Đã thu tiền nợ " + soTien.toLocaleString('vi-VN') + " đ từ khách hàng [" + ten + "] thành công! Mã phiếu thu: " + maPT);
 
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run.apiThanhToanCongNoKH({
@@ -22648,15 +22836,18 @@ function loadSoQuy(filter) {
           tenKH: ten,
           soTien: soTien,
           hinhThuc: hinhThuc,
-          nganHang: nganHang
+          loaiQuy: hinhThuc,
+          nganHang: nganHang,
+          chiNhanh: chiNhanh,
+          nguoiNhan: nguoiNhan,
+          ngayGD: ngayGD_Str,
+          ghiChu: fullGhiChu
         });
       }
 
       // Làm mới lịch sử trong modal chi tiết
       taiLichSuGiaoDichKH(ma);
     }
-
-
 
     // Gắn các hàm quan trọng của Nhập Hàng vào window
     window.xacNhanLuuPhieuNhap = xacNhanLuuPhieuNhap;
@@ -22776,7 +22967,7 @@ function loadSoQuy(filter) {
       return v === null ? true : (v === 'true' || v === '1');
     }
 
-    function napDanhSachNhanVienVaoSelect(selectId, selectedVal) {
+    function napDanhSachNhanVienVaoSelect(selectId, selectedVal, allowOther = false) {
       const el = document.getElementById(selectId);
       if (!el) return;
       
@@ -22799,11 +22990,51 @@ function loadSoQuy(filter) {
       
       const currentSelect = selectedVal || el.value || ((typeof currentUser !== 'undefined' && currentUser) ? currentUser.hoTen : danhSach[0]);
       
-      el.innerHTML = danhSach.map(ten => `<option value="${ten}" ${ten === currentSelect ? 'selected' : ''}>${ten}</option>`).join('');
-      if (currentSelect && !danhSach.includes(currentSelect)) {
-        el.innerHTML += `<option value="${currentSelect}" selected>${currentSelect}</option>`;
+      let html = danhSach.map(ten => `<option value="${ten}" ${ten === currentSelect ? 'selected' : ''}>👤 ${ten}</option>`).join('');
+      if (allowOther) {
+        html += `<option value="OTHER" ${currentSelect === 'OTHER' ? 'selected' : ''}>✏️ Khác (Tự nhập họ tên...)</option>`;
+      }
+      el.innerHTML = html;
+      if (currentSelect && currentSelect !== 'OTHER' && !danhSach.includes(currentSelect)) {
+        el.innerHTML = `<option value="${currentSelect}" selected>👤 ${currentSelect}</option>` + el.innerHTML;
       }
     }
+
+    function xuLyChonNguoiNhan(selectEl, customInputId) {
+      const customInp = document.getElementById(customInputId);
+      if (!customInp) return;
+      if (selectEl.value === 'OTHER') {
+        customInp.classList.remove('hidden');
+        customInp.focus();
+      } else {
+        customInp.classList.add('hidden');
+        customInp.value = '';
+      }
+    }
+
+    function datGiaTriNgayGioHienTai(inputId) {
+      const el = document.getElementById(inputId);
+      if (!el) return;
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      el.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    }
+
+    function layThongTinNgayGioInput(inputId) {
+      const el = document.getElementById(inputId);
+      let val = el ? el.value : '';
+      let d = val ? new Date(val) : new Date();
+      if (isNaN(d.getTime())) d = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const iso = d.toISOString();
+      const formatted = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+      return { iso, formatted, dateObj: d };
+    }
+
+    window.napDanhSachNhanVienVaoSelect = napDanhSachNhanVienVaoSelect;
+    window.xuLyChonNguoiNhan = xuLyChonNguoiNhan;
+    window.datGiaTriNgayGioHienTai = datGiaTriNgayGioHienTai;
+    window.layThongTinNgayGioInput = layThongTinNgayGioInput;
 
     function khoiTaoThongTinPOS() {
       const ngayBanInp = document.getElementById('pos-ngayban');

@@ -1390,7 +1390,11 @@ function apiThanhToanCongNoNCC(payload) {
     let ngayGD = payload.ngayGD || Utilities.formatDate(new Date(), Session.getScriptTimeZone() || "GMT+7", "yyyy-MM-dd HH:mm:ss");
     let loaiQuy = payload.loaiQuy || payload.hinhThucTT || "TIEN_MAT";
     let chiNhanh = payload.chiNhanh || "CN01: Trụ sở chính";
+    let nguoiNhan = payload.nguoiNhan || payload.nguoiChi || payload.nhanVien || "";
     let ghiChu = payload.ghiChu || `Chi thanh toán công nợ cho NCC ${tenNCC || maNCC}`;
+    if (nguoiNhan && ghiChu.indexOf(nguoiNhan) === -1) {
+      ghiChu = `[Người chi: ${nguoiNhan}] ` + ghiChu;
+    }
 
     let sheetQuy = ss.getSheetByName("SoQuy");
     if (!sheetQuy) {
@@ -1418,12 +1422,19 @@ function apiThanhToanCongNoNCC(payload) {
           ma_doi_tac: maNCC,
           cong_no: newCongNo
         });
+        let ngayGD_ISO = new Date().toISOString();
+        if (payload.ngayGD) {
+          try {
+            let parsed = new Date(payload.ngayGD);
+            if (!isNaN(parsed.getTime())) ngayGD_ISO = parsed.toISOString();
+          } catch(eDate) {}
+        }
         postToSupabaseServer("so_quy", {
           chi_nhanh: chiNhanh,
           ma_phieu: maPhieu,
           loai_phieu: "CHI",
           loai_quy: loaiQuy,
-          ngay_gd: new Date().toISOString(),
+          ngay_gd: ngayGD_ISO,
           so_tien: soTien,
           doi_tuong: "Nhà cung cấp",
           ma_doi_tuong: maNCC,
@@ -4398,7 +4409,11 @@ function apiThanhToanCongNoKH(payload) {
     let ngayGD = payload.ngayGD || Utilities.formatDate(new Date(), Session.getScriptTimeZone() || "GMT+7", "yyyy-MM-dd HH:mm:ss");
     let loaiQuy = payload.loaiQuy || payload.hinhThucTT || "TIEN_MAT";
     let chiNhanh = payload.chiNhanh || "CN01: Trụ sở chính";
+    let nguoiNhan = payload.nguoiNhan || payload.nhanVien || "";
     let ghiChu = payload.ghiChu || `Thu tiền công nợ khách hàng ${tenKH || maKH}`;
+    if (nguoiNhan && ghiChu.indexOf(nguoiNhan) === -1) {
+      ghiChu = `[Người nhận: ${nguoiNhan}] ` + ghiChu;
+    }
 
     let sheetQuy = ss.getSheetByName("SoQuy");
     if (!sheetQuy) {
@@ -4426,12 +4441,19 @@ function apiThanhToanCongNoKH(payload) {
           ma_doi_tac: maKH,
           cong_no: newCongNo
         });
+        let ngayGD_ISO = new Date().toISOString();
+        if (payload.ngayGD) {
+          try {
+            let parsed = new Date(payload.ngayGD);
+            if (!isNaN(parsed.getTime())) ngayGD_ISO = parsed.toISOString();
+          } catch(eDate) {}
+        }
         postToSupabaseServer("so_quy", {
           chi_nhanh: chiNhanh,
           ma_phieu: maPhieu,
           loai_phieu: "THU",
           loai_quy: loaiQuy,
-          ngay_gd: new Date().toISOString(),
+          ngay_gd: ngayGD_ISO,
           so_tien: soTien,
           doi_tuong: "Khách hàng",
           ma_doi_tuong: maKH,
