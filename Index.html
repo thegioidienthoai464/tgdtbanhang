@@ -563,7 +563,22 @@
                 <i class="fa-solid fa-arrows-rotate text-blue-600"></i><span>Tải lại</span>
               </button>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center space-x-1 bg-slate-50 border border-slate-300 rounded-xl px-2 py-1 text-xs shadow-2xs">
+                <i class="fa-regular fa-calendar text-slate-400"></i>
+                <select id="filter-kiemkho-kyngay" onchange="chonKyNgayNhanh(this.value, 'filter-kiemkho-tungay', 'filter-kiemkho-denngay', locDanhSachKiemKho)" class="bg-transparent border-0 font-semibold text-slate-700 text-xs focus:ring-0 focus:outline-none p-0 pr-4">
+                  <option value="ALL">Toàn bộ ngày</option>
+                  <option value="TODAY">Hôm nay (1 ngày)</option>
+                  <option value="YESTERDAY">Hôm qua (1 ngày)</option>
+                  <option value="7DAYS">7 ngày qua</option>
+                  <option value="THIS_MONTH">Tháng này</option>
+                  <option value="CUSTOM">Tùy chọn ngày...</option>
+                </select>
+                <input type="date" id="filter-kiemkho-tungay" onchange="xuLyDoiNgayInput('filter-kiemkho-kyngay', locDanhSachKiemKho)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Từ ngày">
+                <span class="text-slate-400 text-[10px]">-</span>
+                <input type="date" id="filter-kiemkho-denngay" onchange="xuLyDoiNgayInput('filter-kiemkho-kyngay', locDanhSachKiemKho)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Đến ngày">
+                <button type="button" onclick="xoaBoLocNgay('filter-kiemkho-kyngay', 'filter-kiemkho-tungay', 'filter-kiemkho-denngay', locDanhSachKiemKho)" class="text-slate-400 hover:text-rose-500 text-xs px-0.5 transition" title="Xóa lọc ngày"><i class="fa-solid fa-xmark"></i></button>
+              </div>
               <select id="filter-kiemkho-chinhanh" onchange="locDanhSachKiemKho()" class="border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs bg-amber-50 font-bold text-amber-900 shadow-2xs">
                 <option value="CURRENT">📍 Chi nhánh hiện tại</option>
                 <option value="ALL">🌐 Tất cả chi nhánh</option>
@@ -779,7 +794,22 @@
                 <i class="fa-solid fa-arrows-rotate text-rose-600"></i><span>Tải lại</span>
               </button>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center space-x-1 bg-slate-50 border border-slate-300 rounded-xl px-2 py-1 text-xs shadow-2xs">
+                <i class="fa-regular fa-calendar text-slate-400"></i>
+                <select id="filter-xuathuy-kyngay" onchange="chonKyNgayNhanh(this.value, 'filter-xuathuy-tungay', 'filter-xuathuy-denngay', locDanhSachXuatHuy)" class="bg-transparent border-0 font-semibold text-slate-700 text-xs focus:ring-0 focus:outline-none p-0 pr-4">
+                  <option value="ALL">Toàn bộ ngày</option>
+                  <option value="TODAY">Hôm nay (1 ngày)</option>
+                  <option value="YESTERDAY">Hôm qua (1 ngày)</option>
+                  <option value="7DAYS">7 ngày qua</option>
+                  <option value="THIS_MONTH">Tháng này</option>
+                  <option value="CUSTOM">Tùy chọn ngày...</option>
+                </select>
+                <input type="date" id="filter-xuathuy-tungay" onchange="xuLyDoiNgayInput('filter-xuathuy-kyngay', locDanhSachXuatHuy)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Từ ngày">
+                <span class="text-slate-400 text-[10px]">-</span>
+                <input type="date" id="filter-xuathuy-denngay" onchange="xuLyDoiNgayInput('filter-xuathuy-kyngay', locDanhSachXuatHuy)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Đến ngày">
+                <button type="button" onclick="xoaBoLocNgay('filter-xuathuy-kyngay', 'filter-xuathuy-tungay', 'filter-xuathuy-denngay', locDanhSachXuatHuy)" class="text-slate-400 hover:text-rose-500 text-xs px-0.5 transition" title="Xóa lọc ngày"><i class="fa-solid fa-xmark"></i></button>
+              </div>
               <input type="text" id="search-xuat-huy" oninput="locDanhSachXuatHuy()" placeholder="Tìm mã phiếu, người hủy, lý do..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs w-64 bg-slate-50">
             </div>
           </div>
@@ -963,6 +993,21 @@
               </button>
             </div>
             <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center space-x-1 bg-slate-50 border border-slate-300 rounded-xl px-2 py-1 text-xs shadow-2xs">
+                <i class="fa-regular fa-calendar text-slate-400"></i>
+                <select id="filter-chuyenkho-kyngay" onchange="chonKyNgayNhanh(this.value, 'filter-chuyenkho-tungay', 'filter-chuyenkho-denngay', locDanhSachChuyenKho)" class="bg-transparent border-0 font-semibold text-slate-700 text-xs focus:ring-0 focus:outline-none p-0 pr-4">
+                  <option value="ALL">Toàn bộ ngày</option>
+                  <option value="TODAY">Hôm nay (1 ngày)</option>
+                  <option value="YESTERDAY">Hôm qua (1 ngày)</option>
+                  <option value="7DAYS">7 ngày qua</option>
+                  <option value="THIS_MONTH">Tháng này</option>
+                  <option value="CUSTOM">Tùy chọn ngày...</option>
+                </select>
+                <input type="date" id="filter-chuyenkho-tungay" onchange="xuLyDoiNgayInput('filter-chuyenkho-kyngay', locDanhSachChuyenKho)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Từ ngày">
+                <span class="text-slate-400 text-[10px]">-</span>
+                <input type="date" id="filter-chuyenkho-denngay" onchange="xuLyDoiNgayInput('filter-chuyenkho-kyngay', locDanhSachChuyenKho)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Đến ngày">
+                <button type="button" onclick="xoaBoLocNgay('filter-chuyenkho-kyngay', 'filter-chuyenkho-tungay', 'filter-chuyenkho-denngay', locDanhSachChuyenKho)" class="text-slate-400 hover:text-rose-500 text-xs px-0.5 transition" title="Xóa lọc ngày"><i class="fa-solid fa-xmark"></i></button>
+              </div>
               <select id="filter-chuyenkho-xuat" onchange="locDanhSachChuyenKho()" class="border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs bg-slate-50 font-medium">
                 <option value="ALL">📍 Kho xuất: Tất cả</option>
               </select>
@@ -1203,7 +1248,22 @@
                 <i class="fa-solid fa-ban text-rose-600"></i><span>Hủy các đơn đã chọn</span>
               </button>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center space-x-1 bg-slate-50 border border-slate-300 rounded-xl px-2 py-1 text-xs shadow-2xs">
+                <i class="fa-regular fa-calendar text-slate-400"></i>
+                <select id="filter-nhaphang-kyngay" onchange="chonKyNgayNhanh(this.value, 'filter-nhaphang-tungay', 'filter-nhaphang-denngay', locDanhSachNhapHangTable)" class="bg-transparent border-0 font-semibold text-slate-700 text-xs focus:ring-0 focus:outline-none p-0 pr-4">
+                  <option value="ALL">Toàn bộ ngày</option>
+                  <option value="TODAY">Hôm nay (1 ngày)</option>
+                  <option value="YESTERDAY">Hôm qua (1 ngày)</option>
+                  <option value="7DAYS">7 ngày qua</option>
+                  <option value="THIS_MONTH">Tháng này</option>
+                  <option value="CUSTOM">Tùy chọn ngày...</option>
+                </select>
+                <input type="date" id="filter-nhaphang-tungay" onchange="xuLyDoiNgayInput('filter-nhaphang-kyngay', locDanhSachNhapHangTable)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Từ ngày">
+                <span class="text-slate-400 text-[10px]">-</span>
+                <input type="date" id="filter-nhaphang-denngay" onchange="xuLyDoiNgayInput('filter-nhaphang-kyngay', locDanhSachNhapHangTable)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Đến ngày">
+                <button type="button" onclick="xoaBoLocNgay('filter-nhaphang-kyngay', 'filter-nhaphang-tungay', 'filter-nhaphang-denngay', locDanhSachNhapHangTable)" class="text-slate-400 hover:text-rose-500 text-xs px-0.5 transition" title="Xóa lọc ngày"><i class="fa-solid fa-xmark"></i></button>
+              </div>
               <select id="filter-nhaphang-chinhanh" onchange="locDanhSachNhapHangTable()" class="border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs bg-amber-50 font-bold text-amber-900 shadow-2xs">
                 <option value="CURRENT">📍 Chi nhánh hiện tại</option>
                 <option value="ALL">🌐 Tất cả chi nhánh</option>
@@ -1368,7 +1428,22 @@
                 <i class="fa-solid fa-rotate"></i><span>Làm mới</span>
               </button>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center space-x-1 bg-slate-50 border border-slate-300 rounded-xl px-2 py-1 text-xs shadow-2xs">
+                <i class="fa-regular fa-calendar text-slate-400"></i>
+                <select id="filter-tranhap-kyngay" onchange="chonKyNgayNhanh(this.value, 'filter-tranhap-tungay', 'filter-tranhap-denngay', locDanhSachTraHangNCCTable)" class="bg-transparent border-0 font-semibold text-slate-700 text-xs focus:ring-0 focus:outline-none p-0 pr-4">
+                  <option value="ALL">Toàn bộ ngày</option>
+                  <option value="TODAY">Hôm nay (1 ngày)</option>
+                  <option value="YESTERDAY">Hôm qua (1 ngày)</option>
+                  <option value="7DAYS">7 ngày qua</option>
+                  <option value="THIS_MONTH">Tháng này</option>
+                  <option value="CUSTOM">Tùy chọn ngày...</option>
+                </select>
+                <input type="date" id="filter-tranhap-tungay" onchange="xuLyDoiNgayInput('filter-tranhap-kyngay', locDanhSachTraHangNCCTable)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Từ ngày">
+                <span class="text-slate-400 text-[10px]">-</span>
+                <input type="date" id="filter-tranhap-denngay" onchange="xuLyDoiNgayInput('filter-tranhap-kyngay', locDanhSachTraHangNCCTable)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Đến ngày">
+                <button type="button" onclick="xoaBoLocNgay('filter-tranhap-kyngay', 'filter-tranhap-tungay', 'filter-tranhap-denngay', locDanhSachTraHangNCCTable)" class="text-slate-400 hover:text-rose-500 text-xs px-0.5 transition" title="Xóa lọc ngày"><i class="fa-solid fa-xmark"></i></button>
+              </div>
               <select id="filter-tranhap-chinhanh" onchange="locDanhSachTraHangNCCTable()" class="border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs bg-amber-50 font-bold text-amber-900 shadow-2xs">
                 <option value="CURRENT">📍 Chi nhánh hiện tại</option>
                 <option value="ALL">🌐 Tất cả chi nhánh</option>
@@ -1514,7 +1589,22 @@
                 <i class="fa-solid fa-rotate"></i><span>Làm mới</span>
               </button>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center space-x-1 bg-slate-50 border border-slate-300 rounded-xl px-2 py-1 text-xs shadow-2xs">
+                <i class="fa-regular fa-calendar text-slate-400"></i>
+                <select id="filter-dathang-kyngay" onchange="chonKyNgayNhanh(this.value, 'filter-dathang-tungay', 'filter-dathang-denngay', locDanhSachDonDatHangTable)" class="bg-transparent border-0 font-semibold text-slate-700 text-xs focus:ring-0 focus:outline-none p-0 pr-4">
+                  <option value="ALL">Toàn bộ ngày</option>
+                  <option value="TODAY">Hôm nay (1 ngày)</option>
+                  <option value="YESTERDAY">Hôm qua (1 ngày)</option>
+                  <option value="7DAYS">7 ngày qua</option>
+                  <option value="THIS_MONTH">Tháng này</option>
+                  <option value="CUSTOM">Tùy chọn ngày...</option>
+                </select>
+                <input type="date" id="filter-dathang-tungay" onchange="xuLyDoiNgayInput('filter-dathang-kyngay', locDanhSachDonDatHangTable)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Từ ngày">
+                <span class="text-slate-400 text-[10px]">-</span>
+                <input type="date" id="filter-dathang-denngay" onchange="xuLyDoiNgayInput('filter-dathang-kyngay', locDanhSachDonDatHangTable)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Đến ngày">
+                <button type="button" onclick="xoaBoLocNgay('filter-dathang-kyngay', 'filter-dathang-tungay', 'filter-dathang-denngay', locDanhSachDonDatHangTable)" class="text-slate-400 hover:text-rose-500 text-xs px-0.5 transition" title="Xóa lọc ngày"><i class="fa-solid fa-xmark"></i></button>
+              </div>
               <select id="filter-dathang-chinhanh" onchange="locDanhSachDonDatHangTable()" class="border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs bg-amber-50 font-bold text-amber-900 shadow-2xs">
                 <option value="CURRENT">📍 Chi nhánh hiện tại</option>
                 <option value="ALL">🌐 Tất cả chi nhánh</option>
@@ -1764,7 +1854,22 @@
               <p class="text-[11px] text-slate-500">Tìm kiếm đơn hàng đã bán theo 7 tiêu chí để xử lý trả hàng và hoàn tiền tự động</p>
             </div>
           </div>
-          <div class="flex items-center space-x-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center space-x-1 bg-slate-50 border border-slate-300 rounded-xl px-2 py-1 text-xs shadow-2xs">
+              <i class="fa-regular fa-calendar text-slate-400"></i>
+              <select id="filter-trahang-kyngay" onchange="chonKyNgayNhanh(this.value, 'filter-trahang-tungay', 'filter-trahang-denngay', locDonHangTraHang)" class="bg-transparent border-0 font-semibold text-slate-700 text-xs focus:ring-0 focus:outline-none p-0 pr-4">
+                <option value="ALL">Toàn bộ ngày</option>
+                <option value="TODAY">Hôm nay (1 ngày)</option>
+                <option value="YESTERDAY">Hôm qua (1 ngày)</option>
+                <option value="7DAYS">7 ngày qua</option>
+                <option value="THIS_MONTH">Tháng này</option>
+                <option value="CUSTOM">Tùy chọn ngày...</option>
+              </select>
+              <input type="date" id="filter-trahang-tungay" onchange="xuLyDoiNgayInput('filter-trahang-kyngay', locDonHangTraHang)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Từ ngày">
+              <span class="text-slate-400 text-[10px]">-</span>
+              <input type="date" id="filter-trahang-denngay" onchange="xuLyDoiNgayInput('filter-trahang-kyngay', locDonHangTraHang)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Đến ngày">
+              <button type="button" onclick="xoaBoLocNgay('filter-trahang-kyngay', 'filter-trahang-tungay', 'filter-trahang-denngay', locDonHangTraHang)" class="text-slate-400 hover:text-rose-500 text-xs px-0.5 transition" title="Xóa lọc ngày"><i class="fa-solid fa-xmark"></i></button>
+            </div>
             <select id="filter-trahang-chinhanh" onchange="locDonHangTraHang()" class="border border-slate-200 rounded-xl px-3 py-1.5 text-xs bg-slate-50 font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 shadow-2xs">
               <option value="ALL">🌐 Tất cả chi nhánh</option>
               <option value="CURRENT">📍 Chi nhánh hiện tại</option>
@@ -1916,7 +2021,22 @@
               <i class="fa-solid fa-rotate"></i><span>Làm mới danh sách</span>
             </button>
           </div>
-          <div class="flex items-center space-x-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center space-x-1 bg-slate-50 border border-slate-300 rounded-xl px-2 py-1 text-xs shadow-2xs">
+              <i class="fa-regular fa-calendar text-slate-400"></i>
+              <select id="filter-lichsudon-kyngay" onchange="chonKyNgayNhanh(this.value, 'filter-lichsudon-tungay', 'filter-lichsudon-denngay', locDanhSachDonHang)" class="bg-transparent border-0 font-semibold text-slate-700 text-xs focus:ring-0 focus:outline-none p-0 pr-4">
+                <option value="ALL">Toàn bộ ngày</option>
+                <option value="TODAY">Hôm nay (1 ngày)</option>
+                <option value="YESTERDAY">Hôm qua (1 ngày)</option>
+                <option value="7DAYS">7 ngày qua</option>
+                <option value="THIS_MONTH">Tháng này</option>
+                <option value="CUSTOM">Tùy chọn ngày...</option>
+              </select>
+              <input type="date" id="filter-lichsudon-tungay" onchange="xuLyDoiNgayInput('filter-lichsudon-kyngay', locDanhSachDonHang)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Từ ngày">
+              <span class="text-slate-400 text-[10px]">-</span>
+              <input type="date" id="filter-lichsudon-denngay" onchange="xuLyDoiNgayInput('filter-lichsudon-kyngay', locDanhSachDonHang)" class="border border-slate-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Đến ngày">
+              <button type="button" onclick="xoaBoLocNgay('filter-lichsudon-kyngay', 'filter-lichsudon-tungay', 'filter-lichsudon-denngay', locDanhSachDonHang)" class="text-slate-400 hover:text-rose-500 text-xs px-0.5 transition" title="Xóa lọc ngày"><i class="fa-solid fa-xmark"></i></button>
+            </div>
             <select id="filter-lichsu-chinhanh" onchange="locDanhSachDonHang()" class="border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs bg-amber-50 font-bold text-amber-900 shadow-2xs">
               <option value="CURRENT">📍 Chi nhánh hiện tại</option>
               <option value="ALL">🌐 Tất cả chi nhánh</option>
@@ -2021,7 +2141,22 @@
           </div>
 
           <!-- TÌM KIẾM NHANH & BỘ LỌC TRẠNG THÁI GIAO DỊCH -->
-          <div class="flex items-center space-x-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center space-x-1 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-xs shadow-2xs">
+              <i class="fa-regular fa-calendar text-slate-400"></i>
+              <select id="filter-soquy-kyngay" onchange="chonKyNgayNhanh(this.value, 'filter-soquy-tungay', 'filter-soquy-denngay', locDuLieuSoQuy)" class="bg-transparent border-0 font-semibold text-slate-700 text-xs focus:ring-0 focus:outline-none p-0 pr-4">
+                <option value="ALL">Toàn bộ ngày</option>
+                <option value="TODAY">Hôm nay (1 ngày)</option>
+                <option value="YESTERDAY">Hôm qua (1 ngày)</option>
+                <option value="7DAYS">7 ngày qua</option>
+                <option value="THIS_MONTH">Tháng này</option>
+                <option value="CUSTOM">Tùy chọn ngày...</option>
+              </select>
+              <input type="date" id="filter-soquy-tungay" onchange="xuLyDoiNgayInput('filter-soquy-kyngay', locDuLieuSoQuy)" class="border border-slate-200 rounded-md px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Từ ngày">
+              <span class="text-slate-400 text-[10px]">-</span>
+              <input type="date" id="filter-soquy-denngay" onchange="xuLyDoiNgayInput('filter-soquy-kyngay', locDuLieuSoQuy)" class="border border-slate-200 rounded-md px-1.5 py-0.5 text-[11px] font-mono text-slate-700 bg-white" title="Đến ngày">
+              <button type="button" onclick="xoaBoLocNgay('filter-soquy-kyngay', 'filter-soquy-tungay', 'filter-soquy-denngay', locDuLieuSoQuy)" class="text-slate-400 hover:text-rose-500 text-xs px-0.5 transition" title="Xóa lọc ngày"><i class="fa-solid fa-xmark"></i></button>
+            </div>
             <div class="relative">
               <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
               <input type="text" id="sq-search-input" oninput="locDuLieuSoQuy()" placeholder="Tìm mã phiếu, đối tượng, lý do..." class="pl-8 pr-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 w-52 font-medium">
@@ -7669,14 +7804,20 @@ function formatVND(amount) {
       const cnFilter = document.getElementById('filter-nhaphang-chinhanh')?.value || 'CURRENT';
       const targetCN = cnFilter === 'CURRENT' ? layMaChiNhanh(currentChiNhanh) : cnFilter;
 
+      const tuNgayNH = document.getElementById('filter-nhaphang-tungay')?.value || '';
+      const denNgayNH = document.getElementById('filter-nhaphang-denngay')?.value || '';
+
       const filtered = rawNhapHangList.filter(item => {
         if (targetCN !== 'ALL') {
           if (!laCungChiNhanh(item.chiNhanh, targetCN)) return false;
         }
-        return !kw || String(item.maPhieu || '').toLowerCase().includes(kw) ||
+        const matchKw = !kw || String(item.maPhieu || '').toLowerCase().includes(kw) ||
                String(item.tenNCC || '').toLowerCase().includes(kw) ||
                String(item.maNCC || '').toLowerCase().includes(kw) ||
                String(item.ghiChu || '').toLowerCase().includes(kw);
+        const dateVal = item.ngayNhap || item.ngayTao || item.thoiGian || item.created_at;
+        const matchDate = kiemTraNgayTrongKhoang(dateVal, tuNgayNH, denNgayNH);
+        return matchKw && matchDate;
       });
       renderBangDanhSachNhapHang(filtered);
     }
@@ -10991,14 +11132,19 @@ function formatVND(amount) {
       const kw = (document.getElementById('search-kiem-kho')?.value || '').toLowerCase().trim();
       const cnFilter = document.getElementById('filter-kiemkho-chinhanh')?.value || 'CURRENT';
       const targetCN = cnFilter === 'CURRENT' ? layMaChiNhanh(currentChiNhanh) : cnFilter;
+      const tuNgayKK = document.getElementById('filter-kiemkho-tungay')?.value || '';
+      const denNgayKK = document.getElementById('filter-kiemkho-denngay')?.value || '';
 
       const list = rawKiemKhoList.filter(k => {
         if (targetCN !== 'ALL') {
           if (!laCungChiNhanh(k.chiNhanh, targetCN)) return false;
         }
-        return (k.maChungTu || '').toLowerCase().includes(kw) || 
+        const matchKw = (k.maChungTu || '').toLowerCase().includes(kw) || 
                (k.nhanVien || '').toLowerCase().includes(kw) || 
                (k.ghiChu || '').toLowerCase().includes(kw);
+        const dateVal = k.ngayTao || k.ngayKiem || k.thoiGian || k.created_at;
+        const matchDate = kiemTraNgayTrongKhoang(dateVal, tuNgayKK, denNgayKK);
+        return matchKw && matchDate;
       });
       const tbody = document.getElementById('tbl-kiemkho-body');
       if (!tbody) return;
@@ -11677,11 +11823,18 @@ function formatVND(amount) {
     function locDanhSachXuatHuy() {
       const kw = (document.getElementById('search-xuat-huy') || {}).value || '';
       const q = kw.toLowerCase().trim();
-      const filtered = q ? rawXuatHuyList.filter(x =>
-        (x.maChungTu||'').toLowerCase().includes(q) ||
-        (x.nhanVien||'').toLowerCase().includes(q) ||
-        (x.lyDo||'').toLowerCase().includes(q)
-      ) : rawXuatHuyList;
+      const tuNgayXH = document.getElementById('filter-xuathuy-tungay')?.value || '';
+      const denNgayXH = document.getElementById('filter-xuathuy-denngay')?.value || '';
+
+      const filtered = (rawXuatHuyList || []).filter(x => {
+        const matchKw = !q ||
+          (x.maChungTu||'').toLowerCase().includes(q) ||
+          (x.nhanVien||'').toLowerCase().includes(q) ||
+          (x.lyDo||'').toLowerCase().includes(q);
+        const dateVal = x.ngayTao || x.ngayHuy || x.thoiGian || x.created_at;
+        const matchDate = kiemTraNgayTrongKhoang(dateVal, tuNgayXH, denNgayXH);
+        return matchKw && matchDate;
+      });
       const tbody = document.getElementById('tbl-xuathuy-body');
       if (!tbody) return;
       if (!filtered.length) {
@@ -14057,6 +14210,8 @@ function formatVND(amount) {
       const locTrangThai = document.getElementById('sq-loc-trangthai')?.value || 'ALL';
       const filterNH = document.getElementById('filter-quy-nganhang')?.value || '';
       const kw = (document.getElementById('sq-search-input')?.value || '').trim().toLowerCase();
+      const tuNgaySQ = document.getElementById('filter-soquy-tungay')?.value || '';
+      const denNgaySQ = document.getElementById('filter-soquy-denngay')?.value || '';
       
       const list = window.rawSoQuyData.danhSach.filter(p => {
         const matchTrangThai = (locTrangThai === 'ALL' || p.trangThai === locTrangThai);
@@ -14072,8 +14227,29 @@ function formatVND(amount) {
           (p.lyDoThuChi && p.lyDoThuChi.toLowerCase().includes(kw)) ||
           (p.soTien && String(p.soTien).includes(kw)) ||
           (p.chiNhanh && p.chiNhanh.toLowerCase().includes(kw));
-        return matchTrangThai && matchNganHang && matchKw;
+        const dateVal = p.ngayGD || p.ngayGiaoDich || p.ngay || p.ngay_gd || p.created_at;
+        const matchDate = kiemTraNgayTrongKhoang(dateVal, tuNgaySQ, denNgaySQ);
+        return matchTrangThai && matchNganHang && matchKw && matchDate;
       });
+
+      // Cập nhật thống kê thu, chi, tồn theo phạm vi ngày đang lọc
+      if (tuNgaySQ || denNgaySQ) {
+        let tongThuLoc = 0;
+        let tongChiLoc = 0;
+        list.forEach(p => {
+          if (p.trangThai !== 'DaHuy') {
+            const st = Number(p.soTien) || 0;
+            if (String(p.loaiPhieu || "").trim().toUpperCase() === 'THU') tongThuLoc += st;
+            else tongChiLoc += st;
+          }
+        });
+        const elThu = document.getElementById('sq-tong-thu');
+        const elChi = document.getElementById('sq-tong-chi');
+        const elTon = document.getElementById('sq-ton-quy');
+        if (elThu) elThu.innerText = tongThuLoc.toLocaleString('vi-VN') + ' đ';
+        if (elChi) elChi.innerText = tongChiLoc.toLocaleString('vi-VN') + ' đ';
+        if (elTon) elTon.innerText = (tongThuLoc - tongChiLoc).toLocaleString('vi-VN') + ' đ';
+      }
 
       const tbody = document.getElementById('tbl-soquy-body');
       if (!tbody) return;
@@ -18648,14 +18824,20 @@ let danhSachTamXuatExcel = [];
       const cnFilter = document.getElementById('filter-lichsu-chinhanh')?.value || 'CURRENT';
       const targetCN = cnFilter === 'CURRENT' ? layMaChiNhanh(currentChiNhanh) : cnFilter;
 
+      const tuNgayDH = document.getElementById('filter-lichsudon-tungay')?.value || '';
+      const denNgayDH = document.getElementById('filter-lichsudon-denngay')?.value || '';
+
       const filtered = rawDonHangList.filter(d => {
         if (String(d.maDonHang || '').startsWith('PNH') || String(d.maDonHang || '').startsWith('DDH')) return false;
         if (targetCN !== 'ALL') {
           if (!laCungChiNhanh(d.chiNhanh, targetCN)) return false;
         }
-        return String(d.maDonHang).toLowerCase().includes(kw) || 
+        const matchKw = String(d.maDonHang).toLowerCase().includes(kw) || 
                String(d.tenKH).toLowerCase().includes(kw) ||
                String(d.maKH).toLowerCase().includes(kw);
+        const dateVal = d.ngayBan || d.ngayTao || d.thoiGian || d.created_at;
+        const matchDate = kiemTraNgayTrongKhoang(dateVal, tuNgayDH, denNgayDH);
+        return matchKw && matchDate;
       });
       const tbody = document.getElementById('tbl-lichsudon-body');
       if (!tbody) return;
@@ -19097,6 +19279,12 @@ function loadSoQuy(filter) {
         } else if (filterCN !== 'ALL') {
           if (typeof laCungChiNhanh === 'function' && !laCungChiNhanh(don.chiNhanh, filterCN)) return false;
         }
+
+        // Lọc theo ngày bán / ngày tạo đơn trả hàng
+        const tuNgayTH = document.getElementById('filter-trahang-tungay')?.value || '';
+        const denNgayTH = document.getElementById('filter-trahang-denngay')?.value || '';
+        const dateValTH = don.ngayBan || don.ngayTao || don.thoiGian || don.created_at;
+        if (!kiemTraNgayTrongKhoang(dateValTH, tuNgayTH, denNgayTH)) return false;
 
         // KHI Ô TÌM KIẾM TRỐNG -> HIỂN THỊ TOÀN BỘ ĐƠN HÀNG THỎA MÃN BỘ LỌC!
         if (!rawKw) return true;
@@ -20401,14 +20589,20 @@ function loadSoQuy(filter) {
       const cnFilter = document.getElementById('filter-tranhap-chinhanh')?.value || 'CURRENT';
       const targetCN = cnFilter === 'CURRENT' ? layMaChiNhanh(currentChiNhanh) : cnFilter;
 
+      const tuNgayTN = document.getElementById('filter-tranhap-tungay')?.value || '';
+      const denNgayTN = document.getElementById('filter-tranhap-denngay')?.value || '';
+
       const filtered = rawTraHangNCCList.filter(item => {
         if (targetCN !== 'ALL') {
           if (!laCungChiNhanh(item.chiNhanh, targetCN)) return false;
         }
-        return !kw || String(item.maPhieu || '').toLowerCase().includes(kw) ||
+        const matchKw = !kw || String(item.maPhieu || '').toLowerCase().includes(kw) ||
                String(item.tenNCC || '').toLowerCase().includes(kw) ||
                String(item.maNCC || '').toLowerCase().includes(kw) ||
                String(item.ghiChu || '').toLowerCase().includes(kw);
+        const dateVal = item.ngayTra || item.ngayTao || item.thoiGian || item.created_at;
+        const matchDate = kiemTraNgayTrongKhoang(dateVal, tuNgayTN, denNgayTN);
+        return matchKw && matchDate;
       });
       renderBangDanhSachTraHangNCC(filtered);
     }
@@ -21317,6 +21511,9 @@ function loadSoQuy(filter) {
       const cnFilter = document.getElementById('filter-dathang-chinhanh')?.value || 'CURRENT';
       const targetCN = cnFilter === 'CURRENT' ? layMaChiNhanh(currentChiNhanh) : cnFilter;
 
+      const tuNgay = document.getElementById('filter-dathang-tungay')?.value || '';
+      const denNgay = document.getElementById('filter-dathang-denngay')?.value || '';
+
       const filtered = (rawDonDatHangList || []).filter(d => {
         if (targetCN !== 'ALL') {
           if (!laCungChiNhanh(d.chiNhanh, targetCN)) return false;
@@ -21327,7 +21524,9 @@ function loadSoQuy(filter) {
         const tt = d.trangThai || 'Chờ xử lý';
         const matchStatus = statusFilter === 'ALL' || tt === statusFilter;
         const matchKw = !kw || maDonStr.toLowerCase().includes(kw) || tenKHStr.toLowerCase().includes(kw) || sdtStr.toLowerCase().includes(kw);
-        return matchStatus && matchKw;
+        const dateVal = d.ngayDat || d.ngayTao || d.thoiGian || d.created_at;
+        const matchDate = kiemTraNgayTrongKhoang(dateVal, tuNgay, denNgay);
+        return matchStatus && matchKw && matchDate;
       });
 
       if (!filtered.length) {
@@ -21849,6 +22048,43 @@ function loadSoQuy(filter) {
             napCacTrangKHConLai(totalCount, mapItem);
           } else {
             if (typeof luuKHVaoCache === 'function') luuKHVaoCache(rawKHList);
+          }
+
+          // Cập nhật live chính xác 100% công nợ khách hàng từ Supabase
+          try {
+            const { data: debtList } = await supabaseClient
+              .from('dm_doitac')
+              .select('ma_doi_tac, cong_no')
+              .eq('loai_doi_tac', 'KH')
+              .gt('cong_no', 0);
+            if (Array.isArray(debtList)) {
+              const debtMap = new Map();
+              debtList.forEach(d => debtMap.set(d.ma_doi_tac, Number(d.cong_no) || 0));
+              let needUpdateCache = false;
+              rawKHList.forEach(item => {
+                const ma = item.maDoiTac || item.maKH;
+                if (ma) {
+                  if (debtMap.has(ma)) {
+                    const liveDebt = debtMap.get(ma);
+                    if (item.congNo !== liveDebt) {
+                      item.congNo = liveDebt;
+                      needUpdateCache = true;
+                    }
+                  } else if (item.congNo > 0) {
+                    item.congNo = 0;
+                    needUpdateCache = true;
+                  }
+                }
+              });
+              if (needUpdateCache) {
+                locDanhSachKH(false);
+                if (typeof luuKHVaoCache === 'function') {
+                  luuKHVaoCache(rawKHList);
+                }
+              }
+            }
+          } catch(eDebt) {
+            console.warn("Lỗi kiểm tra live công nợ KH:", eDebt);
           }
         }
       } catch(err) {
@@ -22768,6 +23004,9 @@ function loadSoQuy(filter) {
       if (k) {
         k.congNo = Math.max(0, (Number(k.congNo) || 0) - soTien);
         newNo = k.congNo;
+        if (typeof luuKHVaoCache === 'function') {
+          luuKHVaoCache([k]);
+        }
       }
       if (window.currentViewingKH && (window.currentViewingKH.maDoiTac || window.currentViewingKH.maKH) === ma) {
         window.currentViewingKH.congNo = newNo;
@@ -23035,6 +23274,98 @@ function loadSoQuy(filter) {
     window.xuLyChonNguoiNhan = xuLyChonNguoiNhan;
     window.datGiaTriNgayGioHienTai = datGiaTriNgayGioHienTai;
     window.layThongTinNgayGioInput = layThongTinNgayGioInput;
+
+    /* ====================================================================
+     * BỘ LỌC NGÀY CHUNG TOÀN HỆ THỐNG: 1 HOẶC NHIỀU NGÀY / KHOẢNG NGÀY
+     * ==================================================================== */
+    function kiemTraNgayTrongKhoang(dateVal, tuNgayStr, denNgayStr) {
+      if (!tuNgayStr && !denNgayStr) return true; // Không lọc ngày -> khớp tất cả
+      if (!dateVal) return false;
+
+      let ymd = '';
+      if (typeof dateVal === 'string') {
+        const mIso = dateVal.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+        if (mIso) {
+          ymd = `${mIso[1]}-${String(mIso[2]).padStart(2, '0')}-${String(mIso[3]).padStart(2, '0')}`;
+        } else {
+          const mVn = dateVal.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+          if (mVn) {
+            ymd = `${mVn[3]}-${String(mVn[2]).padStart(2, '0')}-${String(mVn[1]).padStart(2, '0')}`;
+          } else {
+            const d = new Date(dateVal);
+            if (!isNaN(d.getTime())) {
+              const pad = n => String(n).padStart(2, '0');
+              ymd = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+            }
+          }
+        }
+      } else if (dateVal instanceof Date && !isNaN(dateVal.getTime())) {
+        const pad = n => String(n).padStart(2, '0');
+        ymd = `${dateVal.getFullYear()}-${pad(dateVal.getMonth()+1)}-${pad(dateVal.getDate())}`;
+      }
+
+      if (!ymd) return true;
+
+      if (tuNgayStr && ymd < tuNgayStr) return false;
+      if (denNgayStr && ymd > denNgayStr) return false;
+      return true;
+    }
+
+    function chonKyNgayNhanh(preset, tuNgayId, denNgayId, callbackFn) {
+      const elTu = document.getElementById(tuNgayId);
+      const elDen = document.getElementById(denNgayId);
+      if (!elTu || !elDen) return;
+
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+      if (preset === 'TODAY') {
+        const today = fmt(now);
+        elTu.value = today;
+        elDen.value = today;
+      } else if (preset === 'YESTERDAY') {
+        const yest = new Date(now.getTime() - 86400000);
+        const yestStr = fmt(yest);
+        elTu.value = yestStr;
+        elDen.value = yestStr;
+      } else if (preset === '7DAYS') {
+        const past7 = new Date(now.getTime() - 6 * 86400000);
+        elTu.value = fmt(past7);
+        elDen.value = fmt(now);
+      } else if (preset === 'THIS_MONTH') {
+        const startM = new Date(now.getFullYear(), now.getMonth(), 1);
+        elTu.value = fmt(startM);
+        elDen.value = fmt(now);
+      } else if (preset === 'ALL') {
+        elTu.value = '';
+        elDen.value = '';
+      }
+
+      if (typeof callbackFn === 'function') callbackFn();
+    }
+
+    function xuLyDoiNgayInput(presetSelectId, callbackFn) {
+      const sel = document.getElementById(presetSelectId);
+      if (sel) sel.value = 'CUSTOM';
+      if (typeof callbackFn === 'function') callbackFn();
+    }
+
+    function xoaBoLocNgay(presetSelectId, tuNgayId, denNgayId, callbackFn) {
+      const sel = document.getElementById(presetSelectId);
+      if (sel) sel.value = 'ALL';
+      const elTu = document.getElementById(tuNgayId);
+      if (elTu) elTu.value = '';
+      const elDen = document.getElementById(denNgayId);
+      if (elDen) elDen.value = '';
+      if (typeof callbackFn === 'function') callbackFn();
+    }
+
+    window.kiemTraNgayTrongKhoang = kiemTraNgayTrongKhoang;
+    window.chonKyNgayNhanh = chonKyNgayNhanh;
+    window.xuLyDoiNgayInput = xuLyDoiNgayInput;
+    window.xoaBoLocNgay = xoaBoLocNgay;
+
 
     function khoiTaoThongTinPOS() {
       const ngayBanInp = document.getElementById('pos-ngayban');
@@ -23639,6 +23970,9 @@ function loadSoQuy(filter) {
       const fNhan = document.getElementById('filter-chuyenkho-nhan')?.value || 'ALL';
       const kw = (document.getElementById('search-chuyenkho')?.value || '').trim().toLowerCase();
 
+      const tuNgayCK = document.getElementById('filter-chuyenkho-tungay')?.value || '';
+      const denNgayCK = document.getElementById('filter-chuyenkho-denngay')?.value || '';
+
       const filtered = (rawChuyenKhoList || []).filter(p => {
         const mXuat = (fXuat === 'ALL') || (layMaChiNhanh(p.cnXuat) === fXuat);
         const mNhan = (fNhan === 'ALL') || (layMaChiNhanh(p.cnNhan) === fNhan);
@@ -23648,7 +23982,9 @@ function loadSoQuy(filter) {
           String(p.ghiChu || '').toLowerCase().includes(kw) ||
           String(p.tenCnXuat || '').toLowerCase().includes(kw) ||
           String(p.tenCnNhan || '').toLowerCase().includes(kw);
-        return mXuat && mNhan && mKw;
+        const dateVal = p.ngayChuyen || p.ngayTao || p.thoiGian || p.created_at;
+        const matchDate = kiemTraNgayTrongKhoang(dateVal, tuNgayCK, denNgayCK);
+        return mXuat && mNhan && mKw && matchDate;
       });
 
       renderBangDanhSachChuyenKho(filtered);

@@ -1378,12 +1378,10 @@ function apiThanhToanCongNoNCC(payload) {
       }
     }
 
-    if (foundRow === -1) {
-      return { success: false, error: "Không tìm thấy Nhà cung cấp [" + maNCC + "] trong hệ thống!" };
-    }
-
     let newCongNo = Math.max(0, currentCongNo - soTien);
-    sheetDT.getRange(foundRow, idxCongNo + 1).setValue(newCongNo);
+    if (foundRow > -1) {
+      sheetDT.getRange(foundRow, idxCongNo + 1).setValue(newCongNo);
+    }
 
     // Ghi nhận Phiếu chi vào Sổ Quỹ
     let maPhieu = payload.maPhieu || ("PC" + Date.now().toString().slice(-6));
@@ -1418,10 +1416,16 @@ function apiThanhToanCongNoNCC(payload) {
     // Đồng bộ sang Supabase
     try {
       if (typeof postToSupabaseServer === 'function') {
-        postToSupabaseServer("dm_doitac", {
-          ma_doi_tac: maNCC,
-          cong_no: newCongNo
-        });
+        if (typeof patchSupabaseServer === 'function') {
+          patchSupabaseServer("dm_doitac", "ma_doi_tac=eq." + maNCC, {
+            cong_no: newCongNo
+          });
+        } else if (typeof postToSupabaseServer === 'function') {
+          postToSupabaseServer("dm_doitac", {
+            ma_doi_tac: maNCC,
+            cong_no: newCongNo
+          });
+        }
         let ngayGD_ISO = new Date().toISOString();
         if (payload.ngayGD) {
           try {
@@ -4397,12 +4401,10 @@ function apiThanhToanCongNoKH(payload) {
       }
     }
 
-    if (foundRow === -1) {
-      return { success: false, error: "Không tìm thấy Khách hàng [" + maKH + "] trong hệ thống!" };
-    }
-
     let newCongNo = Math.max(0, currentCongNo - soTien);
-    sheetDT.getRange(foundRow, idxCongNo + 1).setValue(newCongNo);
+    if (foundRow > -1) {
+      sheetDT.getRange(foundRow, idxCongNo + 1).setValue(newCongNo);
+    }
 
     // Ghi nhận Phiếu thu vào Sổ Quỹ
     let maPhieu = payload.maPhieu || ("PT" + Date.now().toString().slice(-6));
@@ -4437,10 +4439,16 @@ function apiThanhToanCongNoKH(payload) {
     // Đồng bộ sang Supabase
     try {
       if (typeof postToSupabaseServer === 'function') {
-        postToSupabaseServer("dm_doitac", {
-          ma_doi_tac: maKH,
-          cong_no: newCongNo
-        });
+        if (typeof patchSupabaseServer === 'function') {
+          patchSupabaseServer("dm_doitac", "ma_doi_tac=eq." + maKH, {
+            cong_no: newCongNo
+          });
+        } else if (typeof postToSupabaseServer === 'function') {
+          postToSupabaseServer("dm_doitac", {
+            ma_doi_tac: maKH,
+            cong_no: newCongNo
+          });
+        }
         let ngayGD_ISO = new Date().toISOString();
         if (payload.ngayGD) {
           try {
