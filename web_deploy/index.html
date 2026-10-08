@@ -5256,6 +5256,10 @@
   </div>
 
   <script>
+    /* Biến toàn cục phiên đăng nhập người dùng */
+    var currentUser = null;
+    window.currentUser = null;
+
     /* ====================================================================
      * TỰ ĐỘNG THÍCH ỨNG: HỖ TRỢ CHẠY ĐỘC LẬP (VERCEL, NETLIFY, STANDALONE)
      * ==================================================================== */
@@ -11697,16 +11701,16 @@ function formatVND(amount) {
       const dateStr = `${d}/${m}/${now.getFullYear()} ${timeStr}`;
       const code = `PKK${y}${m}${d}_${Date.now().toString().slice(-4)}`;
 
-      const currentUser = document.getElementById('sidebar-user-name')?.innerText || 'Quản trị viên';
+      const currentUserName = document.getElementById('sidebar-user-name')?.innerText || 'Quản trị viên';
       phieuKiemKhoHienTai = {
         maChungTu: code,
         ngayTao: dateStr,
-        nhanVien: currentUser,
+        nhanVien: currentUserName,
         chiNhanh: currentChiNhanh || "CN01: Trụ sở chính Thanh Miện"
       };
 
       document.getElementById('kk-phieu-ma').innerText = code;
-      document.getElementById('kk-phieu-nguoi').innerText = currentUser;
+      document.getElementById('kk-phieu-nguoi').innerText = currentUserName;
       document.getElementById('kk-phieu-ngay').innerText = dateStr;
       document.getElementById('kk-phieu-ghichu').value = "";
       document.getElementById('kk-phieu-canbang').checked = true;
@@ -20140,15 +20144,6 @@ function formatVND(amount) {
       if (typeof showNotification === 'function') showNotification("Đã đăng nhập thành công vào Chế độ Kiểm thử (Sandbox)!");
     }
 
-    if (document.readyState === 'complete') {
-      khoiDongUngDung();
-    } else {
-      window.addEventListener('load', khoiDongUngDung);
-    }
-
-    let currentUser = null;
-    window.currentUser = null;
-
     // Kiểm tra & Khởi tạo phiên đăng nhập ngay khi mở trang
     function kiemTraVaKhoiTaoPhienLamViec() {
       if (typeof initEnvironmentUI === 'function') initEnvironmentUI();
@@ -20176,6 +20171,7 @@ function formatVND(amount) {
         // Đã có phiên đăng nhập hợp lệ
         if (modalLogin) modalLogin.classList.add('hidden');
         hienThiGiaoDienSauKhiDangNhap();
+        if (typeof khoiDongUngDung === 'function') khoiDongUngDung();
       } else {
         // Chưa đăng nhập: Bắt buộc mở modal đăng nhập và khóa giao diện
         currentUser = null;
