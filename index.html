@@ -1266,7 +1266,6 @@
               </div>
               <select id="filter-nhaphang-chinhanh" onchange="locDanhSachNhapHangTable()" class="border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs bg-amber-50 font-bold text-amber-900 shadow-2xs">
                 <option value="CURRENT">📍 Chi nhánh hiện tại</option>
-                <option value="ALL">🌐 Tất cả chi nhánh</option>
               </select>
               <input type="text" id="search-danhsach-nhaphang" oninput="locDanhSachNhapHangTable()" placeholder="Tìm mã phiếu, tên/mã NCC, ghi chú..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs w-64 bg-slate-50 focus:bg-white focus:outline-none focus:border-blue-500">
               <button type="button" onclick="moCaiDatCot('nhaphang')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold border border-slate-300 transition flex items-center space-x-1 text-xs" title="Tùy chỉnh ẩn/hiện cột Nhập hàng">
@@ -6257,9 +6256,10 @@ function formatVND(amount) {
 
     // 3. So khớp 2 chi nhánh có cùng thuộc 1 chi nhánh không
     function laCungChiNhanh(cn1, cn2) {
-      if (!cn1 || !cn2) return false;
-      if (cn1 === 'ALL' || cn2 === 'ALL') return true;
-      return layMaChiNhanh(cn1) === layMaChiNhanh(cn2);
+      const c1 = cn1 || 'CN01';
+      const c2 = cn2 || 'CN01';
+      if (c1 === 'ALL' || c2 === 'ALL') return true;
+      return layMaChiNhanh(c1) === layMaChiNhanh(c2);
     }
 
     // 4. Lấy số lượng tồn kho của một sản phẩm tại chi nhánh cụ thể
@@ -6884,7 +6884,6 @@ function formatVND(amount) {
       const filterSelects = [
         'sq-loc-chinhanh',
         'filter-lichsu-chinhanh',
-        'filter-nhaphang-chinhanh',
         'filter-dathang-chinhanh',
         'filter-tranhap-chinhanh',
         'filter-kiemkho-chinhanh'
@@ -6900,6 +6899,24 @@ function formatVND(amount) {
         `;
         el.value = curVal;
       });
+
+      // Riêng bộ lọc Đơn Nhập Hàng (4.2): Đơn nhập của chi nhánh nào chỉ hiển thị ở chi nhánh đó
+      const elNhapHangCN = document.getElementById('filter-nhaphang-chinhanh');
+      if (elNhapHangCN) {
+        const curValNH = elNhapHangCN.value || 'CURRENT';
+        if (currentUser && currentUser.vaiTro !== 'Admin') {
+          // Nhân viên chỉ hiển thị duy nhất chi nhánh hiện tại
+          elNhapHangCN.innerHTML = `<option value="CURRENT">📍 Chi nhánh: ${tenHienThiNgan}</option>`;
+          elNhapHangCN.value = 'CURRENT';
+        } else {
+          // Quản trị viên: Lựa chọn chi nhánh cụ thể (không có "Tất cả chi nhánh" để tránh lẫn lộn đơn nhập)
+          elNhapHangCN.innerHTML = `
+            <option value="CURRENT">📍 Chi nhánh hiện tại (${tenHienThiNgan})</option>
+            ${rawChiNhanhList.map(cn => `<option value="${cn.ma}">🏢 ${cn.ma}: ${cn.ten}</option>`).join('')}
+          `;
+          elNhapHangCN.value = (curValNH && curValNH !== 'ALL') ? curValNH : 'CURRENT';
+        }
+      }
     }
 
     /* ====================================================================
@@ -7593,7 +7610,7 @@ function formatVND(amount) {
         if (vDanhSach) vDanhSach.classList.add('hidden');
         if (vTaoDon) vTaoDon.classList.remove('hidden');
         const cnDisplay = document.getElementById('nhap-chinhanh-display');
-        if (cnDisplay) cnDisplay.innerText = `Chi nhánh: ${currentChiNhanh || 'CN01: Trụ sở chính'}`;
+        if (cnDisplay) cnDisplay.innerText = `Chi nhánh: ${layTenChiNhanhDayDu(currentChiNhanh)}`;
         if (typeof rawNCCList === 'undefined' || !rawNCCList.length) loadNCC();
         if (typeof rawHangHoa === 'undefined' || !rawHangHoa.length) loadHangHoa();
         const inpNgay = document.getElementById('nhap-ngaynhap');
@@ -7609,6 +7626,8 @@ function formatVND(amount) {
       } else {
         if (vTaoDon) vTaoDon.classList.add('hidden');
         if (vDanhSach) vDanhSach.classList.remove('hidden');
+        const cnFilterEl = document.getElementById('filter-nhaphang-chinhanh');
+        if (cnFilterEl && cnFilterEl.value !== 'CURRENT') cnFilterEl.value = 'CURRENT';
         taiDanhSachNhapHang();
       }
     }
@@ -7635,7 +7654,7 @@ function formatVND(amount) {
                 ngayNhap: (d.ngay_ban || '').replace('T', ' ').slice(0, 19),
                 maNCC: d.ma_kh || '',
                 tenNCC: d.ten_kh || '',
-                chiNhanh: d.chi_nhanh || 'CN01: Trụ sở chính',
+                chiNhanh: d.chi_nhanh || 'CN01: Trụ sở chính Thanh Miện',
                 tongTien: Number(d.tong_tien) || 0,
                 daTra: Number(d.khach_tra) || 0,
                 conNo: Math.max(0, (Number(d.tong_tien) || 0) - (Number(d.khach_tra) || 0)),
@@ -7645,7 +7664,7 @@ function formatVND(amount) {
                 ghiChu: '',
                 chiTietSanPham: Array.isArray(d.chi_tiet_san_pham) ? d.chi_tiet_san_pham : []
               }));
-              renderBangDanhSachNhapHang(rawNhapHangList);
+              locDanhSachNhapHangTable();
               return;
             }
             napNhapHangTuSheets();
@@ -7664,15 +7683,15 @@ function formatVND(amount) {
               nhanVien: d.nhanVien || d.nguoiNhap || 'Quản trị viên',
               nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên'
             }));
-            renderBangDanhSachNhapHang(rawNhapHangList);
+            locDanhSachNhapHangTable();
           } else {
-            renderBangDanhSachNhapHang(rawNhapHangList || []);
+            locDanhSachNhapHangTable();
           }
         }).withFailureHandler(function() {
-          renderBangDanhSachNhapHang(rawNhapHangList || []);
+          locDanhSachNhapHangTable();
         }).apiGetDanhSachNhapHang();
       } else {
-        renderBangDanhSachNhapHang(rawNhapHangList || []);
+        locDanhSachNhapHangTable();
       }
     }
 
@@ -7717,10 +7736,10 @@ function formatVND(amount) {
           ngayNhap = '-';
         }
 
-        let chiNhanh = String(item.chiNhanh || '').trim();
-        if (chiNhanh.startsWith('PNH') || chiNhanh.startsWith('PN') || !chiNhanh) {
-          chiNhanh = 'CN01: Trụ sở chính';
-        }
+        let rawCN = String(item.chiNhanh || '').trim();
+        let chiNhanh = (rawCN.startsWith('PNH') || rawCN.startsWith('PN') || !rawCN) 
+          ? 'CN01: Trụ sở chính Thanh Miện' 
+          : layTenChiNhanhDayDu(rawCN);
 
         let badgeStatus = '';
         if (isDaHuy) {
@@ -7801,16 +7820,34 @@ function formatVND(amount) {
 
     function locDanhSachNhapHangTable() {
       const kw = (document.getElementById('search-danhsach-nhaphang')?.value || '').trim().toLowerCase();
-      const cnFilter = document.getElementById('filter-nhaphang-chinhanh')?.value || 'CURRENT';
-      const targetCN = cnFilter === 'CURRENT' ? layMaChiNhanh(currentChiNhanh) : cnFilter;
+      const cnSelect = document.getElementById('filter-nhaphang-chinhanh');
+      const cnFilter = cnSelect ? cnSelect.value : 'CURRENT';
+      
+      const currentMaCN = layMaChiNhanh(currentChiNhanh);
+      let targetCN = currentMaCN;
+
+      // Nhân viên chỉ được xem chi nhánh hiện tại của mình
+      if (currentUser && currentUser.vaiTro !== 'Admin') {
+        targetCN = currentMaCN;
+        if (cnSelect && cnSelect.value !== 'CURRENT' && cnSelect.value !== currentMaCN) {
+          cnSelect.value = 'CURRENT';
+        }
+      } else {
+        if (cnFilter && cnFilter !== 'CURRENT' && cnFilter !== 'ALL') {
+          targetCN = layMaChiNhanh(cnFilter);
+        } else {
+          targetCN = currentMaCN;
+        }
+      }
 
       const tuNgayNH = document.getElementById('filter-nhaphang-tungay')?.value || '';
       const denNgayNH = document.getElementById('filter-nhaphang-denngay')?.value || '';
 
-      const filtered = rawNhapHangList.filter(item => {
-        if (targetCN !== 'ALL') {
-          if (!laCungChiNhanh(item.chiNhanh, targetCN)) return false;
-        }
+      const filtered = (rawNhapHangList || []).filter(item => {
+        // ĐƠN NHẬP HÀNG CỦA CHI NHÁNH NÀO CHỈ HIỂN THỊ Ở CHI NHÁNH ĐÓ
+        const itemCN = item.chiNhanh || item.chi_nhanh || 'CN01';
+        if (!laCungChiNhanh(itemCN, targetCN)) return false;
+
         const matchKw = !kw || String(item.maPhieu || '').toLowerCase().includes(kw) ||
                String(item.tenNCC || '').toLowerCase().includes(kw) ||
                String(item.maNCC || '').toLowerCase().includes(kw) ||
@@ -7823,9 +7860,15 @@ function formatVND(amount) {
     }
 
     function xuatExcelDanhSachNhapHang() {
+      const currentMaCN = layMaChiNhanh(currentChiNhanh);
+      const cnSelect = document.getElementById('filter-nhaphang-chinhanh');
+      const targetCN = (cnSelect && cnSelect.value && cnSelect.value !== 'CURRENT' && cnSelect.value !== 'ALL')
+        ? layMaChiNhanh(cnSelect.value)
+        : currentMaCN;
+
       const listToExport = selectedNhapHangIds.size > 0
         ? rawNhapHangList.filter(d => selectedNhapHangIds.has(d.maPhieu))
-        : rawNhapHangList;
+        : rawNhapHangList.filter(d => laCungChiNhanh(d.chiNhanh || 'CN01', targetCN));
       if (listToExport.length === 0) return showNotification("Không có đơn nhập hàng nào để xuất!", true);
 
       const rows = listToExport.map((d, i) => ({
@@ -7982,7 +8025,7 @@ function formatVND(amount) {
       showNotification("Đang tiến hành hủy đơn " + maPhieu + "...", false);
       const don = (rawNhapHangList || []).find(d => d.maPhieu === maPhieu);
       if (don) don.trangThai = 'Đã hủy';
-      renderBangDanhSachNhapHang(rawNhapHangList || []);
+      locDanhSachNhapHangTable();
 
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         supabaseClient.from('don_hang').update({ trang_thai: 'Đã hủy' }).eq('ma_don_hang', maPhieu).then(() => {
@@ -8179,7 +8222,7 @@ function formatVND(amount) {
           don.trangThai = (don.conNo <= 0) ? 'Hoàn thành' : 'Một phần';
         }
       }
-      renderBangDanhSachNhapHang(rawNhapHangList || []);
+      locDanhSachNhapHangTable();
 
       // Cập nhật lên Supabase Cloud
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
@@ -14876,7 +14919,7 @@ function formatVND(amount) {
       if (typeof locDanhSachKH === 'function') locDanhSachKH(false);
       if (typeof locDanhSachNCC === 'function') locDanhSachNCC(false);
       if (typeof locDanhSachDonHang === 'function') locDanhSachDonHang();
-      if (typeof renderBangDanhSachNhapHang === 'function' && typeof rawNhapHangList !== 'undefined') renderBangDanhSachNhapHang(rawNhapHangList);
+      if (typeof locDanhSachNhapHangTable === 'function') locDanhSachNhapHangTable();
     }
 
     async function capNhatCongNoKhiSuaPhieuSoQuy(pOld, pNew) {
@@ -20255,7 +20298,7 @@ function loadSoQuy(filter) {
         nganHang: nganHangChon,
         tienMat: tienMat,
         chuyenKhoan: chuyenKhoan,
-        chiNhanh: (typeof currentChiNhanh !== 'undefined' && currentChiNhanh) ? currentChiNhanh : (document.getElementById('select-chinhanh')?.value || 'CN01: Trụ sở chính'),
+        chiNhanh: (typeof currentChiNhanh !== 'undefined' && currentChiNhanh) ? layTenChiNhanhDayDu(currentChiNhanh) : 'CN01: Trụ sở chính Thanh Miện',
         ghiChu: document.getElementById('nhap-ghichu')?.value || '',
         chiTietSanPham: cartCopy,
         chiTiet: cartCopy
@@ -20369,7 +20412,7 @@ function loadSoQuy(filter) {
       } else {
         rawNhapHangList.unshift(newPhieuObj);
       }
-      renderBangDanhSachNhapHang(rawNhapHangList);
+      locDanhSachNhapHangTable();
 
       // Đồng bộ đơn nhập hàng lên Supabase Cloud (cho Netlify & Standalone)
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
@@ -20379,7 +20422,7 @@ function loadSoQuy(filter) {
           ma_kh: payload.maNCC || 'NCC_LE',
           ten_kh: payload.tenNCC || 'Nhà cung cấp',
           so_dien_thoai: '',
-          chi_nhanh: payload.chiNhanh || 'CN01: Trụ sở chính',
+          chi_nhanh: layMaChiNhanh(payload.chiNhanh) || 'CN01',
           tong_tien: payload.tongTien || 0,
           giam_gia: 0,
           khach_phai_tra: payload.conNo || 0,
@@ -20496,21 +20539,21 @@ function loadSoQuy(filter) {
           .withSuccessHandler(function(res) {
             if (res && res.success && Array.isArray(res.data)) {
               rawTraHangNCCList = res.data;
-              renderBangDanhSachTraHangNCC(rawTraHangNCCList);
+              locDanhSachTraHangNCCTable();
             } else {
               rawTraHangNCCList = [];
-              renderBangDanhSachTraHangNCC([]);
+              locDanhSachTraHangNCCTable();
             }
           })
           .withFailureHandler(function(err) {
             console.error("Lỗi tải danh sách trả hàng NCC:", err);
             rawTraHangNCCList = [];
-            renderBangDanhSachTraHangNCC([]);
+            locDanhSachTraHangNCCTable();
           })
           .apiGetDanhSachTraHangNCC();
       } else {
         rawTraHangNCCList = [];
-        renderBangDanhSachTraHangNCC([]);
+        locDanhSachTraHangNCCTable();
       }
     }
 
@@ -20594,7 +20637,8 @@ function loadSoQuy(filter) {
 
       const filtered = rawTraHangNCCList.filter(item => {
         if (targetCN !== 'ALL') {
-          if (!laCungChiNhanh(item.chiNhanh, targetCN)) return false;
+          const itemCN = item.chiNhanh || item.chi_nhanh || 'CN01';
+          if (!laCungChiNhanh(itemCN, targetCN)) return false;
         }
         const matchKw = !kw || String(item.maPhieu || '').toLowerCase().includes(kw) ||
                String(item.tenNCC || '').toLowerCase().includes(kw) ||

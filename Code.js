@@ -4643,7 +4643,7 @@ function parseAndNormalizeDonNhapRow(r, mapDoiTac) {
       break;
     }
   }
-  if (!chiNhanh) chiNhanh = "CN01: Trụ sở chính Hà Nội";
+  if (!chiNhanh) chiNhanh = "CN01: Trụ sở chính Thanh Miện";
 
   // 5. Tìm trạng thái
   let trangThai = "";
@@ -4828,7 +4828,7 @@ function apiLuuPhieuNhapHang(payload) {
     const tongTien = Number(payload.tongTien) || 0;
     const daTra = Number(payload.daTra) || 0;
     const conNo = Math.max(0, tongTien - daTra);
-    const chiNhanh = payload.chiNhanh || "CN01: Trụ sở chính Hà Nội";
+    const chiNhanh = payload.chiNhanh || "CN01: Trụ sở chính Thanh Miện";
     const chiTiet = Array.isArray(payload.chiTietSanPham) ? payload.chiTietSanPham : (Array.isArray(payload.chiTiet) ? payload.chiTiet : []);
     const isEdit = Boolean(payload.isEdit);
     const maNCC = payload.maNCC || "NCC_LE";
