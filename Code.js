@@ -2357,42 +2357,40 @@ function apiCapNhatThongTinDonHang(payload) {
     const maDonHang = String(payload.maDonHang || '').trim();
     if (!maDonHang) return { success: false, error: "Thiếu mã đơn hàng" };
 
-    let sheet = ss.getSheetByName("DonHang");
-    if (!sheet) {
-      ss.getSheets().forEach(s => {
-        let n = s.getName().toLowerCase().replace(/[\s_]+/g, '');
-        if (n === "donhang") sheet = s;
-      });
-    }
-
-    if (sheet) {
-      const rows = sheet.getDataRange().getValues();
-      let foundRow = -1;
-      let headers = rows[0].map(h => String(h || '').toLowerCase().replace(/[\s_]+/g, ''));
-      let colMa = headers.indexOf("madonhang") > -1 ? headers.indexOf("madonhang") : headers.indexOf("madon");
-      let colNgay = headers.indexOf("ngayban") > -1 ? headers.indexOf("ngayban") : headers.indexOf("ngay");
-      let colNV = headers.indexOf("nhanvien") > -1 ? headers.indexOf("nhanvien") : headers.indexOf("nguoiban");
-
-      if (colMa === -1) colMa = 0;
-      if (colNgay === -1) colNgay = 1;
-      if (colNV === -1) colNV = 11;
-
-      for (let i = 1; i < rows.length; i++) {
-        if (String(rows[i][colMa] || '').trim().toUpperCase() === maDonHang.toUpperCase()) {
-          foundRow = i + 1;
-          break;
-        }
+    // Cập nhật thông tin trong sheet DonHang và GiaoDich_DonHang
+    ["DonHang", "GiaoDich_DonHang"].forEach(sheetName => {
+      let sheet = ss.getSheetByName(sheetName);
+      if (!sheet) {
+        ss.getSheets().forEach(s => {
+          let n = s.getName().toLowerCase().replace(/[\s_]+/g, '');
+          if (n === sheetName.toLowerCase().replace(/[\s_]+/g, '')) sheet = s;
+        });
       }
 
-      if (foundRow > 0) {
-        if (payload.ngayBan && colNgay > -1) {
-          sheet.getRange(foundRow, colNgay + 1).setValue(payload.ngayBan);
-        }
-        if (payload.nhanVien && colNV > -1) {
-          sheet.getRange(foundRow, colNV + 1).setValue(payload.nhanVien);
+      if (sheet) {
+        const rows = sheet.getDataRange().getValues();
+        let headers = rows[0].map(h => String(h || '').toLowerCase().replace(/[\s_]+/g, ''));
+        let colMa = headers.indexOf("madonhang") > -1 ? headers.indexOf("madonhang") : headers.indexOf("madon");
+        let colNgay = headers.indexOf("ngayban") > -1 ? headers.indexOf("ngayban") : (headers.indexOf("ngay") > -1 ? headers.indexOf("ngay") : headers.indexOf("ngaytao"));
+        let colNV = headers.indexOf("nhanvien") > -1 ? headers.indexOf("nhanvien") : headers.indexOf("nguoiban");
+
+        if (colMa === -1) colMa = 0;
+        if (colNgay === -1) colNgay = 1;
+        if (colNV === -1) colNV = 11;
+
+        for (let i = 1; i < rows.length; i++) {
+          if (String(rows[i][colMa] || '').trim().toUpperCase() === maDonHang.toUpperCase()) {
+            if (payload.ngayBan && colNgay > -1) {
+              sheet.getRange(i + 1, colNgay + 1).setValue(payload.ngayBan);
+            }
+            if (payload.nhanVien && colNV > -1) {
+              sheet.getRange(i + 1, colNV + 1).setValue(payload.nhanVien);
+            }
+            break;
+          }
         }
       }
-    }
+    });
 
     // Cập nhật ngày giờ trong SoQuy nếu có phiếu thu tương ứng
     let sheetQuy = ss.getSheetByName("SoQuy");
@@ -2415,12 +2413,22 @@ function apiCapNhatThongTinDonHang(payload) {
 
     // Cập nhật sang Supabase
     try {
-      postToSupabaseServer("don_hang", {
-        ma_don_hang: maDonHang,
-        ngay_ban: payload.ngayBan,
-        nhan_vien: payload.nhanVien,
-        ghi_chu: payload.ghiChu
-      });
+      let sbDate = payload.ngayBanISO || payload.ngayBan;
+      if (!payload.ngayBanISO) {
+        try {
+          let dDate = new Date(payload.ngayBan);
+          if (!isNaN(dDate.getTime())) sbDate = dDate.toISOString();
+        } catch(eD) {}
+      }
+      if (typeof patchSupabaseServer === 'function') {
+        patchSupabaseServer("don_hang", "ma_don_hang=eq." + encodeURIComponent(maDonHang), {
+          ngay_ban: sbDate,
+          nhan_vien: payload.nhanVien
+        });
+        patchSupabaseServer("so_quy", "ma_chung_tu=eq." + encodeURIComponent(maDonHang), {
+          ngay_gd: sbDate
+        });
+      }
     } catch(eSup) {}
 
     return { success: true };
@@ -5350,6 +5358,61 @@ function apiCapNhatDonNhapHang(payload) {
         }
       }
     }
+
+    // 4. Cập nhật Ngày nhập & Người nhập nếu có
+    let headersNH = rows[0].map(h => String(h || '').trim().toLowerCase().replace(/[\s_]+/g, ''));
+    let colNgayNH = headersNH.indexOf('ngaynhap') > -1 ? headersNH.indexOf('ngaynhap') : headersNH.indexOf('ngay');
+    if (colNgayNH === -1) colNgayNH = 1;
+    if (payload.ngayNhap) {
+      sheet.getRange(targetRowIndex, colNgayNH + 1).setValue(payload.ngayNhap);
+    }
+    let newNguoiNhap = payload.nguoiNhap || payload.nhanVien;
+    if (newNguoiNhap) {
+      let colNV = headersNH.indexOf('nhanvien') > -1 ? headersNH.indexOf('nhanvien') : headersNH.indexOf('nguoinhap');
+      if (colNV === -1) colNV = 11;
+      sheet.getRange(targetRowIndex, colNV + 1).setValue(newNguoiNhap);
+    }
+
+    // 5. Cập nhật ngày giờ phiếu chi trong SoQuy nếu có
+    if (payload.ngayNhap) {
+      let sheetQuy = ss.getSheetByName("SoQuy");
+      if (sheetQuy) {
+        let qRows = sheetQuy.getDataRange().getValues();
+        let qHeaders = qRows[0].map(h => String(h || '').toLowerCase().replace(/[\s_]+/g, ''));
+        let colChungTu = qHeaders.indexOf("machungtu");
+        let colNgayGD = qHeaders.indexOf("ngaygd") > -1 ? qHeaders.indexOf("ngaygd") : qHeaders.indexOf("ngay");
+        if (colChungTu > -1 && colNgayGD > -1) {
+          for (let k = 1; k < qRows.length; k++) {
+            if (String(qRows[k][colChungTu] || '').trim().toUpperCase() === String(maPhieu).trim().toUpperCase()) {
+              sheetQuy.getRange(k + 1, colNgayGD + 1).setValue(payload.ngayNhap);
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    // 6. Đồng bộ sang Supabase
+    try {
+      let sbDate = payload.ngayNhapISO || payload.ngayNhap;
+      if (!payload.ngayNhapISO) {
+        try {
+          let dDate = new Date(payload.ngayNhap);
+          if (!isNaN(dDate.getTime())) sbDate = dDate.toISOString();
+        } catch(eD) {}
+      }
+      let sbPayload = {};
+      if (sbDate) sbPayload.ngay_ban = sbDate;
+      if (newNguoiNhap) sbPayload.nhan_vien = newNguoiNhap;
+      if (newMaNCC) sbPayload.ma_kh = newMaNCC;
+      if (newTenNCC) sbPayload.ten_kh = newTenNCC;
+      if (typeof patchSupabaseServer === 'function') {
+        patchSupabaseServer("don_hang", "ma_don_hang=eq." + encodeURIComponent(maPhieu), sbPayload);
+        if (sbDate) {
+          patchSupabaseServer("so_quy", "ma_chung_tu=eq." + encodeURIComponent(maPhieu), { ngay_gd: sbDate });
+        }
+      }
+    } catch(eSb) {}
 
     SpreadsheetApp.flush();
     return { success: true, message: "Cập nhật đơn nhập hàng " + maPhieu + " thành công!" };
