@@ -6280,7 +6280,7 @@ function formatVND(amount) {
           const soldImeis = [];
           posCart.forEach(it => {
             if (it.imeiStr) {
-              it.imeiStr.split(',').map(s => s.trim()).filter(Boolean).forEach(im => soldImeis.push(im));
+              String(it.imeiStr).split(/[\n,;\r\t]+/).map(s => s.trim()).filter(Boolean).forEach(im => soldImeis.push(im));
             }
           });
           if (soldImeis.length > 0) {
@@ -8413,7 +8413,7 @@ function formatVND(amount) {
           
           let imeiBadges = '<span class="text-slate-400 italic text-[11px]">-</span>';
           if (it.imeiStr) {
-            const imeis = String(it.imeiStr).split(',').map(s => s.trim()).filter(Boolean);
+            const imeis = String(it.imeiStr).split(/[\n,;\r\t]+/).map(s => s.trim()).filter(Boolean);
             if (imeis.length) {
               imeiBadges = `<div class="flex flex-wrap gap-1 max-w-xs">${imeis.map(im => `<span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-mono text-[10px]">${im}</span>`).join('')}</div>`;
             }
@@ -8990,6 +8990,221 @@ function formatVND(amount) {
       renderNhapCart();
     }
 
+    let dangChonNhapImeiItemIndex = -1;
+    let modalImeiList = [];
+
+    function tachDanhSachImei(str) {
+      if (!str) return [];
+      if (Array.isArray(str)) return str.map(s => String(s || '').trim()).filter(Boolean);
+      return String(str)
+        .split(/[\n,;\r\t]+/)
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+
+    function moModalNhapImeiHangHoa(idx) {
+      if (!nhapCart || !nhapCart[idx]) return;
+      dangChonNhapImeiItemIndex = idx;
+      const item = nhapCart[idx];
+      
+      const tenEl = document.getElementById('nhap-imei-modal-tenhang');
+      const maEl = document.getElementById('nhap-imei-modal-mahang');
+      const slDonEl = document.getElementById('nhap-imei-modal-sl-don');
+      if (tenEl) tenEl.innerText = item.tenHang || '';
+      if (maEl) maEl.innerText = `(${item.maHang || ''})`;
+      if (slDonEl) slDonEl.innerText = item.soLuong || 1;
+      
+      modalImeiList = tachDanhSachImei(item.imeiStr);
+      
+      const ta = document.getElementById('nhap-imei-textarea-bulk');
+      if (ta) ta.value = '';
+      const singleInp = document.getElementById('nhap-imei-input-single');
+      if (singleInp) singleInp.value = '';
+      
+      chuyenTabNhapImei('bulk');
+      renderDanhSachImeiModal();
+      
+      const m = document.getElementById('modal-nhap-imei-hanghoa');
+      if (m) m.classList.remove('hidden');
+    }
+
+    function chuyenTabNhapImei(tab) {
+      const btnBulk = document.getElementById('tab-btn-imei-bulk');
+      const btnSingle = document.getElementById('tab-btn-imei-single');
+      const viewBulk = document.getElementById('tab-view-imei-bulk');
+      const viewSingle = document.getElementById('tab-view-imei-single');
+      
+      if (tab === 'bulk') {
+        if (btnBulk) btnBulk.className = 'flex-1 py-2 font-bold text-amber-600 border-b-2 border-amber-500 flex items-center justify-center space-x-1.5';
+        if (btnSingle) btnSingle.className = 'flex-1 py-2 font-medium text-slate-500 hover:text-slate-800 flex items-center justify-center space-x-1.5';
+        if (viewBulk) viewBulk.classList.remove('hidden');
+        if (viewSingle) viewSingle.classList.add('hidden');
+        const ta = document.getElementById('nhap-imei-textarea-bulk');
+        if (ta) setTimeout(() => ta.focus(), 60);
+      } else {
+        if (btnBulk) btnBulk.className = 'flex-1 py-2 font-medium text-slate-500 hover:text-slate-800 flex items-center justify-center space-x-1.5';
+        if (btnSingle) btnSingle.className = 'flex-1 py-2 font-bold text-indigo-600 border-b-2 border-indigo-500 flex items-center justify-center space-x-1.5';
+        if (viewBulk) viewBulk.classList.add('hidden');
+        if (viewSingle) viewSingle.classList.remove('hidden');
+        const inp = document.getElementById('nhap-imei-input-single');
+        if (inp) setTimeout(() => inp.focus(), 60);
+      }
+    }
+
+    function themMotImeiVaoModal() {
+      const inp = document.getElementById('nhap-imei-input-single');
+      if (!inp) return;
+      const val = inp.value.trim();
+      if (!val) return;
+      
+      const parsed = tachDanhSachImei(val);
+      let countThem = 0;
+      parsed.forEach(im => {
+        if (!modalImeiList.includes(im)) {
+          modalImeiList.push(im);
+          countThem++;
+        }
+      });
+      
+      inp.value = '';
+      inp.focus();
+      renderDanhSachImeiModal();
+      if (countThem === 0 && parsed.length > 0) {
+        if (typeof showNotification === 'function') {
+          showNotification('Mã Serial/IMEI này đã có trong danh sách!', false);
+        }
+      }
+    }
+
+    function themImeiHangLoatVaoModal() {
+      const ta = document.getElementById('nhap-imei-textarea-bulk');
+      if (!ta) return;
+      const text = ta.value.trim();
+      if (!text) {
+        if (typeof showNotification === 'function') showNotification('Vui lòng dán danh sách serial vào ô trước!', true);
+        return;
+      }
+      
+      const arr = tachDanhSachImei(text);
+      if (!arr.length) return;
+      
+      let countThem = 0;
+      let countTrung = 0;
+      arr.forEach(im => {
+        if (!modalImeiList.includes(im)) {
+          modalImeiList.push(im);
+          countThem++;
+        } else {
+          countTrung++;
+        }
+      });
+      
+      ta.value = '';
+      renderDanhSachImeiModal();
+      
+      let msg = `Đã thêm thành công ${countThem} serial!`;
+      if (countTrung > 0) msg += ` (Bỏ qua ${countTrung} mã đã có)`;
+      if (typeof showNotification === 'function') showNotification(msg, false);
+    }
+
+    function xoaMotImeiKhoiModal(idx) {
+      if (idx >= 0 && idx < modalImeiList.length) {
+        modalImeiList.splice(idx, 1);
+        renderDanhSachImeiModal();
+      }
+    }
+
+    function xoaTatCaImeiModal() {
+      if (!modalImeiList.length) return;
+      if (confirm('Bạn có chắc muốn xóa toàn bộ danh sách serial đã nhập?')) {
+        modalImeiList = [];
+        renderDanhSachImeiModal();
+      }
+    }
+
+    function renderDanhSachImeiModal() {
+      const container = document.getElementById('nhap-imei-tags-container');
+      const countEl = document.getElementById('nhap-imei-chip-count');
+      const slDaNhapEl = document.getElementById('nhap-imei-modal-sl-danhap');
+      const badgeEl = document.getElementById('nhap-imei-modal-badge');
+      const progressBar = document.getElementById('nhap-imei-modal-progress');
+      
+      const item = (nhapCart && dangChonNhapImeiItemIndex >= 0) ? nhapCart[dangChonNhapImeiItemIndex] : null;
+      const slDon = item ? Math.max(1, Number(item.soLuong) || 1) : 1;
+      const daNhap = modalImeiList.length;
+      
+      if (countEl) countEl.innerText = daNhap;
+      if (slDaNhapEl) slDaNhapEl.innerText = daNhap;
+      
+      const percent = slDon > 0 ? Math.min(100, Math.round((daNhap / slDon) * 100)) : 0;
+      if (progressBar) {
+        progressBar.style.width = percent + '%';
+        if (daNhap === slDon) {
+          progressBar.className = 'bg-emerald-500 h-2 rounded-full transition-all duration-300';
+        } else if (daNhap > slDon) {
+          progressBar.className = 'bg-rose-500 h-2 rounded-full transition-all duration-300';
+        } else {
+          progressBar.className = 'bg-amber-500 h-2 rounded-full transition-all duration-300';
+        }
+      }
+      
+      if (badgeEl) {
+        if (daNhap === slDon) {
+          badgeEl.className = 'ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800';
+          badgeEl.innerText = 'Đủ số lượng';
+        } else if (daNhap > slDon) {
+          badgeEl.className = 'ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800';
+          badgeEl.innerText = `Vượt ${daNhap - slDon}`;
+        } else {
+          badgeEl.className = 'ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800';
+          badgeEl.innerText = `Còn thiếu ${slDon - daNhap}`;
+        }
+      }
+      
+      if (!container) return;
+      if (!modalImeiList.length) {
+        container.innerHTML = '<p class="text-slate-400 italic text-center w-full py-4 text-xs">Chưa có serial nào được thêm</p>';
+        return;
+      }
+      
+      container.innerHTML = modalImeiList.map((im, idx) => `
+        <span class="inline-flex items-center px-2 py-1 rounded-lg text-[11px] font-mono font-medium bg-white border border-slate-200 text-slate-800 shadow-2xs group hover:border-amber-400 transition">
+          <span class="text-slate-400 mr-1 text-[9px] font-sans font-bold">#${idx + 1}</span>
+          <span>${im}</span>
+          <button type="button" onclick="xoaMotImeiKhoiModal(${idx})" class="ml-1.5 text-slate-300 hover:text-rose-500 transition">
+            <i class="fa-solid fa-xmark text-[10px]"></i>
+          </button>
+        </span>
+      `).join('');
+    }
+
+    function xacNhanLuuImeiVaoDon() {
+      if (dangChonNhapImeiItemIndex < 0 || !nhapCart || !nhapCart[dangChonNhapImeiItemIndex]) {
+        dongModal('modal-nhap-imei-hanghoa');
+        return;
+      }
+      
+      const item = nhapCart[dangChonNhapImeiItemIndex];
+      const dongBoCheckbox = document.getElementById('nhap-imei-dong-bo-sl');
+      
+      // Cập nhật chuỗi imeiStr trong giỏ
+      item.imeiStr = modalImeiList.join(', ');
+      
+      // Tùy chọn đồng bộ số lượng sản phẩm trên đơn
+      if (dongBoCheckbox && dongBoCheckbox.checked && modalImeiList.length > 0) {
+        item.soLuong = modalImeiList.length;
+      }
+      
+      dongModal('modal-nhap-imei-hanghoa');
+      dangChonNhapImeiItemIndex = -1;
+      modalImeiList = [];
+      
+      renderNhapCart();
+      if (typeof showNotification === 'function') {
+        showNotification('Đã lưu danh sách Serial vào đơn hàng thành công!', false);
+      }
+    }
+
     function renderNhapCart() {
       const tbody = document.getElementById('nhap-cart-body');
       if (!tbody) return;
@@ -9000,16 +9215,80 @@ function formatVND(amount) {
         return;
       }
 
-      tbody.innerHTML = nhapCart.map((it, idx) => `
-        <tr class="hover:bg-slate-50 border-b">
-          <td class="p-2.5 font-medium text-slate-800">${it.tenHang} <span class="font-mono text-slate-400 text-[10px]">(${it.maHang})</span></td>
-          <td class="p-2.5 text-center"><input type="number" min="1" value="${it.soLuong}" onchange="nhapCart[${idx}].soLuong=Math.max(1, Number(this.value)||1); renderNhapCart();" class="w-14 border rounded-lg text-center p-1 font-mono font-bold"></td>
-          <td class="p-2.5 text-right"><input type="number" value="${it.donGia}" onchange="nhapCart[${idx}].donGia=Math.max(0, Number(this.value)||0); renderNhapCart();" class="w-24 border rounded-lg text-right p-1 font-mono"></td>
-          <td class="p-2.5"><input type="text" value="${it.imeiStr || ''}" oninput="nhapCart[${idx}].imeiStr=this.value" placeholder="Mã serial/IMEI (cách dấu phẩy)..." class="w-full border rounded-lg p-1 text-xs font-mono"></td>
-          <td class="p-2.5 text-right font-bold text-slate-800 font-mono">${((Number(it.soLuong)||1) * (Number(it.donGia)||0)).toLocaleString()} đ</td>
-          <td class="p-2.5 text-center"><button type="button" onclick="nhapCart.splice(${idx},1); renderNhapCart();" class="text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash"></i></button></td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = nhapCart.map((it, idx) => {
+        const sl = Math.max(1, Number(it.soLuong) || 1);
+        const donGia = Math.max(0, Number(it.donGia) || 0);
+        const thanhTien = sl * donGia;
+        const imeiArr = tachDanhSachImei(it.imeiStr);
+        const imeiCount = imeiArr.length;
+        
+        let btnCls = 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200';
+        let inputBorderCls = 'border-slate-300';
+        let hintHtml = '';
+        
+        if (imeiCount === 0) {
+          btnCls = 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200';
+          hintHtml = '<span class="text-[10px] text-slate-400">Cách nhau bằng dấu , hoặc ;</span>';
+        } else if (imeiCount === sl) {
+          btnCls = 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs';
+          inputBorderCls = 'border-emerald-400 bg-emerald-50/20';
+          hintHtml = `<span class="text-[10px] font-bold text-emerald-600">✓ Đã đủ ${sl} Serial</span>`;
+        } else if (imeiCount > sl) {
+          btnCls = 'bg-rose-600 hover:bg-rose-700 text-white shadow-xs';
+          inputBorderCls = 'border-rose-400 bg-rose-50/20';
+          hintHtml = `<span class="text-[10px] font-bold text-rose-600">⚠ Vượt ${imeiCount - sl} Serial</span>`;
+        } else {
+          btnCls = 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs';
+          inputBorderCls = 'border-amber-400 bg-amber-50/20';
+          hintHtml = `<span class="text-[10px] font-semibold text-amber-600">Thiếu ${sl - imeiCount} Serial</span>`;
+        }
+
+        return `
+          <tr class="hover:bg-slate-50 border-b">
+            <td class="p-2.5 font-medium text-slate-800">
+              <div class="font-bold text-slate-800">${it.tenHang}</div>
+              <div class="font-mono text-slate-400 text-[10px]">${it.maHang}</div>
+            </td>
+            <td class="p-2.5 text-center">
+              <input type="number" min="1" value="${sl}" onchange="nhapCart[${idx}].soLuong=Math.max(1, Number(this.value)||1); renderNhapCart();" class="w-14 border rounded-lg text-center p-1 font-mono font-bold">
+            </td>
+            <td class="p-2.5 text-right">
+              <input type="number" value="${donGia}" onchange="nhapCart[${idx}].donGia=Math.max(0, Number(this.value)||0); renderNhapCart();" class="w-24 border rounded-lg text-right p-1 font-mono">
+            </td>
+            <td class="p-2 min-w-[240px]">
+              <div class="flex items-center space-x-1.5">
+                <div class="relative flex-1">
+                  <input type="text" 
+                         value="${(it.imeiStr || '').replace(/"/g, '&quot;')}" 
+                         oninput="nhapCart[${idx}].imeiStr=this.value" 
+                         onchange="renderNhapCart()" 
+                         placeholder="Nhập serial (cách dấu phẩy, chấm phẩy)..." 
+                         class="w-full border ${inputBorderCls} rounded-lg px-2 py-1 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-400">
+                </div>
+                <button type="button" 
+                        onclick="moModalNhapImeiHangHoa(${idx})" 
+                        title="Mở bảng nhập Serial hàng loạt từ Excel hoặc súng quét"
+                        class="px-2.5 py-1 ${btnCls} rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap">
+                  <i class="fa-solid fa-list-ol text-[10px]"></i>
+                  <span>${imeiCount}/${sl}</span>
+                </button>
+              </div>
+              <div class="flex items-center justify-between px-0.5 mt-0.5">
+                ${hintHtml}
+                <button type="button" onclick="moModalNhapImeiHangHoa(${idx})" class="text-[10px] text-blue-600 hover:text-blue-800 font-medium">
+                  <i class="fa-solid fa-paste text-[9px] mr-0.5"></i>DS Serial
+                </button>
+              </div>
+            </td>
+            <td class="p-2.5 text-right font-bold text-slate-800 font-mono">${thanhTien.toLocaleString()} đ</td>
+            <td class="p-2.5 text-center">
+              <button type="button" onclick="nhapCart.splice(${idx},1); renderNhapCart();" class="text-rose-500 hover:text-rose-700">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
 
       const total = nhapCart.reduce((a, b) => a + ((Number(b.soLuong)||1) * (Number(b.donGia)||0)), 0);
       document.getElementById('nhap-tongtien').innerText = total.toLocaleString() + ' đ';
@@ -14074,101 +14353,7 @@ function formatVND(amount) {
         }).apiGetDanhSachDoiTac("NCC");
       }
     }
-
-    function timKiemNCCNhapHang(kw) {
-      const box = document.getElementById('nhap-ncc-dropdown');
-      const val = (kw || '').toLowerCase().trim();
-      if (!val) { box.classList.add('hidden'); return; }
-      const matched = rawNCCList.filter(n => n.tenDoiTac.toLowerCase().includes(val) || n.maDoiTac.toLowerCase().includes(val) || n.soDienThoai.includes(val));
-      if (!matched.length) {
-        box.innerHTML = '<p class="p-3 text-slate-400 text-center">Không tìm thấy nhà cung cấp nào</p>';
-        box.classList.remove('hidden');
-        return;
-      }
-      box.innerHTML = matched.map(n => `
-        <div onclick="chonNCCNhapHang('${n.maDoiTac}', '${n.tenDoiTac}')" class="p-2.5 hover:bg-blue-50 cursor-pointer border-b last:border-0">
-          <p class="font-bold text-slate-800">${n.tenDoiTac} <span class="font-mono text-blue-600 font-semibold text-[11px]">(${n.maDoiTac})</span></p>
-          <p class="text-[10px] text-slate-400">SĐT: ${n.soDienThoai || '-'} | Địa chỉ: ${n.diaChi || '-'}</p>
-        </div>
-      `).join('');
-      box.classList.remove('hidden');
-    }
-
-    function chonNCCNhapHang(ma, ten) {
-      document.getElementById('nhap-mancc').value = ma;
-      document.getElementById('nhap-ncc-search').value = `${ten} (${ma})`;
-      document.getElementById('nhap-ncc-dropdown').classList.add('hidden');
-    }
-    function themHangVaoPhieuNhap() {
-      const kw = (document.getElementById('nhap-search-item')?.value || '').toLowerCase().trim();
-      const allItems = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) ? rawHangHoa : [];
-      const sp = allItems.find(h => 
-        String(h.maHang || '').toLowerCase() === kw || 
-        String(h.tenHang || '').toLowerCase().includes(kw) ||
-        (h.barcode && String(h.barcode).toLowerCase() === kw)
-      );
-
-      if (!sp) {
-        const rawKw = document.getElementById('nhap-search-item')?.value.trim() || '';
-        showNotification("Mã/tên [" + rawKw + "] chưa có trong hệ thống. Đang mở form thêm mới...", false);
-        moModalTaoHangHoaTuNhap(rawKw);
-        return;
-      }
-
-      const exist = nhapCart.find(i => i.maHang === sp.maHang);
-      if (exist) exist.soLuong++;
-      else nhapCart.push({ maHang: sp.maHang, tenHang: sp.tenHang, soLuong: 1, donGia: Number(sp.giaVon) || 0, imeiStr: "" });
-
-      document.getElementById('nhap-search-item').value = "";
-      const box = document.getElementById('nhap-item-dropdown');
-      if (box) box.classList.add('hidden');
-      renderNhapCart();
-    }
-
-    function renderNhapCart() {
-      const tbody = document.getElementById('nhap-cart-body');
-      if (!nhapCart.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">Đơn nhập hàng đang trống</td></tr>';
-        document.getElementById('nhap-tongtien').innerText = '0 đ';
-        document.getElementById('nhap-datra').value = 0;
-        return;
-      }
-
-      tbody.innerHTML = nhapCart.map((it, idx) => `
-        <tr class="hover:bg-slate-50 border-b">
-          <td class="p-2.5 font-medium text-slate-800">${it.maHang} - ${it.tenHang}</td>
-          <td class="p-2.5 text-center"><input type="number" min="1" value="${it.soLuong}" onchange="nhapCart[${idx}].soLuong=Number(this.value); renderNhapCart();" class="w-14 border rounded-lg text-center p-1 font-mono"></td>
-          <td class="p-2.5 text-right"><input type="number" value="${it.donGia}" onchange="nhapCart[${idx}].donGia=Number(this.value); renderNhapCart();" class="w-24 border rounded-lg text-right p-1 font-mono"></td>
-          <td class="p-2.5"><input type="text" value="${it.imeiStr}" oninput="nhapCart[${idx}].imeiStr=this.value" placeholder="Mã serial..." class="w-full border rounded-lg p-1 text-xs font-mono"></td>
-          <td class="p-2.5 text-right font-bold text-slate-800 font-mono">${(it.soLuong * it.donGia).toLocaleString()} đ</td>
-          <td class="p-2.5 text-center"><button type="button" onclick="nhapCart.splice(${idx},1); renderNhapCart();" class="text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash"></i></button></td>
-        </tr>
-      `).join('');
-
-      const total = nhapCart.reduce((a, b) => a + (b.soLuong * b.donGia), 0);
-      document.getElementById('nhap-tongtien').innerText = total.toLocaleString() + ' đ';
-      thayDoiKieuThanhToanNhap(document.getElementById('nhap-loai-thanhtoan').value);
-    }
-
-    function thayDoiKieuThanhToanNhap(type) {
-      const total = nhapCart.reduce((a, b) => a + (b.soLuong * b.donGia), 0);
-      const box = document.getElementById('box-nhap-datra');
-      const input = document.getElementById('nhap-datra');
-      if (type === 'FULL') {
-        box.classList.remove('hidden');
-        input.value = total;
-        input.disabled = true;
-      } else if (type === 'PARTIAL') {
-        box.classList.remove('hidden');
-        input.value = Math.round(total / 2);
-        input.disabled = false;
-      } else {
-        box.classList.add('hidden');
-        input.value = 0;
-      }
-    }
-
-    // xacNhanLuuPhieuNhap được định nghĩa tập trung và quản lý đầy đủ tại Module 3.2 (cuối script)
+    // (Module 4.2 Nhập Hàng NCC: timKiemNCCNhapHang, chonNCCNhapHang, themHangVaoPhieuNhap, renderNhapCart, thayDoiKieuThanhToanNhap được định nghĩa tập trung đồng bộ ở phía trên)
 
 
     /* 4.2 POS Thu ngân */
@@ -21976,6 +22161,8 @@ let danhSachTamXuatExcel = [];
               const sl = Number(it.soLuong) || 1;
               const dg = Number(it.donGia) || 0;
               const tt = Number(it.thanhTien) || (sl * dg);
+              const imeis = String(it.imeiStr || '').split(/[\n,;\r\t]+/).map(s => s.trim()).filter(Boolean);
+              const imeiBadges = imeis.length ? `<div class="flex flex-wrap gap-1 max-w-xs">${imeis.map(im => `<span class="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[10px]">${im}</span>`).join('')}</div>` : '<span class="text-slate-300">-</span>';
               return `
                 <tr class="hover:bg-slate-50 transition">
                   <td class="p-2.5 text-center text-slate-500">${idx + 1}</td>
@@ -21986,7 +22173,7 @@ let danhSachTamXuatExcel = [];
                   <td class="p-2.5 text-center font-bold font-mono text-slate-800">${sl}</td>
                   <td class="p-2.5 text-right font-mono text-slate-600">${dg.toLocaleString()} đ</td>
                   <td class="p-2.5 text-right font-mono font-bold text-slate-900">${tt.toLocaleString()} đ</td>
-                  <td class="p-2.5 font-mono text-[11px] text-slate-600">${it.imeiStr ? `<span class="bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded border border-amber-200">${it.imeiStr}</span>` : '<span class="text-slate-300">-</span>'}</td>
+                  <td class="p-2.5">${imeiBadges}</td>
                 </tr>
               `;
             }).join('');
@@ -23389,7 +23576,7 @@ function loadSoQuy(filter) {
               supabaseClient.from('dm_hanghoa').update({ ton_kho: hh.tonKho }).eq('ma_hang', hh.maHang).then(() => {});
             }
             if (item.imeiStr) {
-              item.imeiStr.split(',').map(s => s.trim()).filter(Boolean).forEach(im => {
+              tachDanhSachImei(item.imeiStr).forEach(im => {
                 imeiInserts.push({
                   imei: im,
                   ma_hang: item.maHang,
@@ -28494,6 +28681,127 @@ function loadSoQuy(filter) {
     </div>
     <div class="flex justify-end pt-2">
       <button type="button" onclick="dongModalQuanLyChiNhanh()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL QUẢN LÝ NHẬP SERIAL / IMEI HÀNG HÓA KHI NHẬP KHO -->
+<div id="modal-nhap-imei-hanghoa" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-[99999] flex items-center justify-center p-4 hidden">
+  <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 border border-slate-100 text-xs">
+    <!-- Header -->
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+      <div>
+        <h3 class="font-extrabold text-slate-800 text-base flex items-center space-x-2">
+          <i class="fa-solid fa-barcode text-amber-500"></i>
+          <span>Nhập Serial / IMEI Hàng Hóa</span>
+        </h3>
+        <p class="text-slate-500 text-[11px] mt-0.5">
+          Sản phẩm: <span id="nhap-imei-modal-tenhang" class="font-bold text-slate-800"></span> 
+          <span id="nhap-imei-modal-mahang" class="font-mono text-amber-600 font-semibold text-[10px]"></span>
+        </p>
+      </div>
+      <button type="button" onclick="dongModal('modal-nhap-imei-hanghoa')" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Status Cards & Progress Bar -->
+    <div class="bg-amber-50/60 border border-amber-200/80 rounded-2xl p-3.5 space-y-2">
+      <div class="flex items-center justify-between text-xs">
+        <div>
+          <span class="text-slate-500 font-medium">SL trên đơn:</span>
+          <b id="nhap-imei-modal-sl-don" class="text-blue-700 font-mono font-extrabold ml-1">0</b>
+        </div>
+        <div>
+          <span class="text-slate-500 font-medium">Đã nhập:</span>
+          <b id="nhap-imei-modal-sl-danhap" class="text-emerald-700 font-mono font-extrabold ml-1">0</b>
+        </div>
+        <div>
+          <span class="text-slate-500 font-medium">Trạng thái:</span>
+          <span id="nhap-imei-modal-badge" class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Chưa đủ</span>
+        </div>
+      </div>
+      <!-- Progress Bar -->
+      <div class="w-full bg-amber-200/50 rounded-full h-2 overflow-hidden">
+        <div id="nhap-imei-modal-progress" class="bg-amber-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Tabs chọn cách nhập -->
+    <div class="flex border-b border-slate-200 text-xs">
+      <button type="button" id="tab-btn-imei-bulk" onclick="chuyenTabNhapImei('bulk')" class="flex-1 py-2 font-bold text-amber-600 border-b-2 border-amber-500 flex items-center justify-center space-x-1.5">
+        <i class="fa-solid fa-paste"></i>
+        <span>Dán từ Excel / Hàng loạt</span>
+      </button>
+      <button type="button" id="tab-btn-imei-single" onclick="chuyenTabNhapImei('single')" class="flex-1 py-2 font-medium text-slate-500 hover:text-slate-800 flex items-center justify-center space-x-1.5">
+        <i class="fa-solid fa-qrcode"></i>
+        <span>Quét súng / Từng mã</span>
+      </button>
+    </div>
+
+    <!-- View Tab 1: Dán hàng loạt -->
+    <div id="tab-view-imei-bulk" class="space-y-2">
+      <p class="text-[11px] text-slate-500">
+        💡 <b>Mẹo:</b> Dán trực tiếp danh sách serial/SIM từ file Excel vào đây (hỗ trợ mỗi số 1 dòng, hoặc cách nhau bởi dấu phẩy, chấm phẩy <code>;</code>, khoảng cách, tab):
+      </p>
+      <textarea id="nhap-imei-textarea-bulk" rows="4" 
+        class="w-full border border-slate-300 rounded-xl p-2.5 font-mono text-xs focus:ring-2 focus:ring-amber-300 focus:outline-none" 
+        placeholder="0396173095&#10;0376482457&#10;0988123456..."></textarea>
+      <div class="flex justify-between items-center">
+        <span class="text-[11px] text-slate-400 italic">Tự động lọc bỏ các mã trùng lặp</span>
+        <button type="button" onclick="themImeiHangLoatVaoModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold transition flex items-center space-x-1 text-xs shadow-xs">
+          <i class="fa-solid fa-plus"></i>
+          <span>Thêm vào danh sách</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- View Tab 2: Quét súng / Nhập từng mã -->
+    <div id="tab-view-imei-single" class="space-y-2 hidden">
+      <div class="flex space-x-2">
+        <input type="text" id="nhap-imei-input-single" 
+          onkeypress="if(event.key==='Enter'){event.preventDefault(); themMotImeiVaoModal();}" 
+          placeholder="Quét mã vạch hoặc nhập serial rồi nhấn Enter..." 
+          class="flex-1 border border-slate-300 rounded-xl px-3 py-2 font-mono text-xs focus:ring-2 focus:ring-amber-300 focus:outline-none">
+        <button type="button" onclick="themMotImeiVaoModal()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition text-xs">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+      <p class="text-[11px] text-slate-400">Có thể dùng súng quét mã vạch quét liên tục (tự động nhận Enter).</p>
+    </div>
+
+    <!-- Danh sách serial đã nạp (Tags/Chips) -->
+    <div class="space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="font-bold text-slate-700 text-xs">
+          Danh sách Serial đã thêm (<span id="nhap-imei-chip-count">0</span>):
+        </span>
+        <button type="button" onclick="xoaTatCaImeiModal()" class="text-[11px] text-rose-500 hover:text-rose-700 font-semibold">
+          <i class="fa-solid fa-trash-can mr-1"></i>Xóa tất cả
+        </button>
+      </div>
+      <div id="nhap-imei-tags-container" class="max-h-48 overflow-y-auto border border-slate-200 rounded-2xl p-2.5 bg-slate-50 flex flex-wrap gap-1.5 scrollbar-thin">
+        <p class="text-slate-400 italic text-center w-full py-4 text-xs">Chưa có serial nào được thêm</p>
+      </div>
+    </div>
+
+    <!-- Tùy chọn đồng bộ số lượng -->
+    <div class="flex items-center space-x-2 pt-1 border-t border-slate-100">
+      <input type="checkbox" id="nhap-imei-dong-bo-sl" checked class="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-400">
+      <label for="nhap-imei-dong-bo-sl" class="text-slate-700 text-xs font-medium cursor-pointer">
+        Tự động đồng bộ số lượng sản phẩm trên đơn bằng số lượng Serial đã nhập
+      </label>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+      <button type="button" onclick="dongModal('modal-nhap-imei-hanghoa')" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition">
+        Hủy bỏ
+      </button>
+      <button type="button" onclick="xacNhanLuuImeiVaoDon()" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl font-bold shadow-md transition flex items-center space-x-1.5">
+        <i class="fa-solid fa-check"></i>
+        <span>Xác nhận & Lưu vào đơn</span>
+      </button>
     </div>
   </div>
 </div>

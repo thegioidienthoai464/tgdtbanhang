@@ -727,7 +727,7 @@ function apiHuyPhieuXuatHuy(maChungTu) {
         if (Array.isArray(item.danhSachIMEI) && item.danhSachIMEI.length > 0) {
           listIMEIHoi.push(...item.danhSachIMEI.map(x => String(x || '').trim().toUpperCase()).filter(Boolean));
         } else if (item.imeiStr) {
-          listIMEIHoi.push(...item.imeiStr.split(',').map(x => x.trim().toUpperCase()).filter(Boolean));
+          listIMEIHoi.push(...String(item.imeiStr).split(/[\n,;\r\t]+/).map(x => x.trim().toUpperCase()).filter(Boolean));
         }
       });
 
@@ -905,7 +905,7 @@ function apiLuuPhieuXuatHuy(phieu) {
       if (Array.isArray(item.danhSachIMEI) && item.danhSachIMEI.length > 0) {
         listIMEIHuy.push(...item.danhSachIMEI.map(x => String(x || '').trim().toUpperCase()).filter(Boolean));
       } else if (item.imeiStr) {
-        listIMEIHuy.push(...item.imeiStr.split(',').map(x => x.trim().toUpperCase()).filter(Boolean));
+        listIMEIHuy.push(...String(item.imeiStr).split(/[\n,;\r\t]+/).map(x => x.trim().toUpperCase()).filter(Boolean));
       }
     });
 
@@ -2252,7 +2252,7 @@ function apiLuuDonHangPOS(order) {
       if (colIMEI > -1 && colTT > -1) {
         order.chiTietSanPham.forEach(item => {
           if (item.imeiStr) {
-            let imeiArray = item.imeiStr.split(',').map(s => s.trim().toUpperCase());
+            let imeiArray = String(item.imeiStr).split(/[\n,;\r\t]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
             soldImeis.push(...imeiArray);
             for (let j = 1; j < iRows.length; j++) {
               let imVal = String(iRows[j][colIMEI] || "").trim().toUpperCase();
@@ -2429,7 +2429,7 @@ function apiGetDanhSachDonHang() {
           chiTiet = chiTiet.map(item => {
             let imeisArray = [];
             if (item.imeiStr && typeof item.imeiStr === 'string') {
-              imeisArray = item.imeiStr.split(',').map(s => s.trim()).filter(Boolean);
+              imeisArray = String(item.imeiStr).split(/[\n,;\r\t]+/).map(s => s.trim()).filter(Boolean);
             } else if (Array.isArray(item.danhSachIMEI)) {
               imeisArray = item.danhSachIMEI;
             } else if (Array.isArray(item.imeiList)) {
@@ -2745,9 +2745,8 @@ function apiLuuPhieuTraHangKhach(payload) {
           if (clean) allImeisToRestore.push(clean);
         });
       } else if (typeof item.imeiStr === 'string' && item.imeiStr) {
-        item.imeiStr.split(',').forEach(im => {
-          let clean = String(im || "").trim().toUpperCase();
-          if (clean) allImeisToRestore.push(clean);
+        String(item.imeiStr).split(/[\n,;\r\t]+/).map(s => s.trim().toUpperCase()).filter(Boolean).forEach(im => {
+          allImeisToRestore.push(im);
         });
       }
     });
@@ -4930,7 +4929,7 @@ function apiLuuPhieuNhapHang(payload) {
           }
 
           if (sheetIMEI && item.imeiStr) {
-            let imeis = String(item.imeiStr).split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+            let imeis = String(item.imeiStr).split(/[\n,;\r\t]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
             imeis.forEach(im => {
               sheetIMEI.appendRow([chiNhanh, im, mH, "TrongKho", new Date()]);
             });
@@ -5068,7 +5067,7 @@ function apiHuyDonNhapHang(payload) {
       let allIMEIs = [];
       chiTiet.forEach(item => {
         if (item.imeiStr) {
-          let arr = String(item.imeiStr).split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+          let arr = String(item.imeiStr).split(/[\n,;\r\t]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
           allIMEIs = allIMEIs.concat(arr);
         }
       });
@@ -5375,7 +5374,7 @@ function apiLuuPhieuTraHangNCC(payload) {
 
         // Cập nhật IMEI nếu có
         if (sheetIMEI && item.imeiStr) {
-          let imeis = String(item.imeiStr).split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+          let imeis = String(item.imeiStr).split(/[\n,;\r\t]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
           const rIMEI = sheetIMEI.getDataRange().getValues();
           if (rIMEI.length > 1) {
             const hIMEI = rIMEI[0].map(x => String(x || "").trim().toLowerCase().replace(/[\s_]+/g, ''));
