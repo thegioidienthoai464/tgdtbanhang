@@ -2349,6 +2349,87 @@ function apiLuuDonHangPOS(order) {
   return { success: true };
 }
 
+// Cập nhật thông tin ngày giờ & người bán của hóa đơn đã bán
+function apiCapNhatThongTinDonHang(payload) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) return { success: false, error: "Không tìm thấy Spreadsheet" };
+    const maDonHang = String(payload.maDonHang || '').trim();
+    if (!maDonHang) return { success: false, error: "Thiếu mã đơn hàng" };
+
+    let sheet = ss.getSheetByName("DonHang");
+    if (!sheet) {
+      ss.getSheets().forEach(s => {
+        let n = s.getName().toLowerCase().replace(/[\s_]+/g, '');
+        if (n === "donhang") sheet = s;
+      });
+    }
+
+    if (sheet) {
+      const rows = sheet.getDataRange().getValues();
+      let foundRow = -1;
+      let headers = rows[0].map(h => String(h || '').toLowerCase().replace(/[\s_]+/g, ''));
+      let colMa = headers.indexOf("madonhang") > -1 ? headers.indexOf("madonhang") : headers.indexOf("madon");
+      let colNgay = headers.indexOf("ngayban") > -1 ? headers.indexOf("ngayban") : headers.indexOf("ngay");
+      let colNV = headers.indexOf("nhanvien") > -1 ? headers.indexOf("nhanvien") : headers.indexOf("nguoiban");
+
+      if (colMa === -1) colMa = 0;
+      if (colNgay === -1) colNgay = 1;
+      if (colNV === -1) colNV = 11;
+
+      for (let i = 1; i < rows.length; i++) {
+        if (String(rows[i][colMa] || '').trim().toUpperCase() === maDonHang.toUpperCase()) {
+          foundRow = i + 1;
+          break;
+        }
+      }
+
+      if (foundRow > 0) {
+        if (payload.ngayBan && colNgay > -1) {
+          sheet.getRange(foundRow, colNgay + 1).setValue(payload.ngayBan);
+        }
+        if (payload.nhanVien && colNV > -1) {
+          sheet.getRange(foundRow, colNV + 1).setValue(payload.nhanVien);
+        }
+      }
+    }
+
+    // Cập nhật ngày giờ trong SoQuy nếu có phiếu thu tương ứng
+    let sheetQuy = ss.getSheetByName("SoQuy");
+    if (sheetQuy && payload.ngayBan) {
+      const qRows = sheetQuy.getDataRange().getValues();
+      if (qRows.length > 1) {
+        let qHeaders = qRows[0].map(h => String(h || '').toLowerCase().replace(/[\s_]+/g, ''));
+        let colChungTu = qHeaders.indexOf("machungtu");
+        let colNgayGD = qHeaders.indexOf("ngaygd") > -1 ? qHeaders.indexOf("ngaygd") : qHeaders.indexOf("ngay");
+        if (colChungTu > -1 && colNgayGD > -1) {
+          for (let k = 1; k < qRows.length; k++) {
+            if (String(qRows[k][colChungTu] || '').trim().toUpperCase() === maDonHang.toUpperCase()) {
+              sheetQuy.getRange(k + 1, colNgayGD + 1).setValue(payload.ngayBan);
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    // Cập nhật sang Supabase
+    try {
+      postToSupabaseServer("don_hang", {
+        ma_don_hang: maDonHang,
+        ngay_ban: payload.ngayBan,
+        nhan_vien: payload.nhanVien,
+        ghi_chu: payload.ghiChu
+      });
+    } catch(eSup) {}
+
+    return { success: true };
+  } catch(err) {
+    Logger.log("Lỗi apiCapNhatThongTinDonHang: " + err.message);
+    return { success: false, error: err.message };
+  }
+}
+
 // Lấy danh sách toàn bộ đơn hàng đã bán từ Google Sheets (hỗ trợ cả sheet DonHang và GiaoDich_DonHang)
 function apiGetDanhSachDonHang() {
   try {
@@ -3245,7 +3326,7 @@ function apiLuuPhieuSoQuy(data) {
   let maPhieu = data.maPhieu || ((data.loaiPhieu === "CHI" ? "PC" : "PT") + Date.now().toString().slice(-6));
   let ngayGD = data.ngayGD || Utilities.formatDate(new Date(), Session.getScriptTimeZone() || "GMT+7", "yyyy-MM-dd HH:mm:ss");
 
-  sheet.appendRow([
+  const rowValues = [
     data.chiNhanh || "CN01: Trụ sở chính",
     maPhieu,
     data.loaiPhieu || "THU",
@@ -3257,7 +3338,23 @@ function apiLuuPhieuSoQuy(data) {
     data.maChungTu || "THU_CHI_THU_CONG",
     data.trangThai || "DaThanhToan",
     data.ghiChu || ""
-  ]);
+  ];
+
+  // Kiểm tra nếu phiếu đã tồn tại trong sheet thì cập nhật dòng đó
+  const rowsSQ = sheet.getDataRange().getValues();
+  let foundRowSQ = -1;
+  for (let i = 1; i < rowsSQ.length; i++) {
+    if (String(rowsSQ[i][1] || '').trim().toUpperCase() === String(maPhieu).trim().toUpperCase()) {
+      foundRowSQ = i + 1;
+      break;
+    }
+  }
+
+  if (foundRowSQ > 0) {
+    sheet.getRange(foundRowSQ, 1, 1, rowValues.length).setValues([rowValues]);
+  } else {
+    sheet.appendRow(rowValues);
+  }
 
   // 👉 ĐỒNG BỘ THỜI GIAN THỰC SANG SUPABASE POSTGRESQL (< 100MS)
   try {
