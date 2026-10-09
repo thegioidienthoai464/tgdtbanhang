@@ -1267,6 +1267,12 @@
               <select id="filter-nhaphang-chinhanh" onchange="locDanhSachNhapHangTable()" class="border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs bg-amber-50 font-bold text-amber-900 shadow-2xs">
                 <option value="CURRENT">📍 Chi nhánh hiện tại</option>
               </select>
+              <select id="filter-nhaphang-trangthai" onchange="locDanhSachNhapHangTable()" class="border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs bg-slate-50 font-bold text-slate-700 shadow-2xs">
+                <option value="COMPLETED" selected>✓ Đơn đã nhập (Hoàn thành)</option>
+                <option value="DRAFT">⏳ Đơn lưu tạm (Chưa xong)</option>
+                <option value="CANCELLED">❌ Đơn đã hủy</option>
+                <option value="ALL">📋 Toàn bộ các đơn</option>
+              </select>
               <input type="text" id="search-danhsach-nhaphang" oninput="locDanhSachNhapHangTable()" placeholder="Tìm mã phiếu, tên/mã NCC, ghi chú..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs w-64 bg-slate-50 focus:bg-white focus:outline-none focus:border-blue-500">
               <button type="button" onclick="moCaiDatCot('nhaphang')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold border border-slate-300 transition flex items-center space-x-1 text-xs" title="Tùy chỉnh ẩn/hiện cột Nhập hàng">
                 <i class="fa-solid fa-sliders text-indigo-600"></i><span>Cột</span>
@@ -1316,10 +1322,14 @@
             <div class="lg:col-span-2 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
               <div class="relative flex space-x-2">
                 <input type="text" id="nhap-search-item" oninput="xuLyGoiYSanPhamNhap(this.value)" placeholder="Quét mã vạch hoặc nhập mã/tên hàng hóa nhập..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs bg-slate-50 focus:outline-none focus:border-blue-500">
-                <button type="button" onclick="themHangVaoPhieuNhap()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs">
-                  <i class="fa-solid fa-plus mr-1"></i>Đưa vào đơn
+                <button type="button" onclick="themHangVaoPhieuNhap()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1 whitespace-nowrap">
+                  <i class="fa-solid fa-plus mr-0.5"></i><span>Đưa vào đơn</span>
                 </button>
-                <div id="nhap-item-dropdown" class="absolute left-0 right-28 top-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-60 overflow-y-auto z-50 hidden divide-y divide-slate-100"></div>
+                <button type="button" onclick="moModalNhapImeiTuToolbar()" class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1.5 whitespace-nowrap transition" title="Mở bảng dán danh sách serial từ Excel hoặc quét mã">
+                  <i class="fa-solid fa-barcode"></i>
+                  <span>📋 DS Serial Hàng Loạt</span>
+                </button>
+                <div id="nhap-item-dropdown" class="absolute left-0 right-72 top-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-60 overflow-y-auto z-50 hidden divide-y divide-slate-100"></div>
               </div>
               <div class="border rounded-xl overflow-hidden">
                 <table class="w-full text-left text-xs">
@@ -1403,9 +1413,14 @@
                 <label class="text-[11px] font-semibold text-slate-600">Ghi chú đơn nhập:</label>
                 <input type="text" id="nhap-ghichu" placeholder="Ghi chú thêm..." class="w-full border rounded-xl p-2 text-xs bg-slate-50 mt-1">
               </div>
-              <button type="button" id="btn-xacnhan-nhaphang" onclick="xacNhanLuuPhieuNhap()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow transition flex items-center justify-center space-x-1.5">
-                <i class="fa-solid fa-check"></i><span>HOÀN TẤT NHẬP HÀNG</span>
-              </button>
+              <div class="grid grid-cols-2 gap-2 pt-1">
+                <button type="button" id="btn-luutam-nhaphang" onclick="luuTamDonNhapHang()" class="py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center space-x-1.5" title="Lưu tạm đơn này để tiếp tục làm việc sau">
+                  <i class="fa-solid fa-floppy-disk"></i><span>LƯU TẠM ĐƠN</span>
+                </button>
+                <button type="button" id="btn-xacnhan-nhaphang" onclick="xacNhanLuuPhieuNhap()" class="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow transition flex items-center justify-center space-x-1.5">
+                  <i class="fa-solid fa-check"></i><span>HOÀN TẤT NHẬP</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -8124,6 +8139,7 @@ function formatVND(amount) {
                 ghiChu: '',
                 chiTietSanPham: Array.isArray(d.chi_tiet_san_pham) ? d.chi_tiet_san_pham : []
               }));
+              dongBoDonLuuTamVaoDanhSach();
               locDanhSachNhapHangTable();
               return;
             }
@@ -8143,14 +8159,18 @@ function formatVND(amount) {
               nhanVien: d.nhanVien || d.nguoiNhap || 'Quản trị viên',
               nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên'
             }));
+            dongBoDonLuuTamVaoDanhSach();
             locDanhSachNhapHangTable();
           } else {
+            dongBoDonLuuTamVaoDanhSach();
             locDanhSachNhapHangTable();
           }
         }).withFailureHandler(function() {
+          dongBoDonLuuTamVaoDanhSach();
           locDanhSachNhapHangTable();
         }).apiGetDanhSachNhapHang();
       } else {
+        dongBoDonLuuTamVaoDanhSach();
         locDanhSachNhapHangTable();
       }
     }
@@ -8182,7 +8202,9 @@ function formatVND(amount) {
         const tongTien = Number(item.tongTien) || 0;
         const daTra = Number(item.daTra) || 0;
         const conNo = Number(item.conNo) || Math.max(0, tongTien - daTra);
-        const isDaHuy = (item.trangThai === 'Đã hủy' || item.trangThai === 'DaHuy');
+        const rawTT = String(item.trangThai || '').trim();
+        const isDaHuy = (rawTT === 'Đã hủy' || rawTT === 'DaHuy' || rawTT === 'Hủy' || rawTT === 'HuyNhapKho');
+        const isLuuTam = (rawTT === 'Lưu tạm' || rawTT === 'Chưa hoàn thành' || rawTT === 'Draft' || rawTT === 'LUU_TAM' || item.isDraft === true);
 
         // Làm sạch tên NCC, Ngày nhập, Chi nhánh phòng thủ vững chắc
         let tenNCC = String(item.tenNCC || '').trim();
@@ -8204,6 +8226,8 @@ function formatVND(amount) {
         let badgeStatus = '';
         if (isDaHuy) {
           badgeStatus = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">Đã hủy</span>';
+        } else if (isLuuTam) {
+          badgeStatus = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">⏳ Lưu tạm</span>';
         } else if (conNo > 0) {
           badgeStatus = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${daTra > 0 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}">${daTra > 0 ? 'Một phần' : 'Còn nợ'}</span>`;
         } else {
@@ -8234,7 +8258,14 @@ function formatVND(amount) {
               <button type="button" onclick="xemChiTietDonNhap('${item.maPhieu}')" title="Xem chi tiết" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-semibold transition">
                 <i class="fa-solid fa-eye mr-0.5"></i>Xem
               </button>
-              ${!isDaHuy ? `
+              ${isLuuTam ? `
+                <button type="button" onclick="tiepTucNhapDonLuuTam('${item.maPhieu}')" title="Tiếp tục làm việc với đơn lưu tạm này" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                  <i class="fa-solid fa-play text-[10px]"></i><span>Tiếp tục</span>
+                </button>
+                <button type="button" onclick="xacNhanXoaDonLuuTam('${item.maPhieu}')" title="Xóa đơn lưu tạm" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition">
+                  <i class="fa-solid fa-trash mr-0.5"></i>Xóa
+                </button>
+              ` : (!isDaHuy ? `
                 <button type="button" onclick="moModalSuaDonNhap('${item.maPhieu}')" title="Sửa đơn nhập" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs font-semibold transition">
                   <i class="fa-solid fa-pen-to-square mr-0.5"></i>Sửa
                 </button>
@@ -8243,7 +8274,7 @@ function formatVND(amount) {
                 </button>
               ` : `
                 <span class="text-[10px] text-slate-400 italic">Đã hủy</span>
-              `}
+              `)}
             </div>
           </td>
         `;
@@ -8302,11 +8333,22 @@ function formatVND(amount) {
 
       const tuNgayNH = document.getElementById('filter-nhaphang-tungay')?.value || '';
       const denNgayNH = document.getElementById('filter-nhaphang-denngay')?.value || '';
+      const ttFilter = document.getElementById('filter-nhaphang-trangthai')?.value || 'COMPLETED';
 
       const filtered = (rawNhapHangList || []).filter(item => {
         // ĐƠN NHẬP HÀNG CỦA CHI NHÁNH NÀO CHỈ HIỂN THỊ Ở CHI NHÁNH ĐÓ
         const itemCN = item.chiNhanh || item.chi_nhanh || 'CN01';
         if (!laCungChiNhanh(itemCN, targetCN)) return false;
+
+        // Lọc theo trạng thái: COMPLETED (mặc định), DRAFT, CANCELLED, ALL
+        const rawTT = String(item.trangThai || '').trim();
+        const isDaHuy = (rawTT === 'Đã hủy' || rawTT === 'DaHuy' || rawTT === 'Hủy' || rawTT === 'HuyNhapKho');
+        const isLuuTam = (rawTT === 'Lưu tạm' || rawTT === 'Chưa hoàn thành' || rawTT === 'Draft' || rawTT === 'LUU_TAM' || item.isDraft === true);
+        const isHoanThanh = (!isDaHuy && !isLuuTam);
+
+        if (ttFilter === 'COMPLETED' && !isHoanThanh) return false;
+        if (ttFilter === 'CANCELLED' && !isDaHuy) return false;
+        if (ttFilter === 'DRAFT' && !isLuuTam) return false;
 
         const matchKw = !kw || String(item.maPhieu || '').toLowerCase().includes(kw) ||
                String(item.tenNCC || '').toLowerCase().includes(kw) ||
@@ -8789,10 +8831,226 @@ function formatVND(amount) {
 
       const btnXacNhan = document.getElementById('btn-xacnhan-nhaphang');
       if (btnXacNhan) {
-        btnXacNhan.innerHTML = `<i class="fa-solid fa-save mr-1.5"></i><span>CẬP NHẬT ĐƠN [${don.maPhieu}]</span>`;
+        const isDraft = (don.isDraft || don.trangThai === 'Lưu tạm');
+        btnXacNhan.innerHTML = isDraft 
+          ? `<i class="fa-solid fa-check-double mr-1.5"></i><span>HOÀN TẤT ĐƠN TẠM [${don.maPhieu}]</span>` 
+          : `<i class="fa-solid fa-save mr-1.5"></i><span>CẬP NHẬT ĐƠN [${don.maPhieu}]</span>`;
       }
 
       showNotification(`Đã nạp toàn bộ sản phẩm của đơn [${don.maPhieu}] vào giỏ. Bạn có thể chỉnh sửa số lượng, giá hoặc thêm mặt hàng rồi bấm Cập nhật!`, false);
+    }
+
+    // ====================================================================
+    // QUẢN LÝ ĐƠN LƯU TẠM & SHORTCUT SERIAL TỪ TOOLBAR
+    // ====================================================================
+    function moModalNhapImeiTuToolbar() {
+      if (nhapCart && nhapCart.length > 0) {
+        const idx = (dangChonNhapImeiItemIndex >= 0 && dangChonNhapImeiItemIndex < nhapCart.length) 
+          ? dangChonNhapImeiItemIndex 
+          : 0;
+        moModalNhapImeiHangHoa(idx);
+        return;
+      }
+      
+      const kw = (document.getElementById('nhap-search-item')?.value || '').trim();
+      if (kw) {
+        themHangVaoPhieuNhap();
+        if (nhapCart && nhapCart.length > 0) {
+          setTimeout(() => moModalNhapImeiHangHoa(nhapCart.length - 1), 80);
+          return;
+        }
+      }
+
+      const inp = document.getElementById('nhap-search-item');
+      const box = document.getElementById('nhap-item-dropdown');
+      if (inp) inp.focus();
+      if (box) {
+        const allItems = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) ? rawHangHoa : (localData.hangHoa || []);
+        if (allItems && allItems.length > 0) {
+          const topList = allItems.slice(0, 15);
+          box.innerHTML = `
+            <div class="p-2.5 bg-amber-50 text-amber-900 text-xs font-bold border-b border-amber-200 flex items-center justify-between">
+              <span class="flex items-center space-x-1.5"><i class="fa-solid fa-barcode text-amber-600"></i><span>Chọn sản phẩm để dán danh sách Serial / IMEI:</span></span>
+              <button type="button" onclick="document.getElementById('nhap-item-dropdown').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 px-1.5">✕</button>
+            </div>
+          ` + topList.map(h => `
+            <div onclick="chonSanPhamVaoPhieuNhap('${h.maHang}'); setTimeout(() => moModalNhapImeiHangHoa(nhapCart.length - 1), 100);" class="p-2.5 hover:bg-amber-50/70 cursor-pointer flex justify-between items-center transition">
+              <div>
+                <p class="font-bold text-slate-800">${h.tenHang} <span class="font-mono text-blue-600 font-semibold text-[11px]">(${h.maHang})</span></p>
+                <p class="text-[10px] text-slate-400">Tồn kho: <b class="font-mono">${h.tonKho || 0}</b> | ĐVT: ${h.donViTinh || 'Cái'}</p>
+              </div>
+              <span class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold text-[11px] whitespace-nowrap shadow-2xs">Chọn & Dán Serial ➜</span>
+            </div>
+          `).join('');
+          box.classList.remove('hidden');
+        }
+      }
+      showNotification("Vui lòng chọn sản phẩm cần nhập Serial từ danh sách gợi ý vừa mở!", false);
+    }
+
+    function luuTamDonNhapHang() {
+      if (!nhapCart || !nhapCart.length) {
+        return showNotification("Vui lòng thêm ít nhất một mặt hàng vào đơn trước khi lưu tạm!", true);
+      }
+      
+      const maNCC = document.getElementById('nhap-mancc')?.value?.trim() || '';
+      const searchNCC = document.getElementById('nhap-ncc-search')?.value?.trim() || '';
+      const ncc = (typeof rawNCCList !== 'undefined' && Array.isArray(rawNCCList)) ? 
+        rawNCCList.find(n => (n.maDoiTac || n.maNCC) === maNCC || (n.tenDoiTac || n.tenNCC) === searchNCC) : null;
+      let tenNCC = ncc ? (ncc.tenDoiTac || ncc.tenNCC) : (searchNCC || 'Nhà cung cấp');
+      if (tenNCC && tenNCC.includes('(')) {
+        tenNCC = tenNCC.replace(/\s*\([^)]*\)$/, '').trim();
+      }
+
+      const tongTien = nhapCart.reduce((a, b) => a + ((Number(b.soLuong) || 1) * (Number(b.donGia || b.giaNhap) || 0)), 0);
+      const daTra = Number(document.getElementById('nhap-datra')?.value) || 0;
+      const conNo = Math.max(0, tongTien - daTra);
+
+      const isEditing = Boolean(window.dangSuaDonNhapMaPhieu);
+      const maPhieu = isEditing ? window.dangSuaDonNhapMaPhieu : ("PNH" + Date.now().toString().slice(-6));
+
+      const valNgayNhapInp = document.getElementById('nhap-ngaynhap')?.value;
+      let ngayNhapFormatted = new Date().toISOString().replace('T', ' ').slice(0, 19);
+      if (valNgayNhapInp) {
+        const d = new Date(valNgayNhapInp);
+        if (!isNaN(d.getTime())) {
+          const pad = n => String(n).padStart(2, '0');
+          ngayNhapFormatted = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        }
+      }
+      const valNguoiNhap = document.getElementById('nhap-nguoinhap')?.value?.trim() || ((typeof currentUser !== 'undefined' && currentUser) ? (currentUser.hoTen || currentUser.username) : 'Quản trị viên');
+
+      const cartCopy = nhapCart.map(i => ({
+        maHang: i.maHang,
+        tenHang: i.tenHang,
+        soLuong: Number(i.soLuong) || 1,
+        donGia: Number(i.donGia || i.giaNhap) || 0,
+        giaNhap: Number(i.donGia || i.giaNhap) || 0,
+        thanhTien: (Number(i.soLuong) || 1) * (Number(i.donGia || i.giaNhap) || 0),
+        imeiStr: i.imeiStr || ''
+      }));
+
+      const draftObj = {
+        maPhieu: maPhieu,
+        isDraft: true,
+        ngayNhap: ngayNhapFormatted,
+        nhanVien: valNguoiNhap,
+        nguoiNhap: valNguoiNhap,
+        maNCC: maNCC || (ncc ? (ncc.maDoiTac || ncc.maNCC) : 'NCC_LE'),
+        tenNCC: tenNCC,
+        tongTien: tongTien,
+        daTra: daTra,
+        conNo: conNo,
+        trangThai: 'Lưu tạm',
+        hinhThuc: document.getElementById('nhap-hinhthuc')?.value || 'TIEN_MAT',
+        chiNhanh: (typeof currentChiNhanh !== 'undefined' && currentChiNhanh) ? layTenChiNhanhDayDu(currentChiNhanh) : 'CN01: Trụ sở chính Thanh Miện',
+        ghiChu: document.getElementById('nhap-ghichu')?.value || 'Đơn lưu tạm',
+        chiTietSanPham: cartCopy
+      };
+
+      // 1. Lưu vào localStorage
+      try {
+        localStorage.setItem('SMART_ERP_DRAFT_DON_NHAP_' + maPhieu, JSON.stringify(draftObj));
+        let allDraftKeys = JSON.parse(localStorage.getItem('SMART_ERP_DRAFT_KEYS') || '[]');
+        if (!allDraftKeys.includes(maPhieu)) allDraftKeys.push(maPhieu);
+        localStorage.setItem('SMART_ERP_DRAFT_KEYS', JSON.stringify(allDraftKeys));
+      } catch(e) {
+        console.warn("Lỗi lưu localStorage draft:", e);
+      }
+
+      // 2. Cập nhật bộ nhớ rawNhapHangList
+      if (!Array.isArray(rawNhapHangList)) rawNhapHangList = [];
+      const exIdx = rawNhapHangList.findIndex(d => d.maPhieu === maPhieu);
+      if (exIdx >= 0) rawNhapHangList[exIdx] = draftObj;
+      else rawNhapHangList.unshift(draftObj);
+
+      // 3. Đồng bộ lên Supabase nếu có
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        supabaseClient.from('don_hang').upsert([{
+          ma_don_hang: maPhieu,
+          ngay_ban: new Date().toISOString(),
+          ma_kh: draftObj.maNCC,
+          ten_kh: draftObj.tenNCC,
+          so_dien_thoai: '',
+          chi_nhanh: layMaChiNhanh(draftObj.chiNhanh) || 'CN01',
+          tong_tien: tongTien,
+          giam_gia: 0,
+          khach_phai_tra: conNo,
+          khach_tra: daTra,
+          hinh_thuc_tt: draftObj.hinhThuc,
+          chi_tiet_san_pham: cartCopy,
+          trang_thai: 'Lưu tạm',
+          nhan_vien: valNguoiNhap
+        }]).then(() => {
+          console.log("Đã đồng bộ đơn lưu tạm lên Supabase:", maPhieu);
+        }, e => console.warn(e));
+      }
+
+      // Reset form
+      window.dangSuaDonNhapMaPhieu = null;
+      nhapCart = [];
+      renderNhapCart();
+      const sInp = document.getElementById('nhap-ncc-search'); if (sInp) sInp.value = '';
+      const mInp = document.getElementById('nhap-mancc'); if (mInp) mInp.value = '';
+      const gInp = document.getElementById('nhap-ghichu'); if (gInp) gInp.value = '';
+
+      // Chuyển sang danh sách và hiển thị tab đơn Lưu tạm
+      const filterTT = document.getElementById('filter-nhaphang-trangthai');
+      if (filterTT) filterTT.value = 'DRAFT';
+      locDanhSachNhapHangTable();
+      chuyenViewNhapHang('danhsach');
+
+      showNotification(`Đã lưu tạm đơn nhập [${maPhieu}] thành công! Bạn có thể tiếp tục bất cứ lúc nào.`, false);
+    }
+
+    function tiepTucNhapDonLuuTam(maPhieu) {
+      let don = (rawNhapHangList || []).find(d => d.maPhieu === maPhieu);
+      if (!don) {
+        try {
+          const stored = localStorage.getItem('SMART_ERP_DRAFT_DON_NHAP_' + maPhieu);
+          if (stored) don = JSON.parse(stored);
+        } catch(e) {}
+      }
+      if (!don) return showNotification("Không tìm thấy dữ liệu đơn lưu tạm!", true);
+      
+      window.currentEditingDonNhap = don;
+      napDonNhapVaoGioDeSua();
+      showNotification(`Đang mở lại đơn lưu tạm [${maPhieu}]. Bạn có thể tiếp tục thêm hàng/serial rồi Hoàn tất!`, false);
+    }
+
+    function xacNhanXoaDonLuuTam(maPhieu) {
+      showConfirm("Xóa đơn lưu tạm", `Bạn có chắc chắn muốn xóa đơn lưu tạm [${maPhieu}] không?`, function() {
+        try {
+          localStorage.removeItem('SMART_ERP_DRAFT_DON_NHAP_' + maPhieu);
+          let allDraftKeys = JSON.parse(localStorage.getItem('SMART_ERP_DRAFT_KEYS') || '[]');
+          allDraftKeys = allDraftKeys.filter(k => k !== maPhieu);
+          localStorage.setItem('SMART_ERP_DRAFT_KEYS', JSON.stringify(allDraftKeys));
+        } catch(e) {}
+        
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          supabaseClient.from('don_hang').delete().eq('ma_don_hang', maPhieu).then(() => {});
+        }
+        
+        rawNhapHangList = (rawNhapHangList || []).filter(d => d.maPhieu !== maPhieu);
+        locDanhSachNhapHangTable();
+        showNotification(`Đã xóa đơn lưu tạm [${maPhieu}] thành công!`, false);
+      });
+    }
+
+    function dongBoDonLuuTamVaoDanhSach() {
+      try {
+        let allDraftKeys = JSON.parse(localStorage.getItem('SMART_ERP_DRAFT_KEYS') || '[]');
+        if (!Array.isArray(rawNhapHangList)) rawNhapHangList = [];
+        allDraftKeys.forEach(key => {
+          const dStr = localStorage.getItem('SMART_ERP_DRAFT_DON_NHAP_' + key);
+          if (dStr) {
+            const dObj = JSON.parse(dStr);
+            if (dObj && !rawNhapHangList.some(x => x.maPhieu === dObj.maPhieu)) {
+              rawNhapHangList.unshift(dObj);
+            }
+          }
+        });
+      } catch(e) {}
     }
 
     // ====================================================================
@@ -9209,7 +9467,20 @@ function formatVND(amount) {
       const tbody = document.getElementById('nhap-cart-body');
       if (!tbody) return;
       if (!nhapCart.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">Đơn nhập hàng đang trống. Quét mã hoặc tìm sản phẩm phía trên.</td></tr>';
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="p-8 text-center text-slate-400 space-y-3">
+              <i class="fa-solid fa-boxes-stacked text-3xl text-slate-300 block mb-1"></i>
+              <p class="font-medium text-xs">Đơn nhập hàng đang trống. Quét mã hoặc tìm sản phẩm phía trên để đưa vào đơn.</p>
+              <div class="flex items-center justify-center space-x-2 pt-1">
+                <button type="button" onclick="moModalNhapImeiTuToolbar()" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl text-xs font-bold shadow-xs inline-flex items-center space-x-1.5 transition">
+                  <i class="fa-solid fa-barcode"></i>
+                  <span>📋 Nhập Serial / IMEI Hàng Loạt từ Excel</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
         document.getElementById('nhap-tongtien').innerText = '0 đ';
         document.getElementById('nhap-datra').value = 0;
         return;
@@ -9222,12 +9493,12 @@ function formatVND(amount) {
         const imeiArr = tachDanhSachImei(it.imeiStr);
         const imeiCount = imeiArr.length;
         
-        let btnCls = 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200';
+        let btnCls = 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs';
         let inputBorderCls = 'border-slate-300';
         let hintHtml = '';
         
         if (imeiCount === 0) {
-          btnCls = 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200';
+          btnCls = 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs';
           hintHtml = '<span class="text-[10px] text-slate-400">Cách nhau bằng dấu , hoặc ;</span>';
         } else if (imeiCount === sl) {
           btnCls = 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs';
@@ -9255,28 +9526,29 @@ function formatVND(amount) {
             <td class="p-2.5 text-right">
               <input type="number" value="${donGia}" onchange="nhapCart[${idx}].donGia=Math.max(0, Number(this.value)||0); renderNhapCart();" class="w-24 border rounded-lg text-right p-1 font-mono">
             </td>
-            <td class="p-2 min-w-[240px]">
+            <td class="p-2 min-w-[280px]">
               <div class="flex items-center space-x-1.5">
                 <div class="relative flex-1">
                   <input type="text" 
                          value="${(it.imeiStr || '').replace(/"/g, '&quot;')}" 
                          oninput="nhapCart[${idx}].imeiStr=this.value" 
                          onchange="renderNhapCart()" 
-                         placeholder="Nhập serial (cách dấu phẩy, chấm phẩy)..." 
-                         class="w-full border ${inputBorderCls} rounded-lg px-2 py-1 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-400">
+                         placeholder="Nhập serial (cách dấu , hoặc ;)..." 
+                         class="w-full border ${inputBorderCls} rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-400">
                 </div>
                 <button type="button" 
                         onclick="moModalNhapImeiHangHoa(${idx})" 
-                        title="Mở bảng nhập Serial hàng loạt từ Excel hoặc súng quét"
-                        class="px-2.5 py-1 ${btnCls} rounded-lg text-xs font-bold transition flex items-center space-x-1 whitespace-nowrap">
-                  <i class="fa-solid fa-list-ol text-[10px]"></i>
-                  <span>${imeiCount}/${sl}</span>
+                        title="Bấm để mở bảng Dán danh sách Serial từ Excel hoặc Quét mã"
+                        class="px-3 py-1.5 ${btnCls} rounded-lg text-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap shadow-xs">
+                  <i class="fa-solid fa-clipboard-list text-xs"></i>
+                  <span>DS Serial (${imeiCount}/${sl})</span>
                 </button>
               </div>
-              <div class="flex items-center justify-between px-0.5 mt-0.5">
+              <div class="flex items-center justify-between px-1 mt-1">
                 ${hintHtml}
-                <button type="button" onclick="moModalNhapImeiHangHoa(${idx})" class="text-[10px] text-blue-600 hover:text-blue-800 font-medium">
-                  <i class="fa-solid fa-paste text-[9px] mr-0.5"></i>DS Serial
+                <button type="button" onclick="moModalNhapImeiHangHoa(${idx})" class="text-[11px] text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center space-x-1">
+                  <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                  <span>Dán từ Excel</span>
                 </button>
               </div>
             </td>
@@ -23495,6 +23767,13 @@ function loadSoQuy(filter) {
 
       function resetFormNhap() {
         window.dangSuaDonNhapMaPhieu = null;
+        window.currentEditingDonNhap = null;
+        try {
+          localStorage.removeItem('SMART_ERP_DRAFT_DON_NHAP_' + maPhieu);
+          let allDraftKeys = JSON.parse(localStorage.getItem('SMART_ERP_DRAFT_KEYS') || '[]');
+          allDraftKeys = allDraftKeys.filter(k => k !== maPhieu);
+          localStorage.setItem('SMART_ERP_DRAFT_KEYS', JSON.stringify(allDraftKeys));
+        } catch(e) {}
         if (btn) {
           btn.disabled = false;
           btn.innerHTML = '<i class="fa-solid fa-check mr-1.5"></i><span>HOÀN TẤT NHẬP HÀNG</span>';
@@ -26295,6 +26574,11 @@ function loadSoQuy(filter) {
     window.chonNCCNhapHangSua = chonNCCNhapHangSua;
     window.xacNhanLuuSuaDonNhap = xacNhanLuuSuaDonNhap;
     window.napDonNhapVaoGioDeSua = napDonNhapVaoGioDeSua;
+    window.moModalNhapImeiTuToolbar = moModalNhapImeiTuToolbar;
+    window.luuTamDonNhapHang = luuTamDonNhapHang;
+    window.tiepTucNhapDonLuuTam = tiepTucNhapDonLuuTam;
+    window.xacNhanXoaDonLuuTam = xacNhanXoaDonLuuTam;
+    window.dongBoDonLuuTamVaoDanhSach = dongBoDonLuuTamVaoDanhSach;
 
     // Gắn các hàm của Trả Hàng NCC (3.3) vào window
     window.chuyenViewTraHangNCC = chuyenViewTraHangNCC;
