@@ -1,10 +1,10 @@
 {
-  "version": "1.1.7",
-  "build_number": 18,
+  "version": "1.1.8",
+  "build_number": 19,
   "force_update": false,
-  "release_notes": "• Đồng bộ chuẩn xác 100% dữ liệu kho hàng đa chi nhánh (Thanh Miện CN01, Thanh Giang CN02, Bình Giang CN03, Toàn hệ thống ALL) khớp với bản PC.\n• Tồn kho và giá trị vốn tính toán chính xác theo từng chi nhánh, quét realtime trạng thái kho IMEI từ Supabase và giao dịch bán hàng.\n• Báo cáo bán hàng, tồn kho và cảnh báo hết hàng tại Trung tâm Báo cáo ERP hiển thị chuẩn xác theo từng chi nhánh được chọn.\n• Cập nhật tồn kho hiển thị tại màn hình POS theo chi nhánh đang giao dịch.",
+  "release_notes": "• Tối ưu màn hình Quản lý đơn hàng (Bán hàng, Đặt hàng, Nhập kho): Bỏ thanh chi nhánh chiếm diện tích ở thân trang, tích hợp hiển thị chi nhánh lên thanh tiêu đề AppBar.\n• Tinh gọn thẻ đơn hàng thông minh: Hiển thị tên khách/NCC, chi nhánh, thời gian và tổng tiền siêu thoáng, giúp nhìn thấy nhiều đơn hàng hơn gấp 2 lần mà không cần cuộn.\n• Bổ sung tính năng xem chi tiết đơn hàng đầy đủ: danh sách sản phẩm, IMEI, thanh toán, in bill LAN trực tiếp từ đơn hàng.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.7/TT_POS_v1.1.7.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.7/TT_POS_v1.1.7.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.1.7"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.8/TT_POS_v1.1.8.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.8/TT_POS_v1.1.8.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.1.8"
 }

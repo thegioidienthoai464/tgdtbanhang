@@ -1,7 +1,7 @@
 name: tt_pos
 description: "T&T POS - Hệ Thống Quản Lý Bán Hàng & Kho ERP - Mobile App (Android & iOS)"
 publish_to: 'none'
-version: 1.1.7+18
+version: 1.1.8+19
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

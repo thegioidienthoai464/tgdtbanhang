@@ -6,8 +6,8 @@ const { execSync } = require('child_process');
 const env = fs.readFileSync('.env', 'utf8');
 const token = env.match(/GITHUB_TOKEN=(.*)/)[1].trim();
 const repo = 'thegioidienthoai464/tgdtbanhang';
-const TARGET_VERSION = 'v1.1.7';
-const TARGET_BUILD = 18;
+const TARGET_VERSION = 'v1.1.8';
+const TARGET_BUILD = 19;
 
 function githubRequest(endpoint, method = 'GET', data = null, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -224,15 +224,15 @@ async function main() {
     body: `## 🚀 Bản cập nhật T&T POS ${TARGET_VERSION} (Build ${TARGET_BUILD})
 
 ### ✨ Tính năng mới & Cải tiến:
-1. **Đồng bộ chuẩn xác 100% kho dữ liệu đa chi nhánh**:
-   - Dữ liệu tồn kho, giá vốn và kho IMEI tại Thanh Miện (CN01), Thanh Giang (CN02), Bình Giang (CN03) và Toàn hệ thống (ALL) khớp hoàn toàn với số liệu máy tính PC.
-   - Quét realtime số lượng máy TrongKho từ bảng IMEI Supabase kết hợp giao dịch bán hàng/nhập xuất thực tế.
-2. **Trung tâm Báo cáo ERP chuẩn PC theo từng chi nhánh**:
-   - Phân hệ 6.1 (Báo cáo bán hàng): Doanh thu thực tế, số lượng đơn hàng, giá trị trung bình/đơn chuẩn xác theo từng chi nhánh được chọn (loại trừ đơn Đã hủy).
-   - Phân hệ 6.2 (Báo cáo hàng hóa & tồn kho): Thống kê tổng số lượng tồn kho, tổng giá trị vốn, danh sách cảnh báo hết hàng/sắp hết hàng đồng bộ chính xác theo chi nhánh.
-3. **Màn hình Bán hàng POS & Màn hình Kho hàng**:
-   - Hiển thị đúng số lượng tồn kho của mặt hàng theo chi nhánh đang giao dịch.
-   - Cho phép chỉnh sửa giá bán, số lượng, thêm hàng hóa mới và chỉnh sửa thông tin hàng hóa trực tiếp.`,
+1. **Màn hình Quản lý đơn hàng (Bán hàng, Đặt hàng, Nhập kho) - Tối ưu diện tích hiển thị**:
+   - Loại bỏ hoàn toàn thanh chọn chi nhánh chiếm diện tích ở thân trang, chuyển tên chi nhánh lên thanh tiêu đề AppBar thanh thoát.
+   - Giữ lại thanh chọn nhanh chi nhánh dạng chip trên 1 dòng duy nhất.
+2. **Thiết kế thẻ đơn hàng siêu thoáng & Nhìn được nhiều đơn hơn gấp 2 lần**:
+   - Tinh gọn độ dày thẻ, hiển thị thông tin trọng tâm: mã đơn, tên khách hàng / nhà cung cấp, chi nhánh, thời gian, hình thức thanh toán và tổng tiền sắc nét.
+   - Người dùng có thể nhìn thấy 4 – 6 đơn hàng ngay trên màn hình mà không cần phải cuộn nhiều.
+3. **Bổ sung xem chi tiết đơn hàng & In bill LAN trực tiếp**:
+   - Chạm vào bất kỳ đơn hàng nào để mở bảng chi tiết: danh sách sản phẩm, số lượng, đơn giá, mã IMEI, tiền cọc, chiết khấu và còn nợ.
+   - Hỗ trợ in hóa đơn trực tiếp ra máy in mạng LAN ngay từ màn hình đơn hàng.`,
     draft: false,
     prerelease: false
   };
