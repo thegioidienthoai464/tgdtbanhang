@@ -29,12 +29,14 @@ class _InventoryViewState extends State<InventoryView> {
     final vm = context.watch<InventoryViewModel>();
     final branchVm = context.watch<BranchViewModel>();
 
-    final filteredProducts = branchVm.isAllSelected
-        ? vm.products
-        : vm.products.where((p) => branchVm.matchesBranch(p.chiNhanh)).toList();
-
-    final currentTotalStock = filteredProducts.fold(0.0, (sum, p) => sum + p.tonKho);
-    final currentTotalValue = filteredProducts.fold(0.0, (sum, p) => sum + (p.tonKho * p.giaVon));
+    final currentTotalStock = vm.products.fold(
+      0.0,
+      (sum, p) => sum + p.getTonKhoChoBoLoc(branchVm.selectedBranchCodes, branchVm.isAllSelected),
+    );
+    final currentTotalValue = vm.products.fold(
+      0.0,
+      (sum, p) => sum + (p.getTonKhoChoBoLoc(branchVm.selectedBranchCodes, branchVm.isAllSelected) * p.getGiaVonTaiChiNhanh(branchVm.selectedBranch.maCN)),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -171,15 +173,18 @@ class _InventoryViewState extends State<InventoryView> {
           Expanded(
             child: vm.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : filteredProducts.isEmpty
+                : vm.products.isEmpty
                     ? const Center(child: Text('Không có hàng hóa nào'))
                     : ListView.separated(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                        itemCount: filteredProducts.length,
+                        itemCount: vm.products.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
-                          final p = filteredProducts[index];
-                          final hasStock = p.tonKho > 0;
+                          final p = vm.products[index];
+                          final pStock = p.getTonKhoChoBoLoc(branchVm.selectedBranchCodes, branchVm.isAllSelected);
+                          final hasStock = pStock > 0;
+                          final pGiaVon = p.getGiaVonTaiChiNhanh(branchVm.selectedBranch.maCN);
+                          final pImeis = p.getImeisTaiChiNhanh(branchVm.selectedBranch.maCN);
 
                           return Container(
                             decoration: BoxDecoration(
@@ -192,7 +197,7 @@ class _InventoryViewState extends State<InventoryView> {
                               leading: CircleAvatar(
                                 backgroundColor: hasStock ? AppTheme.successGreen.withOpacity(0.12) : AppTheme.dangerRed.withOpacity(0.12),
                                 child: Text(
-                                  '${p.tonKho.toInt()}',
+                                  '${pStock.toInt()}',
                                   style: TextStyle(
                                     color: hasStock ? AppTheme.successGreen : AppTheme.dangerRed,
                                     fontWeight: FontWeight.bold,
@@ -204,7 +209,7 @@ class _InventoryViewState extends State<InventoryView> {
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                               ),
                               subtitle: Text(
-                                '${p.maHang} • Vốn: ${Formatters.formatCurrency(p.giaVon)} • Giá bán: ${Formatters.formatCurrency(p.giaBan)}',
+                                '${p.maHang} • Vốn: ${Formatters.formatCurrency(pGiaVon)} • Giá: ${Formatters.formatCurrency(p.giaBan)}${p.coQuanLyImei ? " • 📱 ${pImeis.length} IMEI" : ""}',
                                 style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
                               ),
                               trailing: const Icon(Icons.edit_outlined, color: AppTheme.primaryBlue, size: 20),

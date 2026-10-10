@@ -48,9 +48,10 @@ class _DashboardViewState extends State<DashboardView> {
     final preOrdersCount = filteredPreOrders.where((o) => o.trangThai != 'Đã hủy').length;
 
     // Tồn kho lọc theo chi nhánh
-    final currentStock = branchVm.isAllSelected
-        ? invVm.totalStock
-        : invVm.products.where((p) => branchVm.matchesBranch(p.chiNhanh)).fold(0.0, (sum, p) => sum + p.tonKho);
+    final currentStock = invVm.products.fold(
+      0.0,
+      (sum, p) => sum + p.getTonKhoChoBoLoc(branchVm.selectedBranchCodes, branchVm.isAllSelected),
+    );
 
     // Quỹ tiền lọc theo chi nhánh
     final currentFund = branchVm.isAllSelected
@@ -442,20 +443,31 @@ class _DashboardViewState extends State<DashboardView> {
     CashbookViewModel cashVm,
     PosViewModel posVm,
   ) {
-    // 6.1 Dữ liệu bán hàng
-    final filteredSalesOrders = ordersVm.salesOrders.where((o) => branchVm.matchesBranch(o.chiNhanh)).toList();
+    // 6.1 Dữ liệu bán hàng (Chỉ tính đơn chưa hủy)
+    final filteredSalesOrders = ordersVm.salesOrders
+        .where((o) => o.trangThai != 'Đã hủy' && branchVm.matchesBranch(o.chiNhanh))
+        .toList();
     final totalSales = filteredSalesOrders.fold(0.0, (sum, o) => sum + o.tongTien);
     final totalOrdersCount = filteredSalesOrders.length;
     final avgOrderValue = totalOrdersCount > 0 ? (totalSales / totalOrdersCount) : 0.0;
 
-    // 6.2 Dữ liệu tồn kho
-    final filteredProducts = branchVm.isAllSelected
-        ? invVm.products
-        : invVm.products.where((p) => branchVm.matchesBranch(p.chiNhanh)).toList();
-    final totalStockQty = filteredProducts.fold(0.0, (sum, p) => sum + p.tonKho);
-    final totalStockCost = filteredProducts.fold(0.0, (sum, p) => sum + (p.tonKho * p.giaVon));
-    final lowStockCount = filteredProducts.where((p) => p.tonKho > 0 && p.tonKho <= 2).length;
-    final outOfStockCount = filteredProducts.where((p) => p.tonKho == 0).length;
+    // 6.2 Dữ liệu tồn kho chính xác theo chi nhánh
+    final totalStockQty = invVm.products.fold(
+      0.0,
+      (sum, p) => sum + p.getTonKhoChoBoLoc(branchVm.selectedBranchCodes, branchVm.isAllSelected),
+    );
+    final totalStockCost = invVm.products.fold(
+      0.0,
+      (sum, p) => sum + (p.getTonKhoChoBoLoc(branchVm.selectedBranchCodes, branchVm.isAllSelected) * p.getGiaVonTaiChiNhanh(branchVm.selectedBranch.maCN)),
+    );
+    final lowStockCount = invVm.products.where((p) {
+      final s = p.getTonKhoChoBoLoc(branchVm.selectedBranchCodes, branchVm.isAllSelected);
+      return s > 0 && s <= 2;
+    }).length;
+    final outOfStockCount = invVm.products.where((p) {
+      final s = p.getTonKhoChoBoLoc(branchVm.selectedBranchCodes, branchVm.isAllSelected);
+      return s == 0;
+    }).length;
 
     // 6.3 Dữ liệu khách hàng & công nợ
     final customers = posVm.customers;

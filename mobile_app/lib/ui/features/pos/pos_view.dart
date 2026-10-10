@@ -302,6 +302,7 @@ class _PosViewState extends State<PosView> {
                         itemBuilder: (context, index) {
                           final p = vm.products[index];
                           final isInCart = vm.cart.any((item) => item.maHang == p.maHang);
+                          final posStock = p.getTonKhoChoBoLoc(branchVm.selectedBranchCodes);
 
                           return Container(
                             decoration: BoxDecoration(
@@ -337,9 +338,9 @@ class _PosViewState extends State<PosView> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    '• Tồn: ${p.tonKho.toInt()}',
+                                    '• Tồn: ${posStock.toInt()}',
                                     style: TextStyle(
-                                      color: p.tonKho > 0 ? AppTheme.textMuted : AppTheme.dangerRed,
+                                      color: posStock > 0 ? AppTheme.textMuted : AppTheme.dangerRed,
                                       fontSize: 12,
                                     ),
                                   ),

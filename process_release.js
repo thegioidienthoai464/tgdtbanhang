@@ -6,8 +6,8 @@ const { execSync } = require('child_process');
 const env = fs.readFileSync('.env', 'utf8');
 const token = env.match(/GITHUB_TOKEN=(.*)/)[1].trim();
 const repo = 'thegioidienthoai464/tgdtbanhang';
-const TARGET_VERSION = 'v1.1.6';
-const TARGET_BUILD = 17;
+const TARGET_VERSION = 'v1.1.7';
+const TARGET_BUILD = 18;
 
 function githubRequest(endpoint, method = 'GET', data = null, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -221,22 +221,15 @@ async function main() {
     body: `## 🚀 Bản cập nhật T&T POS ${TARGET_VERSION} (Build ${TARGET_BUILD})
 
 ### ✨ Tính năng mới & Cải tiến:
-1. **Màn hình bán hàng POS - Chỉnh sửa giá & số lượng đơn hàng**:
-   - Cho phép bấm vào từng sản phẩm trong giỏ hàng hoặc ngay tại bước xác nhận thanh toán để chỉnh sửa đơn giá bán, thay đổi số lượng đặt mua, gán mã IMEI/Serial và xóa mặt hàng linh hoạt.
-2. **Màn hình Kho & IMEI - Thêm mới & Chỉnh sửa hàng hóa**:
-   - Bổ sung nút **+ Thêm hàng hóa** trên thanh công cụ và nút nổi.
-   - Bấm vào bất kỳ mặt hàng nào để xem chi tiết và chỉnh sửa: tên, mã hàng, nhóm hàng, đơn vị tính, giá vốn nhập, giá bán ra, số lượng tồn kho, quản lý IMEI, chi nhánh.
-3. **Màn hình Sổ quỹ - Chi tiết phiếu thu/chi & 4 hành động chuyên sâu**:
-   - Bấm vào từng giao dịch thu/chi để xem chi tiết đầy đủ thông tin hạch toán.
-   - Bổ sung 4 hành động: **In phiếu LAN**, **Chia sẻ phiếu (Zalo/SMS)**, **Sửa phiếu** và **Hủy phiếu** (hoàn trả quỹ).
-4. **Màn hình Tổng quan - Truy cập 5 phân hệ báo cáo chuẩn PC**:
-   - Thay thế nút quét barcode bằng tính năng **Truy cập báo cáo**.
-   - Cung cấp đầy đủ 5 phân hệ báo cáo kinh doanh chuẩn theo bản PC:
-     • 6.1 Báo cáo bán hàng (Doanh thu, số lượng đơn, giá trị TB/đơn)
-     • 6.2 Báo cáo hàng hóa & tồn kho (Tồn kho, giá trị vốn, cảnh báo hết hàng)
-     • 6.3 Báo cáo khách hàng & công nợ (Tổng nợ phải thu, số khách nợ)
-     • 6.4 Báo cáo nhà cung cấp & nhập hàng (Đơn hàng chờ nhập kho)
-     • 6.5 Báo cáo tài chính & dòng tiền (Thu, chi, tồn quỹ tiền mặt & ngân hàng, tổng tồn quỹ ròng).`,
+1. **Đồng bộ chuẩn xác 100% kho dữ liệu đa chi nhánh**:
+   - Dữ liệu tồn kho, giá vốn và kho IMEI tại Thanh Miện (CN01), Thanh Giang (CN02), Bình Giang (CN03) và Toàn hệ thống (ALL) khớp hoàn toàn với số liệu máy tính PC.
+   - Quét realtime số lượng máy TrongKho từ bảng IMEI Supabase kết hợp giao dịch bán hàng/nhập xuất thực tế.
+2. **Trung tâm Báo cáo ERP chuẩn PC theo từng chi nhánh**:
+   - Phân hệ 6.1 (Báo cáo bán hàng): Doanh thu thực tế, số lượng đơn hàng, giá trị trung bình/đơn chuẩn xác theo từng chi nhánh được chọn (loại trừ đơn Đã hủy).
+   - Phân hệ 6.2 (Báo cáo hàng hóa & tồn kho): Thống kê tổng số lượng tồn kho, tổng giá trị vốn, danh sách cảnh báo hết hàng/sắp hết hàng đồng bộ chính xác theo chi nhánh.
+3. **Màn hình Bán hàng POS & Màn hình Kho hàng**:
+   - Hiển thị đúng số lượng tồn kho của mặt hàng theo chi nhánh đang giao dịch.
+   - Cho phép chỉnh sửa giá bán, số lượng, thêm hàng hóa mới và chỉnh sửa thông tin hàng hóa trực tiếp.`,
     draft: false,
     prerelease: false
   };

@@ -1,10 +1,10 @@
 {
-  "version": "1.1.6",
-  "build_number": 17,
+  "version": "1.1.7",
+  "build_number": 18,
   "force_update": false,
-  "release_notes": "• Màn hình Sổ quỹ: Loại bỏ thanh chọn chi nhánh chiếm diện tích ở thân trang, tích hợp vào thanh tiêu đề AppBar.\n• Thiết kế lại thẻ Tổng tồn quỹ siêu gọn và thanh lọc thông minh, giúp hiển thị được nhiều giao dịch trên màn hình hơn gấp 3 lần mà không phải cuộn nhiều.\n• Giữ trọn vẹn đầy đủ tính năng: xem chi tiết, in phiếu LAN, chia sẻ, sửa phiếu, hủy phiếu và lọc theo tài khoản ngân hàng.",
+  "release_notes": "• Đồng bộ chuẩn xác 100% dữ liệu kho hàng đa chi nhánh (Thanh Miện CN01, Thanh Giang CN02, Bình Giang CN03, Toàn hệ thống ALL) khớp với bản PC.\n• Tồn kho và giá trị vốn tính toán chính xác theo từng chi nhánh, quét realtime trạng thái kho IMEI từ Supabase và giao dịch bán hàng.\n• Báo cáo bán hàng, tồn kho và cảnh báo hết hàng tại Trung tâm Báo cáo ERP hiển thị chuẩn xác theo từng chi nhánh được chọn.\n• Cập nhật tồn kho hiển thị tại màn hình POS theo chi nhánh đang giao dịch.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.6/TT_POS_v1.1.6.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.6/TT_POS_v1.1.6.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.1.6"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.7/TT_POS_v1.1.7.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.7/TT_POS_v1.1.7.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.1.7"
 }

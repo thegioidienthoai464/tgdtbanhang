@@ -1,7 +1,7 @@
 name: tt_pos
 description: "T&T POS - Hệ Thống Quản Lý Bán Hàng & Kho ERP - Mobile App (Android & iOS)"
 publish_to: 'none'
-version: 1.1.6+17
+version: 1.1.7+18
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -50,3 +50,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/data/
