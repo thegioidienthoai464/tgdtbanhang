@@ -170,7 +170,7 @@ async function main() {
     return;
   }
 
-  const latestArtifact = artRes.data.artifacts[0];
+  const latestArtifact = artRes.data.artifacts.find(a => a.name.includes('Android') || a.name.toLowerCase().includes('apk')) || artRes.data.artifacts[0];
   console.log(`📦 Artifact tìm thấy: ${latestArtifact.name} (ID: ${latestArtifact.id}, Size: ${(latestArtifact.size_in_bytes/1024/1024).toFixed(1)} MB, Created: ${latestArtifact.created_at})`);
 
   const zipPath = path.join(__dirname, 'latest_app.zip');
@@ -185,16 +185,19 @@ async function main() {
   await downloadBinary(initRes.location, zipPath);
   console.log('✅ Đã tải xong zip. Đang giải nén...');
 
-  // Xóa file cũ trước khi giải nén
+  // Xóa các file cũ trước khi giải nén để đảm bảo nhận file mới nhất từ artifact
   let apkSource = path.join(__dirname, 'app-release.apk');
+  const subApk = path.join(__dirname, 'mobile_app', 'build', 'app', 'outputs', 'flutter-apk', 'app-release.apk');
   if (fs.existsSync(apkSource)) {
     try { fs.unlinkSync(apkSource); } catch(_) {}
+  }
+  if (fs.existsSync(subApk)) {
+    try { fs.unlinkSync(subApk); } catch(_) {}
   }
 
   // Giải nén zip bằng PowerShell
   execSync(`powershell -Command "Expand-Archive -Path '${zipPath}' -DestinationPath '${__dirname}' -Force"`);
 
-  const subApk = path.join(__dirname, 'mobile_app', 'build', 'app', 'outputs', 'flutter-apk', 'app-release.apk');
   if (!fs.existsSync(apkSource) && fs.existsSync(subApk)) {
     apkSource = subApk;
   }

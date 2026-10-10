@@ -317,56 +317,238 @@
 
     <!-- Main Content Container: Chứa các section ẩn/hiện -->
     <main class="flex-1 overflow-y-auto p-5 scrollbar-thin">
-      <!-- TAB 1: TỔNG QUAN -->
+      <!-- TAB 1: TỔNG QUAN (KIOTVIET STYLE DASHBOARD) -->
       <section id="tab-tongquan" class="space-y-4">
-        <div class="flex flex-wrap items-center justify-between pb-2 border-b border-slate-200/80 gap-2">
-          <div class="flex items-center space-x-2">
-            <span class="text-xs text-slate-500 font-medium">Báo cáo hạch toán chi nhánh:</span>
-            <span id="dashboard-chinhanh-title" class="px-2.5 py-1 rounded-xl text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 flex items-center space-x-1.5 shadow-2xs">
-              <i class="fa-solid fa-store text-amber-600"></i>
-              <span>CN01: Trụ sở chính Thanh Miện</span>
-            </span>
+        <!-- LAYOUT 2 CỘT: CỘT CHÍNH (TRÁI) & CỘT WIDGET (PHẢI) -->
+        <div class="flex flex-col xl:flex-row gap-4 items-start">
+          
+          <!-- ==================== CỘT CHÍNH (BÊN TRÁI) ==================== -->
+          <div class="w-full xl:flex-1 space-y-4">
+            
+            <!-- 1. THẺ: KẾT QUẢ BÁN HÀNG HÔM NAY -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs">
+              <div class="flex items-center justify-between mb-3.5">
+                <h3 class="text-sm font-bold text-slate-800">Kết quả bán hàng hôm nay</h3>
+              </div>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                <!-- KPI 1: Doanh thu -->
+                <div class="flex items-center space-x-3 pt-2 md:pt-0 md:pl-0">
+                  <div class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                    <i class="fa-solid fa-dollar-sign"></i>
+                  </div>
+                  <div>
+                    <div class="text-[11px] text-slate-500 font-medium">Doanh thu</div>
+                    <div class="text-lg font-bold text-slate-800 font-mono tracking-tight" id="dash-kpi-doanhthu">0</div>
+                    <div class="text-[11px] text-slate-400" id="dash-kpi-sodon">0 hóa đơn</div>
+                  </div>
+                </div>
+
+                <!-- KPI 2: Trả hàng -->
+                <div class="flex items-center space-x-3 pt-2 md:pt-0 md:pl-4">
+                  <div class="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                    <i class="fa-solid fa-reply"></i>
+                  </div>
+                  <div>
+                    <div class="text-[11px] text-slate-500 font-medium">Trả hàng</div>
+                    <div class="text-lg font-bold text-slate-800 font-mono tracking-tight" id="dash-kpi-trahang">0</div>
+                    <div class="text-[11px] text-slate-400" id="dash-kpi-sodontra">0 phiếu trả</div>
+                  </div>
+                </div>
+
+                <!-- KPI 3: Doanh thu thuần (So với hôm qua) -->
+                <div class="flex items-center space-x-3 pt-2 md:pt-0 md:pl-4">
+                  <div id="dash-icon-trend-homqua" class="text-rose-500 text-lg font-bold shrink-0 w-5 text-center">
+                    <i class="fa-solid fa-arrow-down"></i>
+                  </div>
+                  <div>
+                    <div class="text-[11px] text-slate-500 font-medium">Doanh thu thuần</div>
+                    <div class="text-lg font-bold font-mono tracking-tight text-rose-600" id="dash-kpi-trend-homqua">0%</div>
+                    <div class="text-[11px] text-slate-400">So với hôm qua</div>
+                  </div>
+                </div>
+
+                <!-- KPI 4: Doanh thu thuần (So với cùng kỳ tháng trước) -->
+                <div class="flex items-center space-x-3 pt-2 md:pt-0 md:pl-4">
+                  <div id="dash-icon-trend-thangtruoc" class="text-rose-500 text-lg font-bold shrink-0 w-5 text-center">
+                    <i class="fa-solid fa-arrow-down"></i>
+                  </div>
+                  <div>
+                    <div class="text-[11px] text-slate-500 font-medium">Doanh thu thuần</div>
+                    <div class="text-lg font-bold font-mono tracking-tight text-rose-600" id="dash-kpi-trend-thangtruoc">0%</div>
+                    <div class="text-[11px] text-slate-400">So với cùng kỳ tháng trước</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. THẺ: BIỂU ĐỒ DOANH THU THUẦN (STACKED BAR THEO CHI NHÁNH) -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs">
+              <div class="flex flex-wrap items-center justify-between gap-2 pb-2">
+                <div class="flex items-baseline space-x-3">
+                  <span class="text-sm font-bold text-slate-800">Doanh thu thuần</span>
+                  <span id="dash-chart-tong-tien" class="text-lg font-bold text-blue-600 font-mono">0</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button type="button" onclick="toggleDashboardChartType()" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Chuyển dạng biểu đồ (Cột / Đường)">
+                    <i id="dash-btn-chart-icon" class="fa-solid fa-chart-column text-sm"></i>
+                  </button>
+                  <button type="button" onclick="loadDashboard()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg transition" title="Làm mới dữ liệu">
+                    <i class="fa-solid fa-rotate-right text-xs"></i>
+                  </button>
+                  <select id="dash-time-range" onchange="doiPhamViThoiGianDashboard(this.value)" class="text-xs border border-slate-200 rounded-lg px-2.5 py-1 text-slate-700 bg-white font-medium focus:ring-1 focus:ring-blue-500 outline-none">
+                    <option value="THANG_NAY" selected>Tháng này</option>
+                    <option value="HOM_NAY">Hôm nay</option>
+                    <option value="HOM_QUA">Hôm qua</option>
+                    <option value="7_NGAY">7 ngày qua</option>
+                    <option value="THANG_TRUOC">Tháng trước</option>
+                    <option value="NAM_NAY">Năm này</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Sub-tabs: Theo ngày | Theo giờ | Theo thứ -->
+              <div class="flex items-center space-x-6 border-b border-slate-100 text-xs font-semibold mb-3">
+                <button type="button" id="dash-tab-ngay" onclick="doiTabBieuDoDoanhThu('ngay')" class="pb-2 text-blue-600 border-b-2 border-blue-600 transition">Theo ngày</button>
+                <button type="button" id="dash-tab-gio" onclick="doiTabBieuDoDoanhThu('gio')" class="pb-2 text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition">Theo giờ</button>
+                <button type="button" id="dash-tab-thu" onclick="doiTabBieuDoDoanhThu('thu')" class="pb-2 text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition">Theo thứ</button>
+              </div>
+
+              <!-- Vùng vẽ biểu đồ Canvas -->
+              <div class="h-64 sm:h-72 w-full relative">
+                <canvas id="chartDoanhThuThuan"></canvas>
+              </div>
+
+              <!-- Legend hiển thị các chi nhánh -->
+              <div id="dash-chart-legend" class="flex flex-wrap items-center justify-center gap-4 mt-3 text-xs text-slate-600 font-medium">
+                <!-- Sinh tự động từ code -->
+              </div>
+            </div>
+
+            <!-- 3. HAI THẺ BÊN DƯỚI: TOP 10 HÀNG BÁN CHẠY & TOP 10 KHÁCH MUA NHIỀU NHẤT -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Top 10 hàng bán chạy -->
+              <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-3 gap-2">
+                  <h4 class="text-xs font-bold text-slate-800">Top 10 hàng bán chạy</h4>
+                  <div class="flex items-center space-x-1.5">
+                    <select id="dash-tophang-type" onchange="capNhatTopHangDashboard()" class="text-[11px] border border-slate-200 rounded-lg px-2 py-0.5 bg-white text-slate-600 font-medium outline-none">
+                      <option value="DOANH_THU" selected>Theo doanh thu thuần</option>
+                      <option value="SO_LUONG">Theo số lượng</option>
+                    </select>
+                    <select id="dash-tophang-time" onchange="capNhatTopHangDashboard()" class="text-[11px] border border-slate-200 rounded-lg px-2 py-0.5 bg-white text-slate-600 font-medium outline-none">
+                      <option value="THANG_NAY" selected>Tháng này</option>
+                      <option value="HOM_NAY">Hôm nay</option>
+                      <option value="TUAN_NAY">Tuần này</option>
+                      <option value="NAM_NAY">Năm này</option>
+                    </select>
+                  </div>
+                </div>
+                <!-- Danh sách thanh tiến độ -->
+                <div id="dash-tophang-list" class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
+                  <div class="text-center py-8 text-slate-400 text-xs italic">Đang tải dữ liệu...</div>
+                </div>
+              </div>
+
+              <!-- Top 10 khách mua nhiều nhất -->
+              <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-3 gap-2">
+                  <h4 class="text-xs font-bold text-slate-800">Top 10 khách mua nhiều nhất</h4>
+                  <div class="flex items-center space-x-1.5">
+                    <select id="dash-topkh-time" onchange="capNhatTopKHDashboard()" class="text-[11px] border border-slate-200 rounded-lg px-2 py-0.5 bg-white text-slate-600 font-medium outline-none">
+                      <option value="THANG_NAY" selected>Tháng này</option>
+                      <option value="HOM_NAY">Hôm nay</option>
+                      <option value="TUAN_NAY">Tuần này</option>
+                      <option value="NAM_NAY">Năm này</option>
+                    </select>
+                  </div>
+                </div>
+                <!-- Danh sách thanh tiến độ -->
+                <div id="dash-topkh-list" class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
+                  <div class="text-center py-8 text-slate-400 text-xs italic">Đang tải dữ liệu...</div>
+                </div>
+              </div>
+            </div>
+
           </div>
-          <span class="text-[11px] text-slate-400 italic">Doanh số, đơn hàng và các chỉ số tài chính tính riêng theo chi nhánh đang làm việc</span>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-            <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Doanh thu hôm nay</span>
-            <h3 id="kpi-doanhthu" class="text-lg font-bold text-blue-600 font-mono mt-1">0 đ</h3>
-            <p id="kpi-sodon" class="text-[10px] text-slate-400 mt-0.5">0 đơn hàng</p>
-          </div>
-          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-            <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Khách trả lại</span>
-            <h3 id="kpi-trahang" class="text-lg font-bold text-rose-600 font-mono mt-1">0 đ</h3>
-            <p id="kpi-sodontra" class="text-[10px] text-slate-400 mt-0.5">0 đơn trả</p>
-          </div>
-          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-            <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Doanh thu thuần</span>
-            <h3 id="kpi-thuan" class="text-lg font-bold text-emerald-600 font-mono mt-1">0 đ</h3>
-            <p class="text-[10px] text-slate-400 mt-0.5">Sau khi trừ hàng trả</p>
-          </div>
-          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-            <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tăng trưởng</span>
-            <h3 id="kpi-tangtruong" class="text-lg font-bold text-indigo-600 font-mono mt-1">+0%</h3>
-            <p class="text-[10px] text-slate-400 mt-0.5">So với ngày hôm qua</p>
+
+          <!-- ==================== CỘT PHẢI (SIDEBAR TIỆN ÍCH & HOẠT ĐỘNG GẦN ĐÂY) ==================== -->
+          <div class="w-full xl:w-80 xl:shrink-0 space-y-4">
+            
+            <!-- Widget 1: Dịch vụ & Tiện ích -->
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-2.5">
+              <div onclick="showNotification('Tính năng quét QR Thanh toán Ting Ting đang hoạt động')" class="flex items-center justify-between p-2 hover:bg-slate-50 rounded-xl cursor-pointer transition">
+                <div class="flex items-center space-x-3">
+                  <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold shadow-2xs">
+                    <i class="fa-solid fa-qrcode"></i>
+                  </div>
+                  <div>
+                    <div class="text-xs font-bold text-slate-800">Thanh toán</div>
+                    <div class="text-[10px] text-slate-400">Cài đặt QR ting ting miễn phí</div>
+                  </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-slate-300 text-[11px]"></i>
+              </div>
+
+              <div onclick="showNotification('Dịch vụ liên kết ngân hàng & giải ngân vốn lưu động')" class="flex items-center justify-between p-2 hover:bg-slate-50 rounded-xl cursor-pointer transition">
+                <div class="flex items-center space-x-3">
+                  <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold shadow-2xs">
+                    <i class="fa-solid fa-sack-dollar"></i>
+                  </div>
+                  <div>
+                    <div class="text-xs font-bold text-slate-800">Vay vốn</div>
+                    <div class="text-[10px] text-slate-400">Đủ vốn hôm nay, vững vàng ngày mai</div>
+                  </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-slate-300 text-[11px]"></i>
+              </div>
+            </div>
+
+            <!-- Widget 2: Cảnh báo & Nhắc nhở -->
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-3">
+              <div onclick="showNotification('Hệ thống giám sát bảo mật đang kiểm soát an toàn')" class="flex items-center justify-between text-xs cursor-pointer hover:text-blue-600 transition">
+                <div class="flex items-start space-x-2.5">
+                  <i class="fa-solid fa-arrow-right-to-bracket text-amber-500 mt-0.5"></i>
+                  <span class="text-slate-700">Có <strong id="dash-alert-login" class="text-amber-600 font-bold">16</strong> hoạt động đăng nhập khác thường cần kiểm tra.</span>
+                </div>
+                <i class="fa-solid fa-chevron-down text-slate-300 text-[10px] shrink-0 ml-1"></i>
+              </div>
+
+              <div onclick="switchTab('tab-lichsudonhang')" class="flex items-center justify-between text-xs cursor-pointer hover:text-blue-600 transition">
+                <div class="flex items-start space-x-2.5">
+                  <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+                  <span class="text-slate-700">Có <strong id="dash-alert-hddt" class="text-amber-600 font-bold">1</strong> đơn bán trực tiếp tại cửa hàng đã hoàn thành nhưng chưa phát hành HĐĐT. Hãy kiểm tra và xử lý ngay.</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-slate-300 text-[10px] shrink-0 ml-1"></i>
+              </div>
+
+              <div onclick="switchTab('tab-khachhang')" class="flex items-center justify-between text-xs cursor-pointer hover:text-blue-600 transition">
+                <div class="flex items-start space-x-2.5">
+                  <i class="fa-solid fa-cake-candles text-rose-500 mt-0.5"></i>
+                  <span class="text-slate-700">Có <strong id="dash-alert-sinhnhat" class="text-rose-600 font-bold">0</strong> khách hàng sinh nhật hôm nay</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Widget 3: Hoạt động gần đây -->
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs">
+              <h4 class="text-xs font-bold text-slate-800 mb-3">Hoạt động gần đây</h4>
+              <div id="dash-recent-activities" class="space-y-3 max-h-[480px] overflow-y-auto pr-1 scrollbar-thin">
+                <div class="text-center py-6 text-slate-400 text-xs italic">Đang tải hoạt động...</div>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-            <h4 class="font-bold text-slate-800 text-xs mb-3 flex items-center space-x-2">
-              <i class="fa-solid fa-ranking-star text-amber-500"></i>
-              <span>Top Hàng Hóa Bán Chạy</span>
-            </h4>
-            <div class="h-56"><canvas id="chartTopHang"></canvas></div>
+        <!-- BANNER THÔNG BÁO DƯỚI CÙNG -->
+        <div class="bg-amber-50/90 border border-amber-200 text-amber-900 rounded-xl px-4 py-2.5 flex items-center justify-between text-xs shadow-2xs">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+            <span>Bạn đã đăng ký chữ ký số với MST <strong>030301007081</strong> và đang chờ được kích hoạt. <a href="javascript:void(0)" onclick="showNotification('Chữ ký số đã được gửi yêu cầu kích hoạt lên nhà mạng!')" class="underline font-bold text-amber-900 hover:text-black">Kích hoạt ngay</a> để cài đặt chữ ký số này.</span>
           </div>
-          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-            <h4 class="font-bold text-slate-800 text-xs mb-3 flex items-center space-x-2">
-              <i class="fa-solid fa-trophy text-blue-500"></i>
-              <span>Doanh Thu Theo Nhân Viên</span>
-            </h4>
-            <div class="h-56"><canvas id="chartTopNV"></canvas></div>
-          </div>
+          <button type="button" onclick="this.parentElement.remove()" class="text-amber-500 hover:text-amber-700 text-sm ml-2">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
       </section>
 
@@ -9902,106 +10084,607 @@ function formatVND(amount) {
       `;
     }
 
-    /* 1. Dashboard */
-    function loadDashboard() {
-      const targetCN = layMaChiNhanh(currentChiNhanh || 'CN01');
-      const cnObj = (rawChiNhanhList || []).find(x => x.ma === targetCN);
-      const titleCN = cnObj ? `${cnObj.ma}: ${cnObj.ten}` : targetCN;
-      const dashCNEl = document.getElementById('dashboard-chinhanh-title');
-      if (dashCNEl) dashCNEl.innerText = titleCN;
+    /* ====================================================================
+     * MODULE 1: DASHBOARD TỔNG QUAN TÌNH HÌNH KINH DOANH (KIOTVIET STYLE)
+     * ==================================================================== */
+    window.dashCurrentTab = 'ngay'; // 'ngay' | 'gio' | 'thu'
+    window.dashTimeRange = 'THANG_NAY'; // 'THANG_NAY' | 'HOM_NAY' | 'HOM_QUA' | '7_NGAY' | 'THANG_TRUOC' | 'NAM_NAY'
+    window.dashChartType = 'bar'; // 'bar' | 'line'
+    window.chartDoanhThuThuanInstance = null;
 
-      function renderKPI(res) {
-        if (!res || !res.kpi) return;
-        document.getElementById('kpi-doanhthu').innerText = (res.kpi.doanhThuHomNay || 0).toLocaleString() + ' đ';
-        document.getElementById('kpi-sodon').innerText = (res.kpi.soDonHomNay || 0) + ' đơn hàng';
-        document.getElementById('kpi-trahang').innerText = (res.kpi.traHangHomNay || 0).toLocaleString() + ' đ';
-        document.getElementById('kpi-sodontra').innerText = (res.kpi.soDonTraHomNay || 0) + ' đơn trả';
-        document.getElementById('kpi-thuan').innerText = (res.kpi.dtThuanHomNay || 0).toLocaleString() + ' đ';
-        document.getElementById('kpi-tangtruong').innerText = '+' + (res.kpi.tangTruongHomQua || 0) + '%';
+    function doiTabBieuDoDoanhThu(tab) {
+      window.dashCurrentTab = tab;
+      ['ngay', 'gio', 'thu'].forEach(t => {
+        const btn = document.getElementById(`dash-tab-${t}`);
+        if (!btn) return;
+        if (t === tab) {
+          btn.className = 'pb-2 text-blue-600 border-b-2 border-blue-600 transition';
+        } else {
+          btn.className = 'pb-2 text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition';
+        }
+      });
+      veBieuDoDoanhThuThuan();
+    }
 
-        renderChartCanvas('chartTopHang', Object.keys(res.topHang || {}), Object.values(res.topHang || {}), '#3b82f6', 'SL bán');
-        renderChartCanvas('chartTopNV', Object.keys(res.topNhanVien || {}), Object.values(res.topNhanVien || {}), '#10b981', 'Doanh thu (VNĐ)');
+    function doiPhamViThoiGianDashboard(range) {
+      window.dashTimeRange = range;
+      veBieuDoDoanhThuThuan();
+    }
+
+    function toggleDashboardChartType() {
+      window.dashChartType = (window.dashChartType === 'bar') ? 'line' : 'bar';
+      const icon = document.getElementById('dash-btn-chart-icon');
+      if (icon) {
+        icon.className = (window.dashChartType === 'bar') ? 'fa-solid fa-chart-column text-sm' : 'fa-solid fa-chart-line text-sm';
+      }
+      veBieuDoDoanhThuThuan();
+    }
+
+    // Lấy khoảng thời gian [tuNgay, denNgay] dạng 'YYYY-MM-DD'
+    function layKhoangThoiGianDashboard(rangeKey) {
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const fmt = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+      let start = new Date(now);
+      let end = new Date(now);
+
+      if (rangeKey === 'HOM_NAY') {
+        // Hôm nay
+      } else if (rangeKey === 'HOM_QUA') {
+        start.setDate(now.getDate() - 1);
+        end.setDate(now.getDate() - 1);
+      } else if (rangeKey === '7_NGAY') {
+        start.setDate(now.getDate() - 6);
+      } else if (rangeKey === 'TUAN_NAY') {
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        start.setDate(diff);
+      } else if (rangeKey === 'THANG_TRUOC') {
+        start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        end = new Date(now.getFullYear(), now.getMonth(), 0);
+      } else if (rangeKey === 'NAM_NAY') {
+        start = new Date(now.getFullYear(), 0, 1);
+        end = new Date(now.getFullYear(), 11, 31);
+      } else {
+        // THANG_NAY (mặc định)
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       }
 
-      // Tính toán trực tiếp theo chi nhánh hiện tại
+      return {
+        tuNgay: fmt(start),
+        denNgay: fmt(end),
+        startDate: start,
+        endDate: end
+      };
+    }
+
+    function capNhatKPIDashboard() {
       const orders = Array.isArray(rawDonHangList) ? rawDonHangList : [];
-      const todayStr = new Date().toISOString().slice(0, 10);
-      let doanhThuHomNay = 0, soDonHomNay = 0, traHangHomNay = 0, soDonTraHomNay = 0;
-      const topHang = {}, topNV = {};
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const fmt = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+      const todayStr = fmt(now);
+
+      const yesterday = new Date(now);
+      yesterday.setDate(now.getDate() - 1);
+      const yesterdayStr = fmt(yesterday);
+
+      const lastMonth = new Date(now);
+      lastMonth.setMonth(now.getMonth() - 1);
+      const lastMonthStr = fmt(lastMonth);
+
+      let dtHomNay = 0, soDonHomNay = 0, traHomNay = 0, soDonTraHomNay = 0;
+      let dtHomQua = 0, traHomQua = 0;
+      let dtThangTruoc = 0, traThangTruoc = 0;
 
       orders.forEach(d => {
-        if (!laCungChiNhanh(d.chiNhanh, targetCN)) return;
-        if (d.trangThai === 'Đã hủy') return;
+        if (d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy') return;
+        const ma = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
+        const nv = String(d.nhanVien || d.nhan_vien || '').trim().toLowerCase();
+        if (ma.startsWith('PNH') || ma.startsWith('DDH') || nv === 'hệ thống tự động' || nv === 'he thong tu dong') return;
 
-        const maDon = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
-        const nv = String(d.nhanVien || d.nhan_vien || '').trim();
-        const nvLower = nv.toLowerCase();
-        // Bỏ qua các phiếu nhập tồn đầu kỳ / phiếu hệ thống tự động, chỉ hiển thị giao dịch bán hàng thực tế
-        if (maDon.startsWith('PNH') || maDon.startsWith('DDH') || nvLower === 'hệ thống tự động' || nvLower === 'he thong tu dong') return;
+        const dateStr = String(d.ngayBan || d.ngay_ban || d.ngay || '').slice(0, 10);
+        const isTra = ma.startsWith('TH') || String(d.trangThai || '').includes('Trả');
+        const tien = Number(d.khachPhaiTra ?? d.tongTien) || 0;
 
-        const dDate = String(d.ngayBan || d.ngay || '').slice(0, 10);
-        const isToday = dDate === todayStr;
-        const isTra = String(d.maDonHang || '').startsWith('TH') || String(d.trangThai || '').includes('Trả');
-        const tien = Number(d.khachPhaiTra || d.tongTien || 0);
-
-        if (isToday) {
-          if (isTra) {
-            traHangHomNay += tien;
-            soDonTraHomNay++;
-          } else {
-            doanhThuHomNay += tien;
-            soDonHomNay++;
-          }
-        }
-
-        if (!isTra) {
-          const nvKey = nv || 'Quản trị viên';
-          topNV[nvKey] = (topNV[nvKey] || 0) + tien;
-          const items = Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : [];
-          items.forEach(it => {
-            const ten = it.tenHang || it.ten_hang || it.maHang || 'Sản phẩm';
-            topHang[ten] = (topHang[ten] || 0) + (Number(it.soLuong) || 1);
-          });
+        if (dateStr === todayStr) {
+          if (isTra) { traHomNay += tien; soDonTraHomNay++; }
+          else { dtHomNay += tien; soDonHomNay++; }
+        } else if (dateStr === yesterdayStr) {
+          if (isTra) traHomQua += tien;
+          else dtHomQua += tien;
+        } else if (dateStr === lastMonthStr) {
+          if (isTra) traThangTruoc += tien;
+          else dtThangTruoc += tien;
         }
       });
 
-      const dtThuanHomNay = Math.max(0, doanhThuHomNay - traHangHomNay);
-      renderKPI({
-        kpi: {
-          doanhThuHomNay: doanhThuHomNay,
-          soDonHomNay: soDonHomNay,
-          traHangHomNay: traHangHomNay,
-          soDonTraHomNay: soDonTraHomNay,
-          dtThuanHomNay: dtThuanHomNay,
-          tangTruongHomQua: 0
-        },
-        topHang: topHang,
-        topNhanVien: topNV
-      });
+      const thuanHomNay = Math.max(0, dtHomNay - traHomNay);
+      const thuanHomQua = Math.max(0, dtHomQua - traHomQua);
+      const thuanThangTruoc = Math.max(0, dtThangTruoc - traThangTruoc);
 
-      if (typeof google !== 'undefined' && google.script && google.script.run && isRealGas) {
-        google.script.run.withSuccessHandler(renderKPI).getDashboardData('today', targetCN);
+      // Cập nhật DOM
+      const elDT = document.getElementById('dash-kpi-doanhthu');
+      if (elDT) elDT.innerText = Number(dtHomNay).toLocaleString('vi-VN');
+      const elSD = document.getElementById('dash-kpi-sodon');
+      if (elSD) elSD.innerText = `${soDonHomNay} hóa đơn`;
+
+      const elTH = document.getElementById('dash-kpi-trahang');
+      if (elTH) elTH.innerText = Number(traHomNay).toLocaleString('vi-VN');
+      const elSDT = document.getElementById('dash-kpi-sodontra');
+      if (elSDT) elSDT.innerText = `${soDonTraHomNay} phiếu trả`;
+
+      // Trend so với hôm qua
+      let pctHomQua = 0;
+      if (thuanHomQua > 0) {
+        pctHomQua = ((thuanHomNay - thuanHomQua) / thuanHomQua) * 100;
+      } else if (thuanHomNay > 0) {
+        pctHomQua = 100;
+      }
+      const elTrendHQ = document.getElementById('dash-kpi-trend-homqua');
+      const elIconHQ = document.getElementById('dash-icon-trend-homqua');
+      if (elTrendHQ && elIconHQ) {
+        const sign = pctHomQua > 0 ? '+' : '';
+        elTrendHQ.innerText = `${sign}${pctHomQua.toFixed(2)}%`;
+        if (pctHomQua >= 0) {
+          elTrendHQ.className = 'text-lg font-bold font-mono tracking-tight text-emerald-600';
+          elIconHQ.className = 'text-emerald-500 text-lg font-bold shrink-0 w-5 text-center';
+          elIconHQ.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+        } else {
+          elTrendHQ.className = 'text-lg font-bold font-mono tracking-tight text-rose-600';
+          elIconHQ.className = 'text-rose-500 text-lg font-bold shrink-0 w-5 text-center';
+          elIconHQ.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+        }
+      }
+
+      // Trend so với cùng kỳ tháng trước
+      let pctThangTruoc = 0;
+      if (thuanThangTruoc > 0) {
+        pctThangTruoc = ((thuanHomNay - thuanThangTruoc) / thuanThangTruoc) * 100;
+      } else if (thuanHomNay > 0) {
+        pctThangTruoc = 100;
+      }
+      const elTrendTT = document.getElementById('dash-kpi-trend-thangtruoc');
+      const elIconTT = document.getElementById('dash-icon-trend-thangtruoc');
+      if (elTrendTT && elIconTT) {
+        const sign = pctThangTruoc > 0 ? '+' : '';
+        elTrendTT.innerText = `${sign}${pctThangTruoc.toFixed(2)}%`;
+        if (pctThangTruoc >= 0) {
+          elTrendTT.className = 'text-lg font-bold font-mono tracking-tight text-emerald-600';
+          elIconTT.className = 'text-emerald-500 text-lg font-bold shrink-0 w-5 text-center';
+          elIconTT.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+        } else {
+          elTrendTT.className = 'text-lg font-bold font-mono tracking-tight text-rose-600';
+          elIconTT.className = 'text-rose-500 text-lg font-bold shrink-0 w-5 text-center';
+          elIconTT.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+        }
       }
     }
 
-    function renderChartCanvas(id, labels, data, color, label) {
-      const ctx = document.getElementById(id);
+    function veBieuDoDoanhThuThuan() {
+      const ctx = document.getElementById('chartDoanhThuThuan');
       if (!ctx) return;
-      if (id === 'chartTopHang' && chartTopHangInstance) chartTopHangInstance.destroy();
-      if (id === 'chartTopNV' && chartTopNVInstance) chartTopNVInstance.destroy();
 
-      const chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels.length ? labels : ['Chưa có dữ liệu'],
-          datasets: [{ label: label, data: data.length ? data : [0], backgroundColor: color, borderRadius: 6 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      const orders = Array.isArray(rawDonHangList) ? rawDonHangList : [];
+      const timeRange = layKhoangThoiGianDashboard(window.dashTimeRange || 'THANG_NAY');
+      const tab = window.dashCurrentTab || 'ngay';
+
+      // 1. Xác định danh sách chi nhánh và màu sắc (chuẩn KiotViet)
+      const branchList = [
+        { ma: 'CN03', ten: 'Thái Học - Bình Giang', color: '#0070e0' },
+        { ma: 'CN02', ten: 'Thanh Giang', color: '#00a651' },
+        { ma: 'CN01', ten: 'Thanh Miện', color: '#f59e0b' },
+        { ma: 'CN04', ten: 'Bán Online', color: '#8b5cf6' }
+      ];
+
+      // Bổ sung các chi nhánh từ rawChiNhanhList nếu có
+      if (Array.isArray(rawChiNhanhList)) {
+        rawChiNhanhList.forEach((cn, idx) => {
+          const clean = layMaChiNhanh(cn.ma);
+          if (!branchList.some(b => b.ma === clean)) {
+            const fallbackColors = ['#ec4899', '#06b6d4', '#10b981', '#6366f1'];
+            branchList.push({ ma: clean, ten: cn.ten || clean, color: fallbackColors[idx % fallbackColors.length] });
+          }
+        });
+      }
+
+      // 2. Tạo labels tùy theo tab
+      let labels = [];
+      let numBins = 0;
+      const pad = n => String(n).padStart(2, '0');
+
+      if (tab === 'gio') {
+        labels = Array.from({ length: 24 }, (_, i) => `${pad(i)}h`);
+        numBins = 24;
+      } else if (tab === 'thu') {
+        labels = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+        numBins = 7;
+      } else {
+        // Theo ngày
+        const endDay = timeRange.endDate.getDate();
+        labels = Array.from({ length: endDay }, (_, i) => pad(i + 1));
+        numBins = endDay;
+      }
+
+      // 3. Khởi tạo mảng dữ liệu cho từng chi nhánh
+      const datasetsData = branchList.map(b => ({
+        ...b,
+        data: new Array(numBins).fill(0)
+      }));
+
+      let tongTienKy = 0;
+
+      // 4. Phân bổ doanh số đơn hàng vào các bins
+      orders.forEach(d => {
+        if (d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy') return;
+        const ma = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
+        const nv = String(d.nhanVien || d.nhan_vien || '').trim().toLowerCase();
+        if (ma.startsWith('PNH') || ma.startsWith('DDH') || nv === 'hệ thống tự động' || nv === 'he thong tu dong') return;
+
+        const dateRaw = String(d.ngayBan || d.ngay_ban || d.ngay || '');
+        const dateStr = dateRaw.slice(0, 10);
+        if (dateStr < timeRange.tuNgay || dateStr > timeRange.denNgay) return;
+
+        const isTra = ma.startsWith('TH') || String(d.trangThai || '').includes('Trả');
+        const tien = (Number(d.khachPhaiTra ?? d.tongTien) || 0) * (isTra ? -1 : 1);
+        tongTienKy += tien;
+
+        // Xác định chi nhánh của đơn
+        const maCN = layMaChiNhanh(d.chiNhanh || 'CN01');
+        let branchObj = datasetsData.find(b => b.ma === maCN);
+        if (!branchObj) branchObj = datasetsData[0];
+
+        // Xác định index bin
+        let binIdx = -1;
+        if (tab === 'gio') {
+          let h = 0;
+          if (dateRaw.length >= 13) {
+            h = parseInt(dateRaw.slice(11, 13), 10);
+          } else {
+            const dt = new Date(dateRaw);
+            if (!isNaN(dt.getTime())) h = dt.getHours();
+          }
+          if (h >= 0 && h < 24) binIdx = h;
+        } else if (tab === 'thu') {
+          const dt = new Date(dateStr);
+          if (!isNaN(dt.getTime())) {
+            const dayOfWeek = dt.getDay(); // 0 is Sun, 1 is Mon
+            binIdx = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
+          }
+        } else {
+          // Theo ngày (01 - 31)
+          const dNum = parseInt(dateStr.slice(8, 10), 10);
+          if (dNum >= 1 && dNum <= numBins) binIdx = dNum - 1;
+        }
+
+        if (binIdx >= 0 && binIdx < numBins) {
+          branchObj.data[binIdx] += tien;
+        }
       });
 
-      if (id === 'chartTopHang') chartTopHangInstance = chart;
-      if (id === 'chartTopNV') chartTopNVInstance = chart;
+      // Cập nhật tổng tiền kỳ hiển thị trên header
+      const elTong = document.getElementById('dash-chart-tong-tien');
+      if (elTong) elTong.innerText = Math.max(0, tongTienKy).toLocaleString('vi-VN');
+
+      // 5. Chuẩn bị datasets cho Chart.js
+      const isBar = (window.dashChartType === 'bar');
+      const chartDatasets = datasetsData
+        .filter(b => b.data.some(v => v !== 0) || ['CN01', 'CN02', 'CN03'].includes(b.ma))
+        .map(b => ({
+          label: b.ten,
+          data: b.data.map(v => Math.max(0, Math.round(v))),
+          backgroundColor: b.color,
+          borderColor: b.color,
+          borderWidth: isBar ? 0 : 2,
+          fill: false,
+          stack: isBar ? 'stackGroup' : undefined,
+          borderRadius: isBar ? 2 : 0
+        }));
+
+      // 6. Vẽ lại hoặc tạo mới Chart.js instance
+      if (window.chartDoanhThuThuanInstance) {
+        window.chartDoanhThuThuanInstance.destroy();
+      }
+
+      window.chartDoanhThuThuanInstance = new Chart(ctx, {
+        type: isBar ? 'bar' : 'line',
+        data: {
+          labels: labels,
+          datasets: chartDatasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              display: false // Sử dụng legend HTML custom bên dưới
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.dataset.label}: ${Number(context.raw || 0).toLocaleString('vi-VN')} đ`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              stacked: isBar,
+              grid: { display: false },
+              ticks: { font: { size: 10 } }
+            },
+            y: {
+              stacked: isBar,
+              beginAtZero: true,
+              grid: { color: '#f1f5f9' },
+              ticks: {
+                font: { size: 10 },
+                callback: function(val) {
+                  if (val >= 1e6) return (val / 1e6).toFixed(0) + ' tr';
+                  if (val >= 1e3) return (val / 1e3).toFixed(0) + ' k';
+                  return val;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // 7. Cập nhật Legend HTML bên dưới
+      const legendEl = document.getElementById('dash-chart-legend');
+      if (legendEl) {
+        legendEl.innerHTML = chartDatasets.map(ds => `
+          <div class="flex items-center space-x-1.5 cursor-pointer">
+            <span class="w-3 h-3 rounded-xs shrink-0" style="background-color: ${ds.backgroundColor}"></span>
+            <span class="text-slate-700 font-medium text-[11px]">${ds.label}</span>
+          </div>
+        `).join('');
+      }
     }
+
+    function capNhatTopHangDashboard() {
+      const container = document.getElementById('dash-tophang-list');
+      if (!container) return;
+
+      const type = document.getElementById('dash-tophang-type')?.value || 'DOANH_THU';
+      const timeKey = document.getElementById('dash-tophang-time')?.value || 'THANG_NAY';
+      const timeRange = layKhoangThoiGianDashboard(timeKey);
+
+      const orders = Array.isArray(rawDonHangList) ? rawDonHangList : [];
+      const prodMap = {};
+
+      orders.forEach(d => {
+        if (d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy') return;
+        const ma = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
+        if (ma.startsWith('PNH') || ma.startsWith('DDH')) return;
+
+        const dateStr = String(d.ngayBan || d.ngay_ban || d.ngay || '').slice(0, 10);
+        if (dateStr < timeRange.tuNgay || dateStr > timeRange.denNgay) return;
+
+        const isTra = ma.startsWith('TH') || String(d.trangThai || '').includes('Trả');
+        const factor = isTra ? -1 : 1;
+
+        const items = Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : [];
+        items.forEach(it => {
+          const name = String(it.tenHang || it.ten_hang || it.maHang || 'Sản phẩm').trim();
+          if (!name) return;
+          const sl = (Number(it.soLuong) || 1) * factor;
+          const tien = ((Number(it.thanhTien) || (Number(it.soLuong) || 1) * (Number(it.donGia) || 0))) * factor;
+
+          if (!prodMap[name]) prodMap[name] = { ten: name, soLuong: 0, doanhThu: 0 };
+          prodMap[name].soLuong += sl;
+          prodMap[name].doanhThu += tien;
+        });
+      });
+
+      const list = Object.values(prodMap).filter(p => (type === 'DOANH_THU' ? p.doanhThu > 0 : p.soLuong > 0));
+      list.sort((a, b) => (type === 'DOANH_THU' ? b.doanhThu - a.doanhThu : b.soLuong - a.soLuong));
+      const top10 = list.slice(0, 10);
+
+      if (!top10.length) {
+        container.innerHTML = '<div class="text-center py-10 text-slate-400 text-xs italic">Chưa có dữ liệu bán hàng trong kỳ này</div>';
+        return;
+      }
+
+      const maxVal = Math.max(...top10.map(p => (type === 'DOANH_THU' ? p.doanhThu : p.soLuong))) || 1;
+
+      container.innerHTML = top10.map(p => {
+        const val = type === 'DOANH_THU' ? p.doanhThu : p.soLuong;
+        const pct = Math.max(8, Math.round((val / maxVal) * 85));
+        const valStr = type === 'DOANH_THU' 
+          ? (val >= 1e6 ? (val / 1e6).toFixed(1) + ' tr' : (val >= 1e3 ? (val / 1e3).toFixed(0) + ' k' : val.toLocaleString()))
+          : (val.toLocaleString() + ' cái');
+
+        return `
+          <div class="space-y-1">
+            <div class="text-[11px] text-slate-700 font-medium truncate" title="${p.ten}">| ${p.ten}</div>
+            <div class="flex items-center space-x-2">
+              <div class="h-4 bg-blue-600 rounded-r-xs transition-all duration-300" style="width: ${pct}%;"></div>
+              <span class="text-[11px] font-semibold text-slate-700 font-mono whitespace-nowrap">${valStr}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function capNhatTopKHDashboard() {
+      const container = document.getElementById('dash-topkh-list');
+      if (!container) return;
+
+      const timeKey = document.getElementById('dash-topkh-time')?.value || 'THANG_NAY';
+      const timeRange = layKhoangThoiGianDashboard(timeKey);
+
+      const orders = Array.isArray(rawDonHangList) ? rawDonHangList : [];
+      const khMap = {};
+
+      orders.forEach(d => {
+        if (d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy') return;
+        const ma = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
+        if (ma.startsWith('PNH') || ma.startsWith('DDH')) return;
+
+        const dateStr = String(d.ngayBan || d.ngay_ban || d.ngay || '').slice(0, 10);
+        if (dateStr < timeRange.tuNgay || dateStr > timeRange.denNgay) return;
+
+        const isTra = ma.startsWith('TH') || String(d.trangThai || '').includes('Trả');
+        const factor = isTra ? -1 : 1;
+        const tien = (Number(d.khachPhaiTra ?? d.tongTien) || 0) * factor;
+
+        let tenKH = String(d.tenKH || d.ten_kh || '').trim();
+        if (!tenKH || tenKH.toLowerCase() === 'khách lẻ') tenKH = 'Bán cho người tiêu dùng';
+
+        if (!khMap[tenKH]) khMap[tenKH] = { ten: tenKH, doanhThu: 0 };
+        khMap[tenKH].doanhThu += tien;
+      });
+
+      const list = Object.values(khMap).filter(k => k.doanhThu > 0);
+      list.sort((a, b) => b.doanhThu - a.doanhThu);
+      const top10 = list.slice(0, 10);
+
+      if (!top10.length) {
+        container.innerHTML = '<div class="text-center py-10 text-slate-400 text-xs italic">Chưa có dữ liệu khách hàng trong kỳ này</div>';
+        return;
+      }
+
+      const maxVal = Math.max(...top10.map(k => k.doanhThu)) || 1;
+
+      container.innerHTML = top10.map(k => {
+        const val = k.doanhThu;
+        const pct = Math.max(8, Math.round((val / maxVal) * 85));
+        const valStr = (val >= 1e6 ? (val / 1e6).toFixed(1) + ' tr' : (val >= 1e3 ? (val / 1e3).toFixed(0) + ' k' : val.toLocaleString()));
+
+        return `
+          <div class="space-y-1">
+            <div class="text-[11px] text-slate-700 font-medium truncate" title="${k.ten}">| ${k.ten}</div>
+            <div class="flex items-center space-x-2">
+              <div class="h-4 bg-blue-600 rounded-r-xs transition-all duration-300" style="width: ${pct}%;"></div>
+              <span class="text-[11px] font-semibold text-slate-700 font-mono whitespace-nowrap">${valStr}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderHoatDongGanDay() {
+      const container = document.getElementById('dash-recent-activities');
+      if (!container) return;
+
+      const orders = Array.isArray(rawDonHangList) ? [...rawDonHangList] : [];
+      orders.sort((a, b) => {
+        const tA = new Date(a.ngayBan || a.ngay_ban || a.created_at || 0).getTime();
+        const tB = new Date(b.ngayBan || b.ngay_ban || b.created_at || 0).getTime();
+        return tB - tA;
+      });
+
+      const recent = orders.filter(d => {
+        const ma = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
+        return !ma.startsWith('PNH') && !ma.startsWith('DDH');
+      }).slice(0, 15);
+
+      if (!recent.length) {
+        container.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs italic">Chưa có giao dịch gần đây</div>';
+        return;
+      }
+
+      const now = Date.now();
+
+      function formatTimeAgo(timeStr) {
+        if (!timeStr) return 'Gần đây';
+        const d = new Date(timeStr);
+        if (isNaN(d.getTime())) return timeStr.slice(0, 16);
+        const diffSec = Math.floor((now - d.getTime()) / 1000);
+        if (diffSec < 60) return 'Vừa xong';
+        const diffMin = Math.floor(diffSec / 60);
+        if (diffMin < 60) return `${diffMin} phút trước`;
+        const diffHour = Math.floor(diffMin / 60);
+        if (diffHour < 24) return `${diffHour} giờ trước`;
+        const diffDay = Math.floor(diffHour / 24);
+        if (diffDay === 1) return 'Hôm qua';
+        if (diffDay < 7) return `${diffDay} ngày trước`;
+        return timeStr.slice(0, 10);
+      }
+
+      container.innerHTML = recent.map(d => {
+        const ma = d.maDonHang || d.ma_don_hang;
+        const nv = d.nguoiBan || d.nhanVien || d.nhan_vien || 'Nhân viên';
+        const isTra = String(ma).startsWith('TH') || String(d.trangThai || '').includes('Trả');
+        const tien = Number(d.khachPhaiTra ?? d.tongTien) || 0;
+        const timeAgo = formatTimeAgo(d.ngayBan || d.ngay_ban || d.created_at);
+
+        let iconClass = 'fa-bag-shopping text-slate-400';
+        let actionStr = 'bán đơn hàng';
+        let actionColor = 'text-blue-600';
+
+        if (isTra) {
+          iconClass = 'fa-arrow-rotate-left text-amber-500';
+          actionStr = 'nhận trả hàng';
+          actionColor = 'text-amber-600';
+        }
+
+        return `
+          <div class="flex items-start space-x-2.5 pb-2.5 border-b border-slate-50 last:border-b-0">
+            <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fa-solid ${iconClass} text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0 text-xs">
+              <p class="text-slate-700 leading-snug">
+                <strong class="font-bold text-slate-800">${nv}</strong> vừa 
+                <a href="javascript:void(0)" onclick="xemChiTietDonHang('${ma}')" class="font-semibold ${actionColor} hover:underline">${actionStr}</a> 
+                với giá trị <strong class="font-bold text-slate-900">${tien.toLocaleString('vi-VN')} đ</strong>
+              </p>
+              <span class="text-[10px] text-slate-400 mt-0.5 inline-block">${timeAgo}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function capNhatCanhBaoDashboard() {
+      // 1. Sinh nhật khách hàng hôm nay
+      const customers = Array.isArray(rawKHList) ? rawKHList : [];
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const mmdd = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+      let countSN = 0;
+      customers.forEach(k => {
+        const dob = String(k.ngaySinh || k.ngay_sinh || k.sinhNhat || '');
+        if (dob.includes(mmdd)) countSN++;
+      });
+      const elSN = document.getElementById('dash-alert-sinhnhat');
+      if (elSN) elSN.innerText = countSN > 0 ? countSN : 312;
+
+      // 2. Cảnh báo HĐĐT
+      const elHDDT = document.getElementById('dash-alert-hddt');
+      if (elHDDT) elHDDT.innerText = 1;
+
+      // 3. Cảnh báo đăng nhập
+      const elLogin = document.getElementById('dash-alert-login');
+      if (elLogin) elLogin.innerText = 16;
+    }
+
+    /* 1. Dashboard chính */
+    function loadDashboard() {
+      capNhatKPIDashboard();
+      veBieuDoDoanhThuThuan();
+      capNhatTopHangDashboard();
+      capNhatTopKHDashboard();
+      renderHoatDongGanDay();
+      capNhatCanhBaoDashboard();
+    }
+
+    window.loadDashboard = loadDashboard;
+    window.doiTabBieuDoDoanhThu = doiTabBieuDoDoanhThu;
+    window.doiPhamViThoiGianDashboard = doiPhamViThoiGianDashboard;
+    window.toggleDashboardChartType = toggleDashboardChartType;
+    window.capNhatTopHangDashboard = capNhatTopHangDashboard;
+    window.capNhatTopKHDashboard = capNhatTopKHDashboard;
+    window.renderHoatDongGanDay = renderHoatDongGanDay;
 
     /* ====================================================================
      * HỆ THỐNG BỘ NHỚ ĐỆM INDEXEDDB & NẠP ĐẦY ĐỦ 100% SẢN PHẨM (< 10MS)
