@@ -6,8 +6,8 @@ const { execSync } = require('child_process');
 const env = fs.readFileSync('.env', 'utf8');
 const token = env.match(/GITHUB_TOKEN=(.*)/)[1].trim();
 const repo = 'thegioidienthoai464/tgdtbanhang';
-const TARGET_VERSION = 'v1.1.5';
-const TARGET_BUILD = 16;
+const TARGET_VERSION = 'v1.1.6';
+const TARGET_BUILD = 17;
 
 function githubRequest(endpoint, method = 'GET', data = null, headers = {}) {
   return new Promise((resolve, reject) => {

@@ -26,8 +26,8 @@ class UpdateInfo {
 
   factory UpdateInfo.fromJson(Map<String, dynamic> json) {
     return UpdateInfo(
-      version: json['version'] ?? '1.1.5',
-      buildNumber: json['build_number'] ?? 16,
+      version: json['version'] ?? '1.1.6',
+      buildNumber: json['build_number'] ?? 17,
       releaseNotes: json['release_notes'] ?? 'Bản cập nhật tối ưu hệ thống.',
       downloadUrl: json['download_url'] ?? 'https://thegioidienthoai464.github.io/tgdtbanhang/download.html',
       apkUrl: json['apk_url'],
@@ -39,8 +39,8 @@ class UpdateInfo {
 
 class UpdateService {
   // Phiên bản hiện tại của App
-  static const String currentVersion = '1.1.5';
-  static const int currentBuildNumber = 16;
+  static const String currentVersion = '1.1.6';
+  static const int currentBuildNumber = 17;
 
 
   // Cờ ghi nhớ người dùng đã từ chối cập nhật trong phiên hiện tại (tránh pop-up lặp lại liên tục)

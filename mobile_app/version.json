@@ -1,10 +1,10 @@
 {
-  "version": "1.1.5",
-  "build_number": 16,
+  "version": "1.1.6",
+  "build_number": 17,
   "force_update": false,
-  "release_notes": "• Màn hình bán hàng POS: Cho phép chỉnh sửa đơn giá bán và số lượng sản phẩm trực tiếp trong giỏ hàng và tại bước xác nhận thanh toán.\n• Màn hình Kho hàng: Bổ sung tính năng thêm mới hàng hóa (+ Thêm hàng hóa) và bấm vào từng sản phẩm để xem/chỉnh sửa thông tin, giá vốn, giá bán, tồn kho, quản lý IMEI.\n• Màn hình Sổ quỹ: Bổ sung màn hình chi tiết phiếu thu chi khi bấm vào từng giao dịch, hỗ trợ 4 tính năng: In phiếu ra máy in LAN, Chia sẻ phiếu (Zalo/SMS), Sửa thông tin phiếu, Hủy phiếu (hoàn trả quỹ).\n• Màn hình Tổng quan: Thay thế hành động quét barcode bằng tính năng 'Truy cập báo cáo' đầy đủ 5 phân hệ báo cáo kinh doanh chuẩn như trên bản PC (Bán hàng, Hàng hóa & tồn kho, Khách hàng & công nợ, Nhà cung cấp, Tài chính & dòng tiền).",
+  "release_notes": "• Màn hình Sổ quỹ: Loại bỏ thanh chọn chi nhánh chiếm diện tích ở thân trang, tích hợp vào thanh tiêu đề AppBar.\n• Thiết kế lại thẻ Tổng tồn quỹ siêu gọn và thanh lọc thông minh, giúp hiển thị được nhiều giao dịch trên màn hình hơn gấp 3 lần mà không phải cuộn nhiều.\n• Giữ trọn vẹn đầy đủ tính năng: xem chi tiết, in phiếu LAN, chia sẻ, sửa phiếu, hủy phiếu và lọc theo tài khoản ngân hàng.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.5/TT_POS_v1.1.5.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.5/TT_POS_v1.1.5.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.1.5"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.6/TT_POS_v1.1.6.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.1.6/TT_POS_v1.1.6.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.1.6"
 }

@@ -7,7 +7,6 @@ import '../../../data/models/bank_model.dart';
 import '../../../data/models/cashbook_model.dart';
 import '../../../data/services/lan_printer_service.dart';
 import '../branch/branch_view_model.dart';
-import '../branch/branch_filter_chips.dart';
 import 'cashbook_view_model.dart';
 
 
@@ -48,10 +47,26 @@ class _CashbookViewState extends State<CashbookView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sổ quỹ thu chi'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Sổ quỹ thu chi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+            Text(
+              'Chi nhánh: ${branchVm.summaryDisplayName}',
+              style: const TextStyle(fontSize: 11, color: AppTheme.textMuted, fontWeight: FontWeight.normal),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.storefront_outlined),
+            tooltip: 'Chọn chi nhánh',
+            onPressed: () => BranchViewModel.showBranchBottomSheet(context),
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
+            tooltip: 'Làm mới',
             onPressed: () => vm.fetchTransactions(vm.selectedTab),
           ),
         ],
@@ -65,111 +80,86 @@ class _CashbookViewState extends State<CashbookView> {
       ),
       body: Column(
         children: [
-          // Bộ chọn chi nhánh cho sổ quỹ
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 2),
-            child: BranchFilterChips(showHeader: true, title: 'Chi nhánh sổ quỹ:'),
-          ),
-
-          // Thẻ tổng hợp quỹ tài chính toàn diện
+          // Thẻ tổng hợp quỹ tài chính gọn gàng, tối ưu không gian hiển thị
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                // 1. Dòng tiêu đề
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.amber, size: 16),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'TỔNG TỒN QUỸ',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Text(
-                        'Tiền mặt + Ngân hàng',
-                        style: TextStyle(color: Colors.white70, fontSize: 10.5),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-
-                // 2. Số tiền Tổng tồn quỹ nổi bật - không bao giờ bị tràn số
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    Formatters.formatCurrency(totalFund),
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                      color: totalFund >= 0 ? const Color(0xFF10B981) : Colors.redAccent,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-
-                // 3. Khung phân tách Quỹ tiền mặt & Quỹ ngân hàng
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.07),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
+                // Cột trái: Tổng tồn quỹ
+                Expanded(
+                  flex: 5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Quỹ tiền mặt
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Row(
-                              children: [
-                                Icon(Icons.payments_outlined, color: Colors.amber, size: 15),
-                                SizedBox(width: 6),
-                                Text('Quỹ tiền mặt', style: TextStyle(color: Colors.white70, fontSize: 11)),
-                              ],
+                      const Row(
+                        children: [
+                          Icon(Icons.account_balance_wallet_rounded, color: Colors.amber, size: 13),
+                          SizedBox(width: 4),
+                          Text(
+                            'TỔNG TỒN QUỸ',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.3,
                             ),
-                            const SizedBox(height: 4),
-                            FittedBox(
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          Formatters.formatCurrency(totalFund),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
+                            color: totalFund >= 0 ? const Color(0xFF10B981) : Colors.redAccent,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 34,
+                  color: Colors.white24,
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+                // Cột phải: Tiền mặt & Ngân hàng
+                Expanded(
+                  flex: 6,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.payments_outlined, color: Colors.amber, size: 12),
+                          const SizedBox(width: 4),
+                          const Text('TM: ', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                          Expanded(
+                            child: FittedBox(
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.centerLeft,
                               child: Text(
@@ -177,38 +167,26 @@ class _CashbookViewState extends State<CashbookView> {
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
-                                  fontSize: 14,
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      Container(width: 1, height: 32, color: Colors.white24),
-                      const SizedBox(width: 12),
-                      // Quỹ ngân hàng
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.account_balance_outlined, color: Color(0xFF38BDF8), size: 15),
-                                SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    vm.selectedBankAccount != null
-                                        ? vm.selectedBankAccount!.tenNH
-                                        : 'Quỹ ngân hàng',
-                                    style: const TextStyle(color: Colors.white70, fontSize: 11),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            FittedBox(
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          const Icon(Icons.account_balance_outlined, color: Color(0xFF38BDF8), size: 12),
+                          const SizedBox(width: 4),
+                          Text(
+                            vm.selectedBankAccount != null
+                                ? '${vm.selectedBankAccount!.tenNH.split(" ").first}: '
+                                : 'NH: ',
+                            style: const TextStyle(color: Color(0xFF38BDF8), fontSize: 11),
+                          ),
+                          Expanded(
+                            child: FittedBox(
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.centerLeft,
                               child: Text(
@@ -216,12 +194,12 @@ class _CashbookViewState extends State<CashbookView> {
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Color(0xFF38BDF8),
-                                  fontSize: 14,
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -230,81 +208,22 @@ class _CashbookViewState extends State<CashbookView> {
             ),
           ),
 
-          // Lọc theo loại quỹ
+          // Thanh lọc quỹ gọn nhẹ gom chung 1 dòng: [Tất cả] [Tiền mặt] [Ngân hàng] và [Chọn TK NH ▾]
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
             child: Row(
               children: [
-                _buildFilterChip(context, 'Tất cả', 'ALL', vm),
-                const SizedBox(width: 8),
-                _buildFilterChip(context, 'Tiền mặt', 'TIEN_MAT', vm),
-                const SizedBox(width: 8),
-                _buildFilterChip(context, 'Ngân hàng', 'TAI_KHOAN', vm),
+                _buildCompactFilterChip('Tất cả', 'ALL', vm),
+                const SizedBox(width: 6),
+                _buildCompactFilterChip('Tiền mặt', 'TIEN_MAT', vm),
+                const SizedBox(width: 6),
+                _buildCompactFilterChip('Ngân hàng', 'TAI_KHOAN', vm),
+                const Spacer(),
+                if (vm.selectedTab != 'TIEN_MAT' && vm.bankAccounts.isNotEmpty)
+                  _buildCompactBankSelector(context, vm),
               ],
             ),
           ),
-
-          // Bộ chọn tài khoản ngân hàng (Hiển thị 1 tài khoản hoặc Tất cả)
-          if (vm.selectedTab != 'TIEN_MAT' && vm.bankAccounts.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: vm.selectedBankAccount != null ? AppTheme.primaryBlue : AppTheme.borderSubtle,
-                    width: vm.selectedBankAccount != null ? 1.5 : 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.account_balance_rounded,
-                      size: 18,
-                      color: vm.selectedBankAccount != null ? AppTheme.primaryBlue : AppTheme.textMuted,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text('Tài khoản: ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                    Expanded(
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<BankModel?>(
-                          isExpanded: true,
-                          value: vm.selectedBankAccount,
-                          icon: const Icon(Icons.arrow_drop_down, size: 20),
-                          items: [
-                            const DropdownMenuItem<BankModel?>(
-                              value: null,
-                              child: Text('Tất cả tài khoản', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                            ),
-                            ...vm.bankAccounts.map((b) {
-                              return DropdownMenuItem<BankModel?>(
-                                value: b,
-                                child: Text(
-                                  b.displayName,
-                                  style: const TextStyle(fontSize: 12),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              );
-                            }),
-                          ],
-                          onChanged: (bank) {
-                            vm.selectBankAccount(bank);
-                          },
-                        ),
-                      ),
-                    ),
-                    if (vm.selectedBankAccount != null)
-                      IconButton(
-                        icon: const Icon(Icons.clear, size: 16, color: AppTheme.textMuted),
-                        tooltip: 'Xem tất cả',
-                        onPressed: () => vm.selectBankAccount(null),
-                      ),
-                  ],
-                ),
-              ),
-            ),
 
           // Danh sách giao dịch
           Expanded(
@@ -313,9 +232,9 @@ class _CashbookViewState extends State<CashbookView> {
                 : filteredTransactions.isEmpty
                     ? const Center(child: Text('Chưa có giao dịch sổ quỹ nào'))
                     : ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.fromLTRB(12, 2, 12, 16),
                         itemCount: filteredTransactions.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        separatorBuilder: (_, __) => const SizedBox(height: 5),
                         itemBuilder: (context, index) {
                           final t = filteredTransactions[index];
 
@@ -327,42 +246,80 @@ class _CashbookViewState extends State<CashbookView> {
                           return Container(
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: AppTheme.borderSubtle),
                             ),
-                            child: ListTile(
+                            child: InkWell(
                               onTap: () => _showTransactionDetailModal(context, t, vm, branchVm),
-                              leading: CircleAvatar(
-                                backgroundColor: isThu ? AppTheme.successGreen.withOpacity(0.12) : AppTheme.dangerRed.withOpacity(0.12),
-                                child: Icon(
-                                  isThu ? Icons.add : Icons.remove,
-                                  color: isThu ? AppTheme.successGreen : AppTheme.dangerRed,
-                                ),
-                              ),
-                              title: Text(
-                                t.ghiChu.isNotEmpty ? t.ghiChu : (isThu ? 'Thu tiền' : 'Chi tiền'),
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                              ),
-                              subtitle: Text(
-                                '${t.maPhieu} • ${t.chiNhanh}\n${Formatters.formatDateTime(t.ngayGD)} • ${isTm ? "💵 Tiền mặt" : "💳 ${t.loaiQuy}"}',
-                                style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
-                              ),
-                              isThreeLine: true,
-                              trailing: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '${isThu ? '+' : '-'}${Formatters.formatCurrency(t.soTien)}',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: isThu ? AppTheme.successGreen : AppTheme.dangerRed,
-                                      fontSize: 14,
+                              borderRadius: BorderRadius.circular(10),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: isThu ? AppTheme.successGreen.withOpacity(0.12) : AppTheme.dangerRed.withOpacity(0.12),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        isThu ? Icons.arrow_downward : Icons.arrow_upward,
+                                        size: 16,
+                                        color: isThu ? AppTheme.successGreen : AppTheme.dangerRed,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  const Icon(Icons.chevron_right, size: 16, color: AppTheme.textMuted),
-                                ],
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            t.ghiChu.isNotEmpty ? t.ghiChu : (isThu ? 'Thu tiền' : 'Chi tiền'),
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            '${t.maPhieu} • ${Formatters.formatDateTime(t.ngayGD)}',
+                                            style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          Text(
+                                            '${isTm ? "💵 Tiền mặt" : "💳 ${t.loaiQuy}"}${t.chiNhanh.isNotEmpty ? " • ${t.chiNhanh}" : ""}',
+                                            style: TextStyle(
+                                              fontSize: 10.5,
+                                              color: isTm ? Colors.amber.shade800 : const Color(0xFF0284C7),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          '${isThu ? '+' : '-'}${Formatters.formatCurrency(t.soTien)}',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: isThu ? AppTheme.successGreen : AppTheme.dangerRed,
+                                            fontSize: 13.5,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        const Icon(Icons.chevron_right, size: 14, color: AppTheme.textMuted),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           );
@@ -374,12 +331,101 @@ class _CashbookViewState extends State<CashbookView> {
     );
   }
 
-  Widget _buildFilterChip(BuildContext context, String label, String value, CashbookViewModel vm) {
+  Widget _buildCompactFilterChip(String label, String value, CashbookViewModel vm) {
     final isSelected = vm.selectedTab == value;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => vm.switchTab(value),
+    return InkWell(
+      onTap: () => vm.switchTab(value),
+      borderRadius: BorderRadius.circular(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryBlue : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppTheme.primaryBlue : Colors.grey.shade300,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? Colors.white : AppTheme.textPrimary,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactBankSelector(BuildContext context, CashbookViewModel vm) {
+    final currentBank = vm.selectedBankAccount;
+    return PopupMenuButton<BankModel?>(
+      initialValue: currentBank,
+      tooltip: 'Lọc tài khoản ngân hàng',
+      onSelected: (bank) => vm.selectBankAccount(bank),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      itemBuilder: (context) => [
+        const PopupMenuItem<BankModel?>(
+          value: null,
+          child: Row(
+            children: [
+              Icon(Icons.all_inclusive, size: 16, color: AppTheme.primaryBlue),
+              SizedBox(width: 8),
+              Text('Tất cả tài khoản', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        ...vm.bankAccounts.map((b) => PopupMenuItem<BankModel?>(
+          value: b,
+          child: Row(
+            children: [
+              const Icon(Icons.account_balance, size: 16, color: Color(0xFF38BDF8)),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(b.displayName, style: const TextStyle(fontSize: 13), overflow: TextOverflow.ellipsis),
+              ),
+            ],
+          ),
+        )),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+        decoration: BoxDecoration(
+          color: currentBank != null ? AppTheme.primaryBlue.withOpacity(0.08) : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: currentBank != null ? AppTheme.primaryBlue : Colors.grey.shade300,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.account_balance,
+              size: 13,
+              color: currentBank != null ? AppTheme.primaryBlue : AppTheme.textMuted,
+            ),
+            const SizedBox(width: 4),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 85),
+              child: Text(
+                currentBank != null ? currentBank.tenNH : 'Tất cả TK',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: currentBank != null ? AppTheme.primaryBlue : AppTheme.textPrimary,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Icon(Icons.arrow_drop_down, size: 16, color: AppTheme.textMuted),
+          ],
+        ),
+      ),
     );
   }
 
