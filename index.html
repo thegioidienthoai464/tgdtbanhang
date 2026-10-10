@@ -7216,16 +7216,31 @@ function formatVND(amount) {
           }
 
           // 👉 ĐỒNG BỘ DANH SÁCH IMEI CHÍNH XÁC THEO CHI NHÁNH ĐANG CHỌN
-          if (window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa]) {
-            const imeiListCN = window.imeiListByProductAndBranch[cleanMa][targetCN] || [];
+          if (!window.imeiListByProductAndBranch) window.imeiListByProductAndBranch = {};
+          if (!window.imeiListByProductAndBranch[cleanMa]) {
+            window.imeiListByProductAndBranch[cleanMa] = { CN01: [], CN02: [], CN03: [], CN04: [] };
+          }
+          if (Array.isArray(sp.danhSachIMEI) && sp.danhSachIMEI.length > 0) {
+            sp.coQuanLyIMEI = true;
+            sp.danhSachIMEI.forEach(im => {
+              if (!window.imeiListByProductAndBranch[cleanMa][targetCN].includes(im)) {
+                window.imeiListByProductAndBranch[cleanMa][targetCN].push(im);
+              }
+            });
+          }
+
+          const imeiListCN = window.imeiListByProductAndBranch[cleanMa][targetCN] || [];
+          if (imeiListCN.length > 0) {
+            sp.coQuanLyIMEI = true;
             sp.danhSachIMEI = imeiListCN;
             sp.tonIMEI = imeiListCN.length;
-            if (sp.coQuanLyIMEI) {
-              sp.tonKho = imeiListCN.length;
-            }
-          } else if (sp.coQuanLyIMEI) {
-            sp.danhSachIMEI = sp.danhSachIMEI || [];
+            sp.tonKho = imeiListCN.length;
+          } else if (Array.isArray(sp.danhSachIMEI) && sp.danhSachIMEI.length > 0) {
+            sp.coQuanLyIMEI = true;
             sp.tonIMEI = sp.danhSachIMEI.length;
+          } else if (sp.coQuanLyIMEI) {
+            sp.danhSachIMEI = [];
+            sp.tonIMEI = 0;
           }
         });
       }
@@ -7257,6 +7272,7 @@ function formatVND(amount) {
             const allImeis = Object.values(window.imeiListByProductAndBranch[cleanMa]).flat();
             sp.danhSachIMEI = allImeis;
             sp.tonIMEI = allImeis.length;
+            if (allImeis.length > 0) sp.tonKho = allImeis.length;
           }
         });
         if (thTonKho) thTonKho.innerText = "Tổng Tồn (Toàn Chuỗi)";
@@ -7278,6 +7294,7 @@ function formatVND(amount) {
             const cnImeis = window.imeiListByProductAndBranch[cleanMa][targetCN] || [];
             sp.danhSachIMEI = cnImeis;
             sp.tonIMEI = cnImeis.length;
+            if (cnImeis.length > 0) sp.tonKho = cnImeis.length;
           }
         });
         const cnObj = (rawChiNhanhList || []).find(x => x.ma === targetCN);
@@ -7285,6 +7302,63 @@ function formatVND(amount) {
         if (thGiaVon) thGiaVon.innerText = `Giá Vốn (${targetCN})`;
       }
       locDanhSachHangHoa(false);
+    }
+
+    // 8.1 Đồng bộ toàn bộ IMEI từ các phiếu nhập kho đã lập vào bộ nhớ đa chi nhánh
+    function dongBoImeiTuDonNhapHang() {
+      if (!window.imeiListByProductAndBranch) window.imeiListByProductAndBranch = {};
+      const phieuList = Array.isArray(rawNhapHangList) ? [...rawNhapHangList] : [];
+
+      // Quét thêm cả đơn lưu tạm từ localStorage
+      try {
+        let allDraftKeys = JSON.parse(localStorage.getItem('SMART_ERP_DRAFT_KEYS') || '[]');
+        allDraftKeys.forEach(key => {
+          const dStr = localStorage.getItem('SMART_ERP_DRAFT_DON_NHAP_' + key);
+          if (dStr) {
+            const dObj = JSON.parse(dStr);
+            if (dObj && !phieuList.some(x => x.maPhieu === dObj.maPhieu)) {
+              phieuList.push(dObj);
+            }
+          }
+        });
+      } catch(e) {}
+
+      if (!phieuList.length) return;
+
+      let coThayDoi = false;
+      phieuList.forEach(phieu => {
+        if (phieu.trangThai === 'Đã hủy') return;
+        const targetCN = layMaChiNhanh(phieu.chiNhanh || 'CN01');
+        const items = Array.isArray(phieu.chiTietSanPham) ? phieu.chiTietSanPham : [];
+        items.forEach(it => {
+          const cleanMa = String(it.maHang || '').trim().toUpperCase();
+          if (!cleanMa || !it.imeiStr) return;
+          const arr = tachDanhSachImei(it.imeiStr);
+          if (!arr.length) return;
+
+          if (!window.imeiListByProductAndBranch[cleanMa]) {
+            window.imeiListByProductAndBranch[cleanMa] = { CN01: [], CN02: [], CN03: [], CN04: [] };
+          }
+          if (!window.imeiListByProductAndBranch[cleanMa][targetCN]) {
+            window.imeiListByProductAndBranch[cleanMa][targetCN] = [];
+          }
+          arr.forEach(im => {
+            if (!window.imeiListByProductAndBranch[cleanMa][targetCN].includes(im)) {
+              window.imeiListByProductAndBranch[cleanMa][targetCN].push(im);
+              coThayDoi = true;
+            }
+          });
+
+          const sp = (rawHangHoa || []).find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa);
+          if (sp) {
+            sp.coQuanLyIMEI = true;
+          }
+        });
+      });
+
+      if (coThayDoi) {
+        capNhatTonKhoTheoChiNhanhHienTai();
+      }
     }
 
     // 9. Khởi tạo toàn bộ bản đồ tồn kho đa chi nhánh từ DB & giao dịch
@@ -7362,6 +7436,26 @@ function formatVND(amount) {
           }
         });
       }
+
+      // Nạp danh sách IMEI từ rawHangHoa nếu có
+      rawHangHoa.forEach(h => {
+        const ma = String(h.maHang || '').trim().toUpperCase();
+        if (Array.isArray(h.danhSachIMEI) && h.danhSachIMEI.length > 0) {
+          if (!window.imeiListByProductAndBranch[ma]) {
+            window.imeiListByProductAndBranch[ma] = { CN01: [], CN02: [], CN03: [], CN04: [] };
+          }
+          const curCN = layMaChiNhanh(currentChiNhanh || 'CN01');
+          h.danhSachIMEI.forEach(im => {
+            if (!window.imeiListByProductAndBranch[ma][curCN].includes(im)) {
+              window.imeiListByProductAndBranch[ma][curCN].push(im);
+            }
+          });
+          h.coQuanLyIMEI = true;
+        }
+      });
+
+      // Đồng bộ bổ sung IMEI từ các phiếu nhập hàng
+      dongBoImeiTuDonNhapHang();
 
       // Nạp tồn kho chính xác theo chi nhánh cho các sản phẩm có IMEI từ kho_imei
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
@@ -8504,6 +8598,7 @@ function formatVND(amount) {
                 chiTietSanPham: Array.isArray(d.chi_tiet_san_pham) ? d.chi_tiet_san_pham : []
               }));
               dongBoDonLuuTamVaoDanhSach();
+              dongBoImeiTuDonNhapHang();
               locDanhSachNhapHangTable();
               return;
             }
@@ -8524,17 +8619,21 @@ function formatVND(amount) {
               nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên'
             }));
             dongBoDonLuuTamVaoDanhSach();
+            dongBoImeiTuDonNhapHang();
             locDanhSachNhapHangTable();
           } else {
             dongBoDonLuuTamVaoDanhSach();
+            dongBoImeiTuDonNhapHang();
             locDanhSachNhapHangTable();
           }
         }).withFailureHandler(function() {
           dongBoDonLuuTamVaoDanhSach();
+          dongBoImeiTuDonNhapHang();
           locDanhSachNhapHangTable();
         }).apiGetDanhSachNhapHang();
       } else {
         dongBoDonLuuTamVaoDanhSach();
+        dongBoImeiTuDonNhapHang();
         locDanhSachNhapHangTable();
       }
     }
@@ -24957,6 +25056,7 @@ function loadSoQuy(filter) {
       try {
         const targetCNNhap = layMaChiNhanh(payload.chiNhanh);
         cartCopy.forEach(item => {
+          const cleanMa = String(item.maHang || '').trim().toUpperCase();
           // Tính giá vốn bình quân gia quyền các lần nhập nếu tính năng BẬT
           if (typeof layCaiDatTinhGiaVonTB === 'function' && layCaiDatTinhGiaVonTB()) {
             if (typeof tinhVaCapNhatGiaVonBinhQuan === 'function') {
@@ -24964,7 +25064,34 @@ function loadSoQuy(filter) {
             }
           }
           dieuChinhTonKhoChiNhanh(item.maHang, targetCNNhap, item.soLuong);
+
+          // Cập nhật ngay danh sách IMEI vào bộ nhớ local
+          if (item.imeiStr) {
+            const imeis = tachDanhSachImei(item.imeiStr);
+            if (imeis.length > 0) {
+              if (!window.imeiListByProductAndBranch) window.imeiListByProductAndBranch = {};
+              if (!window.imeiListByProductAndBranch[cleanMa]) {
+                window.imeiListByProductAndBranch[cleanMa] = { CN01: [], CN02: [], CN03: [], CN04: [] };
+              }
+              if (!window.imeiListByProductAndBranch[cleanMa][targetCNNhap]) {
+                window.imeiListByProductAndBranch[cleanMa][targetCNNhap] = [];
+              }
+              imeis.forEach(im => {
+                if (!window.imeiListByProductAndBranch[cleanMa][targetCNNhap].includes(im)) {
+                  window.imeiListByProductAndBranch[cleanMa][targetCNNhap].push(im);
+                }
+              });
+
+              const sp = (rawHangHoa || []).find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa);
+              if (sp) {
+                sp.coQuanLyIMEI = true;
+                sp.danhSachIMEI = window.imeiListByProductAndBranch[cleanMa][targetCNNhap];
+                sp.tonIMEI = sp.danhSachIMEI.length;
+              }
+            }
+          }
         });
+        capNhatTonKhoTheoChiNhanhHienTai();
         if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
       } catch(e) {
         console.warn("Lỗi cập nhật local kho:", e);
@@ -25068,6 +25195,7 @@ function loadSoQuy(filter) {
       } else {
         rawNhapHangList.unshift(newPhieuObj);
       }
+      dongBoImeiTuDonNhapHang();
       locDanhSachNhapHangTable();
 
       // Đồng bộ đơn nhập hàng lên Supabase Cloud (cho Netlify & Standalone)
@@ -25099,7 +25227,10 @@ function loadSoQuy(filter) {
             const hh = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) ? 
               rawHangHoa.find(h => (h.maHang || h.ma_hang) === item.maHang) : null;
             if (hh && hh.maHang) {
-              supabaseClient.from('dm_hanghoa').update({ ton_kho: hh.tonKho }).eq('ma_hang', hh.maHang).then(() => {});
+              supabaseClient.from('dm_hanghoa').update({ 
+                ton_kho: hh.tonKho,
+                co_quan_ly_imei: Boolean(hh.coQuanLyIMEI || (item.imeiStr && item.imeiStr.trim().length > 0))
+              }).eq('ma_hang', hh.maHang).then(() => {});
             }
             if (item.imeiStr) {
               tachDanhSachImei(item.imeiStr).forEach(im => {

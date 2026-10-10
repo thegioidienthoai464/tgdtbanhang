@@ -1899,46 +1899,90 @@ function apiLuuDanhSachHangHoaVoiCheDo(list, importMode) {
 
 function apiGetIMEITonKho(maHang, chiNhanh) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName("Kho_IMEI");
-    if (!sheet) return { success: false, error: "Không tìm thấy sheet Kho_IMEI", data: [] };
-
-    const rows = sheet.getDataRange().getValues();
-    if (rows.length < 2) return { success: true, data: [] };
-
-    // Chuẩn hóa dòng tiêu đề
-    const headers = rows[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s_]+/g, ''));
-    
-    const colMa = headers.indexOf("mahang");
-    const colIMEI = headers.indexOf("imei") > -1 ? headers.indexOf("imei") : headers.indexOf("serial");
-    const colCN = headers.indexOf("chinhanh");
-    const colTrangThai = headers.indexOf("trangthai");
-
-    if (colMa === -1 || colIMEI === -1) {
-      return { success: false, error: "Thiếu cột Mã hàng hoặc IMEI trong sheet Kho_IMEI", data: [] };
+    const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
+    let sheet = ss.getSheetByName("Kho_IMEI");
+    if (!sheet) {
+      sheet = ss.insertSheet("Kho_IMEI");
+      sheet.appendRow(["ChiNhanh", "IMEI", "MaHang", "TrangThai", "MaPhieuNhap", "NgayCapNhat"]);
     }
 
+    const rows = sheet.getDataRange().getValues();
     const cleanMaTarget = String(maHang || "").trim().toUpperCase();
     const cleanCNTarget = String(chiNhanh || "").trim().toUpperCase();
     let imeiList = [];
 
-    for (let i = 1; i < rows.length; i++) {
-      let rMa = String(rows[i][colMa] || "").trim().toUpperCase();
-      let rIMEI = String(rows[i][colIMEI] || "").trim();
-      let rCN = colCN > -1 ? String(rows[i][colCN] || "").trim().toUpperCase() : "";
-      let rTT = colTrangThai > -1 ? String(rows[i][colTrangThai] || "").trim().toLowerCase().replace(/[\s_]+/g, '') : "trongkho";
+    if (rows.length > 1) {
+      const headers = rows[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s_]+/g, ''));
+      let colCN = headers.indexOf("chinhanh");
+      let colIMEI = headers.indexOf("imei") > -1 ? headers.indexOf("imei") : headers.indexOf("serial");
+      let colMa = headers.indexOf("mahang") > -1 ? headers.indexOf("mahang") : headers.indexOf("masanpham");
+      let colTrangThai = headers.indexOf("trangthai");
 
-      // Kiểm tra trạng thái: chấp nhận 'trongkho', rỗng, hoặc '1'
-      let isTrongKho = (rTT === "trongkho" || rTT === "" || rTT === "hoatdong");
+      for (let i = 1; i < rows.length; i++) {
+        let rVals = rows[i];
+        let rMa = colMa > -1 ? String(rVals[colMa] || "").trim().toUpperCase() : "";
+        let rIMEI = colIMEI > -1 ? String(rVals[colIMEI] || "").trim() : "";
+        let rCN = colCN > -1 ? String(rVals[colCN] || "").trim().toUpperCase() : "";
+        let rTT = colTrangThai > -1 ? String(rVals[colTrangThai] || "").trim().toLowerCase().replace(/[\s_]+/g, '') : "trongkho";
 
-      if (rMa === cleanMaTarget && rIMEI !== "" && isTrongKho) {
-        // So khớp chi nhánh: Hỗ trợ mã ngắn CN01 hoặc chuỗi tên đầy đủ
-        if (colCN === -1 || !cleanCNTarget || cleanCNTarget === "ALL") {
-          imeiList.push(rIMEI);
-        } else {
-          const isMatch = (rCN === cleanCNTarget || rCN.startsWith(cleanCNTarget) || cleanCNTarget.startsWith(rCN) || (cleanCNTarget === "CN01" && rCN === ""));
-          if (isMatch) {
-            imeiList.push(rIMEI);
+        // Tự sửa nếu cột bị lệch
+        if (rIMEI && (rIMEI.startsWith("CN") || rIMEI.includes("CHI NHÁNH") || rIMEI.includes("TRỤ SỞ"))) {
+          let tempCN = rIMEI;
+          rIMEI = rCN || rMa;
+          rCN = tempCN.toUpperCase();
+        }
+        if (!rMa || rMa === rIMEI.toUpperCase()) {
+          for (let cell of rVals) {
+            let s = String(cell || "").trim().toUpperCase();
+            if (s === cleanMaTarget) { rMa = s; break; }
+          }
+        }
+
+        let isTrongKho = (!rTT || rTT === "trongkho" || rTT === "hoatdong" || rTT === "1");
+        if (rMa === cleanMaTarget && rIMEI !== "" && isTrongKho) {
+          if (colCN === -1 || !cleanCNTarget || cleanCNTarget === "ALL") {
+            if (!imeiList.includes(rIMEI)) imeiList.push(rIMEI);
+          } else {
+            const isMatch = (rCN === cleanCNTarget || rCN.startsWith(cleanCNTarget) || cleanCNTarget.startsWith(rCN) || (cleanCNTarget === "CN01" && (rCN === "" || rCN === "CN01")));
+            if (isMatch && !imeiList.includes(rIMEI)) {
+              imeiList.push(rIMEI);
+            }
+          }
+        }
+      }
+    }
+
+    // Dự phòng: Nếu chưa tìm thấy trong Kho_IMEI, quét từ đơn nhập hàng trong NhapHang
+    if (imeiList.length === 0) {
+      let sheetNhap = ss.getSheetByName("NhapHang") || ss.getSheetByName("GiaoDich_NhapHang") || ss.getSheetByName("DonNhapHang");
+      if (sheetNhap) {
+        const rowsNhap = sheetNhap.getDataRange().getValues();
+        if (rowsNhap.length > 1) {
+          let headersNhap = rowsNhap[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s_]+/g, ''));
+          let idxCT = headersNhap.indexOf("chitietsanpham") > -1 ? headersNhap.indexOf("chitietsanpham") : headersNhap.indexOf("chitiet");
+          let idxCN = headersNhap.indexOf("chinhanh");
+          let idxTT = headersNhap.indexOf("trangthai");
+          if (idxCT > -1) {
+            for (let i = 1; i < rowsNhap.length; i++) {
+              if (idxTT > -1 && String(rowsNhap[i][idxTT] || "").includes("Hủy")) continue;
+              let rowCN = idxCN > -1 ? String(rowsNhap[i][idxCN] || "").toUpperCase() : "";
+              let isCNMatch = (!cleanCNTarget || cleanCNTarget === "ALL" || rowCN === cleanCNTarget || rowCN.startsWith(cleanCNTarget) || cleanCNTarget.startsWith(rowCN) || (cleanCNTarget === "CN01" && !rowCN));
+              if (!isCNMatch) continue;
+
+              let ctStr = rowsNhap[i][idxCT];
+              let ctList = [];
+              try { ctList = typeof ctStr === 'string' ? JSON.parse(ctStr) : ctStr; } catch(e) {}
+              if (Array.isArray(ctList)) {
+                ctList.forEach(it => {
+                  if (String(it.maHang || "").trim().toUpperCase() === cleanMaTarget && it.imeiStr) {
+                    let imArr = String(it.imeiStr).split(/[\n,;\r\t]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
+                    imArr.forEach(im => {
+                      if (!imeiList.includes(im)) imeiList.push(im);
+                    });
+                  }
+                });
+              }
+            }
           }
         }
       }
@@ -2047,28 +2091,81 @@ function apiGetDanhSachHangHoa() {
   if (sheetIMEI) {
     const iRows = sheetIMEI.getDataRange().getValues();
     if (iRows.length > 1) {
+      const iHeaders = iRows[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s_]+/g, ''));
+      let colCN = iHeaders.indexOf("chinhanh");
+      let colIMEI = iHeaders.indexOf("imei") > -1 ? iHeaders.indexOf("imei") : iHeaders.indexOf("serial");
+      let colMa = iHeaders.indexOf("mahang") > -1 ? iHeaders.indexOf("mahang") : iHeaders.indexOf("masanpham");
+      let colTT = iHeaders.indexOf("trangthai");
+
       for (let j = 1; j < iRows.length; j++) {
         let rowVals = iRows[j];
-        let m = "";
-        let im = "";
-        let tt = "trongkho";
+        let m = colMa > -1 ? String(rowVals[colMa] || "").trim().toUpperCase() : "";
+        let im = colIMEI > -1 ? String(rowVals[colIMEI] || "").trim() : "";
+        let tt = colTT > -1 ? String(rowVals[colTT] || "").trim().toLowerCase().replace(/[\s_]+/g, '') : "trongkho";
 
-        // Quét tự động tìm mã hàng và mã IMEI trong các cột
-        for (let cell of rowVals) {
-          let val = String(cell || "").trim();
-          let upperVal = val.toUpperCase();
-          if (upperVal.startsWith("SP") || upperVal.length >= 5 && upperVal.includes("SP")) {
-            m = upperVal;
-          } else if (val.length > 5 && !val.includes(" ") && !val.includes("/")) {
-            im = val;
-          } else if (val.toLowerCase().includes("bán") || val.toLowerCase().includes("xuất")) {
-            tt = "daban";
+        // Tự động xử lý nếu cột bị lệch hoặc giá trị IMEI/ChiNhanh bị tráo đổi
+        if (im && (im.startsWith("CN") || im.includes("Chi nhánh") || im.includes("Trụ sở"))) {
+          im = "";
+          for (let cell of rowVals) {
+            let strC = String(cell || "").trim();
+            if (strC && !strC.startsWith("CN") && !strC.includes("Chi nhánh") && !strC.includes("Trụ sở") && (strC.length >= 8 || /^\d+$/.test(strC))) {
+              if (strC.toUpperCase() !== m) {
+                im = strC;
+                break;
+              }
+            }
           }
         }
 
-        if (m && im && (tt.includes("trongkho") || tt === "")) {
+        // Nếu mã hàng chưa có, quét các ô để nhận diện
+        if (!m) {
+          for (let cell of rowVals) {
+            let strC = String(cell || "").trim().toUpperCase();
+            if (strC && strC !== im.toUpperCase() && !strC.startsWith("CN") && strC !== "TRONGKHO" && strC !== "DABAN") {
+              m = strC;
+              break;
+            }
+          }
+        }
+
+        let isTrongKho = (!tt || tt === "trongkho" || tt === "hoatdong" || tt === "1");
+        if (m && im && isTrongKho) {
           if (!imeiMap[m]) imeiMap[m] = [];
           if (!imeiMap[m].includes(im)) imeiMap[m].push(im);
+        }
+      }
+    }
+  }
+
+  // 1.2 Quét bổ sung từ NhapHang để đảm bảo không sót IMEI vừa nhập từ các phiếu nhập kho
+  let sheetNhap = ss.getSheetByName("NhapHang") || ss.getSheetByName("GiaoDich_NhapHang") || ss.getSheetByName("DonNhapHang");
+  if (sheetNhap) {
+    const rowsNhap = sheetNhap.getDataRange().getValues();
+    if (rowsNhap.length > 1) {
+      let headersNhap = rowsNhap[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s_]+/g, ''));
+      let idxCT = headersNhap.indexOf("chitietsanpham") > -1 ? headersNhap.indexOf("chitietsanpham") : (headersNhap.indexOf("chitiet") > -1 ? headersNhap.indexOf("chitiet") : -1);
+      let idxTT = headersNhap.indexOf("trangthai");
+      if (idxCT > -1) {
+        for (let i = 1; i < rowsNhap.length; i++) {
+          if (idxTT > -1 && String(rowsNhap[i][idxTT] || "").includes("Hủy")) continue;
+          let ctStr = rowsNhap[i][idxCT];
+          if (!ctStr) continue;
+          let ctList = [];
+          try { ctList = typeof ctStr === 'string' ? JSON.parse(ctStr) : ctStr; } catch(e) {}
+          if (Array.isArray(ctList)) {
+            ctList.forEach(it => {
+              let mItem = String(it.maHang || "").trim().toUpperCase();
+              if (mItem && it.imeiStr) {
+                let imArr = String(it.imeiStr).split(/[\n,;\r\t]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
+                if (!imeiMap[mItem]) imeiMap[mItem] = [];
+                imArr.forEach(oneIm => {
+                  if (!imeiMap[mItem].includes(oneIm)) {
+                    imeiMap[mItem].push(oneIm);
+                  }
+                });
+              }
+            });
+          }
         }
       }
     }
@@ -2152,8 +2249,8 @@ function apiGetDanhSachHangHoa() {
       giaVon: Number(giaVon) || 0,
       giaBan: Number(giaBan) || 0,
       coQuanLyIMEI: isImei,
-      tonKho: Number(tonKho) || 0,
-      tonIMEI: hasRealIMEIStock ? imeiMap[ma].length : 0,
+      tonKho: hasRealIMEIStock && Number(tonKho) === 0 ? imeiMap[ma].length : (Number(tonKho) || 0),
+      tonIMEI: hasRealIMEIStock ? imeiMap[ma].length : (rawImeiFlag ? 0 : 0),
       danhSachIMEI: hasRealIMEIStock ? imeiMap[ma] : [],
       trangThai: (trangThai || "Kinh doanh").slice(0, 50)
     });
@@ -4995,13 +5092,38 @@ function apiLuuPhieuNhapHang(payload) {
 
     // 1. Quản lý tồn kho trong DM_HangHoa & IMEI trong Kho_IMEI
     const sheetHang = ss.getSheetByName("DM_HangHoa");
-    const sheetIMEI = ss.getSheetByName("Kho_IMEI");
+    let sheetIMEI = ss.getSheetByName("Kho_IMEI");
+    if (!sheetIMEI) {
+      sheetIMEI = ss.insertSheet("Kho_IMEI");
+      sheetIMEI.appendRow(["ChiNhanh", "IMEI", "MaHang", "TrangThai", "MaPhieuNhap", "NgayCapNhat"]);
+    }
+
+    let rowsIMEI = sheetIMEI.getDataRange().getValues();
+    let headersIMEI = rowsIMEI.length > 0 ? rowsIMEI[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s_]+/g, '')) : [];
+    if (headersIMEI.length === 0) {
+      headersIMEI = ["chinhanh", "imei", "mahang", "trangthai", "maphieunhap", "ngaycapnhat"];
+      sheetIMEI.appendRow(["ChiNhanh", "IMEI", "MaHang", "TrangThai", "MaPhieuNhap", "NgayCapNhat"]);
+      rowsIMEI = sheetIMEI.getDataRange().getValues();
+    }
+    let colCN_IMEI = headersIMEI.indexOf("chinhanh");
+    let colCode_IMEI = headersIMEI.indexOf("imei") > -1 ? headersIMEI.indexOf("imei") : headersIMEI.indexOf("serial");
+    let colMa_IMEI = headersIMEI.indexOf("mahang");
+    let colTT_IMEI = headersIMEI.indexOf("trangthai");
+    let colPhieu_IMEI = headersIMEI.indexOf("maphieu") > -1 ? headersIMEI.indexOf("maphieu") : headersIMEI.indexOf("maphieunhap");
+    let colNgay_IMEI = headersIMEI.indexOf("ngaycapnhat") > -1 ? headersIMEI.indexOf("ngaycapnhat") : headersIMEI.indexOf("ngaynhap");
+
+    let mapImeiRow = {};
+    for (let r = 1; r < rowsIMEI.length; r++) {
+      let existingCode = String(rowsIMEI[r][colCode_IMEI > -1 ? colCode_IMEI : 1] || "").trim().toUpperCase();
+      if (existingCode) mapImeiRow[existingCode] = r + 1;
+    }
 
     if (sheetHang) {
       const rHang = sheetHang.getDataRange().getValues();
       const hHang = rHang[0].map(x => String(x || "").trim().toLowerCase().replace(/[\s_]+/g, ''));
       let idxMa = hHang.indexOf("mahang") > -1 ? hHang.indexOf("mahang") : 0;
       let idxTon = hHang.indexOf("tonkho") > -1 ? hHang.indexOf("tonkho") : 7;
+      let idxCoIMEI = hHang.indexOf("coquanlyimei") > -1 ? hHang.indexOf("coquanlyimei") : (hHang.indexOf("quanlyimei") > -1 ? hHang.indexOf("quanlyimei") : -1);
 
       if (isEdit && Array.isArray(oldChiTiet) && oldChiTiet.length > 0) {
         oldChiTiet.forEach(oldItem => {
@@ -5023,20 +5145,42 @@ function apiLuuPhieuNhapHang(payload) {
         chiTiet.forEach(item => {
           let mH = String(item.maHang || "").trim().toUpperCase();
           let sl = Number(item.soLuong) || 0;
+          let imeis = item.imeiStr ? String(item.imeiStr).split(/[\n,;\r\t]+/).map(s => s.trim().toUpperCase()).filter(Boolean) : [];
+
           for (let i = 1; i < rHang.length; i++) {
             if (String(rHang[i][idxMa] || "").trim().toUpperCase() === mH) {
               let curTon = Number(rHang[i][idxTon]) || 0;
               let tonMoi = curTon + sl;
               sheetHang.getRange(i + 1, idxTon + 1).setValue(tonMoi);
               rHang[i][idxTon] = tonMoi;
+              if (imeis.length > 0 && idxCoIMEI > -1) {
+                sheetHang.getRange(i + 1, idxCoIMEI + 1).setValue("Có");
+                rHang[i][idxCoIMEI] = "Có";
+              }
               break;
             }
           }
 
-          if (sheetIMEI && item.imeiStr) {
-            let imeis = String(item.imeiStr).split(/[\n,;\r\t]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
+          if (sheetIMEI && imeis.length > 0) {
             imeis.forEach(im => {
-              sheetIMEI.appendRow([chiNhanh, im, mH, "TrongKho", new Date()]);
+              if (mapImeiRow[im]) {
+                let rowNum = mapImeiRow[im];
+                if (colTT_IMEI > -1) sheetIMEI.getRange(rowNum, colTT_IMEI + 1).setValue("TrongKho");
+                if (colMa_IMEI > -1) sheetIMEI.getRange(rowNum, colMa_IMEI + 1).setValue(mH);
+                if (colCN_IMEI > -1) sheetIMEI.getRange(rowNum, colCN_IMEI + 1).setValue(chiNhanh);
+                if (colPhieu_IMEI > -1) sheetIMEI.getRange(rowNum, colPhieu_IMEI + 1).setValue(maPhieu);
+                if (colNgay_IMEI > -1) sheetIMEI.getRange(rowNum, colNgay_IMEI + 1).setValue(new Date());
+              } else {
+                let newRow = new Array(Math.max(headersIMEI.length, 6)).fill("");
+                if (colCN_IMEI > -1) newRow[colCN_IMEI] = chiNhanh; else newRow[0] = chiNhanh;
+                if (colCode_IMEI > -1) newRow[colCode_IMEI] = im; else newRow[1] = im;
+                if (colMa_IMEI > -1) newRow[colMa_IMEI] = mH; else newRow[2] = mH;
+                if (colTT_IMEI > -1) newRow[colTT_IMEI] = "TrongKho"; else newRow[3] = "TrongKho";
+                if (colPhieu_IMEI > -1) newRow[colPhieu_IMEI] = maPhieu; else newRow[4] = maPhieu;
+                if (colNgay_IMEI > -1) newRow[colNgay_IMEI] = new Date(); else newRow[5] = new Date();
+                sheetIMEI.appendRow(newRow);
+                mapImeiRow[im] = sheetIMEI.getLastRow();
+              }
             });
           }
         });
