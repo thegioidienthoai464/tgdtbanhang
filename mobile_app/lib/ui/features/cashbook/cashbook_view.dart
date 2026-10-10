@@ -352,7 +352,7 @@ class _CashbookViewState extends State<CashbookView> {
           style: TextStyle(
             fontSize: 11.5,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected ? Colors.white : AppTheme.textPrimary,
+            color: isSelected ? Colors.white : AppTheme.textDark,
           ),
         ),
       ),
@@ -417,7 +417,7 @@ class _CashbookViewState extends State<CashbookView> {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: currentBank != null ? AppTheme.primaryBlue : AppTheme.textPrimary,
+                  color: currentBank != null ? AppTheme.primaryBlue : AppTheme.textDark,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),

@@ -18,6 +18,7 @@ class AppTheme {
   static const Color background = Color(0xFFF8FAFC); // Nền xám sáng sạch sẽ, tinh tế
   static const Color surface = Colors.white;
   static const Color textDark = Color(0xFF0F172A); // Chữ đen đậm dễ đọc
+  static const Color textPrimary = textDark;
   static const Color textMuted = Color(0xFF64748B); // Chữ phụ ghi xám
   
   static const Color successGreen = Color(0xFF10B981); // Xanh lá thành công
