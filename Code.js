@@ -2241,6 +2241,12 @@ function apiGetDanhSachHangHoa() {
     let hasRealIMEIStock = imeiMap[ma] && imeiMap[ma].length > 0;
     let isImei = rawImeiFlag || hasRealIMEIStock;
 
+    // Đối với sản phẩm quản lý theo IMEI: Tồn kho thực tế BẮT BUỘC bằng số lượng IMEI đang tồn trong kho!
+    // Tuyệt đối không để số tồn tĩnh cũ trên sheet ghi đè làm sai lệch (ví dụ sheet ghi 7 nhưng chỉ có 1 IMEI tồn -> tồn phải là 1)
+    let tonThucTe = isImei 
+      ? (hasRealIMEIStock ? imeiMap[ma].length : 0)
+      : (Number(tonKho) || 0);
+
     list.push({
       maHang: ma.slice(0, 50),
       tenHang: ten.slice(0, 255),
@@ -2249,8 +2255,8 @@ function apiGetDanhSachHangHoa() {
       giaVon: Number(giaVon) || 0,
       giaBan: Number(giaBan) || 0,
       coQuanLyIMEI: isImei,
-      tonKho: hasRealIMEIStock && Number(tonKho) === 0 ? imeiMap[ma].length : (Number(tonKho) || 0),
-      tonIMEI: hasRealIMEIStock ? imeiMap[ma].length : (rawImeiFlag ? 0 : 0),
+      tonKho: tonThucTe,
+      tonIMEI: isImei ? (hasRealIMEIStock ? imeiMap[ma].length : 0) : 0,
       danhSachIMEI: hasRealIMEIStock ? imeiMap[ma] : [],
       trangThai: (trangThai || "Kinh doanh").slice(0, 50)
     });
@@ -5928,6 +5934,33 @@ function apiCapNhatTrangThaiDonDatHang(maDonDat, trangThaiMoi) {
   } catch(err) {
     Logger.log("Lỗi apiCapNhatTrangThaiDonDatHang: " + err.message);
     return { success: false, error: err.message };
+  }
+}
+
+// Cập nhật số lượng tồn kho chính xác cho một sản phẩm trong DM_HangHoa
+function apiCapNhatTonKhoHangHoa(maHang, tonMoi) {
+  try {
+    if (!maHang) return { success: false, error: "Thiếu mã hàng" };
+    const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
+    const sheetHang = ss.getSheetByName("DM_HangHoa");
+    if (!sheetHang) return { success: false, error: "Không tìm thấy sheet DM_HangHoa" };
+    const rows = sheetHang.getDataRange().getValues();
+    if (rows.length < 2) return { success: false, error: "Bảng hàng hóa trống" };
+    const headers = rows[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s_]+/g, ''));
+    let idxMa = headers.indexOf("mahang");
+    let idxTon = headers.indexOf("tonkho");
+    if (idxMa === -1) idxMa = 0;
+    if (idxTon === -1) idxTon = 7;
+    const targetMa = String(maHang).trim().toUpperCase();
+    for (let i = 1; i < rows.length; i++) {
+      if (String(rows[i][idxMa] || "").trim().toUpperCase() === targetMa) {
+        sheetHang.getRange(i + 1, idxTon + 1).setValue(Number(tonMoi) || 0);
+        return { success: true, maHang: targetMa, tonMoi: Number(tonMoi) || 0 };
+      }
+    }
+    return { success: false, error: "Không tìm thấy sản phẩm " + targetMa };
+  } catch(e) {
+    return { success: false, error: e.message };
   }
 }
 

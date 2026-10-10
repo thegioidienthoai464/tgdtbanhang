@@ -7235,12 +7235,56 @@ function formatVND(amount) {
             sp.danhSachIMEI = imeiListCN;
             sp.tonIMEI = imeiListCN.length;
             sp.tonKho = imeiListCN.length;
+            if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) {
+              window.tonKhoChiNhanhMap[cleanMa][targetCN] = imeiListCN.length;
+            }
           } else if (Array.isArray(sp.danhSachIMEI) && sp.danhSachIMEI.length > 0) {
             sp.coQuanLyIMEI = true;
             sp.tonIMEI = sp.danhSachIMEI.length;
+            sp.tonKho = sp.tonIMEI;
+            if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) {
+              window.tonKhoChiNhanhMap[cleanMa][targetCN] = sp.tonIMEI;
+            }
           } else if (sp.coQuanLyIMEI) {
             sp.danhSachIMEI = [];
             sp.tonIMEI = 0;
+            sp.tonKho = 0;
+            if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) {
+              window.tonKhoChiNhanhMap[cleanMa][targetCN] = 0;
+            }
+          }
+
+          // 👉 ĐỒNG BỘ TỒN KHO CHO SẢN PHẨM KHÔNG QUẢN LÝ IMEI TỪ CÁC PHIẾU NHẬP/BÁN THỰC TẾ:
+          // Nếu sản phẩm có giao dịch nhập kho và không thuộc bảng tồn kho gốc Excel (rawTonMap[cleanMa] không có):
+          // Số tồn kho chuẩn phải bằng Tổng Nhập trừ Tổng Bán, không để số rác cũ (ví dụ tồn 7) làm lệch so với Thẻ kho!
+          if (!sp.coQuanLyIMEI && (!rawTonMap || !rawTonMap[cleanMa]) && Array.isArray(rawNhapHangList) && rawNhapHangList.length > 0) {
+            let tongNhapSp = 0;
+            rawNhapHangList.forEach(p => {
+              if (p.trangThai === 'Đã hủy') return;
+              if (layMaChiNhanh(p.chiNhanh || 'CN01') !== targetCN) return;
+              (p.chiTietSanPham || []).forEach(it => {
+                if (String(it.maHang || '').trim().toUpperCase() === cleanMa) {
+                  tongNhapSp += Number(it.soLuong) || 0;
+                }
+              });
+            });
+            if (tongNhapSp > 0) {
+              let tongBanSp = 0;
+              (typeof rawDonHangList !== 'undefined' && Array.isArray(rawDonHangList) ? rawDonHangList : []).forEach(dh => {
+                if (dh.trangThai === 'Đã hủy') return;
+                if (layMaChiNhanh(dh.chiNhanh || 'CN01') !== targetCN) return;
+                (dh.chiTietSanPham || []).forEach(it => {
+                  if (String(it.maHang || it.ma_hang || '').trim().toUpperCase() === cleanMa) {
+                    tongBanSp += Number(it.soLuong) || 0;
+                  }
+                });
+              });
+              const tonThucTe = Math.max(0, tongNhapSp - tongBanSp);
+              sp.tonKho = tonThucTe;
+              if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) {
+                window.tonKhoChiNhanhMap[cleanMa][targetCN] = tonThucTe;
+              }
+            }
           }
         });
       }
@@ -7294,7 +7338,10 @@ function formatVND(amount) {
             const cnImeis = window.imeiListByProductAndBranch[cleanMa][targetCN] || [];
             sp.danhSachIMEI = cnImeis;
             sp.tonIMEI = cnImeis.length;
-            if (cnImeis.length > 0) sp.tonKho = cnImeis.length;
+            sp.tonKho = cnImeis.length;
+            if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) {
+              window.tonKhoChiNhanhMap[cleanMa][targetCN] = cnImeis.length;
+            }
           }
         });
         const cnObj = (rawChiNhanhList || []).find(x => x.ma === targetCN);
@@ -7509,7 +7556,13 @@ function formatVND(amount) {
                   const sl = Number(it.soLuong) || 0;
                   if (!m || !sl) return;
                   const sp = (rawHangHoa || []).find(h => String(h.maHang || '').trim().toUpperCase() === m);
-                  if (sp && sp.coQuanLyIMEI) return; // Sản phẩm quản lý theo IMEI đã được tính chính xác từ kho_imei
+                  if (it.imeiStr || (sp && sp.coQuanLyIMEI)) {
+                    if (sp) sp.coQuanLyIMEI = true;
+                    return; // Sản phẩm quản lý theo IMEI đã được tính chính xác từ kho_imei & danh sách IMEI
+                  }
+                  // Nếu sản phẩm không thuộc bảng tồn kho gốc Excel (rawTonMap[m] không có):
+                  // Tồn kho trong dm_hanghoa đã được cập nhật trực tiếp từ phiếu nhập -> không cộng dồn trùng lần 2!
+                  if (!rawTonMap || !rawTonMap[m]) return;
                   if (!window.tonKhoChiNhanhMap[m]) window.tonKhoChiNhanhMap[m] = { CN01: 0, CN02: 0, CN03: 0, CN04: 0 };
                   if (maDH.startsWith('PNH') || maDH.startsWith('TH')) {
                     window.tonKhoChiNhanhMap[m][cn] = (window.tonKhoChiNhanhMap[m][cn] || 0) + sl;
@@ -23106,6 +23159,24 @@ let danhSachTamXuatExcel = [];
         if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[targetMa]) {
           window.tonKhoChiNhanhMap[targetMa][targetCN] = tonHienTai;
         }
+        // 👉 Đồng bộ ngay lập tức ra bảng danh mục hàng tồn và lưu vĩnh viễn
+        try {
+          const saved = JSON.parse(localStorage.getItem('tt_pos_tonkho_chinhanh') || '{}');
+          if (!saved[targetMa]) saved[targetMa] = {};
+          saved[targetMa][targetCN] = tonHienTai;
+          localStorage.setItem('tt_pos_tonkho_chinhanh', JSON.stringify(saved));
+        } catch(e) {}
+        if (typeof locDanhSachHangHoa === 'function') {
+          locDanhSachHangHoa(false);
+        }
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          supabaseClient.from('dm_hanghoa').update({ ton_kho: tonHienTai }).eq('ma_hang', targetMa).then(() => {});
+        }
+        const runnerTheKho = (typeof google !== 'undefined' && google.script && google.script.run)
+          ? google.script.run : window._mockGAS;
+        if (runnerTheKho && runnerTheKho.apiCapNhatTonKhoHangHoa) {
+          runnerTheKho.apiCapNhatTonKhoHangHoa(targetMa, tonHienTai);
+        }
       }
 
       // Cập nhật thẻ metrics
@@ -25087,6 +25158,10 @@ function loadSoQuy(filter) {
                 sp.coQuanLyIMEI = true;
                 sp.danhSachIMEI = window.imeiListByProductAndBranch[cleanMa][targetCNNhap];
                 sp.tonIMEI = sp.danhSachIMEI.length;
+                sp.tonKho = sp.tonIMEI;
+                if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) {
+                  window.tonKhoChiNhanhMap[cleanMa][targetCNNhap] = sp.tonIMEI;
+                }
               }
             }
           }
