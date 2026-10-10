@@ -141,7 +141,7 @@ class ProductModel {
   }
 
   /// Lấy số lượng tồn kho phù hợp với bộ lọc chi nhánh đang chọn
-  double getTonKhoChoBoLoc(Set<String> selectedCodes, bool isAllSelected) {
+  double getTonKhoChoBoLoc(Set<String> selectedCodes, [bool isAllSelected = false]) {
     if (isAllSelected || selectedCodes.contains('ALL') || selectedCodes.isEmpty) {
       return getTongTonKhoToanHeThong();
     }

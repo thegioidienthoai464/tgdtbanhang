@@ -302,7 +302,7 @@ class _PosViewState extends State<PosView> {
                         itemBuilder: (context, index) {
                           final p = vm.products[index];
                           final isInCart = vm.cart.any((item) => item.maHang == p.maHang);
-                          final posStock = p.getTonKhoChoBoLoc(branchVm.selectedBranchCodes);
+                          final posStock = p.getTonKhoChoBoLoc(branchVm.selectedBranchCodes, branchVm.isAllSelected);
 
                           return Container(
                             decoration: BoxDecoration(
