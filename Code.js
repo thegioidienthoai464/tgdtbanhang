@@ -383,6 +383,119 @@ function apiChuyenNhomHangHoa(maHangList, maNhomMoi) {
   }
 }
 
+// ====================================================================
+// MODULE QUẢN LÝ NHÓM HÀNG (DM_NhomHang)
+// ====================================================================
+
+// Đọc danh mục nhóm hàng từ Google Sheets
+function apiGetNhomHang() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName("DM_NhomHang");
+    if (!sheet) {
+      sheet = ss.insertSheet("DM_NhomHang");
+      sheet.appendRow(["MaNhom", "TenNhom", "MaNhomCha", "GhiChu"]);
+      return [];
+    }
+    const rows = sheet.getDataRange().getValues();
+    if (rows.length <= 1) return [];
+    const list = [];
+    for (let i = 1; i < rows.length; i++) {
+      const ma = String(rows[i][0] || '').trim();
+      const ten = String(rows[i][1] || '').trim();
+      if (ma || ten) {
+        list.push({
+          MaNhom: ma,
+          TenNhom: ten,
+          MaNhomCha: String(rows[i][2] || '').trim(),
+          GhiChu: String(rows[i][3] || '').trim()
+        });
+      }
+    }
+    return list;
+  } catch (err) {
+    Logger.log("Lỗi apiGetNhomHang: " + err.message);
+    return [];
+  }
+}
+
+// Lưu hoặc cập nhật nhóm hàng (Cho phép sửa tên, nhóm cha, ghi chú hoặc thêm mới)
+function apiLuuNhomHang(data) {
+  try {
+    if (!data) return { success: false, error: "Dữ liệu rỗng!" };
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName("DM_NhomHang");
+    if (!sheet) {
+      sheet = ss.insertSheet("DM_NhomHang");
+      sheet.appendRow(["MaNhom", "TenNhom", "MaNhomCha", "GhiChu"]);
+    }
+    const rows = sheet.getDataRange().getValues();
+    const maNhom = String(data.maNhom || data.MaNhom || "").trim();
+    const tenNhom = String(data.tenNhom || data.TenNhom || "").trim();
+    const maNhomCha = String(data.maNhomCha || data.MaNhomCha || "").trim();
+    const ghiChu = String(data.ghiChu || data.GhiChu || "").trim();
+
+    if (!tenNhom) {
+      return { success: false, error: "Tên nhóm không được để trống!" };
+    }
+
+    let foundRow = -1;
+    if (maNhom) {
+      for (let i = 1; i < rows.length; i++) {
+        if (String(rows[i][0] || '').trim().toUpperCase() === maNhom.toUpperCase()) {
+          foundRow = i + 1;
+          break;
+        }
+      }
+    }
+
+    if (foundRow > 0) {
+      // Cập nhật nhóm hàng đã có: sửa Tên nhóm, Nhóm cha, Ghi chú
+      sheet.getRange(foundRow, 2).setValue(tenNhom);
+      sheet.getRange(foundRow, 3).setValue(maNhomCha);
+      sheet.getRange(foundRow, 4).setValue(ghiChu);
+      return { success: true, maNhom: maNhom, tenNhom: tenNhom, isUpdate: true };
+    } else {
+      // Thêm mới nhóm hàng
+      let maxNum = 0;
+      for (let i = 1; i < rows.length; i++) {
+        const m = String(rows[i][0] || '').match(/NH(\d+)/i);
+        if (m) {
+          const num = parseInt(m[1], 10);
+          if (num > maxNum) maxNum = num;
+        }
+      }
+      const newCode = maNhom || ("NH" + ("000" + (maxNum + 1)).slice(-3));
+      sheet.appendRow([newCode, tenNhom, maNhomCha, ghiChu]);
+      return { success: true, maNhom: newCode, tenNhom: tenNhom, isUpdate: false };
+    }
+  } catch (err) {
+    Logger.log("Lỗi apiLuuNhomHang: " + err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+// Xóa nhóm hàng khỏi Google Sheets
+function apiXoaNhomHang(maNhom) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName("DM_NhomHang");
+    if (!sheet) return { success: false, error: "Không tìm thấy sheet DM_NhomHang!" };
+    const rows = sheet.getDataRange().getValues();
+    const target = String(maNhom || '').trim().toUpperCase();
+    for (let i = rows.length - 1; i >= 1; i--) {
+      if (String(rows[i][0] || '').trim().toUpperCase() === target) {
+        sheet.deleteRow(i + 1);
+        return { success: true };
+      }
+    }
+    return { success: false, error: "Không tìm thấy nhóm hàng cần xóa!" };
+  } catch (err) {
+    Logger.log("Lỗi apiXoaNhomHang: " + err.message);
+    return { success: false, error: err.message };
+  }
+}
+
 // Đọc danh sách phiếu kiểm kho từ Google Sheets
 function apiGetDanhSachKiemKho() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();

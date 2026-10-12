@@ -4077,25 +4077,89 @@
   </div>
 
   <!-- MODAL: NHÓM HÀNG -->
-  <div id="modal-quanly-nhom" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] overflow-y-auto scrollbar-thin">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="font-bold text-sm text-slate-800"><i class="fa-solid fa-folder-tree text-indigo-600 mr-1.5"></i>Quản Lý Nhóm Hàng</h3>
-        <button type="button" onclick="dongModal('modal-quanly-nhom')" class="text-slate-400 hover:text-slate-600 text-base"><i class="fa-solid fa-xmark"></i></button>
+  <div id="modal-quanly-nhom" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center border-b border-slate-200 pb-3 shrink-0">
+        <div class="flex items-center space-x-2.5">
+          <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold shadow-2xs">
+            <i class="fa-solid fa-folder-tree"></i>
+          </span>
+          <div>
+            <h3 class="font-bold text-sm text-slate-800">Quản Lý Nhóm Hàng</h3>
+            <p class="text-[11px] text-slate-400">Xem danh mục, tạo nhóm mới, đổi tên hoặc sửa thông tin nhóm hàng</p>
+          </div>
+        </div>
+        <button type="button" onclick="dongModal('modal-quanly-nhom')" class="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center text-base transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="border rounded-xl p-3 bg-slate-50/50 max-h-64 overflow-y-auto" id="tree-nhom-container"></div>
-        <div class="space-y-2.5 p-3 border rounded-xl">
-          <h4 class="font-bold text-slate-700 border-b pb-1">Thêm Nhóm Hàng</h4>
-          <div>
-            <label class="font-semibold text-slate-600">Tên nhóm (*):</label>
-            <input type="text" id="input-nhom-ten" class="w-full border rounded-xl p-2 bg-slate-50 mt-1" placeholder="VD: Điện Thoại, Phụ Kiện...">
+
+      <!-- Modal Body -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1 overflow-hidden min-h-0">
+        <!-- Cột trái: Cây danh mục (7 cột) -->
+        <div class="md:col-span-7 flex flex-col border border-slate-200 rounded-2xl p-3 bg-slate-50/50 min-h-0 overflow-hidden">
+          <div class="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-200 shrink-0">
+            <span class="font-bold text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-sitemap text-indigo-500"></i>
+              <span>Danh sách nhóm</span>
+              <span id="badge-tong-nhom-hang" class="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-[10px] font-semibold">0</span>
+            </span>
+            <div class="relative w-36 sm:w-44">
+              <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-[10px] text-slate-400"></i>
+              <input type="text" id="search-nhom-tree" oninput="locTreeNhomHang(this.value)" placeholder="Tìm nhóm..." class="w-full pl-7 pr-2 py-1 text-xs border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            </div>
           </div>
-          <div>
-            <label class="font-semibold text-slate-600">Nhóm cha:</label>
-            <select id="input-nhom-cha" class="w-full border rounded-xl p-2 bg-slate-50 mt-1"></select>
+          <div class="flex-1 overflow-y-auto space-y-2 pt-2.5 pr-1 scrollbar-thin max-h-[380px]" id="tree-nhom-container">
+            <!-- Cây nhóm hàng được render động tại đây -->
           </div>
-          <button type="button" onclick="xacNhanLuuNhomHang()" class="w-full py-2 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 shadow transition mt-2">Lưu nhóm hàng</button>
+        </div>
+
+        <!-- Cột phải: Form Thêm / Sửa nhóm hàng (5 cột) -->
+        <div class="md:col-span-5 flex flex-col border border-slate-200 rounded-2xl p-3.5 bg-white shadow-2xs space-y-3 shrink-0">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+            <h4 id="form-nhom-title" class="font-bold text-slate-800 flex items-center gap-1.5 truncate">
+              <i class="fa-solid fa-folder-plus text-indigo-600"></i>
+              <span>Thêm Nhóm Hàng</span>
+            </h4>
+            <button type="button" id="btn-huy-sua-nhom" onclick="datLaiFormNhomHang()" class="hidden px-2 py-1 text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition font-medium shrink-0">
+              <i class="fa-solid fa-rotate-left mr-1"></i>Thêm mới
+            </button>
+          </div>
+
+          <input type="hidden" id="input-nhom-ma" value="">
+
+          <!-- Badge khi ở chế độ chỉnh sửa -->
+          <div id="box-nhom-ma-badge" class="hidden bg-amber-50 border border-amber-200 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+            <span class="text-amber-800 font-medium text-[11px]">Đang sửa nhóm: <strong id="lbl-nhom-ma" class="font-mono font-bold text-amber-900"></strong></span>
+            <span class="text-amber-700 text-[10px] bg-amber-100 px-1.5 py-0.5 rounded-md font-semibold">Chỉnh sửa</span>
+          </div>
+
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Tên nhóm hàng (*):</label>
+            <input type="text" id="input-nhom-ten" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); xacNhanLuuNhomHang(); }" class="w-full border border-slate-300 rounded-xl p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs transition font-medium text-slate-800" placeholder="VD: Điện Thoại, Phụ Kiện...">
+          </div>
+
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Thuộc nhóm cha:</label>
+            <select id="input-nhom-cha" class="w-full border border-slate-300 rounded-xl p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs transition text-slate-700"></select>
+            <p class="text-[10px] text-slate-400 mt-1">Để trống nếu đây là nhóm chính (cấp 1).</p>
+          </div>
+
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Ghi chú (tùy chọn):</label>
+            <input type="text" id="input-nhom-ghichu" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); xacNhanLuuNhomHang(); }" class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs transition text-slate-700" placeholder="Mô tả nhóm hàng...">
+          </div>
+
+          <div class="pt-2 flex items-center gap-2">
+            <button type="button" id="btn-luu-nhom" onclick="xacNhanLuuNhomHang()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-xs transition flex items-center justify-center space-x-1.5">
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span id="txt-btn-luu-nhom">Lưu nhóm hàng</span>
+            </button>
+            <button type="button" id="btn-huy-sua-nhom-2" onclick="datLaiFormNhomHang()" class="hidden px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition shrink-0">
+              Hủy
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -11978,36 +12042,424 @@ function formatVND(amount) {
     }
 
     /* Quản lý nhóm hàng */
+    let tuKhoaLocNhomTree = "";
+
     function moModalQuanLyNhomHang() {
-      renderTreeNhomHang();
+      tuKhoaLocNhomTree = "";
+      const searchEl = document.getElementById('search-nhom-tree');
+      if (searchEl) searchEl.value = "";
+      datLaiFormNhomHang();
       moModal('modal-quanly-nhom');
+    }
+
+    function locTreeNhomHang(val) {
+      tuKhoaLocNhomTree = String(val || "").toLowerCase().trim();
+      renderTreeNhomHang();
     }
 
     function renderTreeNhomHang() {
       const box = document.getElementById('tree-nhom-container');
-      const nhomCha = rawNhomHang.filter(n => !n.MaNhomCha);
-      if (!nhomCha.length) { box.innerHTML = '<p class="text-slate-400 text-center py-4">Chưa có nhóm hàng</p>'; return; }
-      box.innerHTML = nhomCha.map(cha => {
-        const con = rawNhomHang.filter(n => n.MaNhomCha === cha.MaNhom);
-        return `
-          <div class="border rounded-xl p-2 bg-white mb-1.5">
-            <p class="font-bold text-slate-800">📁 ${cha.TenNhom} <span class="text-slate-400 font-mono">(${cha.MaNhom})</span></p>
-            ${con.map(c => `<p class="pl-4 py-0.5 text-slate-600">└── ${c.TenNhom} <span class="text-slate-400 font-mono">(${c.MaNhom})</span></p>`).join('')}
+      if (!box) return;
+
+      const badgeTong = document.getElementById('badge-tong-nhom-hang');
+      const list = Array.isArray(rawNhomHang) ? rawNhomHang : [];
+      if (badgeTong) badgeTong.innerText = list.length;
+
+      if (!list.length) {
+        box.innerHTML = `
+          <div class="text-center py-8 text-slate-400">
+            <i class="fa-solid fa-folder-open text-3xl mb-2 block opacity-50"></i>
+            Chưa có nhóm hàng nào. Hãy thêm nhóm mới ở bên phải!
           </div>
         `;
-      }).join('');
+        return;
+      }
+
+      // Đếm số sản phẩm thuộc từng nhóm
+      const spCountMap = {};
+      (rawHangHoa || []).forEach(h => {
+        const m = String(h.maNhom || '').trim();
+        if (m) {
+          spCountMap[m] = (spCountMap[m] || 0) + 1;
+        }
+      });
+
+      const elMaInput = document.getElementById('input-nhom-ma');
+      const maDangSua = elMaInput ? elMaInput.value.trim() : '';
+      const kw = tuKhoaLocNhomTree;
+
+      const nhomCha = list.filter(n => !n.MaNhomCha);
+      let html = '';
+
+      nhomCha.forEach(cha => {
+        const con = list.filter(n => n.MaNhomCha === cha.MaNhom);
+        
+        // Kiểm tra lọc tìm kiếm
+        const mCha = !kw || cha.TenNhom.toLowerCase().includes(kw) || cha.MaNhom.toLowerCase().includes(kw);
+        const conFiltered = con.filter(c => !kw || c.TenNhom.toLowerCase().includes(kw) || c.MaNhom.toLowerCase().includes(kw));
+        
+        if (!mCha && !conFiltered.length) return;
+
+        const isDangSuaCha = maDangSua && maDangSua === cha.MaNhom;
+        const countCha = spCountMap[cha.MaNhom] || 0;
+
+        html += `
+          <div class="border ${isDangSuaCha ? 'border-amber-400 ring-2 ring-amber-100 bg-amber-50/20' : 'border-slate-200 bg-white'} rounded-xl overflow-hidden shadow-2xs transition hover:border-indigo-300">
+            <!-- Nhóm cha -->
+            <div class="flex items-center justify-between p-2.5 ${isDangSuaCha ? 'bg-amber-50/60' : 'bg-slate-50/70'} hover:bg-indigo-50/40 transition">
+              <div class="flex items-center space-x-2 min-w-0 flex-1 cursor-pointer" onclick="chonSuaNhomHang('${cha.MaNhom}')" title="Bấm để sửa tên nhóm này">
+                <span class="w-6 h-6 rounded-lg ${isDangSuaCha ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'} flex items-center justify-center shrink-0 text-xs font-bold">
+                  <i class="fa-solid fa-folder"></i>
+                </span>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="font-bold text-slate-800 truncate ${isDangSuaCha ? 'text-amber-900' : ''}">${cha.TenNhom}</span>
+                    <span class="text-[10px] text-slate-400 font-mono">(${cha.MaNhom})</span>
+                    ${isDangSuaCha ? '<span class="text-[9px] bg-amber-500 text-white px-1.5 py-0.2 rounded-full font-semibold shrink-0">Đang sửa</span>' : ''}
+                  </div>
+                  <span class="text-[10px] text-slate-500">${countCha} sản phẩm</span>
+                </div>
+              </div>
+              <div class="flex items-center space-x-1 shrink-0 ml-2">
+                <button type="button" onclick="chonSuaNhomHang('${cha.MaNhom}')" title="Sửa tên nhóm" class="px-2 py-1 rounded-lg bg-white border border-slate-200 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-300 text-slate-600 flex items-center space-x-1 text-[11px] font-medium transition shadow-2xs">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                  <span>Sửa</span>
+                </button>
+                <button type="button" onclick="themNhomCon('${cha.MaNhom}')" title="Thêm nhóm con" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 text-slate-600 flex items-center justify-center transition shadow-2xs">
+                  <i class="fa-solid fa-plus text-xs"></i>
+                </button>
+                <button type="button" onclick="xacNhanXoaNhomHang('${cha.MaNhom}')" title="Xóa nhóm" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 text-slate-400 flex items-center justify-center transition shadow-2xs">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Các nhóm con -->
+            ${con.map(c => {
+              if (kw && !mCha && !conFiltered.some(fc => fc.MaNhom === c.MaNhom)) return '';
+              const isDangSuaCon = maDangSua && maDangSua === c.MaNhom;
+              const countCon = spCountMap[c.MaNhom] || 0;
+              return `
+                <div class="flex items-center justify-between py-1.5 px-3 pl-7 border-t border-slate-100 ${isDangSuaCon ? 'bg-amber-50/40 ring-1 ring-inset ring-amber-200' : 'hover:bg-slate-50/80'} transition">
+                  <div class="flex items-center space-x-2 min-w-0 flex-1 cursor-pointer" onclick="chonSuaNhomHang('${c.MaNhom}')" title="Bấm để sửa tên nhóm này">
+                    <i class="fa-solid fa-turn-up rotate-90 text-slate-300 text-xs shrink-0"></i>
+                    <span class="w-5 h-5 rounded-md ${isDangSuaCon ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'} flex items-center justify-center shrink-0 text-[10px]">
+                      <i class="fa-solid fa-tag"></i>
+                    </span>
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center space-x-1.5">
+                        <span class="font-medium text-slate-700 truncate ${isDangSuaCon ? 'font-bold text-amber-900' : ''}">${c.TenNhom}</span>
+                        <span class="text-[10px] text-slate-400 font-mono">(${c.MaNhom})</span>
+                        ${isDangSuaCon ? '<span class="text-[9px] bg-amber-500 text-white px-1.5 py-0.2 rounded-full font-semibold shrink-0">Đang sửa</span>' : ''}
+                      </div>
+                      <span class="text-[10px] text-slate-400">${countCon} sản phẩm</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-1 shrink-0 ml-2">
+                    <button type="button" onclick="chonSuaNhomHang('${c.MaNhom}')" title="Sửa tên nhóm" class="px-2 py-0.5 rounded-md bg-white border border-slate-200 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-300 text-slate-600 flex items-center space-x-1 text-[10px] font-medium transition">
+                      <i class="fa-solid fa-pen-to-square"></i>
+                      <span>Sửa</span>
+                    </button>
+                    <button type="button" onclick="xacNhanXoaNhomHang('${c.MaNhom}')" title="Xóa nhóm" class="w-6 h-6 rounded-md bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 text-slate-400 flex items-center justify-center transition">
+                      <i class="fa-solid fa-trash-can text-[10px]"></i>
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      });
+
+      // Nhóm mồ côi (nếu có MaNhomCha nhưng cha không tồn tại trong danh sách)
+      const orphanList = list.filter(n => n.MaNhomCha && !nhomCha.some(p => p.MaNhom === n.MaNhomCha));
+      if (orphanList.length) {
+        orphanList.forEach(orp => {
+          if (kw && !orp.TenNhom.toLowerCase().includes(kw) && !orp.MaNhom.toLowerCase().includes(kw)) return;
+          const isDangSua = maDangSua && maDangSua === orp.MaNhom;
+          const count = spCountMap[orp.MaNhom] || 0;
+          html += `
+            <div class="border ${isDangSua ? 'border-amber-400 ring-2 ring-amber-100 bg-amber-50/20' : 'border-slate-200 bg-white'} rounded-xl p-2.5 flex items-center justify-between shadow-2xs">
+              <div class="flex items-center space-x-2 min-w-0 flex-1 cursor-pointer" onclick="chonSuaNhomHang('${orp.MaNhom}')" title="Bấm để sửa tên nhóm này">
+                <span class="w-6 h-6 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 text-xs">
+                  <i class="fa-solid fa-tag"></i>
+                </span>
+                <div class="min-w-0 flex-1">
+                  <span class="font-bold text-slate-800 truncate">${orp.TenNhom}</span>
+                  <span class="text-[10px] text-slate-400 font-mono">(${orp.MaNhom})</span>
+                  <span class="text-[10px] text-slate-500 block">${count} sản phẩm</span>
+                </div>
+              </div>
+              <div class="flex items-center space-x-1 shrink-0 ml-2">
+                <button type="button" onclick="chonSuaNhomHang('${orp.MaNhom}')" class="px-2 py-1 rounded-lg bg-white border border-slate-200 hover:bg-amber-50 hover:text-amber-600 text-slate-600 text-[11px] font-medium flex items-center space-x-1">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                  <span>Sửa</span>
+                </button>
+                <button type="button" onclick="xacNhanXoaNhomHang('${orp.MaNhom}')" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 text-slate-400 flex items-center justify-center">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      box.innerHTML = html || `
+        <div class="text-center py-8 text-slate-400">
+          <i class="fa-solid fa-magnifying-glass text-2xl mb-2 block opacity-50"></i>
+          Không tìm thấy nhóm hàng phù hợp với từ khóa "${kw}"
+        </div>
+      `;
+    }
+
+    function chonSuaNhomHang(maNhom) {
+      const target = (rawNhomHang || []).find(n => n.MaNhom === maNhom);
+      if (!target) return;
+
+      const elMa = document.getElementById('input-nhom-ma');
+      const elTen = document.getElementById('input-nhom-ten');
+      const elCha = document.getElementById('input-nhom-cha');
+      const elGhiChu = document.getElementById('input-nhom-ghichu');
+      const elTitle = document.getElementById('form-nhom-title');
+      const elTxtBtn = document.getElementById('txt-btn-luu-nhom');
+      const elBtnHuy = document.getElementById('btn-huy-sua-nhom');
+      const elBtnHuy2 = document.getElementById('btn-huy-sua-nhom-2');
+      const elBoxBadge = document.getElementById('box-nhom-ma-badge');
+      const elLblMa = document.getElementById('lbl-nhom-ma');
+
+      if (elMa) elMa.value = target.MaNhom;
+      if (elTen) elTen.value = target.TenNhom;
+      if (elGhiChu) elGhiChu.value = target.GhiChu || '';
+
+      if (elLblMa) elLblMa.innerText = target.MaNhom;
+      if (elBoxBadge) elBoxBadge.classList.remove('hidden');
+      if (elBtnHuy) elBtnHuy.classList.remove('hidden');
+      if (elBtnHuy2) elBtnHuy2.classList.remove('hidden');
+
+      if (elTitle) {
+        elTitle.innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-500"></i><span>Sửa Nhóm: <strong class="text-amber-800">${target.TenNhom}</strong></span>`;
+      }
+      if (elTxtBtn) elTxtBtn.innerText = "Lưu thay đổi";
+
+      // Nạp danh sách nhóm cha loại trừ chính nhóm đang sửa
+      if (elCha) {
+        const nhomChaHopLe = (rawNhomHang || []).filter(n => !n.MaNhomCha && n.MaNhom !== target.MaNhom);
+        let opts = '<option value="">(Không chọn nhóm cha - Là nhóm chính)</option>';
+        nhomChaHopLe.forEach(p => {
+          opts += `<option value="${p.MaNhom}" ${p.MaNhom === target.MaNhomCha ? 'selected' : ''}>📁 ${p.TenNhom}</option>`;
+        });
+        elCha.innerHTML = opts;
+      }
+
+      renderTreeNhomHang();
+
+      if (elTen) {
+        elTen.focus();
+        elTen.select();
+      }
+    }
+
+    function datLaiFormNhomHang() {
+      const elMa = document.getElementById('input-nhom-ma');
+      const elTen = document.getElementById('input-nhom-ten');
+      const elCha = document.getElementById('input-nhom-cha');
+      const elGhiChu = document.getElementById('input-nhom-ghichu');
+      const elTitle = document.getElementById('form-nhom-title');
+      const elTxtBtn = document.getElementById('txt-btn-luu-nhom');
+      const elBtnHuy = document.getElementById('btn-huy-sua-nhom');
+      const elBtnHuy2 = document.getElementById('btn-huy-sua-nhom-2');
+      const elBoxBadge = document.getElementById('box-nhom-ma-badge');
+
+      if (elMa) elMa.value = "";
+      if (elTen) elTen.value = "";
+      if (elGhiChu) elGhiChu.value = "";
+
+      if (elBoxBadge) elBoxBadge.classList.add('hidden');
+      if (elBtnHuy) elBtnHuy.classList.add('hidden');
+      if (elBtnHuy2) elBtnHuy2.classList.add('hidden');
+
+      if (elTitle) {
+        elTitle.innerHTML = `<i class="fa-solid fa-folder-plus text-indigo-600"></i><span>Thêm Nhóm Hàng</span>`;
+      }
+      if (elTxtBtn) elTxtBtn.innerText = "Lưu nhóm hàng";
+
+      if (elCha) {
+        const nhomCha = (rawNhomHang || []).filter(n => !n.MaNhomCha);
+        let opts = '<option value="">(Không chọn nhóm cha - Là nhóm chính)</option>';
+        nhomCha.forEach(p => {
+          opts += `<option value="${p.MaNhom}">📁 ${p.TenNhom}</option>`;
+        });
+        elCha.innerHTML = opts;
+      }
+
+      renderTreeNhomHang();
+    }
+
+    function themNhomCon(maNhomCha) {
+      datLaiFormNhomHang();
+      const elCha = document.getElementById('input-nhom-cha');
+      const elTen = document.getElementById('input-nhom-ten');
+      const elTitle = document.getElementById('form-nhom-title');
+
+      if (elCha) elCha.value = maNhomCha;
+      const chaObj = (rawNhomHang || []).find(n => n.MaNhom === maNhomCha);
+      if (elTitle && chaObj) {
+        elTitle.innerHTML = `<i class="fa-solid fa-tag text-indigo-600"></i><span>Thêm nhóm con cho: <strong class="text-indigo-800">${chaObj.TenNhom}</strong></span>`;
+      }
+      if (elTen) {
+        elTen.focus();
+      }
     }
 
     function xacNhanLuuNhomHang() {
-      const ten = document.getElementById('input-nhom-ten').value.trim();
-      if (!ten) return showNotification("Vui lòng nhập tên nhóm!", true);
-      const code = "NH" + ("000" + (rawNhomHang.length + 1)).slice(-3);
-      rawNhomHang.push({ MaNhom: code, TenNhom: ten, MaNhomCha: document.getElementById('input-nhom-cha').value });
-      document.getElementById('input-nhom-ten').value = "";
-      showNotification("Đã thêm nhóm hàng mới!");
-      loadNhomHang();
-      setTimeout(renderTreeNhomHang, 150);
+      const elMa = document.getElementById('input-nhom-ma');
+      const elTen = document.getElementById('input-nhom-ten');
+      const elCha = document.getElementById('input-nhom-cha');
+      const elGhiChu = document.getElementById('input-nhom-ghichu');
+
+      const maNhom = elMa ? elMa.value.trim() : '';
+      const ten = elTen ? elTen.value.trim() : '';
+      const maCha = elCha ? elCha.value.trim() : '';
+      const ghiChu = elGhiChu ? elGhiChu.value.trim() : '';
+
+      if (!ten) return showNotification("Vui lòng nhập tên nhóm hàng!", true);
+
+      const runner = (typeof google !== 'undefined' && google.script && google.script.run)
+        ? google.script.run : window._mockGAS;
+
+      if (maNhom) {
+        // === CHẾ ĐỘ SỬA TÊN / THÔNG TIN NHÓM HÀNG ===
+        const target = (rawNhomHang || []).find(n => n.MaNhom === maNhom);
+        if (!target) return showNotification("Không tìm thấy nhóm hàng cần sửa!", true);
+
+        const oldTen = target.TenNhom;
+        target.TenNhom = ten;
+        target.MaNhomCha = maCha;
+        target.GhiChu = ghiChu;
+
+        // Cập nhật các sản phẩm nếu trước đây lưu mã nhóm dạng Tên nhóm cũ
+        if (Array.isArray(rawHangHoa)) {
+          rawHangHoa.forEach(h => {
+            if (String(h.maNhom || '').trim().toLowerCase() === String(oldTen).toLowerCase()) {
+              h.maNhom = maNhom;
+            }
+          });
+        }
+
+        // Cập nhật Supabase dm_nhomhang
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          supabaseClient.from('dm_nhomhang').update({
+            ten_nhom: ten,
+            ma_nhom_cha: maCha || null,
+            ghi_chu: ghiChu || null
+          }).eq('ma_nhom', maNhom).then(({ error }) => {
+            if (error) console.warn("Lỗi cập nhật Supabase dm_nhomhang:", error);
+          });
+        }
+
+        // Cập nhật Google Sheets
+        if (runner && runner.apiLuuNhomHang) {
+          runner.apiLuuNhomHang({ maNhom: maNhom, tenNhom: ten, maNhomCha: maCha, ghiChu: ghiChu });
+        }
+
+        showNotification("Đã cập nhật tên nhóm hàng thành công: " + ten);
+      } else {
+        // === CHẾ ĐỘ TẠO MỚI NHÓM HÀNG ===
+        const maxNum = (rawNhomHang || []).reduce((max, n) => {
+          const m = String(n.MaNhom || '').match(/NH(\d+)/i);
+          return m ? Math.max(max, parseInt(m[1], 10)) : max;
+        }, 0);
+        const code = "NH" + ("000" + (maxNum + 1)).slice(-3);
+
+        const newObj = { MaNhom: code, TenNhom: ten, MaNhomCha: maCha, GhiChu: ghiChu };
+        rawNhomHang.push(newObj);
+
+        // Lưu lên Supabase
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          supabaseClient.from('dm_nhomhang').insert([{
+            ma_nhom: code,
+            ten_nhom: ten,
+            ma_nhom_cha: maCha || null,
+            ghi_chu: ghiChu || null
+          }]).then(({ error }) => {
+            if (error) console.warn("Lỗi thêm Supabase dm_nhomhang:", error);
+          });
+        }
+
+        // Lưu lên Google Sheets
+        if (runner && runner.apiLuuNhomHang) {
+          runner.apiLuuNhomHang({ maNhom: code, tenNhom: ten, maNhomCha: maCha, ghiChu: ghiChu });
+        }
+
+        showNotification("Đã thêm nhóm hàng mới: " + ten);
+      }
+
+      // Cập nhật tất cả các dropdown nhóm hàng trên toàn bộ giao diện
+      hienThiSelectNhomHang(rawNhomHang);
+
+      // Cập nhật lại bảng danh sách hàng hóa
+      if (typeof locDanhSachHangHoa === 'function') {
+        locDanhSachHangHoa(false);
+      }
+
+      // Đặt lại form về chế độ thêm mới và cập nhật cây nhóm
+      datLaiFormNhomHang();
     }
+
+    function xacNhanXoaNhomHang(maNhom) {
+      const target = (rawNhomHang || []).find(n => n.MaNhom === maNhom);
+      if (!target) return;
+
+      // Kiểm tra nếu có nhóm con
+      const hasCon = (rawNhomHang || []).some(n => n.MaNhomCha === maNhom);
+      if (hasCon) {
+        return showNotification("Không thể xóa nhóm này vì đang chứa nhóm con trực thuộc!", true);
+      }
+
+      // Đếm số hàng hóa thuộc nhóm này
+      const spCount = (rawHangHoa || []).filter(h => 
+        String(h.maNhom || '').toUpperCase() === String(maNhom).toUpperCase() ||
+        String(h.maNhom || '').toLowerCase() === String(target.TenNhom).toLowerCase()
+      ).length;
+
+      const msg = spCount > 0 
+        ? `Nhóm [${target.TenNhom}] hiện đang có ${spCount} sản phẩm. Bạn có chắc chắn muốn xóa nhóm này không?`
+        : `Bạn có chắc chắn muốn xóa nhóm [${target.TenNhom}] không?`;
+
+      if (!confirm(msg)) return;
+
+      // Xóa khỏi rawNhomHang
+      rawNhomHang = rawNhomHang.filter(n => n.MaNhom !== maNhom);
+
+      // Xóa trên Supabase
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        supabaseClient.from('dm_nhomhang').delete().eq('ma_nhom', maNhom).then(({ error }) => {
+          if (error) console.warn("Lỗi xóa nhóm Supabase:", error);
+        });
+      }
+
+      // Xóa trên Google Sheets
+      const runner = (typeof google !== 'undefined' && google.script && google.script.run) 
+        ? google.script.run : window._mockGAS;
+      if (runner && runner.apiXoaNhomHang) {
+        runner.apiXoaNhomHang(maNhom);
+      }
+
+      hienThiSelectNhomHang(rawNhomHang);
+      if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
+      datLaiFormNhomHang();
+      renderTreeNhomHang();
+      showNotification("Đã xóa nhóm hàng: " + target.TenNhom);
+    }
+
+    window.moModalQuanLyNhomHang = moModalQuanLyNhomHang;
+    window.locTreeNhomHang = locTreeNhomHang;
+    window.renderTreeNhomHang = renderTreeNhomHang;
+    window.chonSuaNhomHang = chonSuaNhomHang;
+    window.datLaiFormNhomHang = datLaiFormNhomHang;
+    window.themNhomCon = themNhomCon;
+    window.xacNhanLuuNhomHang = xacNhanLuuNhomHang;
+    window.xacNhanXoaNhomHang = xacNhanXoaNhomHang;
 
     function taiFileMauHangHoa() {
       const sampleData = [
