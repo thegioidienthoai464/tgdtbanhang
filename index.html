@@ -1983,6 +1983,7 @@
                 <select id="dathang-hinhthuc-coc" onchange="thayDoiHinhThucCoc(this.value)" class="w-full border rounded-xl p-2 text-xs bg-slate-50 mt-1 font-medium">
                   <option value="TIEN_MAT">💵 Quỹ tiền mặt</option>
                   <option value="TAI_KHOAN">🏦 Quỹ tài khoản ngân hàng</option>
+                  <option value="THE">💳 Quẹt thẻ POS</option>
                 </select>
               </div>
               <div id="box-dathang-nganhang" class="hidden">
@@ -2084,25 +2085,34 @@
             <select id="pos-hinhthuc" onchange="onChangeHinhThucTT(this.value)" class="w-full border rounded-xl p-2 text-xs bg-slate-50 mt-1 font-medium">
               <option value="TIEN_MAT">💵 Tiền mặt</option>
               <option value="TAI_KHOAN">🏦 Chuyển khoản ngân hàng</option>
-              <option value="HON_HOP">💳 Tiền mặt + Chuyển khoản (Hỗn hợp)</option>
+              <option value="THE">💳 Thẻ (Quẹt thẻ POS)</option>
+              <option value="HON_HOP">🔀 Kết hợp 3 phương thức (Tiền mặt + Chuyển khoản + Thẻ)</option>
             </select>
           </div>
-          <!-- KHỐI THANH TOÁN HỖN HỢP -->
+          <!-- KHỐI THANH TOÁN HỖN HỢP (KẾT HỢP 3 PHƯƠNG THỨC) -->
           <div id="box-pos-honhop" class="hidden space-y-2 p-2.5 bg-blue-50/70 rounded-2xl border border-blue-200">
-            <div class="grid grid-cols-2 gap-2">
+            <div class="text-[10px] font-bold text-blue-800 flex items-center justify-between">
+              <span><i class="fa-solid fa-calculator mr-1"></i>Chia tiền theo 3 phương thức:</span>
+              <span id="pos-honhop-tong" class="font-mono text-blue-700 text-[11px] font-bold">0 đ</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
               <div>
-                <label class="text-[10px] font-bold text-slate-700">Tiền mặt (VNĐ):</label>
-                <input type="number" id="pos-tienmat-val" oninput="tinhTienHonHopPOS('TM')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-slate-800 bg-white">
+                <label class="text-[10px] font-bold text-slate-700">💵 Tiền mặt:</label>
+                <input type="number" id="pos-tienmat-val" oninput="tinhTienHonHopPOS('TM')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-slate-800 bg-white" placeholder="0">
               </div>
               <div>
-                <label class="text-[10px] font-bold text-slate-700">Chuyển khoản (VNĐ):</label>
-                <input type="number" id="pos-chuyenkhoan-val" oninput="tinhTienHonHopPOS('CK')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-blue-600 bg-white">
+                <label class="text-[10px] font-bold text-blue-700">🏦 Chuyển khoản:</label>
+                <input type="number" id="pos-chuyenkhoan-val" oninput="tinhTienHonHopPOS('CK')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-blue-600 bg-white" placeholder="0">
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-purple-700">💳 Quẹt thẻ POS:</label>
+                <input type="number" id="pos-the-val" oninput="tinhTienHonHopPOS('THE')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-purple-600 bg-white" placeholder="0">
               </div>
             </div>
           </div>
-          <!-- 👉 KHỐI CHỌN TÀI KHOẢN NGÂN HÀNG (Tự động ẩn/hiện khi chọn Chuyển khoản) -->
+          <!-- 👉 KHỐI CHỌN TÀI KHOẢN NGÂN HÀNG (Tự động ẩn/hiện khi chọn Chuyển khoản, Thẻ hoặc Hỗn hợp) -->
           <div id="box-chon-nganhang" class="hidden">
-            <label class="text-[11px] font-semibold text-slate-600">Chọn tài khoản ngân hàng nhận:</label>
+            <label class="text-[11px] font-semibold text-slate-600">Chọn tài khoản ngân hàng / Máy POS nhận:</label>
             <select id="pos-nganhang-nhan" class="w-full border rounded-xl p-2 text-xs bg-slate-50 mt-1 font-medium"></select>
           </div>
           <button type="button" id="btn-thanh-toan-pos" onclick="xacNhanThanhToanPOS()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md transition flex items-center justify-center space-x-1.5">
@@ -3769,10 +3779,16 @@
 
       <!-- Modal Footer -->
       <div class="flex justify-between items-center space-x-2 pt-3 border-t border-slate-100 shrink-0">
-        <button type="button" id="ctdh-btn-sua-thongtin" onclick="moModalSuaThongTinDonHang()" class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-xs font-bold border border-amber-200 transition flex items-center space-x-1.5 shadow-2xs">
-          <i class="fa-solid fa-pen-to-square text-amber-600"></i>
-          <span>Sửa Ngày Giờ & Người Bán</span>
-        </button>
+        <div class="flex items-center space-x-2">
+          <button type="button" id="ctdh-btn-sua-thongtin" onclick="moModalSuaThongTinDonHang()" class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-xs font-bold border border-amber-200 transition flex items-center space-x-1.5 shadow-2xs">
+            <i class="fa-solid fa-pen-to-square text-amber-600"></i>
+            <span>Sửa Ngày Giờ & Người Bán</span>
+          </button>
+          <button type="button" id="ctdh-btn-in-hoadon" onclick="inHoaDonBanHang(window.currentViewingDonHang ? window.currentViewingDonHang.maDonHang : null)" class="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold border border-blue-200 transition flex items-center space-x-1.5 shadow-2xs">
+            <i class="fa-solid fa-print text-blue-600"></i>
+            <span>In Hóa Đơn</span>
+          </button>
+        </div>
         <button type="button" onclick="dongModal('modal-chitiet-donhang')" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition">
           Đóng
         </button>
@@ -6342,16 +6358,34 @@ function formatVND(amount) {
         if (boxBank) boxBank.classList.remove('hidden');
         if (boxHonHop) boxHonHop.classList.add('hidden');
         if (selBank) populatePosBankOptions(selBank);
+        const inpPay = document.getElementById('pos-khachtra');
+        if (inpPay && (!inpPay.value || Number(inpPay.value) === 0)) inpPay.value = totalPhaiTra;
+      } else if (val === 'THE') {
+        if (boxBank) boxBank.classList.remove('hidden');
+        if (boxHonHop) boxHonHop.classList.add('hidden');
+        if (selBank) populatePosBankOptions(selBank);
+        const inpPay = document.getElementById('pos-khachtra');
+        if (inpPay && (!inpPay.value || Number(inpPay.value) === 0)) inpPay.value = totalPhaiTra;
       } else if (val === 'HON_HOP') {
         if (boxBank) boxBank.classList.remove('hidden');
         if (boxHonHop) boxHonHop.classList.remove('hidden');
         if (selBank) populatePosBankOptions(selBank);
-        document.getElementById('pos-tienmat-val').value = Math.floor(totalPhaiTra / 2);
-        document.getElementById('pos-chuyenkhoan-val').value = totalPhaiTra - Math.floor(totalPhaiTra / 2);
-        document.getElementById('pos-khachtra').value = totalPhaiTra;
+        const elTM = document.getElementById('pos-tienmat-val');
+        const elCK = document.getElementById('pos-chuyenkhoan-val');
+        const elTHE = document.getElementById('pos-the-val');
+        const currentSum = (Number(elTM?.value) || 0) + (Number(elCK?.value) || 0) + (Number(elTHE?.value) || 0);
+        if (currentSum === 0) {
+          if (elTM) elTM.value = totalPhaiTra;
+          if (elCK) elCK.value = 0;
+          if (elTHE) elTHE.value = 0;
+        }
+        tinhTienHonHopPOS();
       } else {
+        // TIEN_MAT
         if (boxBank) boxBank.classList.add('hidden');
         if (boxHonHop) boxHonHop.classList.add('hidden');
+        const inpPay = document.getElementById('pos-khachtra');
+        if (inpPay && (!inpPay.value || Number(inpPay.value) === 0)) inpPay.value = totalPhaiTra;
       }
     }
 
@@ -6379,9 +6413,12 @@ function formatVND(amount) {
     function tinhTienHonHopPOS(changed) {
       const tm = Number(document.getElementById('pos-tienmat-val')?.value) || 0;
       const ck = Number(document.getElementById('pos-chuyenkhoan-val')?.value) || 0;
-      const totalPay = tm + ck;
+      const the = Number(document.getElementById('pos-the-val')?.value) || 0;
+      const totalPay = tm + ck + the;
       const inputPay = document.getElementById('pos-khachtra');
       if (inputPay) inputPay.value = totalPay;
+      const elHonHopTong = document.getElementById('pos-honhop-tong');
+      if (elHonHopTong) elHonHopTong.innerText = totalPay.toLocaleString('vi-VN') + ' đ';
     }
 
     // Đổ danh sách vào bảng hiển thị trong Modal Quản lý tài khoản NH
@@ -6674,9 +6711,14 @@ function formatVND(amount) {
       
       const paymentType = document.getElementById('pos-loai-thanhtoan')?.value || 'FULL';
       const inputPay = document.getElementById('pos-khachtra');
+      const htPOS = document.getElementById('pos-hinhthuc')?.value || 'TIEN_MAT';
       if (inputPay) {
         if (paymentType === 'FULL') {
-          inputPay.value = finalPrice;
+          if (htPOS === 'HON_HOP') {
+            tinhTienHonHopPOS();
+          } else {
+            inputPay.value = finalPrice;
+          }
         } else if (paymentType === 'DEBT') {
           inputPay.value = 0;
         }
@@ -6700,10 +6742,12 @@ function formatVND(amount) {
 
       let tienMatHonHop = 0;
       let chuyenKhoanHonHop = 0;
+      let theHonHop = 0;
       if (hinhThucTTVal === 'HON_HOP') {
         tienMatHonHop = Number(document.getElementById('pos-tienmat-val')?.value) || 0;
         chuyenKhoanHonHop = Number(document.getElementById('pos-chuyenkhoan-val')?.value) || 0;
-        pay = tienMatHonHop + chuyenKhoanHonHop;
+        theHonHop = Number(document.getElementById('pos-the-val')?.value) || 0;
+        pay = tienMatHonHop + chuyenKhoanHonHop + theHonHop;
       } else if (loaiTT === 'DEBT') {
         pay = 0;
       }
@@ -6716,9 +6760,18 @@ function formatVND(amount) {
       }
 
       const chiNhanhHienTai = document.getElementById('select-chinhanh')?.value || currentChiNhanh || "CN01: Trụ sở chính";
-      const nganHangNhanChon = (hinhThucTTVal === 'TAI_KHOAN' || hinhThucTTVal === 'HON_HOP') 
-        ? (document.getElementById('pos-nganhang-nhan')?.value || 'Chuyển khoản ngân hàng') 
+      const nganHangNhanChon = (hinhThucTTVal === 'TAI_KHOAN' || hinhThucTTVal === 'THE' || hinhThucTTVal === 'HON_HOP') 
+        ? (document.getElementById('pos-nganhang-nhan')?.value || (hinhThucTTVal === 'THE' ? 'Máy POS / Thẻ' : 'Chuyển khoản')) 
         : '';
+
+      let moTaHonHop = '';
+      if (hinhThucTTVal === 'HON_HOP') {
+        const pArr = [];
+        if (tienMatHonHop > 0) pArr.push(`TM: ${tienMatHonHop.toLocaleString()}đ`);
+        if (chuyenKhoanHonHop > 0) pArr.push(`CK: ${chuyenKhoanHonHop.toLocaleString()}đ${nganHangNhanChon ? ' (' + nganHangNhanChon + ')' : ''}`);
+        if (theHonHop > 0) pArr.push(`Thẻ: ${theHonHop.toLocaleString()}đ`);
+        moTaHonHop = pArr.join(' | ');
+      }
 
       const kh = (typeof localData !== 'undefined' && localData.doiTac ? localData.doiTac : (typeof rawKHList !== 'undefined' ? rawKHList : [])).find(k => (k.maDoiTac || k.maKH) === maKH);
       const tenKH = kh ? kh.tenDoiTac : (document.getElementById('pos-kh-search')?.value || "Khách lẻ");
@@ -6759,9 +6812,10 @@ function formatVND(amount) {
         khachPhaiTra: finalPrice,
         khachTra: pay,
         hinhThucTT: hinhThucTTVal,
-        nganHangNhan: nganHangNhanChon,
+        nganHangNhan: (hinhThucTTVal === 'HON_HOP' && moTaHonHop) ? moTaHonHop : nganHangNhanChon,
         tienMatHonHop: tienMatHonHop,
         chuyenKhoanHonHop: chuyenKhoanHonHop,
+        theHonHop: theHonHop,
         chiTietSanPham: JSON.parse(JSON.stringify(posCart)),
         trangThai: "Hoàn thành",
         nhanVien: nhanVienField,
@@ -6878,7 +6932,22 @@ function formatVND(amount) {
               ma_doi_tuong: orderPayload.maKH || "KL",
               ma_chung_tu: orderPayload.maDonHang,
               trang_thai: "DaThanhToan",
-              ghi_chu: `Thu chuyển khoản [${nganHangNhanChon}] đơn hàng ${orderPayload.maDonHang} - KH: ${orderPayload.tenKH}`
+              ghi_chu: `Thu chuyển khoản [${nganHangNhanChon || 'Ngân hàng'}] đơn hàng ${orderPayload.maDonHang} - KH: ${orderPayload.tenKH}`
+            });
+          }
+          if (theHonHop > 0) {
+            listPhieuThu.push({
+              chi_nhanh: String(orderPayload.chiNhanh || '').slice(0, 100),
+              ma_phieu: ("PT" + (Date.now()+2).toString().slice(-6) + "C").slice(0, 50),
+              loai_phieu: "THU",
+              loai_quy: "THE",
+              ngay_gd: ngayBanISO,
+              so_tien: theHonHop,
+              doi_tuong: "Khách hàng",
+              ma_doi_tuong: orderPayload.maKH || "KL",
+              ma_chung_tu: orderPayload.maDonHang,
+              trang_thai: "DaThanhToan",
+              ghi_chu: `Thu quẹt thẻ POS${nganHangNhanChon ? ' [' + nganHangNhanChon + ']' : ''} đơn hàng ${orderPayload.maDonHang} - KH: ${orderPayload.tenKH}`
             });
           }
         } else if (pay > 0) {
@@ -6893,7 +6962,7 @@ function formatVND(amount) {
             ma_doi_tuong: orderPayload.maKH || "KL",
             ma_chung_tu: orderPayload.maDonHang,
             trang_thai: "DaThanhToan",
-            ghi_chu: `Thu tiền bán hàng đơn ${orderPayload.maDonHang} - KH: ${orderPayload.tenKH}` + (nganHangNhanChon ? ` [${nganHangNhanChon}]` : '')
+            ghi_chu: (hinhThucTTVal === 'THE' ? `Thu quẹt thẻ POS` : (hinhThucTTVal === 'TAI_KHOAN' ? `Thu chuyển khoản` : `Thu tiền mặt`)) + ` đơn ${orderPayload.maDonHang} - KH: ${orderPayload.tenKH}` + (nganHangNhanChon ? ` [${nganHangNhanChon}]` : '')
           });
         }
 
@@ -6978,6 +7047,10 @@ function formatVND(amount) {
         if (inpTM) inpTM.value = 0;
         const inpCK = document.getElementById('pos-chuyenkhoan-val');
         if (inpCK) inpCK.value = 0;
+        const inpThe = document.getElementById('pos-the-val');
+        if (inpThe) inpThe.value = 0;
+        const elHonHopTong = document.getElementById('pos-honhop-tong');
+        if (elHonHopTong) elHonHopTong.innerText = '0 đ';
         const elTong = document.getElementById('pos-tongtien');
         if (elTong) elTong.innerText = '0 đ';
         const elPhaiTra = document.getElementById('pos-khachphaitra');
@@ -6999,6 +7072,15 @@ function formatVND(amount) {
           thongBao += ` (Tiền thừa: ${Math.abs(chenhLech).toLocaleString()} đ)`;
         }
         showNotification(thongBao, false);
+
+        // Tự động mở cửa sổ In Hóa Đơn Bán Hàng cho thu ngân
+        try {
+          if (typeof inHoaDonBanHang === 'function') {
+            inHoaDonBanHang(orderPayload);
+          }
+        } catch(ePrint) {
+          console.warn("Lỗi in hóa đơn:", ePrint);
+        }
 
       } catch (errPOS) {
         console.error("Lỗi trong quá trình thanh toán POS:", errPOS);
@@ -16666,9 +16748,14 @@ function formatVND(amount) {
       
       const type = document.getElementById('pos-loai-thanhtoan')?.value || 'FULL';
       const inputPay = document.getElementById('pos-khachtra');
+      const htPOS = document.getElementById('pos-hinhthuc')?.value || 'TIEN_MAT';
       if (inputPay) {
         if (type === 'FULL') {
-          inputPay.value = finalPrice;
+          if (htPOS === 'HON_HOP') {
+            tinhTienHonHopPOS();
+          } else {
+            inputPay.value = finalPrice;
+          }
         } else if (type === 'DEBT') {
           inputPay.value = 0;
         }
@@ -16906,6 +16993,16 @@ function formatVND(amount) {
         let isThu = String(p.loaiPhieu || "").trim().toUpperCase() === 'THU';
         let isChecked = selectedSoQuySet.has(p.maPhieu);
         
+        let lqRaw = String(p.quyNguon || p.loaiQuy || '').toUpperCase();
+        let lqBadge = p.quyNguon || p.loaiQuy || '';
+        if (lqRaw === 'TIEN_MAT' || lqRaw.includes('TIỀN MẶT') || lqRaw.includes('TIEN MAT')) {
+          lqBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fa-solid fa-money-bill-1 mr-1"></i>Tiền mặt</span>';
+        } else if (lqRaw === 'THE' || lqRaw.includes('THẺ') || lqRaw.includes('POS')) {
+          lqBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200"><i class="fa-solid fa-credit-card mr-1"></i>Thẻ POS</span>';
+        } else if (lqRaw === 'TAI_KHOAN' || lqRaw.includes('NGAN_HANG') || lqRaw.includes('TÀI KHOẢN')) {
+          lqBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200"><i class="fa-solid fa-building-columns mr-1"></i>${p.quyNguon || p.loaiQuy || 'Ngân hàng'}</span>`;
+        }
+
         return `
           <tr class="hover:bg-amber-50/30 transition border-b border-slate-100 text-xs ${isChecked ? 'bg-blue-50/40' : ''}">
             <td class="p-2.5 text-center whitespace-nowrap">
@@ -16923,7 +17020,7 @@ function formatVND(amount) {
                 ${isThu ? 'Thu tiền' : 'Chi tiền'}
               </span>
             </td>
-            <td class="px-2.5 py-2 text-slate-700 font-medium whitespace-nowrap">${p.quyNguon || p.loaiQuy || ''}</td>
+            <td class="px-2.5 py-2 text-slate-700 font-medium whitespace-nowrap">${lqBadge}</td>
             <td class="px-2.5 py-2 text-right font-mono font-extrabold whitespace-nowrap ${isThu ? 'text-emerald-600' : 'text-rose-600'}">
               ${isThu ? '+' : '-'}${tienVal.toLocaleString()} đ
             </td>
@@ -24065,6 +24162,7 @@ let danhSachTamXuatExcel = [];
             <td class="p-3 text-center">${trangThaiBadge}</td>
             <td class="p-3 text-center space-x-1">
               <button type="button" onclick="xemChiTietDonHang('${d.maDonHang}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-blue-600 rounded-lg text-xs font-semibold">Xem</button>
+              <button type="button" onclick="inHoaDonBanHang('${d.maDonHang}')" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold" title="In hóa đơn"><i class="fa-solid fa-print mr-0.5"></i>In</button>
               <button type="button" onclick="moModalSuaThongTinDonHang('${d.maDonHang}')" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs font-semibold" title="Sửa ngày giờ & người bán"><i class="fa-solid fa-pen-to-square mr-0.5"></i>Sửa</button>
               <button type="button" onclick="xoaMotDonHang('${d.maDonHang}')" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold">Xóa</button>
             </td>
@@ -24222,7 +24320,31 @@ let danhSachTamXuatExcel = [];
         const elHinhThuc = document.getElementById('ctdh-hinhthuc');
         if (elHinhThuc) {
           const ht = d.hinhThucTT || 'TIEN_MAT';
-          const htText = ht === 'TIEN_MAT' ? 'Tiền mặt' : (ht === 'TAI_KHOAN' ? `Chuyển khoản [${d.nganHangNhan || 'Ngân hàng'}]` : 'Hỗn hợp');
+          let htText = 'Tiền mặt';
+          if (ht === 'TAI_KHOAN') {
+            htText = `Chuyển khoản [${d.nganHangNhan || 'Ngân hàng'}]`;
+          } else if (ht === 'THE') {
+            htText = `Thẻ (Quẹt thẻ POS)${d.nganHangNhan ? ' [' + d.nganHangNhan + ']' : ''}`;
+          } else if (ht === 'HON_HOP') {
+            let tm = Number(d.tienMatHonHop) || 0;
+            let ck = Number(d.chuyenKhoanHonHop) || 0;
+            let the = Number(d.theHonHop) || 0;
+            if (!tm && !ck && !the && d.nganHangNhan) {
+              const mTM = d.nganHangNhan.match(/TM:\s*([\d,.]+)/i);
+              if (mTM) tm = Number(mTM[1].replace(/[,.]/g, '')) || 0;
+              const mCK = d.nganHangNhan.match(/CK:\s*([\d,.]+)/i);
+              if (mCK) ck = Number(mCK[1].replace(/[,.]/g, '')) || 0;
+              const mThe = d.nganHangNhan.match(/Thẻ:\s*([\d,.]+)/i);
+              if (mThe) the = Number(mThe[1].replace(/[,.]/g, '')) || 0;
+            }
+            if (tm > 0 || ck > 0 || the > 0) {
+              htText = `Hỗn hợp (Tiền mặt: ${tm.toLocaleString()}đ | CK: ${ck.toLocaleString()}đ | Thẻ: ${the.toLocaleString()}đ)`;
+            } else if (d.nganHangNhan && d.nganHangNhan.includes('|')) {
+              htText = `Hỗn hợp (${d.nganHangNhan})`;
+            } else {
+              htText = 'Hỗn hợp 3 phương thức (Tiền mặt + Chuyển khoản + Thẻ)';
+            }
+          }
           elHinhThuc.innerText = htText;
         }
 
@@ -30319,6 +30441,185 @@ function loadSoQuy(filter) {
     window.locDanhSachIMEIChuyenKho = locDanhSachIMEIChuyenKho;
     window.capNhatDemIMEIChuyenKho = capNhatDemIMEIChuyenKho;
     window.xacNhanChonIMEIChuyenKho = xacNhanChonIMEIChuyenKho;
+    // ====================================================================
+    // IN HÓA ĐƠN BÁN HÀNG (POS & LỊCH SỬ ĐƠN HÀNG)
+    // ====================================================================
+    function inHoaDonBanHang(orderOrMa) {
+      let d = null;
+      if (typeof orderOrMa === 'string') {
+        d = (rawDonHangList || []).find(x => (x.maDonHang || x.ma_don_hang) === orderOrMa);
+        if (!d && window.currentViewingDonHang && (window.currentViewingDonHang.maDonHang === orderOrMa)) {
+          d = window.currentViewingDonHang;
+        }
+      } else if (orderOrMa && typeof orderOrMa === 'object') {
+        d = orderOrMa;
+      }
+      if (!d) return showNotification("Không tìm thấy thông tin đơn hàng để in!", true);
+
+      const items = Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : [];
+      const tongTien = Number(d.tongTien) || 0;
+      const giamGia = Number(d.giamGia) || 0;
+      const phaiTra = Number(d.khachPhaiTra ?? (tongTien - giamGia)) || 0;
+      const daTra = Number(d.khachTra ?? d.khach_tra) || 0;
+      const conNo = phaiTra - daTra;
+
+      // Xử lý chuỗi hình thức thanh toán
+      const ht = d.hinhThucTT || 'TIEN_MAT';
+      let paymentDetailsHtml = '';
+      if (ht === 'TIEN_MAT') {
+        paymentDetailsHtml = `<div>Hình thức thanh toán: <b>💵 Tiền mặt</b> (${daTra.toLocaleString('vi-VN')} đ)</div>`;
+      } else if (ht === 'TAI_KHOAN') {
+        paymentDetailsHtml = `<div>Hình thức thanh toán: <b>🏦 Chuyển khoản</b> [${d.nganHangNhan || 'Ngân hàng'}] (${daTra.toLocaleString('vi-VN')} đ)</div>`;
+      } else if (ht === 'THE') {
+        paymentDetailsHtml = `<div>Hình thức thanh toán: <b>💳 Thẻ (Quẹt thẻ POS)</b>${d.nganHangNhan ? ' [' + d.nganHangNhan + ']' : ''} (${daTra.toLocaleString('vi-VN')} đ)</div>`;
+      } else if (ht === 'HON_HOP') {
+        let tm = Number(d.tienMatHonHop) || 0;
+        let ck = Number(d.chuyenKhoanHonHop) || 0;
+        let the = Number(d.theHonHop) || 0;
+        if (!tm && !ck && !the && d.nganHangNhan) {
+          const mTM = d.nganHangNhan.match(/TM:\s*([\d,.]+)/i);
+          if (mTM) tm = Number(mTM[1].replace(/[,.]/g, '')) || 0;
+          const mCK = d.nganHangNhan.match(/CK:\s*([\d,.]+)/i);
+          if (mCK) ck = Number(mCK[1].replace(/[,.]/g, '')) || 0;
+          const mThe = d.nganHangNhan.match(/Thẻ:\s*([\d,.]+)/i);
+          if (mThe) the = Number(mThe[1].replace(/[,.]/g, '')) || 0;
+        }
+        paymentDetailsHtml = `
+          <div style="margin-top:6px;padding:8px;background:#f8fafc;border-radius:8px;border:1px dashed #cbd5e1;font-size:12px;">
+            <div style="font-weight:bold;margin-bottom:4px;color:#1e293b;">🔀 Kết hợp 3 phương thức thanh toán:</div>
+            <div style="display:flex;justify-content:space-between;padding:2px 0;"><span>💵 Tiền mặt:</span><b style="font-family:monospace;">${tm.toLocaleString('vi-VN')} đ</b></div>
+            <div style="display:flex;justify-content:space-between;padding:2px 0;"><span>🏦 Chuyển khoản:</span><b style="font-family:monospace;">${ck.toLocaleString('vi-VN')} đ</b></div>
+            <div style="display:flex;justify-content:space-between;padding:2px 0;"><span>💳 Quẹt thẻ POS:</span><b style="font-family:monospace;">${the.toLocaleString('vi-VN')} đ</b></div>
+          </div>
+        `;
+      }
+
+      let rowsHtml = items.map((it, idx) => {
+        const sl = Number(it.soLuong) || 1;
+        const gia = Number(it.donGia) || 0;
+        const thanhTien = Number(it.thanhTien) || (sl * gia);
+        const imeis = String(it.imeiStr || '').split(/[\n,;\r\t]+/).map(s => s.trim()).filter(Boolean);
+        const imeiText = imeis.length ? `<br><small style="color:#64748b;font-family:monospace;">IMEI: ${imeis.join(', ')}</small>` : '';
+        return `
+          <tr>
+            <td style="border:1px solid #cbd5e1;padding:6px;text-align:center;">${idx + 1}</td>
+            <td style="border:1px solid #cbd5e1;padding:6px;">
+              <b>${it.tenHang || it.maHang || '-'}</b>
+              <span style="font-size:11px;color:#0284c7;"> (${it.maHang || ''})</span>
+              ${imeiText}
+            </td>
+            <td style="border:1px solid #cbd5e1;padding:6px;text-align:center;font-weight:bold;font-family:monospace;">${sl}</td>
+            <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;font-family:monospace;">${gia.toLocaleString('vi-VN')} đ</td>
+            <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;font-weight:bold;font-family:monospace;">${thanhTien.toLocaleString('vi-VN')} đ</td>
+          </tr>
+        `;
+      }).join('');
+
+      const tenCuaHang = "HỆ THỐNG BÁN HÀNG";
+      const chiNhanh = d.chiNhanh || (typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : "CN01: Trụ sở chính");
+      const nguoiBan = d.nguoiBan || d.nhanVien || "Thu ngân";
+
+      const printHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Hóa Đơn ${d.maDonHang}</title>
+          <style>
+            @media print {
+              body { margin: 0; padding: 10px; }
+              @page { margin: 8mm; }
+            }
+          </style>
+        </head>
+        <body style="margin:0;padding:20px;background:#fff;">
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:650px;margin:auto;font-size:13px;color:#1e293b;line-height:1.5;">
+            <div style="text-align:center;margin-bottom:16px;">
+              <h2 style="margin:0;font-size:18px;text-transform:uppercase;color:#0f172a;letter-spacing:0.5px;">${tenCuaHang}</h2>
+              <div style="font-size:12px;color:#475569;margin-top:2px;">Chi nhánh: <b>${chiNhanh}</b></div>
+              <div style="margin-top:10px;font-size:16px;font-weight:800;text-transform:uppercase;color:#2563eb;">HÓA ĐƠN BÁN HÀNG</div>
+              <div style="font-size:12px;color:#64748b;margin-top:2px;">Số HĐ: <b style="font-family:monospace;color:#0f172a;">${d.maDonHang}</b> | Ngày: ${d.ngayBan || ''}</div>
+            </div>
+
+            <div style="margin-bottom:14px;border-top:1px dashed #cbd5e1;border-bottom:1px dashed #cbd5e1;padding:10px 0;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;">
+              <div>Khách hàng: <b>${d.tenKH || 'Khách lẻ'}</b></div>
+              <div>Mã KH: <b style="font-family:monospace;">${d.maKH || 'KHACHLE'}</b></div>
+              <div>Số điện thoại: <b>${d.soDienThoai || '---'}</b></div>
+              <div>Thu ngân / Người bán: <b>${nguoiBan}</b></div>
+            </div>
+
+            <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12px;">
+              <thead>
+                <tr style="background:#f1f5f9;color:#334155;">
+                  <th style="border:1px solid #cbd5e1;padding:6px;width:30px;text-align:center;">#</th>
+                  <th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">Tên sản phẩm</th>
+                  <th style="border:1px solid #cbd5e1;padding:6px;width:40px;text-align:center;">SL</th>
+                  <th style="border:1px solid #cbd5e1;padding:6px;width:85px;text-align:right;">Đơn giá</th>
+                  <th style="border:1px solid #cbd5e1;padding:6px;width:100px;text-align:right;">Thành tiền</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml || '<tr><td colspan="5" style="text-align:center;padding:10px;">Không có sản phẩm</td></tr>'}
+              </tbody>
+            </table>
+
+            <div style="border-top:1px solid #cbd5e1;padding-top:10px;font-size:13px;line-height:1.7;">
+              <div style="display:flex;justify-content:space-between;">
+                <span>Tổng tiền hàng:</span>
+                <b style="font-family:monospace;">${tongTien.toLocaleString('vi-VN')} đ</b>
+              </div>
+              ${giamGia > 0 ? `
+              <div style="display:flex;justify-content:space-between;color:#d97706;">
+                <span>Giảm giá / Chiết khấu:</span>
+                <b style="font-family:monospace;">-${giamGia.toLocaleString('vi-VN')} đ</b>
+              </div>` : ''}
+              <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:bold;color:#0f172a;border-top:1px dashed #cbd5e1;margin-top:4px;padding-top:4px;">
+                <span>Khách phải thanh toán:</span>
+                <span style="color:#2563eb;font-family:monospace;font-size:15px;">${phaiTra.toLocaleString('vi-VN')} đ</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;color:#059669;font-weight:bold;">
+                <span>Khách đã thanh toán:</span>
+                <span style="font-family:monospace;">${daTra.toLocaleString('vi-VN')} đ</span>
+              </div>
+              ${conNo > 0 ? `
+              <div style="display:flex;justify-content:space-between;color:#dc2626;font-weight:bold;">
+                <span>Còn nợ lại:</span>
+                <span style="font-family:monospace;">${conNo.toLocaleString('vi-VN')} đ</span>
+              </div>` : ''}
+              ${conNo < 0 ? `
+              <div style="display:flex;justify-content:space-between;color:#0284c7;font-weight:bold;">
+                <span>Tiền thừa trả khách:</span>
+                <span style="font-family:monospace;">${Math.abs(conNo).toLocaleString('vi-VN')} đ</span>
+              </div>` : ''}
+
+              ${paymentDetailsHtml}
+            </div>
+
+            <div style="display:flex;justify-content:space-between;margin-top:36px;text-align:center;font-size:12px;">
+              <div><b>KHÁCH HÀNG</b><br><small style="color:#64748b;">(Ký và ghi rõ họ tên)</small><br><br><br><br></div>
+              <div><b>NGƯỜI BÁN HÀNG</b><br><small style="color:#64748b;">(Ký và ghi rõ họ tên)</small><br><br><br><br></div>
+            </div>
+
+            <div style="text-align:center;margin-top:20px;border-top:1px dashed #cbd5e1;padding-top:12px;font-size:11px;color:#64748b;font-style:italic;">
+              Cảm ơn Quý khách & Hẹn gặp lại!
+            </div>
+          </div>
+          <script>
+            window.onload = function() { window.print(); };
+          <\/script>
+        </body>
+        </html>
+      `;
+
+      const pWin = window.open('', '_blank', 'width=800,height=700');
+      if (pWin) {
+        pWin.document.open();
+        pWin.document.write(printHtml);
+        pWin.document.close();
+      }
+    }
+
+    window.inHoaDonBanHang = inHoaDonBanHang;
     window.xacNhanThucHienChuyenKho = xacNhanThucHienChuyenKho;
     window.xemChiTietChuyenKho = xemChiTietChuyenKho;
     window.inPhieuChuyenKho = inPhieuChuyenKho;
