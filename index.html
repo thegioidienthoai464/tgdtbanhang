@@ -12545,6 +12545,48 @@ function formatVND(amount) {
     window.moModalQuanLyNhomHang = moModalQuanLyNhomHang;
     window.locTreeNhomHang = locTreeNhomHang;
     window.renderTreeNhomHang = renderTreeNhomHang;
+    function doiTenNhanhNhomHang(maNhom, e) {
+      if (e) e.stopPropagation();
+      const target = (rawNhomHang || []).find(n => n.MaNhom === maNhom);
+      if (!target) return;
+      const tenMoi = prompt("Nhập tên mới cho nhóm hàng [" + target.TenNhom + "]:", target.TenNhom);
+      if (tenMoi === null) return;
+      const cleanTen = tenMoi.trim();
+      if (!cleanTen) return showNotification("Tên nhóm hàng không được để trống!", true);
+      if (cleanTen === target.TenNhom) return;
+
+      const oldTen = target.TenNhom;
+      target.TenNhom = cleanTen;
+
+      if (Array.isArray(rawHangHoa)) {
+        rawHangHoa.forEach(h => {
+          if (String(h.maNhom || '').trim().toLowerCase() === String(oldTen).toLowerCase()) {
+            h.maNhom = maNhom;
+          }
+        });
+      }
+
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        supabaseClient.from('dm_nhomhang').update({
+          ten_nhom: cleanTen
+        }).eq('ma_nhom', maNhom).then(({ error }) => {
+          if (error) console.warn("Lỗi cập nhật Supabase dm_nhomhang:", error);
+        });
+      }
+
+      const runner = (typeof google !== 'undefined' && google.script && google.script.run)
+        ? google.script.run : window._mockGAS;
+      if (runner && runner.apiLuuNhomHang) {
+        runner.apiLuuNhomHang({ maNhom: maNhom, tenNhom: cleanTen, maNhomCha: target.MaNhomCha || '', ghiChu: target.GhiChu || '' });
+      }
+
+      hienThiSelectNhomHang(rawNhomHang);
+      if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
+      renderTreeNhomHang();
+      showNotification("Đã đổi tên nhóm thành công: " + cleanTen);
+    }
+
+    window.doiTenNhanhNhomHang = doiTenNhanhNhomHang;
     window.chonSuaNhomHang = chonSuaNhomHang;
     window.datLaiFormNhomHang = datLaiFormNhomHang;
     window.themNhomCon = themNhomCon;
