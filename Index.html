@@ -2,7 +2,12 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="T&T POS">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="format-detection" content="telephone=no">
   <title>T&T POS - Hệ Thống Quản Lý Bán Hàng & Phân Quyền</title>
   <!-- Cấu hình PWA & App iOS (Thêm vào Màn hình chính iPhone/iPad) -->
   <link rel="manifest" href="manifest.json">
@@ -78,6 +83,38 @@
     .scrollbar-thin::-webkit-scrollbar { width: 5px; height: 5px; }
     .scrollbar-thin::-webkit-scrollbar-track { background: #f1f5f9; }
     .scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    /* iOS Safe Area & PWA Touch Optimizations */
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+      --sal: env(safe-area-inset-left, 0px);
+      --sar: env(safe-area-inset-right, 0px);
+    }
+    .pt-safe { padding-top: max(env(safe-area-inset-top, 0px), 0px); }
+    .pb-safe { padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.35rem); }
+    html, body {
+      overscroll-behavior-y: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    @media (max-width: 1023px) {
+      /* Tránh Safari tự động phóng to giao diện khi chạm vào input */
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+      /* Đệm đáy để Bottom Nav không che nội dung */
+      main {
+        padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
+      }
+    }
+    .bottom-nav-active {
+      color: #d97706 !important;
+      font-weight: 700 !important;
+    }
+    .bottom-nav-active i {
+      color: #d97706 !important;
+      transform: scale(1.15);
+    }
   </style>
 </head>
 <body class="bg-slate-100/90 text-slate-800 antialiased flex h-screen overflow-hidden text-xs">
@@ -85,9 +122,16 @@
   <!-- ====================================================================
    * SIDEBAR: THANH ĐIỀU HƯỚNG BÊN TRÁI ĐẦY ĐỦ 7 PHÂN HỆ
    * ==================================================================== -->
-  <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 border-r border-slate-800 z-30 select-none">
+  <!-- Lớp phủ mờ (Backdrop) khi mở Drawer Menu trên điện thoại -->
+  <div id="sidebar-backdrop" onclick="dongSidebarMobile()" class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-40 hidden lg:hidden transition-opacity duration-300"></div>
+
+  <!-- ====================================================================
+   * SIDEBAR: THANH ĐIỀU HƯỚNG BÊN TRÁI (Desktop cố định, Mobile dạng Drawer trượt)
+   * ==================================================================== -->
+  <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 border-r border-slate-800 select-none transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:w-64 pt-safe">
     <!-- Logo & Tên hệ thống -->
-    <div class="h-14 flex items-center px-4 space-x-3 border-b border-slate-800/80 bg-slate-950/40">
+    <div class="h-14 flex items-center px-4 justify-between border-b border-slate-800/80 bg-slate-950/40">
+      <div class="flex items-center space-x-3">
       <div class="w-9 h-9 rounded-full overflow-hidden border-2 border-amber-400 bg-black flex items-center justify-center flex-shrink-0 shadow-md">
         <img src="logo.png?v=2" alt="T&T POS" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<i class=\'fa-solid fa-store text-amber-400\'></i>'">
       </div>
@@ -95,6 +139,12 @@
         <h1 class="font-bold text-sm text-white tracking-wide">T&T POS</h1>
         <p class="text-[10px] text-amber-400 font-semibold tracking-wide">Bán hàng & Quản lý Kho</p>
       </div>
+    
+      </div>
+      <!-- Nút đóng Drawer Menu trên Mobile -->
+      <button type="button" onclick="dongSidebarMobile()" class="lg:hidden w-8 h-8 rounded-xl bg-slate-800/80 text-slate-400 hover:text-white flex items-center justify-center transition" title="Đóng menu">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
     </div>
 
     <!-- Dropdown Chọn Chi Nhánh & Nút Bánh Răng Cài Đặt -->
@@ -272,9 +322,35 @@
     </div>
 
     <!-- Header Topbar -->
-    <header class="h-14 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between shadow-xs flex-shrink-0">
-      <div class="flex items-center space-x-3">
-        <h2 id="page-title" class="font-bold text-sm text-slate-800 tracking-tight">1. Tổng quan tình hình kinh doanh</h2>
+    <!-- BANNER HƯỚNG DẪN DÀNH CHO SAFARI TRÊN IPHONE / IPAD -->
+    <div id="ios-pwa-install-banner" class="hidden bg-gradient-to-r from-slate-950 via-slate-900 to-amber-950 text-white px-3 py-2 border-b border-amber-500/30 flex items-center justify-between text-xs z-30 flex-shrink-0 shadow-md">
+      <div class="flex items-center space-x-2 overflow-hidden pr-2">
+        <span class="w-6 h-6 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center flex-shrink-0 text-xs font-black shadow-xs">
+          <i class="fa-brands fa-apple text-sm"></i>
+        </span>
+        <div class="truncate">
+          <span class="font-bold text-amber-300">Cài đặt App T&amp;T POS:</span>
+          <span class="text-slate-200 text-[11px] ml-1">Bấm <b>Chia sẻ ⎋</b> &gt; <b>"Thêm vào MH chính"</b> để dùng toàn màn hình vĩnh viễn</span>
+        </div>
+      </div>
+      <div class="flex items-center space-x-1 flex-shrink-0">
+        <button type="button" onclick="moModalHuongDanIos()" class="px-2 py-0.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[10px] transition">
+          Chi tiết
+        </button>
+        <button type="button" onclick="dongIosBanner()" class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white rounded text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Header Topbar (Tối ưu cho cả iPhone và Desktop) -->
+    <header class="h-14 bg-white border-b border-slate-200/80 px-3 md:px-6 flex items-center justify-between shadow-xs flex-shrink-0 pt-safe z-30">
+      <div class="flex items-center space-x-2 md:space-x-3 overflow-hidden">
+        <!-- Nút Hamburger Menu (Chỉ hiện trên điện thoại / tablet) -->
+        <button type="button" onclick="moSidebarMobile()" class="lg:hidden p-2 -ml-1 text-slate-700 hover:text-amber-600 hover:bg-slate-100 rounded-xl transition flex items-center justify-center flex-shrink-0" title="Mở danh mục menu">
+          <i class="fa-solid fa-bars text-sm"></i>
+        </button>
+        <h2 id="page-title" class="font-bold text-xs md:text-sm truncate text-slate-800 tracking-tight">1. Tổng quan tình hình kinh doanh</h2>
       </div>
       <div class="flex items-center space-x-3">
         <span id="current-date-badge" class="px-3 py-1 bg-slate-100 rounded-full text-[11px] text-slate-600 font-medium border border-slate-200"></span>
@@ -286,11 +362,11 @@
           <i class="fa-solid fa-flask text-purple-600"></i>
           <span>Chạy thử tính năng</span>
         </a>
-        <button type="button" onclick="moModalHuongDanIos()" title="Cài đặt và sử dụng ứng dụng trên iPhone / iPad" class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-full text-[11px] font-bold flex items-center space-x-1.5 transition shadow-xs">
+        <button type="button" onclick="moModalHuongDanIos()" title="Cài đặt và sử dụng ứng dụng trên iPhone / iPad" class="hidden sm:inline-flex px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-full text-[11px] font-bold items-center space-x-1.5 transition shadow-xs">
           <i class="fa-brands fa-apple text-xs text-slate-800"></i>
           <span>App iPhone/iPad</span>
         </button>
-        <button type="button" id="btn-header-caidat-hethong-top" onclick="moModalCaiDatHeThong()" title="Cài đặt tính năng phần mềm (Giá vốn bình quân, Chặn bán ngừng KD...)" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-full text-[11px] font-bold flex items-center space-x-1.5 transition shadow-xs">
+        <button type="button" id="btn-header-caidat-hethong-top" onclick="moModalCaiDatHeThong()" title="Cài đặt tính năng phần mềm (Giá vốn bình quân, Chặn bán ngừng KD...)" class="hidden md:inline-flex px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-full text-[11px] font-bold items-center space-x-1.5 transition shadow-xs">
           <i class="fa-solid fa-sliders text-blue-600"></i>
           <span>Cài đặt</span>
         </button>
@@ -316,7 +392,7 @@
     </header>
 
     <!-- Main Content Container: Chứa các section ẩn/hiện -->
-    <main class="flex-1 overflow-y-auto p-5 scrollbar-thin">
+    <main class="flex-1 overflow-y-auto p-3 md:p-5 scrollbar-thin">
       <!-- TAB 1: TỔNG QUAN (KIOTVIET STYLE DASHBOARD) -->
       <section id="tab-tongquan" class="space-y-4">
         <!-- LAYOUT 2 CỘT: CỘT CHÍNH (TRÁI) & CỘT WIDGET (PHẢI) -->
@@ -1513,8 +1589,8 @@
                 </button>
                 <div id="nhap-item-dropdown" class="absolute left-0 right-72 top-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-60 overflow-y-auto z-50 hidden divide-y divide-slate-100"></div>
               </div>
-              <div class="border rounded-xl overflow-hidden">
-                <table class="w-full text-left text-xs">
+              <div class="border rounded-xl overflow-x-auto" style="-webkit-overflow-scrolling: touch;">
+            <table class="w-full text-left text-xs min-w-[520px] md:min-w-full">
                   <thead class="bg-slate-100 text-slate-600 uppercase font-semibold border-b">
                     <tr>
                       <th class="p-2.5">Sản Phẩm</th>
@@ -8413,6 +8489,20 @@ function formatVND(amount) {
     }
 
   function switchTab(tabId) {
+      // Tự động đóng Mobile Drawer khi chọn mục
+      if (typeof dongSidebarMobile === 'function') dongSidebarMobile();
+      
+      // Đồng bộ trạng thái active trên Bottom Navigation Bar cho điện thoại
+      document.querySelectorAll('.bottom-nav-btn').forEach(btn => btn.classList.remove('bottom-nav-active'));
+      if (tabId === 'tab-tongquan') {
+        document.getElementById('bottom-nav-tongquan')?.classList.add('bottom-nav-active');
+      } else if (tabId === 'tab-banhang' || tabId === 'tab-pos' || tabId === 'tab-dathang') {
+        document.getElementById('bottom-nav-banhang')?.classList.add('bottom-nav-active');
+      } else if (tabId.startsWith('tab-hanghoa') || tabId.startsWith('tab-kiemkho')) {
+        document.getElementById('bottom-nav-hanghoa')?.classList.add('bottom-nav-active');
+      } else if (tabId.startsWith('tab-soquy')) {
+        document.getElementById('bottom-nav-soquy')?.classList.add('bottom-nav-active');
+      }
       console.log("Switching tab to:", tabId);
       
       // Kiểm tra quyền hạn trước khi chuyển tab
@@ -31312,6 +31402,95 @@ function loadSoQuy(filter) {
           </div>
         </div>
       </div>
+
+
+  <!-- ====================================================================
+   * MOBILE BOTTOM NAVIGATION BAR (Thanh điều hướng dưới đáy chuẩn iOS cho điện thoại)
+   * ==================================================================== -->
+  <nav id="mobile-bottom-nav" class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] px-2 pt-1.5 pb-safe flex items-center justify-around select-none">
+    <!-- 1. Tổng quan -->
+    <button type="button" onclick="switchTab('tab-tongquan')" id="bottom-nav-tongquan" class="bottom-nav-btn bottom-nav-active flex-1 py-1 flex flex-col items-center justify-center text-slate-500 hover:text-amber-600 transition active:scale-95">
+      <i class="fa-solid fa-chart-pie text-base mb-0.5"></i>
+      <span class="text-[10px] font-semibold tracking-tight">Tổng quan</span>
+    </button>
+
+    <!-- 2. Bán hàng POS -->
+    <button type="button" onclick="switchTab('tab-banhang')" id="bottom-nav-banhang" class="bottom-nav-btn flex-1 py-1 flex flex-col items-center justify-center text-slate-500 hover:text-amber-600 transition active:scale-95">
+      <i class="fa-solid fa-cart-shopping text-base mb-0.5"></i>
+      <span class="text-[10px] font-semibold tracking-tight">Bán hàng</span>
+    </button>
+
+    <!-- 3. Kho & Tồn -->
+    <button type="button" onclick="switchTab('tab-hanghoa')" id="bottom-nav-hanghoa" class="bottom-nav-btn flex-1 py-1 flex flex-col items-center justify-center text-slate-500 hover:text-amber-600 transition active:scale-95">
+      <i class="fa-solid fa-boxes-stacked text-base mb-0.5"></i>
+      <span class="text-[10px] font-semibold tracking-tight">Kho hàng</span>
+    </button>
+
+    <!-- 4. Sổ quỹ -->
+    <button type="button" onclick="switchTab('tab-soquy')" id="bottom-nav-soquy" class="bottom-nav-btn flex-1 py-1 flex flex-col items-center justify-center text-slate-500 hover:text-amber-600 transition active:scale-95">
+      <i class="fa-solid fa-wallet text-base mb-0.5"></i>
+      <span class="text-[10px] font-semibold tracking-tight">Sổ quỹ</span>
+    </button>
+
+    <!-- 5. Menu đầy đủ -->
+    <button type="button" onclick="moSidebarMobile()" id="bottom-nav-menu" class="bottom-nav-btn flex-1 py-1 flex flex-col items-center justify-center text-slate-500 hover:text-amber-600 transition active:scale-95">
+      <i class="fa-solid fa-bars text-base mb-0.5"></i>
+      <span class="text-[10px] font-semibold tracking-tight">Menu</span>
+    </button>
+  </nav>
+
+  <script>
+    // JS Hỗ trợ Mobile Drawer & iOS PWA
+    function moSidebarMobile() {
+      const sb = document.getElementById('app-sidebar');
+      const bd = document.getElementById('sidebar-backdrop');
+      if (sb) {
+        sb.classList.remove('-translate-x-full');
+        sb.classList.add('translate-x-0');
+      }
+      if (bd) {
+        bd.classList.remove('hidden');
+      }
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function dongSidebarMobile() {
+      const sb = document.getElementById('app-sidebar');
+      const bd = document.getElementById('sidebar-backdrop');
+      if (sb) {
+        sb.classList.add('-translate-x-full');
+        sb.classList.remove('translate-x-0');
+      }
+      if (bd) {
+        bd.classList.add('hidden');
+      }
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    function kiemTraVaHienThiIosBanner() {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+      const bannerDismissed = sessionStorage.getItem('ios_banner_dismissed') === 'true';
+
+      const banner = document.getElementById('ios-pwa-install-banner');
+      if (banner && isIOS && !isStandalone && !bannerDismissed) {
+        banner.classList.remove('hidden');
+      }
+    }
+
+    function dongIosBanner() {
+      const banner = document.getElementById('ios-pwa-install-banner');
+      if (banner) banner.classList.add('hidden');
+      sessionStorage.setItem('ios_banner_dismissed', 'true');
+    }
+
+    // Tự động kiểm tra hiển thị banner khi nạp trang
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', kiemTraVaHienThiIosBanner);
+    } else {
+      kiemTraVaHienThiIosBanner();
+    }
+  </script>
 
 </body>
 
