@@ -2506,16 +2506,18 @@ function apiLuuDonHangPOS(order) {
     }
     if (ckHH > 0) {
       let mpCK = "PT" + (Date.now() + 1).toString().slice(-6) + "B";
-      sheetQuy.appendRow([chiNhanhDon, mpCK, "THU", "TAI_KHOAN", order.ngayBan, ckHH, "Khách hàng", order.maKH, order.maDonHang, "DaThanhToan", "Thu chuyển khoản [" + (order.nganHangNhan || "Ngân hàng") + "] đơn POS " + order.maDonHang]);
+      let ckBank = order.stkChuyenKhoan || order.nganHangNhan || "Ngân hàng";
+      sheetQuy.appendRow([chiNhanhDon, mpCK, "THU", "TAI_KHOAN", order.ngayBan, ckHH, "Khách hàng", order.maKH, order.maDonHang, "DaThanhToan", "Thu chuyển khoản [" + ckBank + "] đơn POS " + order.maDonHang]);
       try {
-        postToSupabaseServer("so_quy", { chi_nhanh: chiNhanhDon, ma_phieu: mpCK, loai_phieu: "THU", loai_quy: "TAI_KHOAN", ngay_gd: order.ngayBan || new Date().toISOString(), so_tien: ckHH, doi_tuong: "Khách hàng", ma_doi_tuong: String(order.maKH || ""), ma_chung_tu: String(order.maDonHang || ""), trang_thai: "DaThanhToan", ghi_chu: "Thu chuyển khoản [" + (order.nganHangNhan || "Ngân hàng") + "] đơn POS " + order.maDonHang });
+        postToSupabaseServer("so_quy", { chi_nhanh: chiNhanhDon, ma_phieu: mpCK, loai_phieu: "THU", loai_quy: "TAI_KHOAN", ngay_gd: order.ngayBan || new Date().toISOString(), so_tien: ckHH, doi_tuong: "Khách hàng", ma_doi_tuong: String(order.maKH || ""), ma_chung_tu: String(order.maDonHang || ""), trang_thai: "DaThanhToan", ghi_chu: "Thu chuyển khoản [" + ckBank + "] đơn POS " + order.maDonHang });
       } catch(e) {}
     }
     if (theHH > 0) {
       let mpThe = "PT" + (Date.now() + 2).toString().slice(-6) + "C";
-      sheetQuy.appendRow([chiNhanhDon, mpThe, "THU", "THE", order.ngayBan, theHH, "Khách hàng", order.maKH, order.maDonHang, "DaThanhToan", "Thu quẹt thẻ POS đơn POS " + order.maDonHang + (order.nganHangNhan ? " (" + order.nganHangNhan + ")" : "")]);
+      let posAcc = order.stkThePos || (order.hinhThucTT === 'THE' ? order.nganHangNhan : '') || "Thẻ POS";
+      sheetQuy.appendRow([chiNhanhDon, mpThe, "THU", "THE", order.ngayBan, theHH, "Khách hàng", order.maKH, order.maDonHang, "DaThanhToan", "Thu quẹt thẻ POS [" + posAcc + "] đơn POS " + order.maDonHang]);
       try {
-        postToSupabaseServer("so_quy", { chi_nhanh: chiNhanhDon, ma_phieu: mpThe, loai_phieu: "THU", loai_quy: "THE", ngay_gd: order.ngayBan || new Date().toISOString(), so_tien: theHH, doi_tuong: "Khách hàng", ma_doi_tuong: String(order.maKH || ""), ma_chung_tu: String(order.maDonHang || ""), trang_thai: "DaThanhToan", ghi_chu: "Thu quẹt thẻ POS đơn POS " + order.maDonHang + (order.nganHangNhan ? " (" + order.nganHangNhan + ")" : "") });
+        postToSupabaseServer("so_quy", { chi_nhanh: chiNhanhDon, ma_phieu: mpThe, loai_phieu: "THU", loai_quy: "THE", ngay_gd: order.ngayBan || new Date().toISOString(), so_tien: theHH, doi_tuong: "Khách hàng", ma_doi_tuong: String(order.maKH || ""), ma_chung_tu: String(order.maDonHang || ""), trang_thai: "DaThanhToan", ghi_chu: "Thu quẹt thẻ POS [" + posAcc + "] đơn POS " + order.maDonHang });
       } catch(e) {}
     }
   } else if (tienKhachTra > 0) {
@@ -2523,10 +2525,12 @@ function apiLuuDonHangPOS(order) {
     let ghiChuQuy = "Thu tiền hóa đơn bán lẻ POS " + order.maDonHang;
     if (order.hinhThucTT === "TAI_KHOAN") {
       loaiQuyGhiSo = "TAI_KHOAN";
-      ghiChuQuy = "Thu chuyển khoản (" + (order.nganHangNhan || "Ngân hàng") + ") đơn " + order.maDonHang;
+      let ckBank = order.stkChuyenKhoan || order.nganHangNhan || "Ngân hàng";
+      ghiChuQuy = "Thu chuyển khoản [" + ckBank + "] đơn " + order.maDonHang;
     } else if (order.hinhThucTT === "THE") {
       loaiQuyGhiSo = "THE";
-      ghiChuQuy = "Thu quẹt thẻ POS (" + (order.nganHangNhan || "Máy POS") + ") đơn " + order.maDonHang;
+      let posAcc = order.stkThePos || order.nganHangNhan || "Thẻ POS";
+      ghiChuQuy = "Thu quẹt thẻ POS [" + posAcc + "] đơn " + order.maDonHang;
     }
     
     sheetQuy.appendRow([
