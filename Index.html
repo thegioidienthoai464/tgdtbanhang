@@ -1631,7 +1631,7 @@
               </div>
               <div id="box-nhap-datra">
                 <label class="text-[11px] font-semibold text-slate-600">Số tiền thanh toán:</label>
-                <input type="number" id="nhap-datra" value="0" class="w-full border rounded-xl p-2 text-xs text-right font-bold text-blue-600 mt-1 font-mono">
+                <input type="text" inputmode="numeric" id="nhap-datra" value="0" oninput="formatInputMoney(this)" onblur="onBlurMoneyInput(this)" class="w-full border rounded-xl p-2 text-xs text-right font-bold text-blue-600 mt-1 font-mono" placeholder="0">
               </div>
               <div>
                 <label class="text-[11px] font-semibold text-slate-600">Nguồn tiền chi:</label>
@@ -1645,11 +1645,11 @@
                 <div class="grid grid-cols-2 gap-2">
                   <div>
                     <label class="text-[10px] font-bold text-slate-700">Tiền mặt (VNĐ):</label>
-                    <input type="number" id="nhap-tienmat-val" oninput="tinhTienHonHopNhap('TM')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-slate-800 bg-white">
+                    <input type="text" inputmode="numeric" id="nhap-tienmat-val" oninput="formatInputMoney(this); tinhTienHonHopNhap('TM')" onblur="onBlurMoneyInput(this)" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-slate-800 bg-white text-right" placeholder="0">
                   </div>
                   <div>
                     <label class="text-[10px] font-bold text-slate-700">Tài khoản (VNĐ):</label>
-                    <input type="number" id="nhap-chuyenkhoan-val" oninput="tinhTienHonHopNhap('CK')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-blue-600 bg-white">
+                    <input type="text" inputmode="numeric" id="nhap-chuyenkhoan-val" oninput="formatInputMoney(this); tinhTienHonHopNhap('CK')" onblur="onBlurMoneyInput(this)" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-blue-600 bg-white text-right" placeholder="0">
                   </div>
                 </div>
               </div>
@@ -9894,13 +9894,25 @@ function formatVND(amount) {
 
       // Nạp hàng vào giỏ
       const items = Array.isArray(don.chiTietSanPham) ? don.chiTietSanPham : [];
-      nhapCart = items.map(it => ({
-        maHang: it.maHang,
-        tenHang: it.tenHang || it.maHang,
-        soLuong: Number(it.soLuong) || 1,
-        donGia: Number(it.donGia || it.giaNhap) || 0,
-        imeiStr: it.imeiStr || ""
-      }));
+      nhapCart = items.map(it => {
+        const sp = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) 
+          ? rawHangHoa.find(h => String(h.maHang || '').trim().toUpperCase() === String(it.maHang || '').trim().toUpperCase()) 
+          : null;
+        const hasIMEI = Boolean(
+          it.coQuanLyIMEI === true || 
+          it.co_quan_ly_imei === true ||
+          (sp && (sp.coQuanLyIMEI === true || String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || String(sp.coQuanLyIMEI).trim() === '1')) ||
+          (it.imeiStr && it.imeiStr.trim().length > 0)
+        );
+        return {
+          maHang: it.maHang,
+          tenHang: it.tenHang || it.maHang,
+          soLuong: Number(it.soLuong) || 1,
+          donGia: Number(it.donGia || it.giaNhap) || 0,
+          imeiStr: it.imeiStr || "",
+          coQuanLyIMEI: hasIMEI
+        };
+      });
 
       // Chuyển view
       chuyenViewNhapHang('taodon');
@@ -9999,7 +10011,7 @@ function formatVND(amount) {
       }
 
       const tongTien = nhapCart.reduce((a, b) => a + ((Number(b.soLuong) || 1) * (Number(b.donGia || b.giaNhap) || 0)), 0);
-      const daTra = Number(document.getElementById('nhap-datra')?.value) || 0;
+      const daTra = parseMoneyValue(document.getElementById('nhap-datra')?.value);
       const conNo = Math.max(0, tongTien - daTra);
 
       const isEditing = Boolean(window.dangSuaDonNhapMaPhieu);
@@ -10308,12 +10320,32 @@ function formatVND(amount) {
 
     function chonSanPhamVaoPhieuNhap(maHang) {
       const allItems = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) ? rawHangHoa : (localData.hangHoa || []);
-      const sp = allItems.find(h => h.maHang === maHang);
+      const sp = allItems.find(h => String(h.maHang || '').trim().toUpperCase() === String(maHang || '').trim().toUpperCase());
       if (!sp) return;
 
-      const exist = nhapCart.find(i => i.maHang === sp.maHang);
-      if (exist) exist.soLuong++;
-      else nhapCart.push({ maHang: sp.maHang, tenHang: sp.tenHang, soLuong: 1, donGia: Number(sp.giaVon) || 0, imeiStr: "" });
+      const isItemIMEI = Boolean(
+        sp.coQuanLyIMEI === true || 
+        String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || 
+        String(sp.coQuanLyIMEI).trim().toLowerCase().indexOf('c') === 0 || 
+        String(sp.coQuanLyIMEI).trim() === '1' ||
+        sp.co_quan_ly_imei === true ||
+        String(sp.co_quan_ly_imei).trim().toLowerCase() === 'true' ||
+        String(sp.co_quan_ly_imei).trim() === '1'
+      );
+
+      const exist = nhapCart.find(i => String(i.maHang || '').trim().toUpperCase() === String(sp.maHang || '').trim().toUpperCase());
+      if (exist) {
+        exist.soLuong++;
+      } else {
+        nhapCart.push({ 
+          maHang: sp.maHang, 
+          tenHang: sp.tenHang, 
+          soLuong: 1, 
+          donGia: Number(sp.giaVon) || 0, 
+          imeiStr: "",
+          coQuanLyIMEI: isItemIMEI
+        });
+      }
 
       document.getElementById('nhap-search-item').value = "";
       document.getElementById('nhap-item-dropdown').classList.add('hidden');
@@ -10337,9 +10369,29 @@ function formatVND(amount) {
         return;
       }
 
-      const exist = nhapCart.find(i => i.maHang === sp.maHang);
-      if (exist) exist.soLuong++;
-      else nhapCart.push({ maHang: sp.maHang, tenHang: sp.tenHang, soLuong: 1, donGia: Number(sp.giaVon) || 0, imeiStr: "" });
+      const isItemIMEI = Boolean(
+        sp.coQuanLyIMEI === true || 
+        String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || 
+        String(sp.coQuanLyIMEI).trim().toLowerCase().indexOf('c') === 0 || 
+        String(sp.coQuanLyIMEI).trim() === '1' ||
+        sp.co_quan_ly_imei === true ||
+        String(sp.co_quan_ly_imei).trim().toLowerCase() === 'true' ||
+        String(sp.co_quan_ly_imei).trim() === '1'
+      );
+
+      const exist = nhapCart.find(i => String(i.maHang || '').trim().toUpperCase() === String(sp.maHang || '').trim().toUpperCase());
+      if (exist) {
+        exist.soLuong++;
+      } else {
+        nhapCart.push({ 
+          maHang: sp.maHang, 
+          tenHang: sp.tenHang, 
+          soLuong: 1, 
+          donGia: Number(sp.giaVon) || 0, 
+          imeiStr: "",
+          coQuanLyIMEI: isItemIMEI
+        });
+      }
 
       document.getElementById('nhap-search-item').value = "";
       document.getElementById('nhap-item-dropdown').classList.add('hidden');
@@ -10580,7 +10632,8 @@ function formatVND(amount) {
           </tr>
         `;
         document.getElementById('nhap-tongtien').innerText = '0 đ';
-        document.getElementById('nhap-datra').value = 0;
+        const inpDaTra = document.getElementById('nhap-datra');
+        if (inpDaTra) inpDaTra.value = '0';
         return;
       }
 
@@ -10588,28 +10641,56 @@ function formatVND(amount) {
         const sl = Math.max(1, Number(it.soLuong) || 1);
         const donGia = Math.max(0, Number(it.donGia) || 0);
         const thanhTien = sl * donGia;
-        const imeiArr = tachDanhSachImei(it.imeiStr);
+
+        // Xác định sản phẩm có quản lý theo IMEI hay không
+        let hasIMEI = false;
+        if (it.coQuanLyIMEI !== undefined && it.coQuanLyIMEI !== null) {
+          hasIMEI = Boolean(it.coQuanLyIMEI);
+        } else {
+          const sp = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) 
+            ? rawHangHoa.find(h => String(h.maHang || '').trim().toUpperCase() === String(it.maHang || '').trim().toUpperCase()) 
+            : null;
+          if (sp) {
+            hasIMEI = Boolean(
+              sp.coQuanLyIMEI === true || 
+              String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || 
+              String(sp.coQuanLyIMEI).trim().toLowerCase().indexOf('c') === 0 || 
+              String(sp.coQuanLyIMEI).trim() === '1' ||
+              sp.co_quan_ly_imei === true ||
+              String(sp.co_quan_ly_imei).trim().toLowerCase() === 'true' ||
+              String(sp.co_quan_ly_imei).trim() === '1'
+            );
+          }
+        }
+        if (!hasIMEI && it.imeiStr && it.imeiStr.trim().length > 0) {
+          hasIMEI = true;
+        }
+        it.coQuanLyIMEI = hasIMEI;
+
+        const imeiArr = hasIMEI ? tachDanhSachImei(it.imeiStr) : [];
         const imeiCount = imeiArr.length;
         
         let btnCls = 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs';
         let inputBorderCls = 'border-slate-300';
         let hintHtml = '';
         
-        if (imeiCount === 0) {
-          btnCls = 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs';
-          hintHtml = '<span class="text-[10px] text-slate-400">Cách nhau bằng dấu , hoặc ;</span>';
-        } else if (imeiCount === sl) {
-          btnCls = 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs';
-          inputBorderCls = 'border-emerald-400 bg-emerald-50/20';
-          hintHtml = `<span class="text-[10px] font-bold text-emerald-600">✓ Đã đủ ${sl} Serial</span>`;
-        } else if (imeiCount > sl) {
-          btnCls = 'bg-rose-600 hover:bg-rose-700 text-white shadow-xs';
-          inputBorderCls = 'border-rose-400 bg-rose-50/20';
-          hintHtml = `<span class="text-[10px] font-bold text-rose-600">⚠ Vượt ${imeiCount - sl} Serial</span>`;
-        } else {
-          btnCls = 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs';
-          inputBorderCls = 'border-amber-400 bg-amber-50/20';
-          hintHtml = `<span class="text-[10px] font-semibold text-amber-600">Thiếu ${sl - imeiCount} Serial</span>`;
+        if (hasIMEI) {
+          if (imeiCount === 0) {
+            btnCls = 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs';
+            hintHtml = '<span class="text-[10px] text-slate-400">Cách nhau bằng dấu , hoặc ;</span>';
+          } else if (imeiCount === sl) {
+            btnCls = 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs';
+            inputBorderCls = 'border-emerald-400 bg-emerald-50/20';
+            hintHtml = `<span class="text-[10px] font-bold text-emerald-600">✓ Đã đủ ${sl} Serial</span>`;
+          } else if (imeiCount > sl) {
+            btnCls = 'bg-rose-600 hover:bg-rose-700 text-white shadow-xs';
+            inputBorderCls = 'border-rose-400 bg-rose-50/20';
+            hintHtml = `<span class="text-[10px] font-bold text-rose-600">⚠ Vượt ${imeiCount - sl} Serial</span>`;
+          } else {
+            btnCls = 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs';
+            inputBorderCls = 'border-amber-400 bg-amber-50/20';
+            hintHtml = `<span class="text-[10px] font-semibold text-amber-600">Thiếu ${sl - imeiCount} Serial</span>`;
+          }
         }
 
         return `
@@ -10622,35 +10703,41 @@ function formatVND(amount) {
               <input type="number" min="1" value="${sl}" onchange="nhapCart[${idx}].soLuong=Math.max(1, Number(this.value)||1); renderNhapCart();" class="w-14 border rounded-lg text-center p-1 font-mono font-bold">
             </td>
             <td class="p-2.5 text-right">
-              <input type="number" value="${donGia}" onchange="nhapCart[${idx}].donGia=Math.max(0, Number(this.value)||0); renderNhapCart();" class="w-24 border rounded-lg text-right p-1 font-mono">
+              <input type="text" inputmode="numeric" value="${formatMoneyDisplay(donGia)}" oninput="formatInputMoney(this)" onchange="nhapCart[${idx}].donGia=parseMoneyValue(this.value); renderNhapCart();" onblur="onBlurMoneyInput(this)" class="w-24 border rounded-lg text-right p-1 font-mono text-xs font-bold text-blue-600" placeholder="0">
             </td>
-            <td class="p-2 min-w-[280px]">
-              <div class="flex items-center space-x-1.5">
-                <div class="relative flex-1">
-                  <input type="text" 
-                         value="${(it.imeiStr || '').replace(/"/g, '&quot;')}" 
-                         oninput="nhapCart[${idx}].imeiStr=this.value" 
-                         onchange="renderNhapCart()" 
-                         placeholder="Nhập serial (cách dấu , hoặc ;)..." 
-                         class="w-full border ${inputBorderCls} rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-400">
+            <td class="p-2 ${hasIMEI ? 'min-w-[280px]' : ''}">
+              ${hasIMEI ? `
+                <div class="flex items-center space-x-1.5">
+                  <div class="relative flex-1">
+                    <input type="text" 
+                           value="${(it.imeiStr || '').replace(/"/g, '&quot;')}" 
+                           oninput="nhapCart[${idx}].imeiStr=this.value" 
+                           onchange="renderNhapCart()" 
+                           placeholder="Nhập serial (cách dấu , hoặc ;)..." 
+                           class="w-full border ${inputBorderCls} rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-400">
+                  </div>
+                  <button type="button" 
+                          onclick="moModalNhapImeiHangHoa(${idx})" 
+                          title="Bấm để mở bảng Dán danh sách Serial từ Excel hoặc Quét mã"
+                          class="px-3 py-1.5 ${btnCls} rounded-lg text-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap shadow-xs">
+                    <i class="fa-solid fa-clipboard-list text-xs"></i>
+                    <span>DS Serial (${imeiCount}/${sl})</span>
+                  </button>
                 </div>
-                <button type="button" 
-                        onclick="moModalNhapImeiHangHoa(${idx})" 
-                        title="Bấm để mở bảng Dán danh sách Serial từ Excel hoặc Quét mã"
-                        class="px-3 py-1.5 ${btnCls} rounded-lg text-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap shadow-xs">
-                  <i class="fa-solid fa-clipboard-list text-xs"></i>
-                  <span>DS Serial (${imeiCount}/${sl})</span>
-                </button>
-              </div>
-              <div class="flex items-center justify-between px-1 mt-1">
-                ${hintHtml}
-                <button type="button" onclick="moModalNhapImeiHangHoa(${idx})" class="text-[11px] text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center space-x-1">
-                  <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                  <span>Dán từ Excel</span>
-                </button>
-              </div>
+                <div class="flex items-center justify-between px-1 mt-1">
+                  ${hintHtml}
+                  <button type="button" onclick="moModalNhapImeiHangHoa(${idx})" class="text-[11px] text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center space-x-1">
+                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                    <span>Dán từ Excel</span>
+                  </button>
+                </div>
+              ` : `
+                <span class="inline-flex items-center px-2 py-1 rounded-lg text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200 select-none">
+                  <i class="fa-solid fa-ban text-[10px] mr-1.5 text-slate-400"></i>Không quản lý IMEI
+                </span>
+              `}
             </td>
-            <td class="p-2.5 text-right font-bold text-slate-800 font-mono">${thanhTien.toLocaleString()} đ</td>
+            <td class="p-2.5 text-right font-bold text-slate-800 font-mono">${thanhTien.toLocaleString('vi-VN')} đ</td>
             <td class="p-2.5 text-center">
               <button type="button" onclick="nhapCart.splice(${idx},1); renderNhapCart();" class="text-rose-500 hover:text-rose-700">
                 <i class="fa-solid fa-trash"></i>
@@ -10661,7 +10748,7 @@ function formatVND(amount) {
       }).join('');
 
       const total = nhapCart.reduce((a, b) => a + ((Number(b.soLuong)||1) * (Number(b.donGia)||0)), 0);
-      document.getElementById('nhap-tongtien').innerText = total.toLocaleString() + ' đ';
+      document.getElementById('nhap-tongtien').innerText = total.toLocaleString('vi-VN') + ' đ';
       thayDoiKieuThanhToanNhap(document.getElementById('nhap-loai-thanhtoan').value);
     }
 
@@ -10671,13 +10758,13 @@ function formatVND(amount) {
       const input = document.getElementById('nhap-datra');
       if (type === 'FULL') {
         if (box) box.classList.remove('hidden');
-        if (input) { input.value = total; input.disabled = true; }
+        if (input) { input.value = formatMoneyDisplay(total); input.disabled = true; }
       } else if (type === 'PARTIAL') {
         if (box) box.classList.remove('hidden');
-        if (input) { input.value = Math.round(total / 2); input.disabled = false; }
+        if (input) { input.value = formatMoneyDisplay(Math.round(total / 2)); input.disabled = false; }
       } else {
         if (box) box.classList.add('hidden');
-        if (input) { input.value = 0; }
+        if (input) { input.value = '0'; }
       }
     }
 
@@ -12462,7 +12549,8 @@ function formatVND(amount) {
             tenHang: obj.tenHang,
             soLuong: 1,
             donGia: obj.giaVon || 0,
-            imeiStr: ""
+            imeiStr: "",
+            coQuanLyIMEI: Boolean(obj.coQuanLyIMEI)
           });
         }
         const searchInput = document.getElementById('nhap-search-item');
@@ -25966,8 +26054,8 @@ function loadSoQuy(filter) {
         const half = Math.floor(tongTien / 2);
         const tmInp = document.getElementById('nhap-tienmat-val');
         const ckInp = document.getElementById('nhap-chuyenkhoan-val');
-        if (tmInp) tmInp.value = half;
-        if (ckInp) ckInp.value = Math.max(0, tongTien - half);
+        if (tmInp) tmInp.value = formatMoneyDisplay(half);
+        if (ckInp) ckInp.value = formatMoneyDisplay(Math.max(0, tongTien - half));
       } else {
         if (boxBank) boxBank.classList.add('hidden');
         if (boxHonHop) boxHonHop.classList.add('hidden');
@@ -25979,11 +26067,11 @@ function loadSoQuy(filter) {
       const tmInp = document.getElementById('nhap-tienmat-val');
       const ckInp = document.getElementById('nhap-chuyenkhoan-val');
       if (changed === 'TM') {
-        const tm = Number(tmInp?.value) || 0;
-        if (ckInp) ckInp.value = Math.max(0, tongTien - tm);
+        const tm = parseMoneyValue(tmInp?.value);
+        if (ckInp) ckInp.value = formatMoneyDisplay(Math.max(0, tongTien - tm));
       } else {
-        const ck = Number(ckInp?.value) || 0;
-        if (tmInp) tmInp.value = Math.max(0, tongTien - ck);
+        const ck = parseMoneyValue(ckInp?.value);
+        if (tmInp) tmInp.value = formatMoneyDisplay(Math.max(0, tongTien - ck));
       }
     }
 
@@ -26016,7 +26104,7 @@ function loadSoQuy(filter) {
       } else if (loaiTT === 'DEBT') {
         daTra = 0;
       } else {
-        daTra = Number(document.getElementById('nhap-datra')?.value) || 0;
+        daTra = parseMoneyValue(document.getElementById('nhap-datra')?.value);
       }
       daTra = Math.min(tongTien, Math.max(0, daTra));
       const conNo = Math.max(0, tongTien - daTra);
@@ -26033,8 +26121,8 @@ function loadSoQuy(filter) {
         } else if (hinhThucVal === 'TAI_KHOAN') {
           chuyenKhoan = daTra;
         } else if (hinhThucVal === 'HON_HOP') {
-          tienMat = Number(document.getElementById('nhap-tienmat-val')?.value) || 0;
-          chuyenKhoan = Number(document.getElementById('nhap-chuyenkhoan-val')?.value) || Math.max(0, daTra - tienMat);
+          tienMat = parseMoneyValue(document.getElementById('nhap-tienmat-val')?.value);
+          chuyenKhoan = parseMoneyValue(document.getElementById('nhap-chuyenkhoan-val')?.value) || Math.max(0, daTra - tienMat);
         }
       }
 
