@@ -2047,7 +2047,7 @@
             </div>
             <div class="flex justify-between items-center">
               <span class="text-slate-600">Chiết khấu / Giảm giá:</span>
-              <input type="number" id="pos-giamgia" value="0" oninput="tinhTienPOS()" class="w-24 border rounded-lg p-1 text-right font-mono text-xs font-bold text-rose-600">
+              <input type="text" inputmode="numeric" id="pos-giamgia" value="0" oninput="formatInputMoney(this); tinhTienPOS();" onblur="onBlurMoneyInput(this)" class="w-24 border rounded-lg p-1 text-right font-mono text-xs font-bold text-rose-600" placeholder="0">
             </div>
             <div class="flex justify-between items-center border-t pt-1.5">
               <span class="font-bold text-slate-800">Khách phải trả:</span>
@@ -2077,7 +2077,7 @@
           <!-- Ô nhập số tiền khách trả -->
           <div id="box-pos-khachtra">
             <label class="text-[11px] font-semibold text-slate-600">Số tiền khách thanh toán:</label>
-            <input type="number" id="pos-khachtra" value="0" class="w-full border rounded-xl p-2 text-xs text-right font-bold text-emerald-600 mt-1 font-mono">
+            <input type="text" inputmode="numeric" id="pos-khachtra" value="0" oninput="formatInputMoney(this)" onblur="onBlurMoneyInput(this)" class="w-full border rounded-xl p-2 text-xs text-right font-bold text-emerald-600 mt-1 font-mono" placeholder="0">
           </div>
           <!-- Hình thức thanh toán bằng Checkbox (Chọn 1 hoặc nhiều) -->
           <div class="space-y-1.5">
@@ -2118,15 +2118,15 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div id="wrap-pos-tienmat">
                 <label class="text-[10px] font-bold text-slate-700 block mb-0.5">💵 Tiền mặt:</label>
-                <input type="number" id="pos-tienmat-val" oninput="tinhTienHonHopPOS('TM')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-slate-800 bg-white" placeholder="0">
+                <input type="text" inputmode="numeric" id="pos-tienmat-val" oninput="formatInputMoney(this); tinhTienHonHopPOS('TM')" onblur="onBlurMoneyInput(this)" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-slate-800 bg-white text-right" placeholder="0">
               </div>
               <div id="wrap-pos-chuyenkhoan" class="hidden">
                 <label class="text-[10px] font-bold text-blue-700 block mb-0.5">🏦 Chuyển khoản:</label>
-                <input type="number" id="pos-chuyenkhoan-val" oninput="tinhTienHonHopPOS('CK')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-blue-600 bg-white" placeholder="0">
+                <input type="text" inputmode="numeric" id="pos-chuyenkhoan-val" oninput="formatInputMoney(this); tinhTienHonHopPOS('CK')" onblur="onBlurMoneyInput(this)" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-blue-600 bg-white text-right" placeholder="0">
               </div>
               <div id="wrap-pos-the" class="hidden">
                 <label class="text-[10px] font-bold text-purple-700 block mb-0.5">💳 Quẹt thẻ POS:</label>
-                <input type="number" id="pos-the-val" oninput="tinhTienHonHopPOS('THE')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-purple-600 bg-white" placeholder="0">
+                <input type="text" inputmode="numeric" id="pos-the-val" oninput="formatInputMoney(this); tinhTienHonHopPOS('THE')" onblur="onBlurMoneyInput(this)" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-purple-600 bg-white text-right" placeholder="0">
               </div>
             </div>
           </div>
@@ -5528,7 +5528,7 @@
           </div>
           <div>
             <label class="font-semibold text-slate-700">Số tiền (*):</label>
-            <input type="number" id="sq-input-sotien" class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 mt-1 font-mono font-bold text-base text-blue-600 focus:bg-white" placeholder="0">
+            <input type="text" inputmode="numeric" id="sq-input-sotien" oninput="formatInputMoney(this)" onblur="onBlurMoneyInput(this)" class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 mt-1 font-mono font-bold text-base text-blue-600 focus:bg-white" placeholder="0">
           </div>
         </div>
 
@@ -5821,6 +5821,51 @@
 
     window.formatNgayGioLocal = formatNgayGioLocal;
     window.formatNgayGioChoInput = formatNgayGioChoInput;
+
+    /* ====================================================================
+     * TIỆN ÍCH ĐỊNH DẠNG & XỬ LÝ TIỀN TỆ (DẤU CHẤM PHÂN CÁCH HÀNG NGHÌN)
+     * ==================================================================== */
+    function parseMoneyValue(val) {
+      if (val === null || val === undefined) return 0;
+      if (typeof val === 'number') return isNaN(val) ? 0 : Math.round(val);
+      const str = String(val).trim().replace(/[^\d]/g, '');
+      return str ? (parseInt(str, 10) || 0) : 0;
+    }
+
+    function formatMoneyDisplay(val) {
+      const num = parseMoneyValue(val);
+      return num.toLocaleString('vi-VN');
+    }
+
+    function formatInputMoney(inputEl) {
+      if (!inputEl) return;
+      const raw = String(inputEl.value || '');
+      const selEnd = inputEl.selectionEnd || raw.length;
+      const charsFromEnd = raw.length - selEnd;
+      
+      const num = parseMoneyValue(raw);
+      if (raw.trim() === '') {
+        inputEl.value = '';
+        return;
+      }
+      const formatted = num.toLocaleString('vi-VN');
+      inputEl.value = formatted;
+      try {
+        const newPos = Math.max(0, formatted.length - charsFromEnd);
+        inputEl.setSelectionRange(newPos, newPos);
+      } catch(e) {}
+    }
+
+    function onBlurMoneyInput(inputEl) {
+      if (!inputEl) return;
+      const num = parseMoneyValue(inputEl.value);
+      inputEl.value = num.toLocaleString('vi-VN');
+    }
+
+    window.parseMoneyValue = parseMoneyValue;
+    window.formatMoneyDisplay = formatMoneyDisplay;
+    window.formatInputMoney = formatInputMoney;
+    window.onBlurMoneyInput = onBlurMoneyInput;
 
     /* ====================================================================
      * TỰ ĐỘNG THÍCH ỨNG: HỖ TRỢ CHẠY ĐỘC LẬP (VERCEL, NETLIFY, STANDALONE)
@@ -6446,7 +6491,7 @@ function formatVND(amount) {
       const wrapCK = document.getElementById('wrap-pos-chuyenkhoan');
       const wrapThe = document.getElementById('wrap-pos-the');
 
-      const totalPhaiTra = Math.max(0, (posCart.reduce((a, b) => a + (b.soLuong * b.donGia), 0)) - (Number(document.getElementById('pos-giamgia')?.value) || 0));
+      const totalPhaiTra = Math.max(0, (posCart.reduce((a, b) => a + (b.soLuong * b.donGia), 0)) - parseMoneyValue(document.getElementById('pos-giamgia')?.value));
       const countChecked = (isTM ? 1 : 0) + (isCK ? 1 : 0) + (isThe ? 1 : 0);
 
       // Hiển thị/ẩn hộp chọn tài khoản ngân hàng chuyển khoản
@@ -6477,7 +6522,7 @@ function formatVND(amount) {
         const inpPay = document.getElementById('pos-khachtra');
         if (inpPay) {
           inpPay.disabled = false;
-          if (!inpPay.value || Number(inpPay.value) === 0) inpPay.value = totalPhaiTra;
+          if (!inpPay.value || parseMoneyValue(inpPay.value) === 0) inpPay.value = formatMoneyDisplay(totalPhaiTra);
         }
 
         if (isTM) {
@@ -6516,7 +6561,7 @@ function formatVND(amount) {
           else {
             wrapTM.classList.add('hidden');
             const el = document.getElementById('pos-tienmat-val');
-            if (el) el.value = 0;
+            if (el) el.value = '0';
           }
         }
         if (wrapCK) {
@@ -6526,7 +6571,7 @@ function formatVND(amount) {
           } else {
             wrapCK.classList.add('hidden');
             const el = document.getElementById('pos-chuyenkhoan-val');
-            if (el) el.value = 0;
+            if (el) el.value = '0';
           }
         }
         if (wrapThe) {
@@ -6536,7 +6581,7 @@ function formatVND(amount) {
           } else {
             wrapThe.classList.add('hidden');
             const el = document.getElementById('pos-the-val');
-            if (el) el.value = 0;
+            if (el) el.value = '0';
           }
         }
 
@@ -6544,11 +6589,11 @@ function formatVND(amount) {
         const elTM = document.getElementById('pos-tienmat-val');
         const elCK = document.getElementById('pos-chuyenkhoan-val');
         const elTHE = document.getElementById('pos-the-val');
-        const currentSum = (isTM ? (Number(elTM?.value) || 0) : 0) + (isCK ? (Number(elCK?.value) || 0) : 0) + (isThe ? (Number(elTHE?.value) || 0) : 0);
+        const currentSum = (isTM ? parseMoneyValue(elTM?.value) : 0) + (isCK ? parseMoneyValue(elCK?.value) : 0) + (isThe ? parseMoneyValue(elTHE?.value) : 0);
         if (currentSum === 0 && totalPhaiTra > 0) {
-          if (isTM && elTM) elTM.value = totalPhaiTra;
-          else if (isCK && elCK) elCK.value = totalPhaiTra;
-          else if (isThe && elTHE) elTHE.value = totalPhaiTra;
+          if (isTM && elTM) elTM.value = formatMoneyDisplay(totalPhaiTra);
+          else if (isCK && elCK) elCK.value = formatMoneyDisplay(totalPhaiTra);
+          else if (isThe && elTHE) elTHE.value = formatMoneyDisplay(totalPhaiTra);
         }
 
         if (badgeSummary) {
@@ -6595,12 +6640,12 @@ function formatVND(amount) {
       const isCK = cbCK ? cbCK.checked : false;
       const isThe = cbThe ? cbThe.checked : false;
 
-      const tm = isTM ? (Number(document.getElementById('pos-tienmat-val')?.value) || 0) : 0;
-      const ck = isCK ? (Number(document.getElementById('pos-chuyenkhoan-val')?.value) || 0) : 0;
-      const the = isThe ? (Number(document.getElementById('pos-the-val')?.value) || 0) : 0;
+      const tm = isTM ? parseMoneyValue(document.getElementById('pos-tienmat-val')?.value) : 0;
+      const ck = isCK ? parseMoneyValue(document.getElementById('pos-chuyenkhoan-val')?.value) : 0;
+      const the = isThe ? parseMoneyValue(document.getElementById('pos-the-val')?.value) : 0;
       const totalPay = tm + ck + the;
       const inputPay = document.getElementById('pos-khachtra');
-      if (inputPay) inputPay.value = totalPay;
+      if (inputPay) inputPay.value = formatMoneyDisplay(totalPay);
       const elHonHopTong = document.getElementById('pos-honhop-tong');
       if (elHonHopTong) elHonHopTong.innerText = totalPay.toLocaleString('vi-VN') + ' đ';
     }
@@ -6855,7 +6900,7 @@ function formatVND(amount) {
 
     function thayDoiKieuThanhToanPOS(type) {
       const total = (posCart || []).reduce((a, b) => a + (b.soLuong * b.donGia), 0);
-      const discount = Number(document.getElementById('pos-giamgia')?.value) || 0;
+      const discount = parseMoneyValue(document.getElementById('pos-giamgia')?.value);
       const finalPrice = Math.max(0, total - discount);
       
       const box = document.getElementById('box-pos-khachtra');
@@ -6865,7 +6910,7 @@ function formatVND(amount) {
       if (type === 'FULL') {
         if (box) box.classList.remove('hidden');
         if (input) {
-          input.value = finalPrice;
+          input.value = formatMoneyDisplay(finalPrice);
           input.disabled = (htPOS === 'HON_HOP');
         }
         if (htPOS === 'HON_HOP') {
@@ -6876,39 +6921,39 @@ function formatVND(amount) {
           const elCK = document.getElementById('pos-chuyenkhoan-val');
           const elThe = document.getElementById('pos-the-val');
           if (cbTM?.checked && elTM) {
-            elTM.value = finalPrice;
-            if (elCK) elCK.value = 0;
-            if (elThe) elThe.value = 0;
+            elTM.value = formatMoneyDisplay(finalPrice);
+            if (elCK) elCK.value = '0';
+            if (elThe) elThe.value = '0';
           } else if (cbCK?.checked && elCK) {
-            elCK.value = finalPrice;
-            if (elTM) elTM.value = 0;
-            if (elThe) elThe.value = 0;
+            elCK.value = formatMoneyDisplay(finalPrice);
+            if (elTM) elTM.value = '0';
+            if (elThe) elThe.value = '0';
           } else if (cbThe?.checked && elThe) {
-            elThe.value = finalPrice;
-            if (elTM) elTM.value = 0;
-            if (elCK) elCK.value = 0;
+            elThe.value = formatMoneyDisplay(finalPrice);
+            if (elTM) elTM.value = '0';
+            if (elCK) elCK.value = '0';
           }
           tinhTienHonHopPOS();
         }
       } else if (type === 'PARTIAL') {
         if (box) box.classList.remove('hidden');
         if (input) {
-          input.value = Math.round(finalPrice / 2);
+          input.value = formatMoneyDisplay(Math.round(finalPrice / 2));
           input.disabled = (htPOS === 'HON_HOP');
         }
       } else {
         // Ghi nợ toàn bộ (DEBT)
         if (box) box.classList.remove('hidden');
         if (input) {
-          input.value = 0;
+          input.value = '0';
           input.disabled = false;
         }
         const elTM = document.getElementById('pos-tienmat-val');
-        if (elTM) elTM.value = 0;
+        if (elTM) elTM.value = '0';
         const elCK = document.getElementById('pos-chuyenkhoan-val');
-        if (elCK) elCK.value = 0;
+        if (elCK) elCK.value = '0';
         const elThe = document.getElementById('pos-the-val');
-        if (elThe) elThe.value = 0;
+        if (elThe) elThe.value = '0';
         const elHonHopTong = document.getElementById('pos-honhop-tong');
         if (elHonHopTong) elHonHopTong.innerText = '0 đ';
       }
@@ -6916,13 +6961,13 @@ function formatVND(amount) {
 
     function tinhTienPOS() {
       const total = (posCart || []).reduce((a, b) => a + (b.soLuong * b.donGia), 0);
-      const discount = Number(document.getElementById('pos-giamgia')?.value) || 0;
+      const discount = parseMoneyValue(document.getElementById('pos-giamgia')?.value);
       const finalPrice = Math.max(0, total - discount);
       
       const elTong = document.getElementById('pos-tongtien');
-      if (elTong) elTong.innerText = total.toLocaleString() + ' đ';
+      if (elTong) elTong.innerText = total.toLocaleString('vi-VN') + ' đ';
       const elPhaiTra = document.getElementById('pos-khachphaitra');
-      if (elPhaiTra) elPhaiTra.innerText = finalPrice.toLocaleString() + ' đ';
+      if (elPhaiTra) elPhaiTra.innerText = finalPrice.toLocaleString('vi-VN') + ' đ';
       
       const paymentType = document.getElementById('pos-loai-thanhtoan')?.value || 'FULL';
       const inputPay = document.getElementById('pos-khachtra');
@@ -6932,14 +6977,15 @@ function formatVND(amount) {
           if (htPOS === 'HON_HOP') {
             tinhTienHonHopPOS();
           } else {
-            inputPay.value = finalPrice;
+            inputPay.value = formatMoneyDisplay(finalPrice);
           }
         } else if (paymentType === 'DEBT') {
-          inputPay.value = 0;
+          inputPay.value = '0';
         }
         inputPay.disabled = (htPOS === 'HON_HOP');
       }
     }
+    window.tinhTienPOS = tinhTienPOS;
 
     async function xacNhanThanhToanPOS() {
       if (typeof hasPermission === 'function' && !hasPermission('BAN_HANG_THEM')) {
@@ -6949,10 +6995,10 @@ function formatVND(amount) {
       const maKH = document.getElementById('pos-makh')?.value || 'KHACHLE';
       
       const total = posCart.reduce((a, b) => a + (b.soLuong * b.donGia), 0);
-      const discount = Number(document.getElementById('pos-giamgia')?.value) || 0;
+      const discount = parseMoneyValue(document.getElementById('pos-giamgia')?.value);
       const finalPrice = Math.max(0, total - discount);
       const loaiTT = document.getElementById('pos-loai-thanhtoan')?.value || 'FULL';
-      let pay = Number(document.getElementById('pos-khachtra')?.value) || 0;
+      let pay = parseMoneyValue(document.getElementById('pos-khachtra')?.value);
       const hinhThucTTVal = document.getElementById('pos-hinhthuc')?.value || 'TIEN_MAT';
 
       let tienMatHonHop = 0;
@@ -6963,9 +7009,9 @@ function formatVND(amount) {
         const cbCK = document.getElementById('pos-cb-chuyenkhoan');
         const cbThe = document.getElementById('pos-cb-the');
 
-        tienMatHonHop = (cbTM ? cbTM.checked : true) ? (Number(document.getElementById('pos-tienmat-val')?.value) || 0) : 0;
-        chuyenKhoanHonHop = (cbCK ? cbCK.checked : false) ? (Number(document.getElementById('pos-chuyenkhoan-val')?.value) || 0) : 0;
-        theHonHop = (cbThe ? cbThe.checked : false) ? (Number(document.getElementById('pos-the-val')?.value) || 0) : 0;
+        tienMatHonHop = (cbTM ? cbTM.checked : true) ? parseMoneyValue(document.getElementById('pos-tienmat-val')?.value) : 0;
+        chuyenKhoanHonHop = (cbCK ? cbCK.checked : false) ? parseMoneyValue(document.getElementById('pos-chuyenkhoan-val')?.value) : 0;
+        theHonHop = (cbThe ? cbThe.checked : false) ? parseMoneyValue(document.getElementById('pos-the-val')?.value) : 0;
         pay = tienMatHonHop + chuyenKhoanHonHop + theHonHop;
       } else if (loaiTT === 'DEBT') {
         pay = 0;
@@ -6989,9 +7035,9 @@ function formatVND(amount) {
       let moTaHonHop = '';
       if (hinhThucTTVal === 'HON_HOP') {
         const pArr = [];
-        if (tienMatHonHop > 0) pArr.push(`TM: ${tienMatHonHop.toLocaleString()}đ`);
-        if (chuyenKhoanHonHop > 0) pArr.push(`CK: ${chuyenKhoanHonHop.toLocaleString()}đ${nganHangNhanChon ? ' [' + nganHangNhanChon + ']' : ''}`);
-        if (theHonHop > 0) pArr.push(`Thẻ: ${theHonHop.toLocaleString()}đ${stkThePosChon ? ' [' + stkThePosChon + ']' : ''}`);
+        if (tienMatHonHop > 0) pArr.push(`TM: ${tienMatHonHop.toLocaleString('vi-VN')}đ`);
+        if (chuyenKhoanHonHop > 0) pArr.push(`CK: ${chuyenKhoanHonHop.toLocaleString('vi-VN')}đ${nganHangNhanChon ? ' [' + nganHangNhanChon + ']' : ''}`);
+        if (theHonHop > 0) pArr.push(`Thẻ: ${theHonHop.toLocaleString('vi-VN')}đ${stkThePosChon ? ' [' + stkThePosChon + ']' : ''}`);
         moTaHonHop = pArr.join(' | ');
       }
 
@@ -7268,18 +7314,18 @@ function formatVND(amount) {
         resetPosSearchFields();
 
         const inpGiamGia = document.getElementById('pos-giamgia');
-        if (inpGiamGia) inpGiamGia.value = 0;
+        if (inpGiamGia) inpGiamGia.value = '0';
         const inpKhachTra = document.getElementById('pos-khachtra');
         if (inpKhachTra) {
-          inpKhachTra.value = 0;
+          inpKhachTra.value = '0';
           inpKhachTra.disabled = false;
         }
         const inpTM = document.getElementById('pos-tienmat-val');
-        if (inpTM) inpTM.value = 0;
+        if (inpTM) inpTM.value = '0';
         const inpCK = document.getElementById('pos-chuyenkhoan-val');
-        if (inpCK) inpCK.value = 0;
+        if (inpCK) inpCK.value = '0';
         const inpThe = document.getElementById('pos-the-val');
-        if (inpThe) inpThe.value = 0;
+        if (inpThe) inpThe.value = '0';
         const elHonHopTong = document.getElementById('pos-honhop-tong');
         if (elHonHopTong) elHonHopTong.innerText = '0 đ';
         const elTong = document.getElementById('pos-tongtien');
@@ -7302,9 +7348,9 @@ function formatVND(amount) {
         // THÔNG BÁO THÀNH CÔNG RÕ RÀNG
         let thongBao = `Đã thanh toán thành công đơn hàng [${maDon}]!`;
         if (chenhLech > 0) {
-          thongBao += ` (Ghi nợ: ${chenhLech.toLocaleString()} đ)`;
+          thongBao += ` (Ghi nợ: ${chenhLech.toLocaleString('vi-VN')} đ)`;
         } else if (chenhLech < 0) {
-          thongBao += ` (Tiền thừa: ${Math.abs(chenhLech).toLocaleString()} đ)`;
+          thongBao += ` (Tiền thừa: ${Math.abs(chenhLech).toLocaleString('vi-VN')} đ)`;
         }
         showNotification(thongBao, false);
 
@@ -16944,7 +16990,7 @@ function formatVND(amount) {
           </td>
           <!-- Ô CHỈNH SỬA ĐƠN GIÁ TRỰC TIẾP -->
           <td class="p-2.5 text-right">
-            <input type="number" value="${c.donGia}" onchange="posCart[${idx}].donGia=Number(this.value); renderPOSCart();" class="w-24 border rounded-lg text-right p-1 font-mono text-xs font-bold text-blue-600">
+            <input type="text" inputmode="numeric" value="${formatMoneyDisplay(c.donGia)}" oninput="formatInputMoney(this)" onchange="posCart[${idx}].donGia=parseMoneyValue(this.value); renderPOSCart();" onblur="onBlurMoneyInput(this)" class="w-24 border rounded-lg text-right p-1 font-mono text-xs font-bold text-blue-600">
           </td>
           <td class="p-2.5">
             ${hasIMEI ? `
@@ -16959,7 +17005,7 @@ function formatVND(amount) {
               <span class="text-slate-400 italic text-[10px] px-1">Không QL IMEI</span>
             `}
           </td>
-          <td class="p-2.5 text-right font-bold text-slate-800 font-mono">${((Number(c.soLuong) || 1) * (Number(c.donGia) || 0)).toLocaleString()} đ</td>
+          <td class="p-2.5 text-right font-bold text-slate-800 font-mono">${((Number(c.soLuong) || 1) * (Number(c.donGia) || 0)).toLocaleString('vi-VN')} đ</td>
           <td class="p-2.5 text-center">
             <button type="button" onclick="posCart.splice(${idx},1); renderPOSCart();" class="text-rose-500 hover:text-rose-700">
               <i class="fa-solid fa-trash"></i>
@@ -16969,33 +17015,6 @@ function formatVND(amount) {
       `}).join('');
       
       tinhTienPOS();
-    }
-
-    function tinhTienPOS() {
-      const total = (posCart || []).reduce((a, b) => a + (b.soLuong * b.donGia), 0);
-      const discount = Number(document.getElementById('pos-giamgia')?.value) || 0;
-      const finalPrice = Math.max(0, total - discount);
-
-      const elTong = document.getElementById('pos-tongtien');
-      if (elTong) elTong.innerText = total.toLocaleString() + ' đ';
-      const elPhaiTra = document.getElementById('pos-khachphaitra');
-      if (elPhaiTra) elPhaiTra.innerText = finalPrice.toLocaleString() + ' đ';
-      
-      const type = document.getElementById('pos-loai-thanhtoan')?.value || 'FULL';
-      const inputPay = document.getElementById('pos-khachtra');
-      const htPOS = document.getElementById('pos-hinhthuc')?.value || 'TIEN_MAT';
-      if (inputPay) {
-        if (type === 'FULL') {
-          if (htPOS === 'HON_HOP') {
-            tinhTienHonHopPOS();
-          } else {
-            inputPay.value = finalPrice;
-          }
-        } else if (type === 'DEBT') {
-          inputPay.value = 0;
-        }
-        inputPay.disabled = false;
-      }
     }
 
     /* 5. Sổ quỹ */
@@ -17483,7 +17502,7 @@ function formatVND(amount) {
       document.getElementById('sq-input-ghichu').value = gcRaw;
 
       // 3. Số tiền
-      document.getElementById('sq-input-sotien').value = Number(p.soTien) || 0;
+      document.getElementById('sq-input-sotien').value = formatMoneyDisplay(p.soTien || 0);
 
       // 4. Đối tượng
       const elDoiTuong = document.getElementById('sq-input-doituong');
@@ -17516,7 +17535,7 @@ function formatVND(amount) {
     }
 
     async function xacNhanLuuPhieuSoQuy() {
-      const st = Number(document.getElementById('sq-input-sotien').value) || 0;
+      const st = parseMoneyValue(document.getElementById('sq-input-sotien').value);
       const gc = document.getElementById('sq-input-ghichu').value.trim();
       if (st <= 0) return showNotification("Vui lòng nhập số tiền lớn hơn 0!", true);
       const isEditingSQ = Boolean(dangSuaPhieuSoQuyMa);
