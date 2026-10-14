@@ -2079,43 +2079,65 @@
             <label class="text-[11px] font-semibold text-slate-600">Số tiền khách thanh toán:</label>
             <input type="number" id="pos-khachtra" value="0" class="w-full border rounded-xl p-2 text-xs text-right font-bold text-emerald-600 mt-1 font-mono">
           </div>
-          <!-- Hình thức thanh toán -->
-          <div>
-            <label class="text-[11px] font-semibold text-slate-600">Hình thức thanh toán:</label>
-            <select id="pos-hinhthuc" onchange="onChangeHinhThucTT(this.value)" class="w-full border rounded-xl p-2 text-xs bg-slate-50 mt-1 font-medium">
-              <option value="TIEN_MAT">💵 Tiền mặt</option>
-              <option value="TAI_KHOAN">🏦 Chuyển khoản ngân hàng</option>
-              <option value="THE">💳 Thẻ (Quẹt thẻ POS)</option>
-              <option value="HON_HOP">🔀 Kết hợp 3 phương thức (Tiền mặt + Chuyển khoản + Thẻ)</option>
-            </select>
+          <!-- Hình thức thanh toán bằng Checkbox (Chọn 1 hoặc nhiều) -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-semibold text-slate-700">Hình thức thanh toán (chọn 1 hoặc nhiều):</label>
+              <span id="pos-httt-summary" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">💵 Tiền mặt</span>
+            </div>
+            <!-- Input ẩn lưu giá trị hình thức thanh toán chính cho hệ thống -->
+            <input type="hidden" id="pos-hinhthuc" value="TIEN_MAT">
+
+            <div class="grid grid-cols-3 gap-1.5">
+              <!-- Checkbox Tiền mặt -->
+              <label class="flex items-center justify-center p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition select-none shadow-2xs has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/70 has-[:checked]:text-emerald-800">
+                <input type="checkbox" id="pos-cb-tienmat" onchange="onCheckboxHinhThucTTChange()" checked class="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 mr-1 cursor-pointer">
+                <span class="text-[11px] font-bold">💵 Tiền mặt</span>
+              </label>
+
+              <!-- Checkbox Chuyển khoản -->
+              <label class="flex items-center justify-center p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition select-none shadow-2xs has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50/70 has-[:checked]:text-blue-800">
+                <input type="checkbox" id="pos-cb-chuyenkhoan" onchange="onCheckboxHinhThucTTChange()" class="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500 border-slate-300 mr-1 cursor-pointer">
+                <span class="text-[11px] font-bold">🏦 CK ngân hàng</span>
+              </label>
+
+              <!-- Checkbox Quẹt thẻ POS -->
+              <label class="flex items-center justify-center p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition select-none shadow-2xs has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50/70 has-[:checked]:text-purple-800">
+                <input type="checkbox" id="pos-cb-the" onchange="onCheckboxHinhThucTTChange()" class="w-3.5 h-3.5 rounded text-purple-600 focus:ring-purple-500 border-slate-300 mr-1 cursor-pointer">
+                <span class="text-[11px] font-bold">💳 Quẹt thẻ</span>
+              </label>
+            </div>
           </div>
-          <!-- KHỐI THANH TOÁN HỖN HỢP (KẾT HỢP 3 PHƯƠNG THỨC) -->
+
+          <!-- KHỐI PHÂN BỔ TIỀN KHI CHỌN NHIỀU PHƯƠNG THỨC THANH TOÁN -->
           <div id="box-pos-honhop" class="hidden space-y-2 p-2.5 bg-blue-50/70 rounded-2xl border border-blue-200">
             <div class="text-[10px] font-bold text-blue-800 flex items-center justify-between">
-              <span><i class="fa-solid fa-calculator mr-1"></i>Chia tiền theo 3 phương thức:</span>
+              <span><i class="fa-solid fa-calculator mr-1"></i>Chia tiền theo các phương thức đã chọn:</span>
               <span id="pos-honhop-tong" class="font-mono text-blue-700 text-[11px] font-bold">0 đ</span>
             </div>
-            <div class="grid grid-cols-3 gap-2">
-              <div>
-                <label class="text-[10px] font-bold text-slate-700">💵 Tiền mặt:</label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div id="wrap-pos-tienmat">
+                <label class="text-[10px] font-bold text-slate-700 block mb-0.5">💵 Tiền mặt:</label>
                 <input type="number" id="pos-tienmat-val" oninput="tinhTienHonHopPOS('TM')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-slate-800 bg-white" placeholder="0">
               </div>
-              <div>
-                <label class="text-[10px] font-bold text-blue-700">🏦 Chuyển khoản:</label>
+              <div id="wrap-pos-chuyenkhoan" class="hidden">
+                <label class="text-[10px] font-bold text-blue-700 block mb-0.5">🏦 Chuyển khoản:</label>
                 <input type="number" id="pos-chuyenkhoan-val" oninput="tinhTienHonHopPOS('CK')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-blue-600 bg-white" placeholder="0">
               </div>
-              <div>
-                <label class="text-[10px] font-bold text-purple-700">💳 Quẹt thẻ POS:</label>
+              <div id="wrap-pos-the" class="hidden">
+                <label class="text-[10px] font-bold text-purple-700 block mb-0.5">💳 Quẹt thẻ POS:</label>
                 <input type="number" id="pos-the-val" oninput="tinhTienHonHopPOS('THE')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-purple-600 bg-white" placeholder="0">
               </div>
             </div>
           </div>
-          <!-- 👉 KHỐI CHỌN TÀI KHOẢN NGÂN HÀNG (Tự động ẩn/hiện khi chọn Chuyển khoản hoặc Hỗn hợp) -->
+
+          <!-- 👉 KHỐI CHỌN TÀI KHOẢN NGÂN HÀNG (Tự động ẩn/hiện khi checkbox Chuyển khoản được chọn) -->
           <div id="box-chon-nganhang" class="hidden">
             <label class="text-[11px] font-semibold text-blue-700">Chọn tài khoản ngân hàng nhận chuyển khoản:</label>
             <select id="pos-nganhang-nhan" class="w-full border rounded-xl p-2 text-xs bg-slate-50 mt-1 font-medium text-slate-800"></select>
           </div>
-          <!-- 👉 KHỐI CHỌN SỐ TÀI KHOẢN THẺ POS (Tự động ẩn/hiện khi chọn Quẹt thẻ POS hoặc Hỗn hợp) -->
+
+          <!-- 👉 KHỐI CHỌN SỐ TÀI KHOẢN THẺ POS (Tự động ẩn/hiện khi checkbox Quẹt thẻ được chọn) -->
           <div id="box-chon-the-pos" class="hidden">
             <label class="text-[11px] font-semibold text-purple-700">Chọn số tài khoản thẻ POS nhận:</label>
             <select id="pos-the-nganhang-nhan" class="w-full border border-purple-200 rounded-xl p-2 text-xs bg-purple-50/50 mt-1 font-medium text-purple-900"></select>
@@ -6367,54 +6389,181 @@ function formatVND(amount) {
       if (selThe) selThe.innerHTML = buildOptions(true);
     }
 
-    // Bật/tắt hiển thị hộp chọn tài khoản ngân hàng dựa vào hình thức thanh toán
+    // Bật/tắt hiển thị hộp chọn tài khoản ngân hàng dựa vào hình thức thanh toán (hỗ trợ gọi bằng code)
     function onChangeHinhThucTT(val) {
+      const cbTM = document.getElementById('pos-cb-tienmat');
+      const cbCK = document.getElementById('pos-cb-chuyenkhoan');
+      const cbThe = document.getElementById('pos-cb-the');
+
+      if (val === 'TAI_KHOAN') {
+        if (cbTM) cbTM.checked = false;
+        if (cbCK) cbCK.checked = true;
+        if (cbThe) cbThe.checked = false;
+      } else if (val === 'THE') {
+        if (cbTM) cbTM.checked = false;
+        if (cbCK) cbCK.checked = false;
+        if (cbThe) cbThe.checked = true;
+      } else if (val === 'HON_HOP') {
+        if (cbTM) cbTM.checked = true;
+        if (cbCK) cbCK.checked = true;
+        if (cbThe) cbThe.checked = true;
+      } else {
+        // TIEN_MAT
+        if (cbTM) cbTM.checked = true;
+        if (cbCK) cbCK.checked = false;
+        if (cbThe) cbThe.checked = false;
+      }
+      onCheckboxHinhThucTTChange();
+    }
+
+    // Xử lý khi người dùng click vào các checkbox Hình thức thanh toán (Tiền mặt, Chuyển khoản, Quẹt thẻ)
+    function onCheckboxHinhThucTTChange() {
+      const cbTM = document.getElementById('pos-cb-tienmat');
+      const cbCK = document.getElementById('pos-cb-chuyenkhoan');
+      const cbThe = document.getElementById('pos-cb-the');
+
+      let isTM = !!cbTM?.checked;
+      let isCK = !!cbCK?.checked;
+      let isThe = !!cbThe?.checked;
+
+      // Không cho phép bỏ chọn toàn bộ (phải có ít nhất 1 hình thức thanh toán)
+      if (!isTM && !isCK && !isThe) {
+        if (cbTM) cbTM.checked = true;
+        isTM = true;
+        showNotification("Vui lòng chọn ít nhất 1 hình thức thanh toán!", true);
+      }
+
+      const inpHinhThuc = document.getElementById('pos-hinhthuc');
       const boxBank = document.getElementById('box-chon-nganhang');
       const boxThe = document.getElementById('box-chon-the-pos');
       const boxHonHop = document.getElementById('box-pos-honhop');
+      const boxKhachTra = document.getElementById('box-pos-khachtra');
+      const badgeSummary = document.getElementById('pos-httt-summary');
       const selBank = document.getElementById('pos-nganhang-nhan');
       const selThe = document.getElementById('pos-the-nganhang-nhan');
-      const totalPhaiTra = Math.max(0, (posCart.reduce((a, b) => a + (b.soLuong * b.donGia), 0)) - (Number(document.getElementById('pos-giamgia')?.value) || 0));
 
-      if (val === 'TAI_KHOAN') {
-        if (boxBank) boxBank.classList.remove('hidden');
-        if (boxThe) boxThe.classList.add('hidden');
+      const wrapTM = document.getElementById('wrap-pos-tienmat');
+      const wrapCK = document.getElementById('wrap-pos-chuyenkhoan');
+      const wrapThe = document.getElementById('wrap-pos-the');
+
+      const totalPhaiTra = Math.max(0, (posCart.reduce((a, b) => a + (b.soLuong * b.donGia), 0)) - (Number(document.getElementById('pos-giamgia')?.value) || 0));
+      const countChecked = (isTM ? 1 : 0) + (isCK ? 1 : 0) + (isThe ? 1 : 0);
+
+      // Hiển thị/ẩn hộp chọn tài khoản ngân hàng chuyển khoản
+      if (boxBank) {
+        if (isCK) {
+          boxBank.classList.remove('hidden');
+          if (selBank && !selBank.options.length) populatePosBankOptions(selBank, false);
+        } else {
+          boxBank.classList.add('hidden');
+        }
+      }
+
+      // Hiển thị/ẩn hộp chọn số tài khoản thẻ POS
+      if (boxThe) {
+        if (isThe) {
+          boxThe.classList.remove('hidden');
+          if (selThe && !selThe.options.length) populatePosBankOptions(selThe, true);
+        } else {
+          boxThe.classList.add('hidden');
+        }
+      }
+
+      if (countChecked === 1) {
+        // Chỉ chọn 1 hình thức duy nhất
         if (boxHonHop) boxHonHop.classList.add('hidden');
-        if (selBank) populatePosBankOptions(selBank, false);
+        if (boxKhachTra) boxKhachTra.classList.remove('hidden');
+
         const inpPay = document.getElementById('pos-khachtra');
-        if (inpPay && (!inpPay.value || Number(inpPay.value) === 0)) inpPay.value = totalPhaiTra;
-      } else if (val === 'THE') {
-        if (boxBank) boxBank.classList.add('hidden');
-        if (boxThe) boxThe.classList.remove('hidden');
-        if (boxHonHop) boxHonHop.classList.add('hidden');
-        if (selThe) populatePosBankOptions(selThe, true);
-        const inpPay = document.getElementById('pos-khachtra');
-        if (inpPay && (!inpPay.value || Number(inpPay.value) === 0)) inpPay.value = totalPhaiTra;
-      } else if (val === 'HON_HOP') {
-        if (boxBank) boxBank.classList.remove('hidden');
-        if (boxThe) boxThe.classList.remove('hidden');
+        if (inpPay) {
+          inpPay.disabled = false;
+          if (!inpPay.value || Number(inpPay.value) === 0) inpPay.value = totalPhaiTra;
+        }
+
+        if (isTM) {
+          if (inpHinhThuc) inpHinhThuc.value = 'TIEN_MAT';
+          if (badgeSummary) {
+            badgeSummary.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
+            badgeSummary.innerText = '💵 Tiền mặt';
+          }
+        } else if (isCK) {
+          if (inpHinhThuc) inpHinhThuc.value = 'TAI_KHOAN';
+          if (badgeSummary) {
+            badgeSummary.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200';
+            badgeSummary.innerText = '🏦 Chuyển khoản';
+          }
+          if (selBank) populatePosBankOptions(selBank, false);
+        } else if (isThe) {
+          if (inpHinhThuc) inpHinhThuc.value = 'THE';
+          if (badgeSummary) {
+            badgeSummary.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200';
+            badgeSummary.innerText = '💳 Quẹt thẻ POS';
+          }
+          if (selThe) populatePosBankOptions(selThe, true);
+        }
+      } else {
+        // Chọn từ 2 hoặc cả 3 hình thức (Hỗn hợp)
+        if (inpHinhThuc) inpHinhThuc.value = 'HON_HOP';
         if (boxHonHop) boxHonHop.classList.remove('hidden');
-        if (selBank) populatePosBankOptions(selBank, false);
-        if (selThe) populatePosBankOptions(selThe, true);
+        if (boxKhachTra) boxKhachTra.classList.remove('hidden');
+
+        const inpPay = document.getElementById('pos-khachtra');
+        if (inpPay) inpPay.disabled = true; // Khóa ô tổng, tự tính từ các ô phân bổ
+
+        // Ẩn/hiện các ô nhập tiền tương ứng với các checkbox được tích
+        if (wrapTM) {
+          if (isTM) wrapTM.classList.remove('hidden');
+          else {
+            wrapTM.classList.add('hidden');
+            const el = document.getElementById('pos-tienmat-val');
+            if (el) el.value = 0;
+          }
+        }
+        if (wrapCK) {
+          if (isCK) {
+            wrapCK.classList.remove('hidden');
+            if (selBank) populatePosBankOptions(selBank, false);
+          } else {
+            wrapCK.classList.add('hidden');
+            const el = document.getElementById('pos-chuyenkhoan-val');
+            if (el) el.value = 0;
+          }
+        }
+        if (wrapThe) {
+          if (isThe) {
+            wrapThe.classList.remove('hidden');
+            if (selThe) populatePosBankOptions(selThe, true);
+          } else {
+            wrapThe.classList.add('hidden');
+            const el = document.getElementById('pos-the-val');
+            if (el) el.value = 0;
+          }
+        }
+
+        // Tự động phân bổ số tiền nếu tổng các ô đang bằng 0
         const elTM = document.getElementById('pos-tienmat-val');
         const elCK = document.getElementById('pos-chuyenkhoan-val');
         const elTHE = document.getElementById('pos-the-val');
-        const currentSum = (Number(elTM?.value) || 0) + (Number(elCK?.value) || 0) + (Number(elTHE?.value) || 0);
-        if (currentSum === 0) {
-          if (elTM) elTM.value = totalPhaiTra;
-          if (elCK) elCK.value = 0;
-          if (elTHE) elTHE.value = 0;
+        const currentSum = (isTM ? (Number(elTM?.value) || 0) : 0) + (isCK ? (Number(elCK?.value) || 0) : 0) + (isThe ? (Number(elTHE?.value) || 0) : 0);
+        if (currentSum === 0 && totalPhaiTra > 0) {
+          if (isTM && elTM) elTM.value = totalPhaiTra;
+          else if (isCK && elCK) elCK.value = totalPhaiTra;
+          else if (isThe && elTHE) elTHE.value = totalPhaiTra;
         }
+
+        if (badgeSummary) {
+          badgeSummary.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200';
+          const labels = [];
+          if (isTM) labels.push('Tiền mặt');
+          if (isCK) labels.push('CK');
+          if (isThe) labels.push('Thẻ');
+          badgeSummary.innerText = `🔀 Kết hợp (${labels.join(' + ')})`;
+        }
+
         tinhTienHonHopPOS();
-      } else {
-        // TIEN_MAT
-        if (boxBank) boxBank.classList.add('hidden');
-        if (boxThe) boxThe.classList.add('hidden');
-        if (boxHonHop) boxHonHop.classList.add('hidden');
-        const inpPay = document.getElementById('pos-khachtra');
-        if (inpPay && (!inpPay.value || Number(inpPay.value) === 0)) inpPay.value = totalPhaiTra;
       }
     }
+    window.onCheckboxHinhThucTTChange = onCheckboxHinhThucTTChange;
 
     function populatePosBankOptions(selBank, isThe = false) {
       if (!selBank) return;
@@ -6438,9 +6587,17 @@ function formatVND(amount) {
     }
 
     function tinhTienHonHopPOS(changed) {
-      const tm = Number(document.getElementById('pos-tienmat-val')?.value) || 0;
-      const ck = Number(document.getElementById('pos-chuyenkhoan-val')?.value) || 0;
-      const the = Number(document.getElementById('pos-the-val')?.value) || 0;
+      const cbTM = document.getElementById('pos-cb-tienmat');
+      const cbCK = document.getElementById('pos-cb-chuyenkhoan');
+      const cbThe = document.getElementById('pos-cb-the');
+
+      const isTM = cbTM ? cbTM.checked : true;
+      const isCK = cbCK ? cbCK.checked : false;
+      const isThe = cbThe ? cbThe.checked : false;
+
+      const tm = isTM ? (Number(document.getElementById('pos-tienmat-val')?.value) || 0) : 0;
+      const ck = isCK ? (Number(document.getElementById('pos-chuyenkhoan-val')?.value) || 0) : 0;
+      const the = isThe ? (Number(document.getElementById('pos-the-val')?.value) || 0) : 0;
       const totalPay = tm + ck + the;
       const inputPay = document.getElementById('pos-khachtra');
       if (inputPay) inputPay.value = totalPay;
@@ -6703,18 +6860,41 @@ function formatVND(amount) {
       
       const box = document.getElementById('box-pos-khachtra');
       const input = document.getElementById('pos-khachtra');
+      const htPOS = document.getElementById('pos-hinhthuc')?.value || 'TIEN_MAT';
       
       if (type === 'FULL') {
         if (box) box.classList.remove('hidden');
         if (input) {
           input.value = finalPrice;
-          input.disabled = false; // Luôn cho phép thu ngân sửa đổi số tiền
+          input.disabled = (htPOS === 'HON_HOP');
+        }
+        if (htPOS === 'HON_HOP') {
+          const cbTM = document.getElementById('pos-cb-tienmat');
+          const cbCK = document.getElementById('pos-cb-chuyenkhoan');
+          const cbThe = document.getElementById('pos-cb-the');
+          const elTM = document.getElementById('pos-tienmat-val');
+          const elCK = document.getElementById('pos-chuyenkhoan-val');
+          const elThe = document.getElementById('pos-the-val');
+          if (cbTM?.checked && elTM) {
+            elTM.value = finalPrice;
+            if (elCK) elCK.value = 0;
+            if (elThe) elThe.value = 0;
+          } else if (cbCK?.checked && elCK) {
+            elCK.value = finalPrice;
+            if (elTM) elTM.value = 0;
+            if (elThe) elThe.value = 0;
+          } else if (cbThe?.checked && elThe) {
+            elThe.value = finalPrice;
+            if (elTM) elTM.value = 0;
+            if (elCK) elCK.value = 0;
+          }
+          tinhTienHonHopPOS();
         }
       } else if (type === 'PARTIAL') {
         if (box) box.classList.remove('hidden');
         if (input) {
-          input.value = Math.round(finalPrice / 2); // Mặc định gợi ý trả trước 50%
-          input.disabled = false;
+          input.value = Math.round(finalPrice / 2);
+          input.disabled = (htPOS === 'HON_HOP');
         }
       } else {
         // Ghi nợ toàn bộ (DEBT)
@@ -6723,6 +6903,14 @@ function formatVND(amount) {
           input.value = 0;
           input.disabled = false;
         }
+        const elTM = document.getElementById('pos-tienmat-val');
+        if (elTM) elTM.value = 0;
+        const elCK = document.getElementById('pos-chuyenkhoan-val');
+        if (elCK) elCK.value = 0;
+        const elThe = document.getElementById('pos-the-val');
+        if (elThe) elThe.value = 0;
+        const elHonHopTong = document.getElementById('pos-honhop-tong');
+        if (elHonHopTong) elHonHopTong.innerText = '0 đ';
       }
     }
 
@@ -6749,7 +6937,7 @@ function formatVND(amount) {
         } else if (paymentType === 'DEBT') {
           inputPay.value = 0;
         }
-        inputPay.disabled = false;
+        inputPay.disabled = (htPOS === 'HON_HOP');
       }
     }
 
@@ -6771,12 +6959,20 @@ function formatVND(amount) {
       let chuyenKhoanHonHop = 0;
       let theHonHop = 0;
       if (hinhThucTTVal === 'HON_HOP') {
-        tienMatHonHop = Number(document.getElementById('pos-tienmat-val')?.value) || 0;
-        chuyenKhoanHonHop = Number(document.getElementById('pos-chuyenkhoan-val')?.value) || 0;
-        theHonHop = Number(document.getElementById('pos-the-val')?.value) || 0;
+        const cbTM = document.getElementById('pos-cb-tienmat');
+        const cbCK = document.getElementById('pos-cb-chuyenkhoan');
+        const cbThe = document.getElementById('pos-cb-the');
+
+        tienMatHonHop = (cbTM ? cbTM.checked : true) ? (Number(document.getElementById('pos-tienmat-val')?.value) || 0) : 0;
+        chuyenKhoanHonHop = (cbCK ? cbCK.checked : false) ? (Number(document.getElementById('pos-chuyenkhoan-val')?.value) || 0) : 0;
+        theHonHop = (cbThe ? cbThe.checked : false) ? (Number(document.getElementById('pos-the-val')?.value) || 0) : 0;
         pay = tienMatHonHop + chuyenKhoanHonHop + theHonHop;
       } else if (loaiTT === 'DEBT') {
         pay = 0;
+      } else {
+        if (hinhThucTTVal === 'TIEN_MAT') tienMatHonHop = pay;
+        else if (hinhThucTTVal === 'TAI_KHOAN') chuyenKhoanHonHop = pay;
+        else if (hinhThucTTVal === 'THE') theHonHop = pay;
       }
 
       // Khóa nút thanh toán tránh bấm trùng
@@ -29060,6 +29256,12 @@ function loadSoQuy(filter) {
       if (nguoiBanSel) {
         const curVal = nguoiBanSel.value;
         napDanhSachNhanVienVaoSelect('pos-nguoiban', curVal);
+      }
+      if (typeof renderSelectNganHangPOS === 'function') {
+        renderSelectNganHangPOS();
+      }
+      if (typeof onCheckboxHinhThucTTChange === 'function') {
+        onCheckboxHinhThucTTChange();
       }
     }
 
