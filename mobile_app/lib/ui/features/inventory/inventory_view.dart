@@ -209,7 +209,7 @@ class _InventoryViewState extends State<InventoryView> {
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                               ),
                               subtitle: Text(
-                                '${p.maHang} • Vốn: ${Formatters.formatCurrency(pGiaVon)} • Giá: ${Formatters.formatCurrency(p.giaBan)}${p.coQuanLyImei ? " • 📱 ${pImeis.length} IMEI" : ""}',
+                                '${p.maHang} • Vốn: ${Formatters.formatCurrency(pGiaVon)} • Giá: ${Formatters.formatCurrency(p.giaBan)}${p.coQuanLyImei ? " • 📱 ${pImeis.length} IMEI" : " • 🚫 Không IMEI"}',
                                 style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
                               ),
                               trailing: const Icon(Icons.edit_outlined, color: AppTheme.primaryBlue, size: 20),
@@ -238,8 +238,8 @@ class _InventoryViewState extends State<InventoryView> {
     final nameCtrl = TextEditingController(text: isEdit ? product.tenHang : '');
     final groupCtrl = TextEditingController(text: isEdit ? product.maNhom : 'Điện thoại');
     final unitCtrl = TextEditingController(text: isEdit ? product.donViTinh : 'Cái');
-    final costCtrl = TextEditingController(text: isEdit ? product.giaVon.toInt().toString() : '0');
-    final priceCtrl = TextEditingController(text: isEdit ? product.giaBan.toInt().toString() : '0');
+    final costCtrl = TextEditingController(text: isEdit ? Formatters.formatNumber(product.giaVon) : '0');
+    final priceCtrl = TextEditingController(text: isEdit ? Formatters.formatNumber(product.giaBan) : '0');
     final stockCtrl = TextEditingController(text: isEdit ? product.tonKho.toInt().toString() : '1');
     final branchCtrl = TextEditingController(text: isEdit ? product.chiNhanh : branchVm.selectedBranch.displayName);
 
@@ -383,6 +383,7 @@ class _InventoryViewState extends State<InventoryView> {
                           child: TextField(
                             controller: costCtrl,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [CurrencyInputFormatter()],
                             decoration: const InputDecoration(
                               labelText: 'Giá vốn nhập (VNĐ)',
                               border: OutlineInputBorder(),
@@ -396,6 +397,7 @@ class _InventoryViewState extends State<InventoryView> {
                           child: TextField(
                             controller: priceCtrl,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [CurrencyInputFormatter()],
                             decoration: const InputDecoration(
                               labelText: 'Giá bán ra (VNĐ)',
                               border: OutlineInputBorder(),
@@ -568,8 +570,8 @@ class _InventoryViewState extends State<InventoryView> {
                                 return;
                               }
 
-                              final cost = double.tryParse(costCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
-                              final price = double.tryParse(priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
+                              final cost = Formatters.parseCurrency(costCtrl.text);
+                              final price = Formatters.parseCurrency(priceCtrl.text);
                               final stock = double.tryParse(stockCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
 
                               final newProductModel = ProductModel(

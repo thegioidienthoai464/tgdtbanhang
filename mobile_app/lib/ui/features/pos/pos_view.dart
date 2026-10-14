@@ -704,6 +704,7 @@ class _PosViewState extends State<PosView> {
                 TextField(
                   controller: debtCtrl,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [CurrencyInputFormatter()],
                   decoration: const InputDecoration(
                     labelText: 'Công nợ ban đầu (VNĐ)',
                     hintText: '0',
@@ -765,7 +766,7 @@ class _PosViewState extends State<PosView> {
                           }
 
                           final code = codeCtrl.text.trim().isNotEmpty ? codeCtrl.text.trim() : defaultCode;
-                          final debt = double.tryParse(debtCtrl.text.replaceAll('.', '').replaceAll(',', '')) ?? 0.0;
+                          final debt = Formatters.parseCurrency(debtCtrl.text);
 
                           Navigator.pop(dCtx);
                           final created = await vm.createFullCustomer(
@@ -817,9 +818,9 @@ class _PosViewState extends State<PosView> {
     BankModel? chosenBank = vm.selectedBank ?? (vm.bankAccounts.isNotEmpty ? vm.bankAccounts.first : null);
     
     // Controller nhập số tiền khách trả
-    final TextEditingController paidCtrl = TextEditingController(text: subtotal.toInt().toString());
-    final TextEditingController cashPartCtrl = TextEditingController(text: (subtotal / 2).toInt().toString());
-    final TextEditingController bankPartCtrl = TextEditingController(text: (subtotal - (subtotal / 2).toInt()).toInt().toString());
+    final TextEditingController paidCtrl = TextEditingController(text: Formatters.formatNumber(subtotal));
+    final TextEditingController cashPartCtrl = TextEditingController(text: Formatters.formatNumber(subtotal / 2));
+    final TextEditingController bankPartCtrl = TextEditingController(text: Formatters.formatNumber(subtotal - (subtotal / 2).toInt()));
     bool applySurplusToDebt = true;
 
     showModalBottomSheet(
@@ -836,11 +837,11 @@ class _PosViewState extends State<PosView> {
             if (pMethod == 'CON_NO') {
               actualPaid = 0.0;
             } else if (pMethod == 'HON_HOP') {
-              final c = double.tryParse(cashPartCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
-              final b = double.tryParse(bankPartCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
+              final c = Formatters.parseCurrency(cashPartCtrl.text);
+              final b = Formatters.parseCurrency(bankPartCtrl.text);
               actualPaid = c + b;
             } else {
-              actualPaid = double.tryParse(paidCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
+              actualPaid = Formatters.parseCurrency(paidCtrl.text);
             }
 
             final diff = actualPaid - subtotal; // < 0: thiếu (nợ); > 0: thừa
@@ -1027,7 +1028,7 @@ class _PosViewState extends State<PosView> {
                           onSelected: (_) {
                             setModalState(() {
                               pMethod = 'TIEN_MAT';
-                              paidCtrl.text = subtotal.toInt().toString();
+                              paidCtrl.text = Formatters.formatNumber(subtotal);
                             });
                           },
                         ),
@@ -1038,7 +1039,7 @@ class _PosViewState extends State<PosView> {
                           onSelected: (_) {
                             setModalState(() {
                               pMethod = 'TAI_KHOAN';
-                              paidCtrl.text = subtotal.toInt().toString();
+                              paidCtrl.text = Formatters.formatNumber(subtotal);
                             });
                           },
                         ),
@@ -1049,8 +1050,8 @@ class _PosViewState extends State<PosView> {
                           onSelected: (_) {
                             setModalState(() {
                               pMethod = 'HON_HOP';
-                              cashPartCtrl.text = (subtotal / 2).toInt().toString();
-                              bankPartCtrl.text = (subtotal - (subtotal / 2).toInt()).toInt().toString();
+                              cashPartCtrl.text = Formatters.formatNumber(subtotal / 2);
+                              bankPartCtrl.text = Formatters.formatNumber(subtotal - (subtotal / 2).toInt());
                             });
                           },
                         ),
@@ -1136,6 +1137,7 @@ class _PosViewState extends State<PosView> {
                             child: TextField(
                               controller: cashPartCtrl,
                               keyboardType: TextInputType.number,
+                              inputFormatters: [CurrencyInputFormatter()],
                               decoration: InputDecoration(
                                 labelText: 'Tiền mặt (đ)',
                                 isDense: true,
@@ -1150,6 +1152,7 @@ class _PosViewState extends State<PosView> {
                             child: TextField(
                               controller: bankPartCtrl,
                               keyboardType: TextInputType.number,
+                              inputFormatters: [CurrencyInputFormatter()],
                               decoration: InputDecoration(
                                 labelText: 'Chuyển khoản (đ)',
                                 isDense: true,
@@ -1170,6 +1173,7 @@ class _PosViewState extends State<PosView> {
                             child: TextField(
                               controller: paidCtrl,
                               keyboardType: TextInputType.number,
+                              inputFormatters: [CurrencyInputFormatter()],
                               decoration: InputDecoration(
                                 labelText: 'Số tiền khách thanh toán (VNĐ)',
                                 prefixIcon: const Icon(Icons.attach_money),
@@ -1187,7 +1191,7 @@ class _PosViewState extends State<PosView> {
                             ),
                             onPressed: () {
                               setModalState(() {
-                                paidCtrl.text = subtotal.toInt().toString();
+                                paidCtrl.text = Formatters.formatNumber(subtotal);
                               });
                             },
                             child: const Text('Đúng tiền', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -1358,10 +1362,10 @@ class _PosViewState extends State<PosView> {
                           }
 
                           final cashVal = pMethod == 'HON_HOP' 
-                              ? (double.tryParse(cashPartCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0)
+                              ? Formatters.parseCurrency(cashPartCtrl.text)
                               : (pMethod == 'TIEN_MAT' ? actualPaid : 0.0);
                           final bankVal = pMethod == 'HON_HOP' 
-                              ? (double.tryParse(bankPartCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0)
+                              ? Formatters.parseCurrency(bankPartCtrl.text)
                               : (pMethod == 'TAI_KHOAN' ? actualPaid : 0.0);
 
                           final res = await vm.checkout(
@@ -1458,7 +1462,7 @@ class _PosViewState extends State<PosView> {
   // Dialog chỉnh sửa giá bán và số lượng của 1 mặt hàng trong giỏ
   void _showEditCartItemDialog(BuildContext context, PosViewModel vm, OrderItemModel item, [VoidCallback? onUpdated]) {
     final qtyCtrl = TextEditingController(text: item.soLuong.toString());
-    final priceCtrl = TextEditingController(text: item.donGia.toInt().toString());
+    final priceCtrl = TextEditingController(text: Formatters.formatNumber(item.donGia));
     final imeiCtrl = TextEditingController(text: item.imeiStr);
 
     showDialog(
@@ -1497,6 +1501,7 @@ class _PosViewState extends State<PosView> {
                 TextField(
                   controller: priceCtrl,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [CurrencyInputFormatter()],
                   decoration: const InputDecoration(
                     labelText: 'Đơn giá bán (VNĐ)',
                     hintText: 'Nhập giá bán mới...',
@@ -1517,17 +1522,40 @@ class _PosViewState extends State<PosView> {
                     isDense: true,
                   ),
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: imeiCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'IMEI / Serial (tùy chọn)',
-                    hintText: 'Nhập IMEI gắn với máy...',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.qr_code_2_outlined, size: 20),
-                    isDense: true,
+                if (item.coQuanLyImei) ...[
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: imeiCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'IMEI / Serial (tùy chọn)',
+                      hintText: 'Nhập IMEI gắn với máy...',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.qr_code_2_outlined, size: 20),
+                      isDense: true,
+                    ),
                   ),
-                ),
+                ] else ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.block, size: 16, color: Colors.grey),
+                        SizedBox(width: 8),
+                        Text(
+                          'Không quản lý IMEI',
+                          style: TextStyle(fontSize: 12.5, color: Colors.grey, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -1548,13 +1576,13 @@ class _PosViewState extends State<PosView> {
               ),
               onPressed: () {
                 final newQty = int.tryParse(qtyCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
-                final newPrice = double.tryParse(priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? item.donGia;
-                final newImei = imeiCtrl.text.trim();
+                final newPrice = Formatters.parseCurrency(priceCtrl.text);
+                final newImei = item.coQuanLyImei ? imeiCtrl.text.trim() : '';
 
                 vm.updateCartItem(
                   item.maHang,
                   quantity: newQty,
-                  price: newPrice,
+                  price: newPrice > 0 ? newPrice : item.donGia,
                   imeiStr: newImei,
                 );
                 Navigator.pop(dCtx);
@@ -1655,8 +1683,10 @@ class _PosViewState extends State<PosView> {
                                           ],
                                         ),
                                       ),
-                                      if (item.imeiStr.isNotEmpty)
-                                        Text('IMEI: ${item.imeiStr}', style: const TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                                      if (item.coQuanLyImei && item.imeiStr.isNotEmpty)
+                                        Text('IMEI: ${item.imeiStr}', style: const TextStyle(fontSize: 11, color: AppTheme.textMuted))
+                                      else if (!item.coQuanLyImei)
+                                        const Text('Không quản lý IMEI', style: TextStyle(fontSize: 10.5, color: Colors.grey, fontStyle: FontStyle.italic)),
                                     ],
                                   ),
                                 ),

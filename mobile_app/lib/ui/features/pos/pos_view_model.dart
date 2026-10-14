@@ -125,6 +125,7 @@ class PosViewModel extends ChangeNotifier {
         soLuong: existing.soLuong + 1,
         donGia: existing.donGia,
         imeiStr: existing.imeiStr,
+        coQuanLyImei: existing.coQuanLyImei,
       );
     } else {
       _cart.add(OrderItemModel(
@@ -132,6 +133,7 @@ class PosViewModel extends ChangeNotifier {
         tenHang: product.tenHang,
         soLuong: 1,
         donGia: product.giaBan,
+        coQuanLyImei: product.coQuanLyImei,
       ));
     }
     notifyListeners();
@@ -151,6 +153,7 @@ class PosViewModel extends ChangeNotifier {
           soLuong: newQty,
           donGia: current.donGia,
           imeiStr: current.imeiStr,
+          coQuanLyImei: current.coQuanLyImei,
         );
       }
       notifyListeners();
@@ -172,7 +175,8 @@ class PosViewModel extends ChangeNotifier {
           tenHang: current.tenHang,
           soLuong: newQty,
           donGia: newPrice,
-          imeiStr: newImei,
+          imeiStr: current.coQuanLyImei ? newImei : '',
+          coQuanLyImei: current.coQuanLyImei,
         );
       }
       notifyListeners();

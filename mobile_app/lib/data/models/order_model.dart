@@ -5,6 +5,7 @@ class OrderItemModel {
   final double donGia;
   final double thanhTien;
   final String imeiStr;
+  final bool coQuanLyImei;
 
   OrderItemModel({
     required this.maHang,
@@ -13,12 +14,18 @@ class OrderItemModel {
     this.donGia = 0,
     double? thanhTien,
     this.imeiStr = '',
+    this.coQuanLyImei = true,
   }) : thanhTien = thanhTien ?? (soLuong * donGia);
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
     int qty = (json['soLuong'] ?? json['so_luong'] ?? 1) as int;
     double price = ((json['donGia'] ?? json['don_gia'] ?? json['giaNhap']) as num?)?.toDouble() ?? 0.0;
     double total = ((json['thanhTien'] ?? json['thanh_tien']) as num?)?.toDouble() ?? (qty * price);
+    final rawCoImei = json['coQuanLyImei'] ?? json['co_quan_ly_imei'] ?? json['coQuanLyIMEI'];
+    bool hasImei = true;
+    if (rawCoImei != null) {
+      hasImei = rawCoImei == true || rawCoImei.toString().toLowerCase() == 'true';
+    }
 
     return OrderItemModel(
       maHang: json['maHang']?.toString() ?? json['ma_hang']?.toString() ?? '',
@@ -27,6 +34,7 @@ class OrderItemModel {
       donGia: price,
       thanhTien: total,
       imeiStr: json['imeiStr']?.toString() ?? json['imei']?.toString() ?? '',
+      coQuanLyImei: hasImei,
     );
   }
 
@@ -38,6 +46,8 @@ class OrderItemModel {
       'donGia': donGia,
       'thanhTien': thanhTien,
       'imeiStr': imeiStr,
+      'coQuanLyImei': coQuanLyImei,
+      'co_quan_ly_imei': coQuanLyImei,
     };
   }
 }

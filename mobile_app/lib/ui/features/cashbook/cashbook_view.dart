@@ -550,6 +550,7 @@ class _CashbookViewState extends State<CashbookView> {
                     TextField(
                       controller: amountCtrl,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [CurrencyInputFormatter()],
                       decoration: const InputDecoration(
                         labelText: 'Số tiền (VNĐ)',
                         border: OutlineInputBorder(),
@@ -1071,6 +1072,7 @@ ${tx.maChungTu.isNotEmpty ? "• Chứng từ  : ${tx.maChungTu}\n" : ""}══�
                     TextField(
                       controller: amountCtrl,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [CurrencyInputFormatter()],
                       decoration: const InputDecoration(
                         labelText: 'Số tiền (VNĐ)',
                         border: OutlineInputBorder(),

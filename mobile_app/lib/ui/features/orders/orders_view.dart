@@ -461,6 +461,26 @@ class _OrdersViewState extends State<OrdersView> with SingleTickerProviderStateM
                                           'IMEI: ${item.imeiStr}',
                                           style: const TextStyle(fontSize: 10.5, color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
                                         ),
+                                      )
+                                    else if (!item.coQuanLyImei)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade100,
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: Colors.grey.shade300),
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.block, size: 10, color: Colors.grey),
+                                            SizedBox(width: 3),
+                                            Text(
+                                              'Không QL IMEI',
+                                              style: TextStyle(fontSize: 9.5, color: Colors.grey, fontWeight: FontWeight.w600),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                   ],
                                 ),
