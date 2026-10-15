@@ -228,9 +228,11 @@ class LanPrinterService {
           ? 'Tien mat'
           : order.hinhThucTT == 'TAI_KHOAN'
               ? 'Chuyen khoan${order.nganHangNhan != null ? " (${removeDiacritics(order.nganHangNhan!)})" : ""}'
-              : order.hinhThucTT == 'HON_HOP'
-                  ? 'Hon hop (TM + CK)'
-                  : 'Ghi no';
+              : order.hinhThucTT == 'THE'
+                  ? 'Quet the POS${order.nganHangNhan != null ? " (${removeDiacritics(order.nganHangNhan!)})" : ""}'
+                  : order.hinhThucTT == 'HON_HOP'
+                      ? 'Ket hop${order.nganHangNhan != null ? " (${removeDiacritics(order.nganHangNhan!)})" : ""}'
+                      : 'Ghi no';
 
       bytes.addAll([0x1B, 0x45, 0x01]); // In đậm
       bytes.addAll(utf8.encode("TONG TIEN HANG  : $tongTienStr\n"));

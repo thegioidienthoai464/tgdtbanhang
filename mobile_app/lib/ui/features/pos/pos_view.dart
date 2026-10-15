@@ -809,19 +809,96 @@ class _PosViewState extends State<PosView> {
     );
   }
 
-  // Modal Xác Nhận Thanh Toán Toàn Diện
+  // Modal Xác Nhận Thanh Toán Toàn Diện (Checkbox Tiền mặt, Ngân hàng, Thẻ POS & Kết hợp cả 3)
   void _showCheckoutModal(BuildContext context, PosViewModel vm, BranchViewModel branchVm) {
     final subtotal = vm.subtotal;
     
-    // State cục bộ cho modal thanh toán
-    String pMethod = vm.paymentMethod;
+    // State cục bộ cho modal thanh toán dạng Checkbox
+    bool isCash = true;
+    bool isBank = false;
+    bool isPosCard = false;
+    bool isDebtOnly = (vm.paymentMethod == 'CON_NO');
+    if (isDebtOnly) {
+      isCash = false;
+      isBank = false;
+      isPosCard = false;
+    } else if (vm.paymentMethod == 'TAI_KHOAN') {
+      isCash = false;
+      isBank = true;
+      isPosCard = false;
+    } else if (vm.paymentMethod == 'THE') {
+      isCash = false;
+      isBank = false;
+      isPosCard = true;
+    }
+
     BankModel? chosenBank = vm.selectedBank ?? (vm.bankAccounts.isNotEmpty ? vm.bankAccounts.first : null);
+    BankModel? chosenCardBank = vm.selectedBank ?? (vm.bankAccounts.isNotEmpty ? vm.bankAccounts.first : null);
     
     // Controller nhập số tiền khách trả
     final TextEditingController paidCtrl = TextEditingController(text: Formatters.formatNumber(subtotal));
-    final TextEditingController cashPartCtrl = TextEditingController(text: Formatters.formatNumber(subtotal / 2));
-    final TextEditingController bankPartCtrl = TextEditingController(text: Formatters.formatNumber(subtotal - (subtotal / 2).toInt()));
+    final TextEditingController cashPartCtrl = TextEditingController(text: Formatters.formatNumber(subtotal));
+    final TextEditingController bankPartCtrl = TextEditingController(text: '0');
+    final TextEditingController cardPartCtrl = TextEditingController(text: '0');
     bool applySurplusToDebt = true;
+
+    // Tự động phân bổ số tiền khi thay đổi các checkbox phương thức thanh toán
+    void autoDistributeAmounts() {
+      final selected = <String>[];
+      if (isCash) selected.add('cash');
+      if (isBank) selected.add('bank');
+      if (isPosCard) selected.add('card');
+
+      if (selected.isEmpty) {
+        paidCtrl.text = '0';
+        cashPartCtrl.text = '0';
+        bankPartCtrl.text = '0';
+        cardPartCtrl.text = '0';
+        return;
+      }
+
+      if (selected.length == 1) {
+        final fullStr = Formatters.formatNumber(subtotal);
+        paidCtrl.text = fullStr;
+        if (isCash) {
+          cashPartCtrl.text = fullStr;
+          bankPartCtrl.text = '0';
+          cardPartCtrl.text = '0';
+        } else if (isBank) {
+          bankPartCtrl.text = fullStr;
+          cashPartCtrl.text = '0';
+          cardPartCtrl.text = '0';
+        } else if (isPosCard) {
+          cardPartCtrl.text = fullStr;
+          cashPartCtrl.text = '0';
+          bankPartCtrl.text = '0';
+        }
+      } else if (selected.length == 2) {
+        final half = (subtotal / 2).floorToDouble();
+        final rem = subtotal - half;
+        final halfStr = Formatters.formatNumber(half);
+        final remStr = Formatters.formatNumber(rem);
+        if (isCash && isBank) {
+          cashPartCtrl.text = halfStr;
+          bankPartCtrl.text = remStr;
+          cardPartCtrl.text = '0';
+        } else if (isCash && isPosCard) {
+          cashPartCtrl.text = halfStr;
+          cardPartCtrl.text = remStr;
+          bankPartCtrl.text = '0';
+        } else if (isBank && isPosCard) {
+          bankPartCtrl.text = halfStr;
+          cardPartCtrl.text = remStr;
+          cashPartCtrl.text = '0';
+        }
+      } else if (selected.length == 3) {
+        final third = (subtotal / 3).floorToDouble();
+        final rem = subtotal - (third * 2);
+        cashPartCtrl.text = Formatters.formatNumber(third);
+        bankPartCtrl.text = Formatters.formatNumber(third);
+        cardPartCtrl.text = Formatters.formatNumber(rem);
+      }
+    }
 
     showModalBottomSheet(
       context: context,
@@ -832,14 +909,34 @@ class _PosViewState extends State<PosView> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            // Tính toán số tiền khách trả theo hình thức
+            final int selectedCount = (isCash ? 1 : 0) + (isBank ? 1 : 0) + (isPosCard ? 1 : 0);
+            final bool isCombined = selectedCount >= 2;
+
+            // Xác định mã hình thức thanh toán chuẩn
+            String pMethod;
+            if (isDebtOnly) {
+              pMethod = 'CON_NO';
+            } else if (isCombined) {
+              pMethod = 'HON_HOP';
+            } else if (isCash) {
+              pMethod = 'TIEN_MAT';
+            } else if (isBank) {
+              pMethod = 'TAI_KHOAN';
+            } else if (isPosCard) {
+              pMethod = 'THE';
+            } else {
+              pMethod = 'TIEN_MAT';
+            }
+
+            // Tính toán số tiền khách trả thực tế
             double actualPaid = 0.0;
-            if (pMethod == 'CON_NO') {
+            if (isDebtOnly) {
               actualPaid = 0.0;
-            } else if (pMethod == 'HON_HOP') {
-              final c = Formatters.parseCurrency(cashPartCtrl.text);
-              final b = Formatters.parseCurrency(bankPartCtrl.text);
-              actualPaid = c + b;
+            } else if (isCombined) {
+              final c = isCash ? Formatters.parseCurrency(cashPartCtrl.text) : 0.0;
+              final b = isBank ? Formatters.parseCurrency(bankPartCtrl.text) : 0.0;
+              final p = isPosCard ? Formatters.parseCurrency(cardPartCtrl.text) : 0.0;
+              actualPaid = c + b + p;
             } else {
               actualPaid = Formatters.parseCurrency(paidCtrl.text);
             }
@@ -1014,94 +1111,386 @@ class _PosViewState extends State<PosView> {
                     ),
                     const Divider(),
 
-                    // Khối 3: Hình thức thanh toán (4 tùy chọn)
-                    const Text('Hình thức thanh toán:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
+                    // Khối 3: Hình thức thanh toán dạng CHECKBOX (Tiền mặt, Ngân hàng, Thẻ POS & Kết hợp cả 3)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        ChoiceChip(
-                          avatar: const Icon(Icons.payments_outlined, size: 16),
-                          label: const Text('Tiền mặt'),
-                          selected: pMethod == 'TIEN_MAT',
-                          onSelected: (_) {
-                            setModalState(() {
-                              pMethod = 'TIEN_MAT';
-                              paidCtrl.text = Formatters.formatNumber(subtotal);
-                            });
-                          },
+                        const Text(
+                          'Hình thức thanh toán (Tích chọn):',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                         ),
-                        ChoiceChip(
-                          avatar: const Icon(Icons.account_balance_outlined, size: 16),
-                          label: const Text('Chuyển khoản'),
-                          selected: pMethod == 'TAI_KHOAN',
-                          onSelected: (_) {
-                            setModalState(() {
-                              pMethod = 'TAI_KHOAN';
-                              paidCtrl.text = Formatters.formatNumber(subtotal);
-                            });
-                          },
+                        if (isCombined)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.amber.shade400),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.splitscreen_outlined, size: 12, color: Colors.brown),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Kết hợp ($selectedCount phương thức)',
+                                  style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.brown),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Hàng 3 Checkbox: Tiền mặt • Ngân hàng • Thẻ POS
+                    Row(
+                      children: [
+                        // Checkbox 1: Tiền mặt
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setModalState(() {
+                                isDebtOnly = false;
+                                if (isCash && (isBank || isPosCard)) {
+                                  isCash = false;
+                                } else {
+                                  isCash = true;
+                                }
+                                autoDistributeAmounts();
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: (isCash && !isDebtOnly) ? const Color(0xFFF0FDFA) : Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: (isCash && !isDebtOnly) ? const Color(0xFF0D9488) : Colors.grey.shade300,
+                                  width: (isCash && !isDebtOnly) ? 2.0 : 1.0,
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.payments_outlined, size: 16, color: (isCash && !isDebtOnly) ? const Color(0xFF0D9488) : Colors.grey.shade600),
+                                      const SizedBox(width: 4),
+                                      SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: Checkbox(
+                                          value: isCash && !isDebtOnly,
+                                          activeColor: const Color(0xFF0D9488),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                          onChanged: (_) {
+                                            setModalState(() {
+                                              isDebtOnly = false;
+                                              if (isCash && (isBank || isPosCard)) {
+                                                isCash = false;
+                                              } else {
+                                                isCash = true;
+                                              }
+                                              autoDistributeAmounts();
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Tiền mặt',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: (isCash && !isDebtOnly) ? FontWeight.bold : FontWeight.w600,
+                                      color: (isCash && !isDebtOnly) ? const Color(0xFF0D9488) : Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        ChoiceChip(
-                          avatar: const Icon(Icons.splitscreen_outlined, size: 16),
-                          label: const Text('Hỗn hợp (TM + CK)'),
-                          selected: pMethod == 'HON_HOP',
-                          onSelected: (_) {
-                            setModalState(() {
-                              pMethod = 'HON_HOP';
-                              cashPartCtrl.text = Formatters.formatNumber(subtotal / 2);
-                              bankPartCtrl.text = Formatters.formatNumber(subtotal - (subtotal / 2).toInt());
-                            });
-                          },
+                        const SizedBox(width: 6),
+
+                        // Checkbox 2: Ngân hàng (Chuyển khoản)
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setModalState(() {
+                                isDebtOnly = false;
+                                if (isBank && (isCash || isPosCard)) {
+                                  isBank = false;
+                                } else {
+                                  isBank = true;
+                                }
+                                autoDistributeAmounts();
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: (isBank && !isDebtOnly) ? const Color(0xFFEFF6FF) : Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: (isBank && !isDebtOnly) ? AppTheme.primaryBlue : Colors.grey.shade300,
+                                  width: (isBank && !isDebtOnly) ? 2.0 : 1.0,
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.account_balance_outlined, size: 16, color: (isBank && !isDebtOnly) ? AppTheme.primaryBlue : Colors.grey.shade600),
+                                      const SizedBox(width: 4),
+                                      SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: Checkbox(
+                                          value: isBank && !isDebtOnly,
+                                          activeColor: AppTheme.primaryBlue,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                          onChanged: (_) {
+                                            setModalState(() {
+                                              isDebtOnly = false;
+                                              if (isBank && (isCash || isPosCard)) {
+                                                isBank = false;
+                                              } else {
+                                                isBank = true;
+                                              }
+                                              autoDistributeAmounts();
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Ngân hàng',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: (isBank && !isDebtOnly) ? FontWeight.bold : FontWeight.w600,
+                                      color: (isBank && !isDebtOnly) ? AppTheme.primaryBlue : Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        ChoiceChip(
-                          avatar: const Icon(Icons.edit_note_outlined, size: 16),
-                          label: const Text('Ghi nợ'),
-                          selected: pMethod == 'CON_NO',
-                          onSelected: (_) {
-                            setModalState(() {
-                              pMethod = 'CON_NO';
-                              paidCtrl.text = '0';
-                            });
-                          },
+                        const SizedBox(width: 6),
+
+                        // Checkbox 3: Quẹt thẻ POS
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setModalState(() {
+                                isDebtOnly = false;
+                                if (isPosCard && (isCash || isBank)) {
+                                  isPosCard = false;
+                                } else {
+                                  isPosCard = true;
+                                }
+                                autoDistributeAmounts();
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: (isPosCard && !isDebtOnly) ? const Color(0xFFFAF5FF) : Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: (isPosCard && !isDebtOnly) ? const Color(0xFF9333EA) : Colors.grey.shade300,
+                                  width: (isPosCard && !isDebtOnly) ? 2.0 : 1.0,
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.credit_card_outlined, size: 16, color: (isPosCard && !isDebtOnly) ? const Color(0xFF9333EA) : Colors.grey.shade600),
+                                      const SizedBox(width: 4),
+                                      SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: Checkbox(
+                                          value: isPosCard && !isDebtOnly,
+                                          activeColor: const Color(0xFF9333EA),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                          onChanged: (_) {
+                                            setModalState(() {
+                                              isDebtOnly = false;
+                                              if (isPosCard && (isCash || isBank)) {
+                                                isPosCard = false;
+                                              } else {
+                                                isPosCard = true;
+                                              }
+                                              autoDistributeAmounts();
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Thẻ POS',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: (isPosCard && !isDebtOnly) ? FontWeight.bold : FontWeight.w600,
+                                      color: (isPosCard && !isDebtOnly) ? const Color(0xFF9333EA) : Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
 
-                    // Khối 4: Tùy chọn Tài khoản ngân hàng (nếu là TAI_KHOAN hoặc HON_HOP)
-                    if (pMethod == 'TAI_KHOAN' || pMethod == 'HON_HOP') ...[
+                    // Tùy chọn Ghi nợ phụ (Nợ toàn bộ 100%)
+                    InkWell(
+                      onTap: () {
+                        setModalState(() {
+                          isDebtOnly = !isDebtOnly;
+                          if (isDebtOnly) {
+                            paidCtrl.text = '0';
+                            cashPartCtrl.text = '0';
+                            bankPartCtrl.text = '0';
+                            cardPartCtrl.text = '0';
+                          } else {
+                            isCash = true;
+                            autoDistributeAmounts();
+                          }
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: Checkbox(
+                                value: isDebtOnly,
+                                activeColor: AppTheme.warningOrange,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                onChanged: (val) {
+                                  setModalState(() {
+                                    isDebtOnly = val ?? false;
+                                    if (isDebtOnly) {
+                                      paidCtrl.text = '0';
+                                      cashPartCtrl.text = '0';
+                                      bankPartCtrl.text = '0';
+                                      cardPartCtrl.text = '0';
+                                    } else {
+                                      isCash = true;
+                                      autoDistributeAmounts();
+                                    }
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'Khách nợ toàn bộ 100% (chưa thanh toán)',
+                              style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Khối 4 & 5: Nhập số tiền chi tiết cho từng hình thức
+                    if (isCombined && !isDebtOnly) ...[
+                      // KHỐI PHÂN BỔ TIỀN KHI CHỌN TỪ 2 HOẶC CẢ 3 HÌNH THỨC
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.blue.shade50.withOpacity(0.5),
+                          color: const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: Colors.blue.shade200),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Row(
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Icon(Icons.account_balance, size: 16, color: AppTheme.primaryBlue),
-                                SizedBox(width: 6),
-                                Text(
-                                  'Tài khoản ngân hàng nhận tiền (*):',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.primaryBlue),
+                                const Text(
+                                  'Chia tiền theo phương thức đã chọn:',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                                ),
+                                InkWell(
+                                  onTap: () => setModalState(() => autoDistributeAmounts()),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.shade100,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: const Text('Chia đều', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue)),
+                                  ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 6),
-                            if (vm.bankAccounts.isEmpty)
-                              const Text('Chưa có danh sách ngân hàng trong hệ thống', style: TextStyle(fontSize: 12, color: Colors.grey))
-                            else
+                            const SizedBox(height: 8),
+
+                            // 1. Ô tiền mặt
+                            if (isCash) ...[
+                              TextField(
+                                controller: cashPartCtrl,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [CurrencyInputFormatter()],
+                                decoration: InputDecoration(
+                                  labelText: '💵 Tiền mặt (đ)',
+                                  isDense: true,
+                                  prefixIcon: const Icon(Icons.payments, size: 16, color: Color(0xFF0D9488)),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                ),
+                                onChanged: (_) => setModalState(() {}),
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+
+                            // 2. Ô ngân hàng + Dropdown chọn ngân hàng
+                            if (isBank) ...[
+                              TextField(
+                                controller: bankPartCtrl,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [CurrencyInputFormatter()],
+                                decoration: InputDecoration(
+                                  labelText: '🏦 Chuyển khoản ngân hàng (đ)',
+                                  isDense: true,
+                                  prefixIcon: const Icon(Icons.account_balance, size: 16, color: AppTheme.primaryBlue),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                ),
+                                onChanged: (_) => setModalState(() {}),
+                              ),
+                              const SizedBox(height: 6),
                               DropdownButtonFormField<BankModel>(
                                 isExpanded: true,
                                 value: chosenBank,
                                 decoration: InputDecoration(
+                                  labelText: 'Tài khoản ngân hàng nhận tiền',
                                   isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                   filled: true,
                                   fillColor: Colors.white,
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -1111,62 +1500,62 @@ class _PosViewState extends State<PosView> {
                                     value: b,
                                     child: Text(
                                       b.displayName,
-                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                      style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   );
                                 }).toList(),
-                                onChanged: (newBank) {
-                                  setModalState(() {
-                                    chosenBank = newBank;
-                                  });
-                                },
+                                onChanged: (newBank) => setModalState(() => chosenBank = newBank),
                               ),
+                              const SizedBox(height: 8),
+                            ],
+
+                            // 3. Ô quẹt thẻ POS + Dropdown chọn tài khoản thẻ
+                            if (isPosCard) ...[
+                              TextField(
+                                controller: cardPartCtrl,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [CurrencyInputFormatter()],
+                                decoration: InputDecoration(
+                                  labelText: '💳 Quẹt thẻ POS (đ)',
+                                  isDense: true,
+                                  prefixIcon: const Icon(Icons.credit_card, size: 16, color: Color(0xFF9333EA)),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                ),
+                                onChanged: (_) => setModalState(() {}),
+                              ),
+                              const SizedBox(height: 6),
+                              DropdownButtonFormField<BankModel>(
+                                isExpanded: true,
+                                value: chosenCardBank,
+                                decoration: InputDecoration(
+                                  labelText: 'Tài khoản thẻ POS nhận',
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                items: vm.bankAccounts.map((b) {
+                                  return DropdownMenuItem<BankModel>(
+                                    value: b,
+                                    child: Text(
+                                      '💳 Thẻ POS: ${b.displayName}',
+                                      style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (newBank) => setModalState(() => chosenCardBank = newBank),
+                              ),
+                            ],
                           ],
                         ),
                       ),
-                      const SizedBox(height: 12),
-                    ],
-
-                    // Khối 5: Nhập số tiền chi tiết cho từng hình thức
-                    if (pMethod == 'HON_HOP') ...[
-                      // Hai ô nhập tiền mặt & chuyển khoản cho thanh toán hỗn hợp
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: cashPartCtrl,
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [CurrencyInputFormatter()],
-                              decoration: InputDecoration(
-                                labelText: 'Tiền mặt (đ)',
-                                isDense: true,
-                                prefixIcon: const Icon(Icons.payments, size: 16),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                              onChanged: (_) => setModalState(() {}),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: bankPartCtrl,
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [CurrencyInputFormatter()],
-                              decoration: InputDecoration(
-                                labelText: 'Chuyển khoản (đ)',
-                                isDense: true,
-                                prefixIcon: const Icon(Icons.account_balance, size: 16),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                              onChanged: (_) => setModalState(() {}),
-                            ),
-                          ),
-                        ],
-                      ),
                       const SizedBox(height: 8),
-                    ] else if (pMethod != 'CON_NO') ...[
-                      // Ô nhập số tiền khách trả tùy chỉnh
+                    ] else if (!isDebtOnly) ...[
+                      // KHI CHỈ CHỌN 1 HÌNH THỨC DUY NHẤT
                       Row(
                         children: [
                           Expanded(
@@ -1175,8 +1564,13 @@ class _PosViewState extends State<PosView> {
                               keyboardType: TextInputType.number,
                               inputFormatters: [CurrencyInputFormatter()],
                               decoration: InputDecoration(
-                                labelText: 'Số tiền khách thanh toán (VNĐ)',
-                                prefixIcon: const Icon(Icons.attach_money),
+                                labelText: isCash 
+                                    ? 'Số tiền mặt thanh toán (VNĐ)' 
+                                    : (isBank ? 'Số tiền chuyển khoản (VNĐ)' : 'Số tiền quẹt thẻ POS (VNĐ)'),
+                                prefixIcon: Icon(
+                                  isCash ? Icons.payments_outlined : (isBank ? Icons.account_balance_outlined : Icons.credit_card_outlined),
+                                  color: isCash ? const Color(0xFF0D9488) : (isBank ? AppTheme.primaryBlue : const Color(0xFF9333EA)),
+                                ),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                                 suffixText: 'đ',
                               ),
@@ -1199,6 +1593,62 @@ class _PosViewState extends State<PosView> {
                         ],
                       ),
                       const SizedBox(height: 8),
+
+                      // Dropdown ngân hàng nếu là Chuyển khoản
+                      if (isBank) ...[
+                        DropdownButtonFormField<BankModel>(
+                          isExpanded: true,
+                          value: chosenBank,
+                          decoration: InputDecoration(
+                            labelText: 'Tài khoản ngân hàng nhận tiền (*)',
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          items: vm.bankAccounts.map((b) {
+                            return DropdownMenuItem<BankModel>(
+                              value: b,
+                              child: Text(
+                                b.displayName,
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (newBank) => setModalState(() => chosenBank = newBank),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+
+                      // Dropdown tài khoản thẻ nếu là Quẹt thẻ POS
+                      if (isPosCard) ...[
+                        DropdownButtonFormField<BankModel>(
+                          isExpanded: true,
+                          value: chosenCardBank,
+                          decoration: InputDecoration(
+                            labelText: 'Tài khoản thẻ POS nhận tiền (*)',
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          items: vm.bankAccounts.map((b) {
+                            return DropdownMenuItem<BankModel>(
+                              value: b,
+                              child: Text(
+                                '💳 Thẻ POS: ${b.displayName}',
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (newBank) => setModalState(() => chosenCardBank = newBank),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                     ],
 
                     // Khối 6: Bảng tính toán chênh lệch & Thông báo công nợ / tiền thừa
@@ -1361,20 +1811,31 @@ class _PosViewState extends State<PosView> {
                             return;
                           }
 
-                          final cashVal = pMethod == 'HON_HOP' 
-                              ? Formatters.parseCurrency(cashPartCtrl.text)
-                              : (pMethod == 'TIEN_MAT' ? actualPaid : 0.0);
-                          final bankVal = pMethod == 'HON_HOP' 
-                              ? Formatters.parseCurrency(bankPartCtrl.text)
-                              : (pMethod == 'TAI_KHOAN' ? actualPaid : 0.0);
+                          final cashVal = isDebtOnly
+                              ? 0.0
+                              : (isCombined
+                                  ? (isCash ? Formatters.parseCurrency(cashPartCtrl.text) : 0.0)
+                                  : (isCash ? actualPaid : 0.0));
+                          final bankVal = isDebtOnly
+                              ? 0.0
+                              : (isCombined
+                                  ? (isBank ? Formatters.parseCurrency(bankPartCtrl.text) : 0.0)
+                                  : (isBank ? actualPaid : 0.0));
+                          final cardVal = isDebtOnly
+                              ? 0.0
+                              : (isCombined
+                                  ? (isPosCard ? Formatters.parseCurrency(cardPartCtrl.text) : 0.0)
+                                  : (isPosCard ? actualPaid : 0.0));
 
                           final res = await vm.checkout(
                             chiNhanh: branchVm.selectedBranch.displayName,
                             customerPaid: actualPaid,
                             paymentMethod: pMethod,
                             bankAccount: chosenBank,
+                            cardBankAccount: chosenCardBank,
                             cashAmount: cashVal,
                             bankTransferAmount: bankVal,
+                            cardAmount: cardVal,
                             applySurplusToDebt: applySurplusToDebt,
                           );
 

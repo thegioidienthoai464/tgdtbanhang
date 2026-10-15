@@ -1,10 +1,10 @@
 {
-  "version": "1.2.0",
-  "build_number": 21,
+  "version": "1.2.1",
+  "build_number": 22,
   "force_update": false,
-  "release_notes": "• Tối ưu quản lý IMEI: Tự động phát hiện và ẩn ô nhập IMEI đối với các mặt hàng không quản lý theo IMEI (phụ kiện, ốp lưng, kính cường lực...), hiển thị nhãn trạng thái trực quan.\n• Định dạng dấu chấm (.) phân tách hàng nghìn: Đơn giá sản phẩm và các ô nhập tiền thanh toán tự động định dạng chuẩn tiếng Việt (ví dụ: 160.000, 343.600), không còn số thô khó đọc.\n• Tối ưu màn hình Quản lý đơn hàng (Bán hàng, Đặt hàng, Nhập kho): Thân trang hiển thị trọn vẹn danh sách đơn, thẻ đơn hàng tinh gọn thoáng mắt và bổ sung xem chi tiết/in bill LAN.\n• Đồng bộ build số 21: Khắc phục triệt để thông báo cập nhật lặp lại.",
+  "release_notes": "• Thanh toán linh hoạt dạng Checkbox: Bổ sung 3 tùy chọn Tiền mặt, Ngân hàng, Thẻ POS và hỗ trợ kết hợp tự do cả 3 phương án (hoặc 2 trong 3, 1 trong 3) với tính năng chia tiền thông minh.\n• Tối ưu quản lý IMEI: Tự động ẩn ô nhập IMEI cho phụ kiện và hiển thị trực quan.\n• Định dạng dấu chấm (.) phân tách hàng nghìn cho tất cả ô nhập tiền và đơn giá.\n• Quản lý đơn hàng: Thân trang rộng thoáng hiển thị tối đa danh sách đơn hàng, xem chi tiết và in bill LAN.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.0/TT_POS_v1.2.0.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.0/TT_POS_v1.2.0.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.0"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.1/TT_POS_v1.2.1.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.1/TT_POS_v1.2.1.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.1"
 }

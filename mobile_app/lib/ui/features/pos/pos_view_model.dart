@@ -269,8 +269,10 @@ class PosViewModel extends ChangeNotifier {
     required double customerPaid,
     required String paymentMethod,
     BankModel? bankAccount,
+    BankModel? cardBankAccount,
     double cashAmount = 0.0,
     double bankTransferAmount = 0.0,
+    double cardAmount = 0.0,
     bool applySurplusToDebt = true,
   }) async {
     if (_cart.isEmpty) return {'success': false, 'message': 'Giỏ hàng đang trống'};
@@ -297,9 +299,27 @@ class PosViewModel extends ChangeNotifier {
       final now = DateTime.now();
       final maDon = "HD${now.millisecondsSinceEpoch.toString().substring(5)}";
       final branch = chiNhanh ?? 'CN01: Trụ sở chính';
-      final bankName = (paymentMethod == 'TAI_KHOAN' || paymentMethod == 'HON_HOP')
-          ? (bankAccount?.displayName ?? _selectedBank?.displayName)
-          : null;
+      
+      String? bankName;
+      if (paymentMethod == 'TAI_KHOAN') {
+        bankName = bankAccount?.displayName ?? _selectedBank?.displayName;
+      } else if (paymentMethod == 'THE') {
+        bankName = cardBankAccount?.displayName ?? bankAccount?.displayName ?? _selectedBank?.displayName ?? 'Thẻ POS';
+      } else if (paymentMethod == 'HON_HOP') {
+        final List<String> parts = [];
+        if (cashAmount > 0) {
+          parts.add('TM: ${Formatters.formatNumber(cashAmount)}');
+        }
+        if (bankTransferAmount > 0) {
+          final bName = bankAccount?.displayName ?? 'CK';
+          parts.add('CK: ${Formatters.formatNumber(bankTransferAmount)} [$bName]');
+        }
+        if (cardAmount > 0) {
+          final cName = cardBankAccount?.displayName ?? 'Thẻ POS';
+          parts.add('Thẻ POS: ${Formatters.formatNumber(cardAmount)} [$cName]');
+        }
+        bankName = parts.isNotEmpty ? parts.join(' • ') : null;
+      }
 
       final order = OrderModel(
         maDonHang: maDon,
@@ -359,17 +379,32 @@ class PosViewModel extends ChangeNotifier {
           maPhieu: maPT,
           chiNhanh: branch,
           loaiPhieu: 'THU',
-          loaiQuy: bankName ?? 'TAI_KHOAN',
+          loaiQuy: 'TAI_KHOAN',
           ngayGD: now,
           soTien: paid,
           doiTuong: 'Khách hàng',
           maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KHACHLE',
           maChungTu: maDon,
-          ghiChu: 'Thu chuyển khoản bán hàng POS $maDon',
+          ghiChu: 'Thu chuyển khoản [${bankAccount?.displayName ?? "Ngân hàng"}] đơn hàng $maDon',
+        );
+        await _cashbookRepo.saveTransaction(phieuThu);
+      } else if (paymentMethod == 'THE' && paid > 0) {
+        final maPT = "PT${now.millisecondsSinceEpoch.toString().substring(6)}";
+        final phieuThu = CashbookModel(
+          maPhieu: maPT,
+          chiNhanh: branch,
+          loaiPhieu: 'THU',
+          loaiQuy: 'THE',
+          ngayGD: now,
+          soTien: paid,
+          doiTuong: 'Khách hàng',
+          maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KHACHLE',
+          maChungTu: maDon,
+          ghiChu: 'Thu quẹt thẻ POS [${cardBankAccount?.displayName ?? "Thẻ POS"}] đơn hàng $maDon',
         );
         await _cashbookRepo.saveTransaction(phieuThu);
       } else if (paymentMethod == 'HON_HOP') {
-        // Thanh toán hỗn hợp: tách riêng phiếu thu tiền mặt và chuyển khoản
+        // Thanh toán hỗn hợp: tách riêng từng phiếu thu tương ứng
         if (cashAmount > 0) {
           final maPT1 = "PT${now.millisecondsSinceEpoch.toString().substring(6)}A";
           final phieuThuTienMat = CashbookModel(
@@ -382,7 +417,7 @@ class PosViewModel extends ChangeNotifier {
             doiTuong: 'Khách hàng',
             maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KHACHLE',
             maChungTu: maDon,
-            ghiChu: 'Thu tiền mặt đơn hàng $maDon (Thanh toán hỗn hợp)',
+            ghiChu: 'Thu tiền mặt đơn hàng $maDon (Thanh toán kết hợp)',
           );
           await _cashbookRepo.saveTransaction(phieuThuTienMat);
         }
@@ -392,15 +427,31 @@ class PosViewModel extends ChangeNotifier {
             maPhieu: maPT2,
             chiNhanh: branch,
             loaiPhieu: 'THU',
-            loaiQuy: bankName ?? 'TAI_KHOAN',
+            loaiQuy: 'TAI_KHOAN',
             ngayGD: now,
             soTien: bankTransferAmount,
             doiTuong: 'Khách hàng',
             maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KHACHLE',
             maChungTu: maDon,
-            ghiChu: 'Thu chuyển khoản đơn hàng $maDon (Thanh toán hỗn hợp)',
+            ghiChu: 'Thu chuyển khoản [${bankAccount?.displayName ?? "Ngân hàng"}] đơn hàng $maDon (Thanh toán kết hợp)',
           );
           await _cashbookRepo.saveTransaction(phieuThuBank);
+        }
+        if (cardAmount > 0) {
+          final maPT3 = "PT${now.millisecondsSinceEpoch.toString().substring(6)}C";
+          final phieuThuCard = CashbookModel(
+            maPhieu: maPT3,
+            chiNhanh: branch,
+            loaiPhieu: 'THU',
+            loaiQuy: 'THE',
+            ngayGD: now,
+            soTien: cardAmount,
+            doiTuong: 'Khách hàng',
+            maDoiTuong: _selectedCustomer?.maDoiTac ?? 'KHACHLE',
+            maChungTu: maDon,
+            ghiChu: 'Thu quẹt thẻ POS [${cardBankAccount?.displayName ?? "Thẻ POS"}] đơn hàng $maDon (Thanh toán kết hợp)',
+          );
+          await _cashbookRepo.saveTransaction(phieuThuCard);
         }
       }
 

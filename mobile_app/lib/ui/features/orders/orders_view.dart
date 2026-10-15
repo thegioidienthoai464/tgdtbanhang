@@ -237,7 +237,13 @@ class _OrdersViewState extends State<OrdersView> with SingleTickerProviderStateM
                         Row(
                           children: [
                             Icon(
-                              (o.hinhThucTT == 'TIEN_MAT') ? Icons.payments_outlined : Icons.account_balance_outlined,
+                              (o.hinhThucTT == 'TIEN_MAT')
+                                  ? Icons.payments_outlined
+                                  : (o.hinhThucTT == 'THE'
+                                      ? Icons.credit_card_outlined
+                                      : (o.hinhThucTT == 'HON_HOP'
+                                          ? Icons.splitscreen_outlined
+                                          : Icons.account_balance_outlined)),
                               size: 13,
                               color: AppTheme.textMuted,
                             ),
@@ -247,7 +253,13 @@ class _OrdersViewState extends State<OrdersView> with SingleTickerProviderStateM
                                   ? 'Cọc: ${Formatters.formatCurrency(o.khachTra)}'
                                   : (isImport
                                       ? 'Đã trả: ${Formatters.formatCurrency(o.khachTra)}'
-                                      : (o.hinhThucTT == 'TIEN_MAT' ? 'Tiền mặt' : 'Chuyển khoản')),
+                                      : (o.hinhThucTT == 'TIEN_MAT'
+                                          ? 'Tiền mặt'
+                                          : (o.hinhThucTT == 'THE'
+                                              ? 'Thẻ POS'
+                                              : (o.hinhThucTT == 'HON_HOP'
+                                                  ? 'Kết hợp'
+                                                  : 'Chuyển khoản')))),
                               style: TextStyle(
                                 fontSize: 11.5,
                                 color: isPreOrder ? AppTheme.successGreen : AppTheme.textMuted,
@@ -511,7 +523,13 @@ class _OrdersViewState extends State<OrdersView> with SingleTickerProviderStateM
                             const Divider(height: 12),
                             _buildMoneyRow(
                               'Hình thức thanh toán:',
-                              o.hinhThucTT == 'TIEN_MAT' ? 'Tiền mặt' : 'Chuyển khoản ${o.nganHangNhan ?? ""}'.trim(),
+                              o.hinhThucTT == 'TIEN_MAT'
+                                  ? 'Tiền mặt'
+                                  : (o.hinhThucTT == 'THE'
+                                      ? 'Quẹt thẻ POS ${o.nganHangNhan != null ? "[${o.nganHangNhan}]" : ""}'.trim()
+                                      : (o.hinhThucTT == 'HON_HOP'
+                                          ? 'Kết hợp (${o.nganHangNhan ?? ""})'.trim()
+                                          : 'Chuyển khoản ${o.nganHangNhan != null ? "[${o.nganHangNhan}]" : ""}'.trim())),
                               isBold: true,
                             ),
                           ],

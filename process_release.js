@@ -6,8 +6,8 @@ const { execSync } = require('child_process');
 const env = fs.readFileSync('.env', 'utf8');
 const token = env.match(/GITHUB_TOKEN=(.*)/)[1].trim();
 const repo = 'thegioidienthoai464/tgdtbanhang';
-const TARGET_VERSION = 'v1.2.0';
-const TARGET_BUILD = 21;
+const TARGET_VERSION = 'v1.2.1';
+const TARGET_BUILD = 22;
 
 function githubRequest(endpoint, method = 'GET', data = null, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -224,14 +224,18 @@ async function main() {
     body: `## 🚀 Bản cập nhật T&T POS ${TARGET_VERSION} (Build ${TARGET_BUILD})
 
 ### ✨ Tính năng mới & Cải tiến:
-1. **Tối ưu Quản lý IMEI (Ẩn IMEI cho hàng không quản lý IMEI)**:
+1. **Thanh toán linh hoạt dạng Checkbox (Tiền mặt, Ngân hàng, Thẻ POS & Kết hợp tự do)**:
+   - Hỗ trợ 3 Checkbox tương tác độc lập: 💵 Tiền mặt, 🏦 Ngân hàng (Chuyển khoản), 💳 Quẹt thẻ POS.
+   - Cho phép chọn bất kỳ phương thức nào: 1 trong 3, kết hợp 2 trong 3, hoặc kết hợp cả 3 phương án cùng lúc.
+   - Bảng phân bổ số tiền thông minh khi kết hợp nhiều phương thức, có nút "Chia đều", tự động định dạng dấu chấm phân tách hàng nghìn.
+   - Tự động tách và hạch toán đúng sổ quỹ: Tiền mặt vào quỹ TIEN_MAT, Chuyển khoản vào quỹ TAI_KHOAN, Quẹt thẻ vào quỹ THE (đồng bộ chuẩn 100% Web ERP).
+   - Danh sách và chi tiết đơn hàng hiển thị trực quan thông tin quẹt thẻ POS hoặc hình thức kết hợp.
+2. **Tối ưu Quản lý IMEI (Ẩn IMEI cho hàng không quản lý IMEI)**:
    - Tự động nhận diện các mặt hàng không quản lý theo IMEI (phụ kiện, ốp lưng, kính cường lực...).
    - Ẩn hoàn toàn ô nhập IMEI khi bán hàng POS và sửa giỏ hàng, hiển thị huy hiệu "Không quản lý IMEI" trực quan.
-   - Thẻ chi tiết đơn hàng trong Quản lý đơn hàng hiển thị rõ ràng thông tin quản lý IMEI của từng sản phẩm.
-2. **Định dạng dấu chấm (.) phân tách hàng nghìn chuẩn tiếng Việt**:
-   - Tự động định dạng dấu chấm phân tách hàng nghìn khi nhập/sửa đơn giá bán, giá vốn nhập, số tiền thanh toán (tiền mặt, chuyển khoản) và công nợ (ví dụ: 160.000, 343.600...).
-   - Bảng thanh toán tự động tính toán chính xác, ngăn chặn hoàn toàn lỗi gõ nhầm chữ số hay lỗi hiển thị số dính liền.
-3. **Màn hình Quản lý đơn hàng (Bán hàng, Đặt hàng, Nhập kho) - Tối ưu diện tích hiển thị**:
+3. **Định dạng dấu chấm (.) phân tách hàng nghìn chuẩn tiếng Việt**:
+   - Tự động định dạng dấu chấm phân tách hàng nghìn khi nhập/sửa đơn giá bán, giá vốn nhập, số tiền thanh toán (tiền mặt, chuyển khoản, thẻ POS) và công nợ (ví dụ: 160.000, 343.600...).
+4. **Màn hình Quản lý đơn hàng (Bán hàng, Đặt hàng, Nhập kho) - Tối ưu diện tích hiển thị**:
    - Loại bỏ thanh chọn chi nhánh chiếm diện tích ở thân trang, chuyển tên chi nhánh lên thanh tiêu đề AppBar thanh thoát.
    - Thiết kế thẻ đơn hàng siêu thoáng, nhìn được nhiều đơn hơn gấp 2 lần.
    - Bổ sung xem chi tiết đơn hàng đầy đủ & In bill LAN trực tiếp.`,
