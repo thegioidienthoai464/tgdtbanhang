@@ -962,7 +962,7 @@ ${tx.maChungTu.isNotEmpty ? "• Chứng từ  : ${tx.maChungTu}\n" : ""}══�
     CashbookViewModel vm,
     BranchViewModel branchVm,
   ) {
-    final amountCtrl = TextEditingController(text: tx.soTien.toInt().toString());
+    final amountCtrl = TextEditingController(text: Formatters.formatNumber(tx.soTien));
     final descCtrl = TextEditingController(text: tx.ghiChu);
     final partnerCtrl = TextEditingController(text: tx.doiTuong);
     String loaiPhieu = tx.loaiPhieu;

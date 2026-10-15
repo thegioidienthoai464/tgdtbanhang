@@ -132,7 +132,27 @@ class ProductRepository {
       // Xử lý sản phẩm IMEI
       final productImeis = imeiMap[maHang] ?? {'CN01': [], 'CN02': [], 'CN03': [], 'CN04': []};
       final bool hasImeisInDb = productImeis.values.any((l) => l.isNotEmpty);
-      final bool isImeiTracked = p.coQuanLyImei || hasImeisInDb;
+
+      final tenLower = p.tenHang.toLowerCase();
+      final nhomLower = p.maNhom.toLowerCase();
+      final bool isAccessoryKeyword = tenLower.contains('ốp') ||
+          tenLower.contains('kính') ||
+          tenLower.contains('cường lực') ||
+          tenLower.contains('dán') ||
+          tenLower.contains('bao da') ||
+          tenLower.contains('tai nghe') ||
+          tenLower.contains('dây sạc') ||
+          tenLower.contains('củ sạc') ||
+          tenLower.contains('cáp') ||
+          nhomLower.contains('phụ kiện') ||
+          nhomLower.contains('phu kien');
+
+      // Tự động phát hiện: Nếu có IMEI tồn kho thực tế thì luôn quản lý theo IMEI.
+      // Nếu là phụ kiện và không có IMEI trong kho thì coi là hàng không quản lý IMEI.
+      bool isImeiTracked = p.coQuanLyImei || hasImeisInDb;
+      if (isAccessoryKeyword && !hasImeisInDb) {
+        isImeiTracked = false;
+      }
 
       if (isImeiTracked) {
         cn01 = (productImeis['CN01']?.length ?? 0).toDouble();

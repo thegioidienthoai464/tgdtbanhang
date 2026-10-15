@@ -24,7 +24,23 @@ class OrderItemModel {
     final rawCoImei = json['coQuanLyImei'] ?? json['co_quan_ly_imei'] ?? json['coQuanLyIMEI'];
     bool hasImei = true;
     if (rawCoImei != null) {
-      hasImei = rawCoImei == true || rawCoImei.toString().toLowerCase() == 'true';
+      hasImei = rawCoImei == true ||
+          rawCoImei.toString().toLowerCase() == 'true' ||
+          rawCoImei.toString() == '1' ||
+          rawCoImei.toString().toLowerCase() == 't';
+    } else {
+      final tenLower = (json['tenHang'] ?? json['ten_hang'] ?? '').toString().toLowerCase();
+      final bool isAccessory = tenLower.contains('ốp') ||
+          tenLower.contains('kính') ||
+          tenLower.contains('cường lực') ||
+          tenLower.contains('dán') ||
+          tenLower.contains('bao da') ||
+          tenLower.contains('tai nghe') ||
+          tenLower.contains('sạc') ||
+          tenLower.contains('cáp');
+      if (isAccessory) {
+        hasImei = false;
+      }
     }
 
     return OrderItemModel(

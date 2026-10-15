@@ -80,7 +80,12 @@ class ProductModel {
       donViTinh: json['don_vi_tinh']?.toString() ?? 'Cái',
       giaVon: (json['gia_von'] as num?)?.toDouble() ?? 0.0,
       giaBan: (json['gia_ban'] as num?)?.toDouble() ?? 0.0,
-      coQuanLyImei: json['co_quan_ly_imei'] == true || json['co_quan_ly_imei'] == 'true',
+      coQuanLyImei: json['co_quan_ly_imei'] == true ||
+          json['co_quan_ly_imei']?.toString().toLowerCase() == 'true' ||
+          json['co_quan_ly_imei']?.toString() == '1' ||
+          json['coQuanLyImei'] == true ||
+          json['coQuanLyImei']?.toString().toLowerCase() == 'true' ||
+          json['coQuanLyImei']?.toString() == '1',
       tonKho: (json['ton_kho'] as num?)?.toDouble() ?? 0.0,
       trangThai: json['trang_thai']?.toString() ?? 'Kinh doanh',
       chiNhanh: json['chi_nhanh']?.toString() ?? 'CN01: Trụ sở chính',

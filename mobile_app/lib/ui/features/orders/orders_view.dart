@@ -6,7 +6,6 @@ import '../../core/formatters.dart';
 import '../../../data/models/order_model.dart';
 import '../../../data/services/lan_printer_service.dart';
 import '../branch/branch_view_model.dart';
-import '../branch/branch_filter_chips.dart';
 import 'orders_view_model.dart';
 
 class OrdersView extends StatefulWidget {
@@ -83,27 +82,16 @@ class _OrdersViewState extends State<OrdersView> with SingleTickerProviderStateM
           ],
         ),
       ),
-      body: Column(
-        children: [
-          // Thanh lọc chi nhánh ngang nhỏ gọn (Đã loại bỏ thanh Chi nhánh chiếm diện tích ở thân trang)
-          const Padding(
-            padding: EdgeInsets.fromLTRB(10, 6, 10, 2),
-            child: BranchFilterChips(),
-          ),
-          Expanded(
-            child: vm.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildOrderList(context, filteredPreOrders, isPreOrder: true),
-                      _buildOrderList(context, filteredSalesOrders),
-                      _buildOrderList(context, filteredImportOrders, isImport: true),
-                    ],
-                  ),
-          ),
-        ],
-      ),
+      body: vm.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildOrderList(context, filteredPreOrders, isPreOrder: true),
+                _buildOrderList(context, filteredSalesOrders),
+                _buildOrderList(context, filteredImportOrders, isImport: true),
+              ],
+            ),
     );
   }
 
