@@ -10,6 +10,7 @@ import '../../../data/repositories/partner_repository.dart';
 import '../../../data/repositories/cashbook_repository.dart';
 import '../../../data/repositories/bank_repository.dart';
 import '../../../data/services/lan_printer_service.dart';
+import '../../core/formatters.dart';
 
 class PosViewModel extends ChangeNotifier {
   final ProductRepository _productRepo = ProductRepository();
