@@ -436,6 +436,14 @@ class _CashbookViewState extends State<CashbookView> {
     String loaiPhieu = 'THU';
     String loaiHinh = 'TIEN_MAT'; // 'TIEN_MAT' hoặc 'NGAN_HANG'
     BankModel? chosenBank = vm.bankAccounts.isNotEmpty ? vm.bankAccounts.first : null;
+    String selectedCategory = 'Chuyển/ rút';
+
+    // Biến cho nghiệp vụ Chuyển / Rút
+    String fromQuyType = 'TIEN_MAT';
+    BankModel? fromBank = vm.bankAccounts.isNotEmpty ? vm.bankAccounts.first : null;
+    String toQuyType = 'NGAN_HANG';
+    BankModel? toBank = vm.bankAccounts.isNotEmpty ? (vm.bankAccounts.length > 1 ? vm.bankAccounts[1] : vm.bankAccounts.first) : null;
+    bool autoPairTransfer = true;
 
     showModalBottomSheet(
       context: context,
@@ -446,6 +454,9 @@ class _CashbookViewState extends State<CashbookView> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            final isChuyenRut = selectedCategory == 'Chuyển/ rút';
+            final categories = loaiPhieu == 'THU' ? vm.incomeCategories : vm.expenseCategories;
+
             return Padding(
               padding: EdgeInsets.only(
                 left: 16,
@@ -458,8 +469,21 @@ class _CashbookViewState extends State<CashbookView> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Lập phiếu thu / chi nhanh', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          isChuyenRut ? 'Chuyển / Rút Tiền Nội Bộ' : 'Lập phiếu thu / chi nhanh',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
                     // Thông tin chi nhánh hạch toán
                     Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -483,76 +507,287 @@ class _CashbookViewState extends State<CashbookView> {
                       ),
                     ),
 
-                    // Chọn Loại phiếu Thu / Chi
+                    // 1. Chọn Hạng mục thu / chi mẫu (Có Chuyển/ rút và Thêm mẫu mới)
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        ChoiceChip(
-                          label: const Text('Phiếu Thu (+)'),
-                          selected: loaiPhieu == 'THU',
-                          selectedColor: AppTheme.successGreen.withOpacity(0.2),
-                          onSelected: (_) => setModalState(() => loaiPhieu = 'THU'),
-                        ),
-                        const SizedBox(width: 8),
-                        ChoiceChip(
-                          label: const Text('Phiếu Chi (-)'),
-                          selected: loaiPhieu == 'CHI',
-                          selectedColor: AppTheme.dangerRed.withOpacity(0.2),
-                          onSelected: (_) => setModalState(() => loaiPhieu = 'CHI'),
+                        const Text('Hạng mục mẫu:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        TextButton.icon(
+                          style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                          icon: const Icon(Icons.add_circle_outline, size: 14),
+                          label: const Text('Thêm mẫu', style: TextStyle(fontSize: 12)),
+                          onPressed: () async {
+                            final nameCtrl = TextEditingController();
+                            final newName = await showDialog<String>(
+                              context: context,
+                              builder: (dCtx) => AlertDialog(
+                                title: const Text('Thêm hạng mục mẫu mới', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                                content: TextField(
+                                  controller: nameCtrl,
+                                  autofocus: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Tên hạng mục (*)',
+                                    hintText: 'VD: Chi tiếp khách VIP, Thu hoàn ứng...',
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(dCtx), child: const Text('Hủy')),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      final t = nameCtrl.text.trim();
+                                      if (t.isNotEmpty) Navigator.pop(dCtx, t);
+                                    },
+                                    child: const Text('Thêm'),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (newName != null && newName.isNotEmpty) {
+                              vm.addCustomCategory(newName, isIncome: loaiPhieu == 'THU');
+                              setModalState(() => selectedCategory = newName);
+                            }
+                          },
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-
-                    // Chọn Quỹ: Tiền mặt hay Chuyển khoản ngân hàng
-                    Row(
-                      children: [
-                        ChoiceChip(
-                          label: const Text('Tiền mặt'),
-                          selected: loaiHinh == 'TIEN_MAT',
-                          onSelected: (_) => setModalState(() => loaiHinh = 'TIEN_MAT'),
-                        ),
-                        const SizedBox(width: 8),
-                        ChoiceChip(
-                          label: const Text('Tài khoản ngân hàng'),
-                          selected: loaiHinh == 'NGAN_HANG',
-                          onSelected: (_) => setModalState(() => loaiHinh = 'NGAN_HANG'),
-                        ),
-                      ],
-                    ),
-
-                    // Dropdown chọn ngân hàng nếu là chuyển khoản
-                    if (loaiHinh == 'NGAN_HANG' && vm.bankAccounts.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade400),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<BankModel>(
-                            isExpanded: true,
-                            value: chosenBank,
-                            hint: const Text('Chọn tài khoản ngân hàng'),
-                            items: vm.bankAccounts.map((b) {
-                              return DropdownMenuItem<BankModel>(
-                                value: b,
-                                child: Text(b.displayName, style: const TextStyle(fontSize: 12)),
-                              );
-                            }).toList(),
-                            onChanged: (b) => setModalState(() => chosenBank = b),
-                          ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          value: categories.contains(selectedCategory) ? selectedCategory : categories.first,
+                          items: categories.map((c) {
+                            final isCR = c == 'Chuyển/ rút';
+                            return DropdownMenuItem<String>(
+                              value: c,
+                              child: Text(
+                                isCR ? '🔄 Chuyển/ rút (Tiền mặt ⇄ Ngân hàng)' : c,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: isCR ? FontWeight.bold : FontWeight.normal,
+                                  color: isCR ? AppTheme.primaryBlue : Colors.black87,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setModalState(() {
+                                selectedCategory = val;
+                                if (val == 'Chuyển/ rút' && partnerCtrl.text.isEmpty) {
+                                  partnerCtrl.text = 'Nội bộ';
+                                }
+                              });
+                            }
+                          },
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // NẾU LÀ "CHUYỂN/ RÚT": HIỂN THỊ KHỐI CHUYỂN RÚT GIỮA CÁC QUỸ
+                    if (isChuyenRut) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF2FF),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFC7D2FE)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.sync_alt, size: 16, color: Color(0xFF4F46E5)),
+                                SizedBox(width: 6),
+                                Text(
+                                  'ĐIỀU CHUYỂN QUỸ NỘI BỘ',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF3730A3)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+
+                            // TỪ QUỸ
+                            Row(
+                              children: [
+                                const Text('Từ quỹ: ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.redAccent)),
+                                const SizedBox(width: 8),
+                                ChoiceChip(
+                                  label: const Text('Tiền mặt', style: TextStyle(fontSize: 11)),
+                                  selected: fromQuyType == 'TIEN_MAT',
+                                  visualDensity: VisualDensity.compact,
+                                  onSelected: (_) => setModalState(() => fromQuyType = 'TIEN_MAT'),
+                                ),
+                                const SizedBox(width: 6),
+                                ChoiceChip(
+                                  label: const Text('Ngân hàng', style: TextStyle(fontSize: 11)),
+                                  selected: fromQuyType == 'NGAN_HANG',
+                                  visualDensity: VisualDensity.compact,
+                                  onSelected: (_) => setModalState(() => fromQuyType = 'NGAN_HANG'),
+                                ),
+                              ],
+                            ),
+                            if (fromQuyType == 'NGAN_HANG' && vm.bankAccounts.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<BankModel>(
+                                    isExpanded: true,
+                                    value: fromBank ?? vm.bankAccounts.first,
+                                    items: vm.bankAccounts.map((b) => DropdownMenuItem(value: b, child: Text(b.displayName, style: const TextStyle(fontSize: 11.5)))).toList(),
+                                    onChanged: (b) => setModalState(() => fromBank = b),
+                                  ),
+                                ),
+                              ),
+                            ],
+
+                            const SizedBox(height: 10),
+
+                            // ĐẾN QUỸ
+                            Row(
+                              children: [
+                                const Text('Đến quỹ: ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.successGreen)),
+                                const SizedBox(width: 8),
+                                ChoiceChip(
+                                  label: const Text('Ngân hàng', style: TextStyle(fontSize: 11)),
+                                  selected: toQuyType == 'NGAN_HANG',
+                                  visualDensity: VisualDensity.compact,
+                                  onSelected: (_) => setModalState(() => toQuyType = 'NGAN_HANG'),
+                                ),
+                                const SizedBox(width: 6),
+                                ChoiceChip(
+                                  label: const Text('Tiền mặt', style: TextStyle(fontSize: 11)),
+                                  selected: toQuyType == 'TIEN_MAT',
+                                  visualDensity: VisualDensity.compact,
+                                  onSelected: (_) => setModalState(() => toQuyType = 'TIEN_MAT'),
+                                ),
+                              ],
+                            ),
+                            if (toQuyType == 'NGAN_HANG' && vm.bankAccounts.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<BankModel>(
+                                    isExpanded: true,
+                                    value: toBank ?? (vm.bankAccounts.length > 1 ? vm.bankAccounts[1] : vm.bankAccounts.first),
+                                    items: vm.bankAccounts.map((b) => DropdownMenuItem(value: b, child: Text(b.displayName, style: const TextStyle(fontSize: 11.5)))).toList(),
+                                    onChanged: (b) => setModalState(() => toBank = b),
+                                  ),
+                                ),
+                              ),
+                            ],
+
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: Checkbox(
+                                    value: autoPairTransfer,
+                                    onChanged: (v) => setModalState(() => autoPairTransfer = v ?? true),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Expanded(
+                                  child: Text('Tự động tạo cặp phiếu đối ứng (Chi nguồn & Thu đích)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ] else ...[
+                      // NẾU KHÔNG PHẢI CHUYỂN RÚT: CHỌN LOẠI PHIẾU VÀ NGUỒN QUỸ BÌNH THƯỜNG
+                      Row(
+                        children: [
+                          ChoiceChip(
+                            label: const Text('Phiếu Thu (+)'),
+                            selected: loaiPhieu == 'THU',
+                            selectedColor: AppTheme.successGreen.withOpacity(0.2),
+                            onSelected: (_) => setModalState(() => loaiPhieu = 'THU'),
+                          ),
+                          const SizedBox(width: 8),
+                          ChoiceChip(
+                            label: const Text('Phiếu Chi (-)'),
+                            selected: loaiPhieu == 'CHI',
+                            selectedColor: AppTheme.dangerRed.withOpacity(0.2),
+                            onSelected: (_) => setModalState(() => loaiPhieu = 'CHI'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+
+                      Row(
+                        children: [
+                          ChoiceChip(
+                            label: const Text('Tiền mặt'),
+                            selected: loaiHinh == 'TIEN_MAT',
+                            onSelected: (_) => setModalState(() => loaiHinh = 'TIEN_MAT'),
+                          ),
+                          const SizedBox(width: 8),
+                          ChoiceChip(
+                            label: const Text('Tài khoản ngân hàng'),
+                            selected: loaiHinh == 'NGAN_HANG',
+                            onSelected: (_) => setModalState(() => loaiHinh = 'NGAN_HANG'),
+                          ),
+                        ],
+                      ),
+
+                      if (loaiHinh == 'NGAN_HANG' && vm.bankAccounts.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade400),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<BankModel>(
+                              isExpanded: true,
+                              value: chosenBank,
+                              hint: const Text('Chọn tài khoản ngân hàng'),
+                              items: vm.bankAccounts.map((b) {
+                                return DropdownMenuItem<BankModel>(
+                                  value: b,
+                                  child: Text(b.displayName, style: const TextStyle(fontSize: 12)),
+                                );
+                              }).toList(),
+                              onChanged: (b) => setModalState(() => chosenBank = b),
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
                     ],
 
-                    const SizedBox(height: 12),
                     TextField(
                       controller: amountCtrl,
                       keyboardType: TextInputType.number,
                       inputFormatters: [CurrencyInputFormatter()],
                       decoration: const InputDecoration(
-                        labelText: 'Số tiền (VNĐ)',
+                        labelText: 'Số tiền (VNĐ) (*)',
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -568,7 +803,7 @@ class _CashbookViewState extends State<CashbookView> {
                     TextField(
                       controller: descCtrl,
                       decoration: const InputDecoration(
-                        labelText: 'Lý do thu / chi',
+                        labelText: 'Ghi chú thêm',
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -576,25 +811,63 @@ class _CashbookViewState extends State<CashbookView> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isChuyenRut ? const Color(0xFF4F46E5) : (loaiPhieu == 'THU' ? AppTheme.successGreen : AppTheme.dangerRed),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
                         onPressed: () async {
                           final val = double.tryParse(amountCtrl.text.replaceAll('.', '').replaceAll(',', '')) ?? 0;
-                          if (val <= 0) return;
+                          if (val <= 0) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Vui lòng nhập số tiền lớn hơn 0!')),
+                            );
+                            return;
+                          }
 
-                          final finalQuy = loaiHinh == 'TIEN_MAT'
-                              ? 'TIEN_MAT'
-                              : (chosenBank?.displayName ?? 'TAI_KHOAN');
+                          if (isChuyenRut && autoPairTransfer) {
+                            final fromQ = fromQuyType == 'TIEN_MAT' ? 'TIEN_MAT' : (fromBank?.displayName ?? 'TAI_KHOAN');
+                            final toQ = toQuyType == 'TIEN_MAT' ? 'TIEN_MAT' : (toBank?.displayName ?? 'TAI_KHOAN');
 
-                          await vm.addTransaction(
-                            loaiPhieu: loaiPhieu,
-                            loaiQuy: finalQuy,
-                            soTien: val,
-                            doiTuong: partnerCtrl.text.trim(),
-                            ghiChu: descCtrl.text.trim(),
-                            chiNhanh: branchVm.selectedBranch.displayName,
-                          );
+                            if (fromQ == toQ) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Quỹ nguồn và Quỹ đích không được trùng nhau!')),
+                              );
+                              return;
+                            }
+
+                            await vm.transferFunds(
+                              fromQuy: fromQ,
+                              toQuy: toQ,
+                              soTien: val,
+                              doiTuong: partnerCtrl.text.trim(),
+                              ghiChu: descCtrl.text.trim(),
+                              chiNhanh: branchVm.selectedBranch.displayName,
+                            );
+                          } else {
+                            final finalQuy = loaiHinh == 'TIEN_MAT'
+                                ? 'TIEN_MAT'
+                                : (chosenBank?.displayName ?? 'TAI_KHOAN');
+
+                            final note = selectedCategory.isNotEmpty
+                                ? '[$selectedCategory] ${descCtrl.text.trim()}'
+                                : descCtrl.text.trim();
+
+                            await vm.addTransaction(
+                              loaiPhieu: loaiPhieu,
+                              loaiQuy: finalQuy,
+                              soTien: val,
+                              doiTuong: partnerCtrl.text.trim(),
+                              ghiChu: note,
+                              chiNhanh: branchVm.selectedBranch.displayName,
+                            );
+                          }
+
                           if (context.mounted) Navigator.pop(context);
                         },
-                        child: const Text('XÁC NHẬN GHI SỔ'),
+                        child: Text(
+                          isChuyenRut ? 'XÁC NHẬN CHUYỂN / RÚT TIỀN' : 'XÁC NHẬN GHI SỔ',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+                        ),
                       ),
                     ),
                   ],

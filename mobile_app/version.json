@@ -1,10 +1,10 @@
 {
-  "version": "1.2.1",
-  "build_number": 22,
+  "version": "1.2.2",
+  "build_number": 23,
   "force_update": false,
-  "release_notes": "• Thanh toán linh hoạt dạng Checkbox: Bổ sung 3 tùy chọn Tiền mặt, Ngân hàng, Thẻ POS và hỗ trợ kết hợp tự do cả 3 phương án (hoặc 2 trong 3, 1 trong 3) với tính năng chia tiền thông minh.\n• Tối ưu quản lý IMEI: Tự động ẩn ô nhập IMEI cho phụ kiện và hiển thị trực quan.\n• Định dạng dấu chấm (.) phân tách hàng nghìn cho tất cả ô nhập tiền và đơn giá.\n• Quản lý đơn hàng: Thân trang rộng thoáng hiển thị tối đa danh sách đơn hàng, xem chi tiết và in bill LAN.",
+  "release_notes": "• Sổ quỹ Thu/Chi: Bổ sung hạng mục mẫu \"Chuyển/ rút\" hỗ trợ điều chuyển tiền giữa quỹ tiền mặt và tài khoản ngân hàng, hoặc giữa các tài khoản ngân hàng với tính năng tự động tạo cặp phiếu đối ứng.\n• Quản lý hạng mục mẫu: Cho phép thêm mới và lưu lại các hạng mục thu/chi mẫu tùy chỉnh dùng nhiều lần.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.1/TT_POS_v1.2.1.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.1/TT_POS_v1.2.1.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.1"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.2/TT_POS_v1.2.2.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.2/TT_POS_v1.2.2.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.2"
 }

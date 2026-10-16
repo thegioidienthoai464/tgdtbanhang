@@ -170,6 +170,61 @@ class CashbookViewModel extends ChangeNotifier {
     }).toList();
   }
 
+  // Danh mục hạng mục thu chi mẫu
+  static const List<String> defaultIncomeCategories = [
+    'Chuyển/ rút',
+    'Thu tiền bán hàng',
+    'Thu công nợ khách hàng',
+    'Thu hoàn tiền nhà cung cấp',
+    'Thu hoàn tiền tạm ứng',
+    'Thu vay / mượn',
+    'Thu lãi tiền gửi',
+    'Thu chi tổng hợp khác',
+  ];
+
+  static const List<String> defaultExpenseCategories = [
+    'Chuyển/ rút',
+    'Chi nhập hàng',
+    'Chi trả nợ nhà cung cấp',
+    'Chi trả lương nhân viên',
+    'Chi tiền thuê mặt bằng',
+    'Chi tiền điện / nước / mạng',
+    'Chi tiếp khách / sinh hoạt',
+    'Chi vận chuyển / giao hàng',
+    'Chi quảng cáo / marketing',
+    'Chi sửa chữa / bảo trì',
+    'Chi tổng hợp khác',
+  ];
+
+  final List<String> _customIncomeCategories = [];
+  final List<String> _customExpenseCategories = [];
+
+  List<String> get incomeCategories => [
+    ...defaultIncomeCategories,
+    ..._customIncomeCategories,
+  ];
+
+  List<String> get expenseCategories => [
+    ...defaultExpenseCategories,
+    ..._customExpenseCategories,
+  ];
+
+  void addCustomCategory(String name, {bool isIncome = true, bool forBoth = false}) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
+    if (forBoth || isIncome) {
+      if (!incomeCategories.contains(trimmed)) {
+        _customIncomeCategories.add(trimmed);
+      }
+    }
+    if (forBoth || !isIncome) {
+      if (!expenseCategories.contains(trimmed)) {
+        _customExpenseCategories.add(trimmed);
+      }
+    }
+    notifyListeners();
+  }
+
   Future<void> addTransaction({
     required String loaiPhieu,
     required String loaiQuy,
@@ -194,6 +249,62 @@ class CashbookViewModel extends ChangeNotifier {
     );
 
     await _cashbookRepo.saveTransaction(tx);
+    await fetchTransactions();
+  }
+
+  // Nghiệp vụ Chuyển/ rút tiền nội bộ (tự động tạo cặp phiếu chi nguồn & thu đích)
+  Future<void> transferFunds({
+    required String fromQuy,
+    required String toQuy,
+    required double soTien,
+    required String doiTuong,
+    required String ghiChu,
+    String? chiNhanh,
+  }) async {
+    final now = DateTime.now();
+    final ts = now.millisecondsSinceEpoch.toString();
+    final sub = ts.length > 6 ? ts.substring(ts.length - 6) : ts;
+    final maChi = "PC$sub";
+    final maThu = "PT${(int.tryParse(sub) ?? 0) + 1}";
+
+    final fromName = _isTienMat(fromQuy) ? 'Quỹ tiền mặt' : fromQuy;
+    final toName = _isTienMat(toQuy) ? 'Quỹ tiền mặt' : toQuy;
+
+    final extraNote = ghiChu.trim().isNotEmpty ? ' - ${ghiChu.trim()}' : '';
+    final fullGhiChuChi = "[Chuyển/ rút] Chuyển tiền từ $fromName sang $toName$extraNote (Phiếu thu đối ứng: $maThu)";
+    final fullGhiChuThu = "[Chuyển/ rút] Nhận tiền từ $fromName vào $toName$extraNote (Phiếu chi đối ứng: $maChi)";
+
+    final targetBranch = chiNhanh ?? 'CN01: Trụ sở chính';
+    final targetPartner = doiTuong.trim().isNotEmpty ? doiTuong.trim() : 'Nội bộ';
+
+    final txChi = CashbookModel(
+      maPhieu: maChi,
+      chiNhanh: targetBranch,
+      loaiPhieu: 'CHI',
+      loaiQuy: fromQuy,
+      ngayGD: now,
+      soTien: soTien,
+      doiTuong: targetPartner,
+      maDoiTuong: 'NOI_BO',
+      maChungTu: 'CHUYEN_RUT_NOI_BO',
+      ghiChu: fullGhiChuChi,
+    );
+
+    final txThu = CashbookModel(
+      maPhieu: maThu,
+      chiNhanh: targetBranch,
+      loaiPhieu: 'THU',
+      loaiQuy: toQuy,
+      ngayGD: now.add(const Duration(milliseconds: 10)),
+      soTien: soTien,
+      doiTuong: targetPartner,
+      maDoiTuong: 'NOI_BO',
+      maChungTu: 'CHUYEN_RUT_NOI_BO',
+      ghiChu: fullGhiChuThu,
+    );
+
+    await _cashbookRepo.saveTransaction(txChi);
+    await _cashbookRepo.saveTransaction(txThu);
     await fetchTransactions();
   }
 

@@ -2428,6 +2428,9 @@
             <button type="button" onclick="moModalLapPhieuChi()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold shadow-xs flex items-center space-x-1.5 transition">
               <i class="fa-solid fa-minus-circle"></i><span>LẬP PHIẾU CHI</span>
             </button>
+            <button type="button" onclick="moModalChuyenRutTien()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs flex items-center space-x-1.5 transition" title="Chuyển tiền từ tiền mặt vào tài khoản ngân hàng hoặc giữa các tài khoản ngân hàng">
+              <i class="fa-solid fa-arrow-right-arrow-left"></i><span>CHUYỂN / RÚT TIỀN</span>
+            </button>
             <button type="button" onclick="xuatExcelSoQuy()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition flex items-center space-x-1 shadow-2xs">
               <i class="fa-solid fa-file-excel text-emerald-600"></i><span>Xuất Excel</span>
             </button>
@@ -5549,12 +5552,84 @@
         </div>
 
         <div>
-          <label class="font-semibold text-slate-700">Hạng mục thu / chi (*):</label>
+          <div class="flex items-center justify-between">
+            <label class="font-semibold text-slate-700">Hạng mục thu / chi (*):</label>
+            <div class="flex items-center space-x-2 text-xs">
+              <button type="button" onclick="moModalThemHangMucMau()" class="text-blue-600 hover:text-blue-800 font-bold flex items-center space-x-1 transition" title="Thêm hạng mục mẫu mới">
+                <i class="fa-solid fa-plus-circle"></i><span>Thêm mẫu mới</span>
+              </button>
+              <span class="text-slate-300">|</span>
+              <button type="button" onclick="moModalQuanLyHangMucMau()" class="text-slate-500 hover:text-slate-700 font-medium flex items-center space-x-1" title="Quản lý danh sách mẫu">
+                <i class="fa-solid fa-gear"></i><span>Quản lý mẫu</span>
+              </button>
+            </div>
+          </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
-            <select id="sq-input-hangmuc-select" onchange="thayDoiHangMucSoQuy(this.value)" class="border border-slate-300 rounded-xl p-2 bg-slate-50 font-medium">
-              <!-- Dynamically populated based on Thu / Chi -->
+            <select id="sq-input-hangmuc-select" onchange="thayDoiHangMucSoQuy(this.value)" class="border border-slate-300 rounded-xl p-2 bg-slate-50 font-medium text-slate-800">
+              <!-- Dynamically populated based on Thu / Chi, including 'Chuyển/ rút' -->
             </select>
-            <input type="text" id="sq-input-hangmuc-custom" placeholder="Nhập hạng mục tùy chỉnh..." class="border border-slate-300 rounded-xl p-2 bg-slate-50 font-medium">
+            <div class="flex items-center space-x-1">
+              <input type="text" id="sq-input-hangmuc-custom" oninput="onInputHangMucCustomSoQuy(this.value)" placeholder="Nhập hạng mục tùy chỉnh..." class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 font-medium">
+              <button type="button" onclick="luuNhanhHangMucHienTaiLamMau()" class="px-2.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 rounded-xl font-bold text-xs shrink-0 transition" title="Lưu hạng mục này thành mẫu mới dùng lần sau">
+                <i class="fa-solid fa-bookmark mr-0.5"></i>Lưu mẫu
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- KHỐI NGHIỆP VỤ: CHUYỂN / RÚT TIỀN NỘI BỘ (Tiền mặt <-> Ngân hàng, Ngân hàng <-> Ngân hàng) -->
+        <div id="box-sq-chuyen-rut" class="hidden p-3 bg-gradient-to-r from-indigo-50/90 to-purple-50/90 rounded-2xl border border-indigo-200 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-xs text-indigo-950 flex items-center space-x-1.5">
+              <i class="fa-solid fa-arrow-right-arrow-left text-indigo-600"></i>
+              <span>CHI TIẾT CHUYỂN / RÚT TIỀN NỘI BỘ</span>
+            </span>
+            <label class="flex items-center space-x-1.5 cursor-pointer text-xs font-bold text-indigo-900 bg-white px-2 py-0.5 rounded-lg border border-indigo-200 shadow-2xs">
+              <input type="checkbox" id="sq-chuyenrut-tao-doi-ung" checked class="rounded text-indigo-600 focus:ring-indigo-500">
+              <span>Tự động tạo cặp phiếu đối ứng (Chi nguồn & Thu đích)</span>
+            </label>
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+            <!-- NGUỒN CHUYỂN -->
+            <div class="bg-white p-2.5 rounded-xl border border-rose-200 shadow-2xs space-y-1">
+              <label class="font-bold text-rose-700 flex items-center space-x-1">
+                <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                <span>TỪ QUỸ (Chuyển đi / Chi tiền):</span>
+              </label>
+              <select id="sq-chuyenrut-tu-loai" onchange="dongBoChuyenRut('TU')" class="w-full border border-slate-300 rounded-lg p-1.5 bg-slate-50 font-semibold text-slate-800">
+                <option value="TIEN_MAT">💵 Quỹ tiền mặt</option>
+                <option value="TAI_KHOAN">🏦 Quỹ tài khoản ngân hàng</option>
+              </select>
+              <div id="box-sq-chuyenrut-tu-nganhang" class="hidden">
+                <select id="sq-chuyenrut-tu-nganhang-sel" class="w-full border border-indigo-200 rounded-lg p-1.5 bg-indigo-50/50 font-medium text-slate-700 mt-1"></select>
+              </div>
+            </div>
+
+            <!-- ĐÍCH NHẬN -->
+            <div class="bg-white p-2.5 rounded-xl border border-emerald-200 shadow-2xs space-y-1">
+              <label class="font-bold text-emerald-700 flex items-center space-x-1">
+                <i class="fa-solid fa-arrow-down-to-bracket"></i>
+                <span>ĐẾN QUỸ (Nhận vào / Thu tiền):</span>
+              </label>
+              <select id="sq-chuyenrut-den-loai" onchange="dongBoChuyenRut('DEN')" class="w-full border border-slate-300 rounded-lg p-1.5 bg-slate-50 font-semibold text-slate-800">
+                <option value="TAI_KHOAN">🏦 Quỹ tài khoản ngân hàng</option>
+                <option value="TIEN_MAT">💵 Quỹ tiền mặt</option>
+              </select>
+              <div id="box-sq-chuyenrut-den-nganhang">
+                <select id="sq-chuyenrut-den-nganhang-sel" class="w-full border border-emerald-200 rounded-lg p-1.5 bg-emerald-50/50 font-medium text-slate-700 mt-1"></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-[11px] text-indigo-700 flex items-center justify-between">
+            <span class="flex items-center space-x-1">
+              <i class="fa-solid fa-circle-check text-emerald-600"></i>
+              <span id="sq-chuyenrut-huongdan">Hệ thống sẽ tự động trừ quỹ nguồn và cộng quỹ đích chính xác tuyệt đối.</span>
+            </span>
+            <button type="button" onclick="daoChieuChuyenRut()" class="text-indigo-600 hover:text-indigo-800 font-bold underline flex items-center space-x-0.5">
+              <i class="fa-solid fa-repeat"></i><span>Đảo chiều</span>
+            </button>
           </div>
         </div>
 
@@ -5567,6 +5642,82 @@
       <div class="flex justify-end space-x-2 pt-3 border-t">
         <button type="button" onclick="dongModal('modal-phieu-soquy')" class="px-4 py-2 border rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition">Hủy</button>
         <button type="button" id="btn-luu-soquy" onclick="xacNhanLuuPhieuSoQuy()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow transition">Xác nhận lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: THÊM HẠNG MỤC MẪU MỚI -->
+  <div id="modal-them-hangmuc-mau" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-60 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-sm text-slate-800 flex items-center space-x-1.5">
+          <i class="fa-solid fa-folder-plus text-blue-600"></i>
+          <span>Thêm Hạng Mục Mẫu Mới</span>
+        </h3>
+        <button type="button" onclick="dongModal('modal-them-hangmuc-mau')" class="text-slate-400 hover:text-slate-600 text-base"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="font-semibold text-slate-700">Tên hạng mục mẫu mới (*):</label>
+          <input type="text" id="input-them-hangmuc-ten" class="w-full border border-slate-300 rounded-xl p-2.5 bg-slate-50 mt-1 font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500" placeholder="VD: Chi tiếp khách VIP, Thu hoàn ứng...">
+        </div>
+
+        <div>
+          <label class="font-semibold text-slate-700">Áp dụng cho loại phiếu:</label>
+          <div class="grid grid-cols-3 gap-2 mt-1">
+            <label class="flex items-center space-x-1.5 p-2 border rounded-xl cursor-pointer hover:bg-slate-50 font-medium">
+              <input type="radio" name="rd-them-hangmuc-loai" value="BOTH" checked class="text-blue-600">
+              <span>Cả Thu & Chi</span>
+            </label>
+            <label class="flex items-center space-x-1.5 p-2 border rounded-xl cursor-pointer hover:bg-slate-50 font-medium">
+              <input type="radio" name="rd-them-hangmuc-loai" value="THU" class="text-emerald-600">
+              <span class="text-emerald-700 font-bold">Chỉ Thu</span>
+            </label>
+            <label class="flex items-center space-x-1.5 p-2 border rounded-xl cursor-pointer hover:bg-slate-50 font-medium">
+              <input type="radio" name="rd-them-hangmuc-loai" value="CHI" class="text-rose-600">
+              <span class="text-rose-700 font-bold">Chỉ Chi</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-3 border-t">
+        <button type="button" onclick="dongModal('modal-them-hangmuc-mau')" class="px-4 py-2 border rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition">Hủy</button>
+        <button type="button" onclick="xacNhanThemHangMucMauMoi()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-check"></i><span>Lưu hạng mục mẫu</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: QUẢN LÝ DANH SÁCH HẠNG MỤC MẪU -->
+  <div id="modal-quanly-hangmuc-mau" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-60 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] flex flex-col">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-sm text-slate-800 flex items-center space-x-1.5">
+          <i class="fa-solid fa-list-check text-indigo-600"></i>
+          <span>Quản Lý Hạng Mục Thu / Chi Mẫu</span>
+        </h3>
+        <button type="button" onclick="dongModal('modal-quanly-hangmuc-mau')" class="text-slate-400 hover:text-slate-600 text-base"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex space-x-1">
+          <button type="button" id="tab-btn-ql-hangmuc-thu" onclick="doiTabQuanLyHangMuc('THU')" class="px-3 py-1.5 rounded-lg font-bold bg-emerald-600 text-white">Hạng mục Thu</button>
+          <button type="button" id="tab-btn-ql-hangmuc-chi" onclick="doiTabQuanLyHangMuc('CHI')" class="px-3 py-1.5 rounded-lg font-bold bg-slate-200 text-slate-700 hover:bg-slate-300">Hạng mục Chi</button>
+        </div>
+        <button type="button" onclick="moModalThemHangMucMau()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg flex items-center space-x-1 shadow-2xs">
+          <i class="fa-solid fa-plus"></i><span>Thêm mẫu</span>
+        </button>
+      </div>
+
+      <div class="overflow-y-auto flex-1 border rounded-xl divide-y divide-slate-100 max-h-80" id="container-danhsach-hangmuc-mau">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="flex justify-end pt-2 border-t">
+        <button type="button" onclick="dongModal('modal-quanly-hangmuc-mau')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold text-slate-700 transition">Đóng</button>
       </div>
     </div>
   </div>
@@ -17132,7 +17283,8 @@ function formatVND(amount) {
     var selectedSoQuySet = new Set();
     var dangSuaPhieuSoQuyMa = null;
 
-    const HANG_MUC_THU_MAU = [
+    const HANG_MUC_THU_MAC_DINH = [
+      "Chuyển/ rút",
       "Thu tiền bán hàng",
       "Thu công nợ khách hàng",
       "Thu hoàn tiền nhà cung cấp",
@@ -17142,7 +17294,8 @@ function formatVND(amount) {
       "Thu chi tổng hợp khác"
     ];
 
-    const HANG_MUC_CHI_MAU = [
+    const HANG_MUC_CHI_MAC_DINH = [
+      "Chuyển/ rút",
       "Chi nhập hàng",
       "Chi trả nợ nhà cung cấp",
       "Chi trả lương nhân viên",
@@ -17155,21 +17308,356 @@ function formatVND(amount) {
       "Chi tổng hợp khác"
     ];
 
+    // Lấy danh sách hạng mục mẫu (mặc định + tùy chỉnh lưu trong máy + từ CSDL)
+    function layDanhSachHangMucMau(isThu) {
+      const defaultList = isThu ? HANG_MUC_THU_MAC_DINH : HANG_MUC_CHI_MAC_DINH;
+      const keyStorage = isThu ? 'CUSTOM_HANG_MUC_THU_V2' : 'CUSTOM_HANG_MUC_CHI_V2';
+      let customList = [];
+      try {
+        const saved = localStorage.getItem(keyStorage);
+        if (saved) customList = JSON.parse(saved);
+      } catch(e) {}
+
+      const setList = new Set();
+      // Đưa Chuyển/ rút lên đầu tiên
+      setList.add("Chuyển/ rút");
+      defaultList.forEach(item => setList.add(item));
+      if (Array.isArray(customList)) {
+        customList.forEach(item => { if (item && item.trim()) setList.add(item.trim()); });
+      }
+
+      // Nạp thêm từ lịch sử giao dịch sổ quỹ trong CSDL nếu có
+      if (window.rawSoQuyAllRecords && Array.isArray(window.rawSoQuyAllRecords)) {
+        window.rawSoQuyAllRecords.forEach(r => {
+          const rLp = String(r.loai_phieu || r.loaiPhieu || 'THU').toUpperCase();
+          if ((isThu && rLp === 'THU') || (!isThu && rLp === 'CHI')) {
+            const gc = r.ghi_chu || r.ghiChu || '';
+            const m = gc.match(/^\[(.*?)\]/);
+            if (m && m[1] && m[1].trim()) {
+              setList.add(m[1].trim());
+            }
+          }
+        });
+      }
+
+      return Array.from(setList);
+    }
+
     function napGoiYHangMucSoQuy(isThu, currentVal = '') {
       const sel = document.getElementById('sq-input-hangmuc-select');
       if (!sel) return;
-      const list = isThu ? HANG_MUC_THU_MAU : HANG_MUC_CHI_MAU;
+      const list = layDanhSachHangMucMau(isThu);
       let html = '<option value="">-- Chọn hạng mục mẫu --</option>';
       list.forEach(h => {
         const isSel = (currentVal && currentVal === h) ? 'selected' : '';
-        html += `<option value="${h}" ${isSel}>${h}</option>`;
+        const badge = h === 'Chuyển/ rút' ? ' (Tiền mặt ⇄ Ngân hàng)' : '';
+        html += `<option value="${h}" ${isSel}>${h}${badge}</option>`;
       });
+      html += '<option value="__THEM_MOI__">➕ Thêm hạng mục mẫu mới...</option>';
       sel.innerHTML = html;
     }
 
     function thayDoiHangMucSoQuy(val) {
+      if (val === '__THEM_MOI__') {
+        moModalThemHangMucMau();
+        document.getElementById('sq-input-hangmuc-select').value = '';
+        return;
+      }
       const custom = document.getElementById('sq-input-hangmuc-custom');
       if (custom && val) custom.value = val;
+      kiemTraVaHienThiKhoiChuyenRut(val);
+    }
+
+    function onInputHangMucCustomSoQuy(val) {
+      kiemTraVaHienThiKhoiChuyenRut(val);
+    }
+
+    function kiemTraVaHienThiKhoiChuyenRut(val) {
+      const box = document.getElementById('box-sq-chuyen-rut');
+      if (!box) return;
+      const isChuyenRut = val && (val.toLowerCase().includes('chuyển/ rút') || val.toLowerCase().includes('chuyen/ rut') || val.toLowerCase().includes('chuyển rút'));
+      if (isChuyenRut) {
+        box.classList.remove('hidden');
+        napDanhSachNganHangVaoSelectChuyenRut();
+        dongBoChuyenRut();
+        // Gợi ý đối tượng là Nội bộ nếu chưa nhập
+        const elDt = document.getElementById('sq-input-doituong');
+        const elMadt = document.getElementById('sq-input-madoituong');
+        if (elDt && elMadt && (!elMadt.value || elMadt.value === '')) {
+          elDt.value = 'Khác';
+          elMadt.value = 'NỘI BỘ';
+        }
+      } else {
+        box.classList.add('hidden');
+      }
+    }
+
+    // Nạp danh sách tài khoản ngân hàng vào khối Chuyển / Rút
+    function napDanhSachNganHangVaoSelectChuyenRut() {
+      const selTu = document.getElementById('sq-chuyenrut-tu-nganhang-sel');
+      const selDen = document.getElementById('sq-chuyenrut-den-nganhang-sel');
+      if (!selTu || !selDen) return;
+
+      const targetCN = currentChiNhanh || 'CN01';
+      let banks = (rawNganHangList || []).filter(item => typeof isBankAllowedForBranch === 'function' ? isBankAllowedForBranch(item, targetCN) : true);
+      if (!banks.length && Array.isArray(rawNganHangList) && rawNganHangList.length) banks = rawNganHangList;
+
+      let optionsHtml = '';
+      if (banks.length) {
+        optionsHtml = banks.map(b => {
+          const name = b.tenNH || b.tenNganHang || 'Ngân hàng';
+          const stk = b.soTK || b.soTaiKhoan || '';
+          const chu = b.chuTK || b.chuTaiKhoan || '';
+          return `<option value="${name} - ${stk}">${name} - ${stk} (${chu})</option>`;
+        }).join('');
+      } else {
+        optionsHtml = '<option value="Ngân hàng">Tài khoản ngân hàng</option>';
+      }
+
+      selTu.innerHTML = optionsHtml;
+      selDen.innerHTML = optionsHtml;
+      if (selDen.options.length > 1) {
+        selDen.selectedIndex = 1;
+      }
+    }
+
+    function dongBoChuyenRut(side) {
+      const tuLoai = document.getElementById('sq-chuyenrut-tu-loai')?.value || 'TIEN_MAT';
+      const denLoai = document.getElementById('sq-chuyenrut-den-loai')?.value || 'TAI_KHOAN';
+      const boxTuBank = document.getElementById('box-sq-chuyenrut-tu-nganhang');
+      const boxDenBank = document.getElementById('box-sq-chuyenrut-den-nganhang');
+
+      if (boxTuBank) {
+        if (tuLoai === 'TAI_KHOAN') boxTuBank.classList.remove('hidden');
+        else boxTuBank.classList.add('hidden');
+      }
+
+      if (boxDenBank) {
+        if (denLoai === 'TAI_KHOAN') boxDenBank.classList.remove('hidden');
+        else boxDenBank.classList.add('hidden');
+      }
+
+      const huongDan = document.getElementById('sq-chuyenrut-huongdan');
+      if (huongDan) {
+        const tuTxt = tuLoai === 'TIEN_MAT' ? 'Tiền mặt' : 'Tài khoản NH';
+        const denTxt = denLoai === 'TIEN_MAT' ? 'Tiền mặt' : 'Tài khoản NH';
+        huongDan.innerText = `Chuyển tiền: Từ [${tuTxt}] ➔ Sang [${denTxt}]. Hệ thống tự động ghi nhận số dư hai bên.`;
+      }
+    }
+
+    function daoChieuChuyenRut() {
+      const selTu = document.getElementById('sq-chuyenrut-tu-loai');
+      const selDen = document.getElementById('sq-chuyenrut-den-loai');
+      if (!selTu || !selDen) return;
+
+      const temp = selTu.value;
+      selTu.value = selDen.value;
+      selDen.value = temp;
+
+      const bankTu = document.getElementById('sq-chuyenrut-tu-nganhang-sel');
+      const bankDen = document.getElementById('sq-chuyenrut-den-nganhang-sel');
+      if (bankTu && bankDen) {
+        const tempIdx = bankTu.selectedIndex;
+        bankTu.selectedIndex = bankDen.selectedIndex;
+        bankDen.selectedIndex = tempIdx;
+      }
+
+      dongBoChuyenRut();
+    }
+
+    // Mở nhanh modal Lập phiếu Chuyển / Rút tiền
+    function moModalChuyenRutTien() {
+      if (typeof hasSoQuyPermission === 'function' && !hasSoQuyPermission('THEM')) {
+        return showNotification("Bạn không có quyền Lập phiếu sổ quỹ! Vui lòng liên hệ Quản trị viên.", true);
+      }
+      dangSuaPhieuSoQuyMa = null;
+      loaiPhieuDangLap = "CHI"; // Mặc định tạo cặp: Chi từ quỹ nguồn & Thu vào quỹ đích
+      
+      document.getElementById('sq-modal-title').innerHTML = '<i class="fa-solid fa-arrow-right-arrow-left text-indigo-600 mr-1.5"></i>Lập Phiếu Chuyển / Rút Tiền Nội Bộ';
+      const btn = document.getElementById('btn-luu-soquy');
+      if (btn) {
+        btn.className = "px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow transition";
+        btn.innerHTML = '<i class="fa-solid fa-arrow-right-arrow-left mr-1.5"></i>Xác nhận chuyển / rút tiền';
+      }
+
+      document.getElementById('sq-input-sotien').value = "";
+      document.getElementById('sq-input-ghichu').value = "";
+      document.getElementById('sq-input-doituong').value = "Khác";
+      document.getElementById('sq-input-madoituong').value = "NỘI BỘ";
+      document.getElementById('sq-input-hangmuc-custom').value = "Chuyển/ rút";
+      document.getElementById('sq-input-nguoithuchi').value = currentUser?.hoTen || "Admin";
+
+      const elNgay = document.getElementById('sq-input-ngaygd');
+      if (elNgay) { elNgay.disabled = false; elNgay.classList.remove('cursor-not-allowed', 'opacity-75'); }
+      const elNguoi = document.getElementById('sq-input-nguoithuchi');
+      if (elNguoi) { elNguoi.disabled = false; elNguoi.classList.remove('cursor-not-allowed', 'opacity-75'); }
+      document.getElementById('sq-lock-ngay')?.classList.add('hidden');
+      document.getElementById('sq-lock-nguoi')?.classList.add('hidden');
+      napDanhSachNhanVienVaoDatalistSoQuy();
+
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('sq-input-ngaygd').value = now.toISOString().slice(0, 16);
+
+      napGoiYHangMucSoQuy(false, 'Chuyển/ rút');
+      
+      const boxChuyenRut = document.getElementById('box-sq-chuyen-rut');
+      if (boxChuyenRut) boxChuyenRut.classList.remove('hidden');
+      
+      const chk = document.getElementById('sq-chuyenrut-tao-doi-ung');
+      if (chk) chk.checked = true;
+
+      napDanhSachNganHangVaoSelectChuyenRut();
+      const currentTab = (typeof currentQuyDangXem !== 'undefined') ? currentQuyDangXem : 'TIEN_MAT';
+      const selTu = document.getElementById('sq-chuyenrut-tu-loai');
+      const selDen = document.getElementById('sq-chuyenrut-den-loai');
+
+      if (currentTab === 'TAI_KHOAN') {
+        if (selTu) selTu.value = 'TAI_KHOAN';
+        if (selDen) selDen.value = 'TIEN_MAT';
+      } else {
+        if (selTu) selTu.value = 'TIEN_MAT';
+        if (selDen) selDen.value = 'TAI_KHOAN';
+      }
+      dongBoChuyenRut();
+
+      moModal('modal-phieu-soquy');
+    }
+
+    // Modal: Thêm hạng mục mẫu mới
+    function moModalThemHangMucMau() {
+      const inp = document.getElementById('input-them-hangmuc-ten');
+      if (inp) {
+        inp.value = (document.getElementById('sq-input-hangmuc-custom')?.value || '').trim();
+      }
+      moModal('modal-them-hangmuc-mau');
+    }
+
+    function xacNhanThemHangMucMauMoi() {
+      const ten = (document.getElementById('input-them-hangmuc-ten')?.value || '').trim();
+      if (!ten) return showNotification("Vui lòng nhập tên hạng mục mẫu mới!", true);
+
+      let loai = 'BOTH';
+      const radios = document.getElementsByName('rd-them-hangmuc-loai');
+      radios.forEach(r => { if (r.checked) loai = r.value; });
+
+      themHangMucMauMoi(ten, loai);
+      dongModal('modal-them-hangmuc-mau');
+
+      const isThu = loaiPhieuDangLap === 'THU';
+      napGoiYHangMucSoQuy(isThu, ten);
+      const custom = document.getElementById('sq-input-hangmuc-custom');
+      if (custom) custom.value = ten;
+      kiemTraVaHienThiKhoiChuyenRut(ten);
+
+      showNotification(`Đã thêm hạng mục mẫu "${ten}" thành công!`);
+    }
+
+    function luuNhanhHangMucHienTaiLamMau() {
+      const val = (document.getElementById('sq-input-hangmuc-custom')?.value || '').trim();
+      if (!val) return showNotification("Vui lòng nhập tên hạng mục tùy chỉnh trước khi lưu làm mẫu!", true);
+
+      const isThu = loaiPhieuDangLap === 'THU';
+      themHangMucMauMoi(val, isThu ? 'THU' : 'CHI');
+      napGoiYHangMucSoQuy(isThu, val);
+      showNotification(`Đã lưu hạng mục "${val}" vào danh sách mẫu thành công!`);
+    }
+
+    function themHangMucMauMoi(tenMoi, loai = 'BOTH') {
+      if (!tenMoi || !tenMoi.trim()) return false;
+      tenMoi = tenMoi.trim();
+
+      if (loai === 'THU' || loai === 'BOTH') {
+        let listThu = [];
+        try { listThu = JSON.parse(localStorage.getItem('CUSTOM_HANG_MUC_THU_V2') || '[]'); } catch(e){}
+        if (!listThu.includes(tenMoi)) listThu.push(tenMoi);
+        localStorage.setItem('CUSTOM_HANG_MUC_THU_V2', JSON.stringify(listThu));
+      }
+      if (loai === 'CHI' || loai === 'BOTH') {
+        let listChi = [];
+        try { listChi = JSON.parse(localStorage.getItem('CUSTOM_HANG_MUC_CHI_V2') || '[]'); } catch(e){}
+        if (!listChi.includes(tenMoi)) listChi.push(tenMoi);
+        localStorage.setItem('CUSTOM_HANG_MUC_CHI_V2', JSON.stringify(listChi));
+      }
+      return true;
+    }
+
+    // Modal: Quản lý danh sách hạng mục mẫu
+    var currentTabQLHangMuc = 'THU';
+    function moModalQuanLyHangMucMau() {
+      currentTabQLHangMuc = loaiPhieuDangLap === 'CHI' ? 'CHI' : 'THU';
+      doiTabQuanLyHangMuc(currentTabQLHangMuc);
+      moModal('modal-quanly-hangmuc-mau');
+    }
+
+    function doiTabQuanLyHangMuc(tab) {
+      currentTabQLHangMuc = tab;
+      const btnThu = document.getElementById('tab-btn-ql-hangmuc-thu');
+      const btnChi = document.getElementById('tab-btn-ql-hangmuc-chi');
+      if (tab === 'THU') {
+        btnThu.className = 'px-3 py-1.5 rounded-lg font-bold bg-emerald-600 text-white';
+        btnChi.className = 'px-3 py-1.5 rounded-lg font-bold bg-slate-200 text-slate-700 hover:bg-slate-300';
+      } else {
+        btnChi.className = 'px-3 py-1.5 rounded-lg font-bold bg-rose-600 text-white';
+        btnThu.className = 'px-3 py-1.5 rounded-lg font-bold bg-slate-200 text-slate-700 hover:bg-slate-300';
+      }
+
+      const container = document.getElementById('container-danhsach-hangmuc-mau');
+      if (!container) return;
+
+      const isThu = tab === 'THU';
+      const defaultList = isThu ? HANG_MUC_THU_MAC_DINH : HANG_MUC_CHI_MAC_DINH;
+      const keyStorage = isThu ? 'CUSTOM_HANG_MUC_THU_V2' : 'CUSTOM_HANG_MUC_CHI_V2';
+      let customList = [];
+      try { customList = JSON.parse(localStorage.getItem(keyStorage) || '[]'); } catch(e){}
+
+      let html = '';
+      // 1. Mặc định
+      defaultList.forEach(h => {
+        html += `
+          <div class="flex items-center justify-between p-2.5 hover:bg-slate-50 transition">
+            <span class="font-semibold text-slate-800">${h}</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500">Mặc định</span>
+          </div>`;
+      });
+
+      // 2. Tùy chỉnh do người dùng thêm
+      if (customList.length) {
+        customList.forEach(h => {
+          if (!defaultList.includes(h)) {
+            html += `
+              <div class="flex items-center justify-between p-2.5 hover:bg-amber-50/50 transition bg-amber-50/20">
+                <span class="font-bold text-slate-800 flex items-center space-x-1.5">
+                  <i class="fa-solid fa-tag text-blue-500 text-[11px]"></i>
+                  <span>${h}</span>
+                </span>
+                <div class="flex items-center space-x-2">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">Tùy chỉnh</span>
+                  <button type="button" onclick="xoaHangMucMau('${h.replace(/'/g, "\'")}', '${tab}')" class="text-rose-600 hover:text-rose-800 p-1" title="Xóa hạng mục mẫu này">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+              </div>`;
+          }
+        });
+      } else {
+        html += '<div class="p-4 text-center text-slate-400 italic">Chưa có hạng mục mẫu tùy chỉnh nào được thêm.</div>';
+      }
+
+      container.innerHTML = html;
+    }
+
+    function xoaHangMucMau(ten, loai) {
+      if (!confirm(`Bạn có chắc chắn muốn xóa hạng mục mẫu "${ten}"?`)) return;
+      const keyStorage = loai === 'THU' ? 'CUSTOM_HANG_MUC_THU_V2' : 'CUSTOM_HANG_MUC_CHI_V2';
+      let customList = [];
+      try { customList = JSON.parse(localStorage.getItem(keyStorage) || '[]'); } catch(e){}
+      customList = customList.filter(x => x !== ten);
+      localStorage.setItem(keyStorage, JSON.stringify(customList));
+
+      doiTabQuanLyHangMuc(loai);
+      napGoiYHangMucSoQuy(loaiPhieuDangLap === 'THU');
+      showNotification(`Đã xóa hạng mục "${ten}"!`);
     }
 
     function thayDoiLoaiQuySoQuy(val) {
@@ -17454,6 +17942,7 @@ function formatVND(amount) {
       document.getElementById('sq-input-loaiquy').value = targetQuy;
       thayDoiLoaiQuySoQuy(targetQuy);
       napGoiYHangMucSoQuy(true);
+      document.getElementById('box-sq-chuyen-rut')?.classList.add('hidden');
 
       moModal('modal-phieu-soquy');
     }
@@ -17494,6 +17983,7 @@ function formatVND(amount) {
       document.getElementById('sq-input-loaiquy').value = targetQuy;
       thayDoiLoaiQuySoQuy(targetQuy);
       napGoiYHangMucSoQuy(false);
+      document.getElementById('box-sq-chuyen-rut')?.classList.add('hidden');
 
       moModal('modal-phieu-soquy');
     }
@@ -17578,6 +18068,7 @@ function formatVND(amount) {
       }
       napGoiYHangMucSoQuy(isThu, hangMuc);
       document.getElementById('sq-input-hangmuc-custom').value = hangMuc;
+      kiemTraVaHienThiKhoiChuyenRut(hangMuc);
 
       // Tách phần ngân hàng từ ghi chú nếu có: [Ngân hàng ...]
       const mBank = gcRaw.match(/\[([^\]]*?(?:Ngân hàng|STK|Vietcombank|Techcombank|MB|BIDV|Agribank|ACB|VPBank)[^\]]*?)\]/i);
@@ -17633,6 +18124,179 @@ function formatVND(amount) {
       }
 
       const isEditing = Boolean(dangSuaPhieuSoQuyMa);
+
+      const hangMucVal = (document.getElementById('sq-input-hangmuc-custom')?.value || document.getElementById('sq-input-hangmuc-select')?.value || "").trim();
+      const isChuyenRut = hangMucVal.toLowerCase().includes('chuyển/ rút') || hangMucVal.toLowerCase().includes('chuyen/ rut') || hangMucVal.toLowerCase().includes('chuyển rút');
+      const isTaoDoiUng = isChuyenRut && !isEditing && (document.getElementById('sq-chuyenrut-tao-doi-ung')?.checked !== false);
+
+      if (isTaoDoiUng) {
+        // XỬ LÝ NGHIỆP VỤ CHUYỂN / RÚT TIỀN TỰ ĐỘNG TẠO CẶP PHIẾU ĐỐI ỨNG (CHI NGUỒN + THU ĐÍCH)
+        const tuLoai = document.getElementById('sq-chuyenrut-tu-loai')?.value || 'TIEN_MAT';
+        const denLoai = document.getElementById('sq-chuyenrut-den-loai')?.value || 'TAI_KHOAN';
+        const tuBank = (tuLoai === 'TAI_KHOAN') ? (document.getElementById('sq-chuyenrut-tu-nganhang-sel')?.value || '') : '';
+        const denBank = (denLoai === 'TAI_KHOAN') ? (document.getElementById('sq-chuyenrut-den-nganhang-sel')?.value || '') : '';
+
+        // Kiểm tra hợp lệ: không được chuyển cùng 1 tài khoản/quỹ
+        if (tuLoai === 'TIEN_MAT' && denLoai === 'TIEN_MAT') {
+          return showNotification("Quỹ nguồn và Quỹ đích đều là Tiền mặt! Vui lòng chọn chuyển giữa Tiền mặt và Ngân hàng, hoặc giữa các Ngân hàng.", true);
+        }
+        if (tuLoai === 'TAI_KHOAN' && denLoai === 'TAI_KHOAN' && tuBank && denBank && tuBank === denBank) {
+          return showNotification("Tài khoản ngân hàng nguồn và đích đang trùng nhau! Vui lòng chọn 2 tài khoản khác nhau.", true);
+        }
+
+        const tuTenQuy = tuLoai === 'TIEN_MAT' ? 'Quỹ tiền mặt' : `TK ${tuBank}`;
+        const denTenQuy = denLoai === 'TIEN_MAT' ? 'Quỹ tiền mặt' : `TK ${denBank}`;
+
+        const baseTs = Date.now().toString().slice(-6);
+        const maPhieuChi = 'PC' + baseTs;
+        const maPhieuThu = 'PT' + (Number(baseTs) + 1);
+
+        const ngayVal = document.getElementById('sq-input-ngaygd')?.value;
+        let ngayGD = ngayVal ? (ngayVal.replace('T', ' ') + (ngayVal.length === 16 ? ':00' : '')) : formatNgayGioLocal(new Date());
+        let ngayGD_ISO = new Date().toISOString();
+        if (ngayVal) {
+          try { ngayGD_ISO = new Date(ngayVal).toISOString(); } catch(e) {}
+        }
+        const nguoiThuChi = document.getElementById('sq-input-nguoithuchi')?.value || currentUser?.hoTen || "Admin";
+        const targetCN = currentChiNhanh || "CN01: Trụ sở chính";
+
+        const fullGhiChuChi = `[Chuyển/ rút] Chuyển tiền từ ${tuTenQuy} sang ${denTenQuy}${gc ? ' - ' + gc : ''} (Người thực hiện: ${nguoiThuChi}) (Phiếu thu đối ứng: ${maPhieuThu})` + (tuBank ? ` [${tuBank}]` : '');
+        const fullGhiChuThu = `[Chuyển/ rút] Nhận tiền từ ${tuTenQuy} vào ${denTenQuy}${gc ? ' - ' + gc : ''} (Người thực hiện: ${nguoiThuChi}) (Phiếu chi đối ứng: ${maPhieuChi})` + (denBank ? ` [${denBank}]` : '');
+
+        const payloadChi = {
+          maPhieu: maPhieuChi,
+          loaiPhieu: 'CHI',
+          loaiQuy: tuLoai,
+          quyNguon: (tuLoai === 'TAI_KHOAN' && tuBank) ? tuBank : tuLoai,
+          nganHang: tuBank,
+          ngayGD: ngayGD,
+          ngayGiaoDich: ngayGD,
+          ngayGDISO: ngayGD_ISO,
+          soTien: st,
+          doiTuong: document.getElementById('sq-input-doituong')?.value || 'Khác',
+          maDoiTuong: (document.getElementById('sq-input-madoituong')?.value || 'NỘI BỘ').trim().toUpperCase(),
+          maChungTu: 'CHUYEN_RUT_NOI_BO',
+          trangThai: 'DaThanhToan',
+          ghiChu: fullGhiChuChi,
+          lyDoThuChi: fullGhiChuChi,
+          chiNhanh: targetCN
+        };
+
+        const payloadThu = {
+          maPhieu: maPhieuThu,
+          loaiPhieu: 'THU',
+          loaiQuy: denLoai,
+          quyNguon: (denLoai === 'TAI_KHOAN' && denBank) ? denBank : denLoai,
+          nganHang: denBank,
+          ngayGD: ngayGD,
+          ngayGiaoDich: ngayGD,
+          ngayGDISO: ngayGD_ISO,
+          soTien: st,
+          doiTuong: document.getElementById('sq-input-doituong')?.value || 'Khác',
+          maDoiTuong: (document.getElementById('sq-input-madoituong')?.value || 'NỘI BỘ').trim().toUpperCase(),
+          maChungTu: 'CHUYEN_RUT_NOI_BO',
+          trangThai: 'DaThanhToan',
+          ghiChu: fullGhiChuThu,
+          lyDoThuChi: fullGhiChuThu,
+          chiNhanh: targetCN
+        };
+
+        const btn = document.getElementById('btn-luu-soquy');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Đang chuyển...'; }
+
+        try {
+          if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+            const rowsSb = [
+              {
+                chi_nhanh: String(payloadChi.chiNhanh || "CN01: Trụ sở chính").slice(0, 100),
+                ma_phieu: payloadChi.maPhieu,
+                loai_phieu: 'CHI',
+                loai_quy: String(payloadChi.loaiQuy || "TIEN_MAT").slice(0, 100),
+                ngay_gd: ngayGD_ISO,
+                so_tien: st,
+                doi_tuong: payloadChi.doiTuong,
+                ma_doi_tuong: payloadChi.maDoiTuong,
+                ma_chung_tu: payloadChi.maChungTu,
+                trang_thai: 'DaThanhToan',
+                ghi_chu: payloadChi.ghiChu
+              },
+              {
+                chi_nhanh: String(payloadThu.chiNhanh || "CN01: Trụ sở chính").slice(0, 100),
+                ma_phieu: payloadThu.maPhieu,
+                loai_phieu: 'THU',
+                loai_quy: String(payloadThu.loaiQuy || "TIEN_MAT").slice(0, 100),
+                ngay_gd: ngayGD_ISO,
+                so_tien: st,
+                doi_tuong: payloadThu.doiTuong,
+                ma_doi_tuong: payloadThu.maDoiTuong,
+                ma_chung_tu: payloadThu.maChungTu,
+                trang_thai: 'DaThanhToan',
+                ghi_chu: payloadThu.ghiChu
+              }
+            ];
+            const { error: sbErr } = await supabaseClient.from('so_quy').upsert(rowsSb, { onConflict: 'ma_phieu' });
+            if (sbErr) console.warn("Lỗi lưu cặp phiếu chuyển rút lên Supabase:", sbErr);
+          }
+
+          if (!window.rawSoQuyData) window.rawSoQuyData = { danhSach: [] };
+          if (!Array.isArray(window.rawSoQuyData.danhSach)) window.rawSoQuyData.danhSach = [];
+          window.rawSoQuyData.danhSach.unshift(payloadThu);
+          window.rawSoQuyData.danhSach.unshift(payloadChi);
+
+          if (Array.isArray(window.rawSoQuyAllRecords)) {
+            window.rawSoQuyAllRecords.unshift({
+              ma_phieu: payloadThu.maPhieu, chi_nhanh: payloadThu.chiNhanh, loai_phieu: 'THU', loai_quy: payloadThu.loaiQuy,
+              ngay_gd: payloadThu.ngayGD, so_tien: st, doi_tuong: payloadThu.doiTuong, ma_doi_tuong: payloadThu.maDoiTuong,
+              ma_chung_tu: payloadThu.maChungTu, trang_thai: 'DaThanhToan', ghi_chu: payloadThu.ghiChu
+            });
+            window.rawSoQuyAllRecords.unshift({
+              ma_phieu: payloadChi.maPhieu, chi_nhanh: payloadChi.chiNhanh, loai_phieu: 'CHI', loai_quy: payloadChi.loaiQuy,
+              ngay_gd: payloadChi.ngayGD, so_tien: st, doi_tuong: payloadChi.doiTuong, ma_doi_tuong: payloadChi.maDoiTuong,
+              ma_chung_tu: payloadChi.maChungTu, trang_thai: 'DaThanhToan', ghi_chu: payloadChi.ghiChu
+            });
+          }
+
+          let tongThu = 0; let tongChi = 0;
+          window.rawSoQuyData.danhSach.forEach(item => {
+            if (item.trangThai !== 'DaHuy') {
+              const stVal = Number(item.soTien) || 0;
+              if (item.loaiPhieu === 'THU') tongThu += stVal;
+              else if (item.loaiPhieu === 'CHI') tongChi += stVal;
+            }
+          });
+          window.rawSoQuyData.tongThu = tongThu;
+          window.rawSoQuyData.tongChi = tongChi;
+          window.rawSoQuyData.tonQuy = tongThu - tongChi;
+
+          const elThu = document.getElementById('sq-tong-thu');
+          const elChi = document.getElementById('sq-tong-chi');
+          const elTon = document.getElementById('sq-ton-quy');
+          if (elThu) elThu.innerText = (tongThu || 0).toLocaleString('vi-VN') + ' đ';
+          if (elChi) elChi.innerText = (tongChi || 0).toLocaleString('vi-VN') + ' đ';
+          if (elTon) elTon.innerText = ((tongThu - tongChi) || 0).toLocaleString('vi-VN') + ' đ';
+
+          try {
+            if (typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run.apiLuuPhieuSoQuy === 'function') {
+              google.script.run.apiLuuPhieuSoQuy(payloadChi);
+              google.script.run.apiLuuPhieuSoQuy(payloadThu);
+            }
+          } catch(e) {}
+
+          dongModal('modal-phieu-soquy');
+          showNotification(`Đã chuyển/rút tiền thành công! Đã tạo phiếu chi [${maPhieuChi}] và phiếu thu đối ứng [${maPhieuThu}].`);
+          locDuLieuSoQuy();
+          return;
+        } catch(errCR) {
+          console.error("Lỗi chuyển rút tiền:", errCR);
+          showNotification("Có lỗi xảy ra khi chuyển tiền: " + errCR.message, true);
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-arrow-right-arrow-left mr-1.5"></i>Xác nhận chuyển / rút tiền';
+          }
+        }
+      }
+
       let pOld = null;
       if (isEditing) {
         const found = (window.rawSoQuyData?.danhSach || []).find(x => x.maPhieu === dangSuaPhieuSoQuyMa) ||
