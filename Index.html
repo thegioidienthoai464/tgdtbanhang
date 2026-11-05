@@ -186,6 +186,10 @@
           <button type="button" onclick="switchTab('tab-trahang')" id="nav-trahang" class="nav-sub-item w-full text-left py-1.5 px-2.5 rounded-lg hover:text-white hover:bg-slate-800 transition">2.3 Khách trả hàng</button>
           <button type="button" onclick="switchTab('tab-khachhang')" id="nav-khachhang" class="nav-sub-item w-full text-left py-1.5 px-2.5 rounded-lg hover:text-white hover:bg-slate-800 transition">2.4 Khách hàng & Công nợ</button>
           <button type="button" onclick="switchTab('tab-lichsudonhang')" id="nav-lichsudonhang" class="nav-sub-item w-full text-left py-1.5 px-2.5 rounded-lg hover:text-white hover:bg-slate-800 transition">2.5 Lịch sử đơn hàng</button>
+          <button type="button" onclick="switchTab('tab-suachua')" id="nav-suachua" class="nav-sub-item w-full text-left py-1.5 px-2.5 rounded-lg hover:text-white hover:bg-slate-800 transition flex items-center justify-between">
+            <span>2.6 Yêu cầu sửa chữa</span>
+            <span id="badge-suachua-count" class="hidden px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full">0</span>
+          </button>
         </div>
       </div>
 
@@ -2028,10 +2032,15 @@
           </div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-          <h4 class="font-bold text-slate-800 text-xs border-b pb-2 flex items-center space-x-1.5">
-            <i class="fa-solid fa-receipt text-blue-600"></i>
-            <span>Hóa Đơn Thu Ngân</span>
-          </h4>
+          <div class="flex items-center justify-between border-b pb-2">
+            <h4 class="font-bold text-slate-800 text-xs flex items-center space-x-1.5">
+              <i class="fa-solid fa-receipt text-blue-600"></i>
+              <span>Hóa Đơn Thu Ngân</span>
+            </h4>
+            <button type="button" onclick="moModalTiepNhanSuaChua()" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10.5px] font-bold shadow-2xs flex items-center space-x-1 transition" title="Tiếp nhận thiết bị sửa chữa hoặc bảo hành">
+              <i class="fa-solid fa-wrench"></i><span>Nhận sửa chữa</span>
+            </button>
+          </div>
           <div>
             <label class="text-[11px] font-semibold text-slate-600">Khách hàng (Gõ tên, SĐT, mã):</label>
             <div class="relative">
@@ -2372,6 +2381,239 @@
             </thead>
             <tbody id="tbl-lichsudon-body" class="divide-y divide-slate-100 font-medium"></tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- 2.6 TAB YÊU CẦU SỬA CHỮA & BẢO HÀNH (CHUẨN GIAO DIỆN KIOTVIET) -->
+      <section id="tab-suachua" class="hidden space-y-3">
+        <!-- 4 THẺ KPI TỔNG HỢP TIẾP NHẬN & SỬA CHỮA -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="bg-white p-3 rounded-2xl border border-blue-200 shadow-2xs flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-base shrink-0">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-bold text-slate-500 uppercase tracking-tight truncate">Đang tiếp nhận / Kiểm tra</p>
+              <div class="flex items-baseline space-x-1">
+                <span id="sc-kpi-dangxuly-sl" class="text-base font-extrabold text-blue-700 font-mono">0</span>
+                <span class="text-[11px] text-slate-400 font-medium">phiếu</span>
+              </div>
+              <p id="sc-kpi-dangxuly-tien" class="text-[11px] font-mono text-slate-600 font-semibold truncate">0 đ</p>
+            </div>
+          </div>
+          <div class="bg-white p-3 rounded-2xl border border-amber-200 shadow-2xs flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-base shrink-0">
+              <i class="fa-solid fa-screwdriver-wrench"></i>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-bold text-slate-500 uppercase tracking-tight truncate">Đang sửa / Chờ linh kiện</p>
+              <div class="flex items-baseline space-x-1">
+                <span id="sc-kpi-dangsua-sl" class="text-base font-extrabold text-amber-700 font-mono">0</span>
+                <span class="text-[11px] text-slate-400 font-medium">máy</span>
+              </div>
+              <p class="text-[11px] text-amber-600 font-medium truncate">Đang xử lý kỹ thuật</p>
+            </div>
+          </div>
+          <div class="bg-white p-3 rounded-2xl border border-purple-200 shadow-2xs flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-base shrink-0">
+              <i class="fa-solid fa-bell"></i>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-bold text-slate-500 uppercase tracking-tight truncate">Đã sửa xong (Chờ giao)</p>
+              <div class="flex items-baseline space-x-1">
+                <span id="sc-kpi-dasuaxong-sl" class="text-base font-extrabold text-purple-700 font-mono">0</span>
+                <span class="text-[11px] text-slate-400 font-medium">máy</span>
+              </div>
+              <p class="text-[11px] text-purple-600 font-medium truncate">Sẵn sàng trả khách</p>
+            </div>
+          </div>
+          <div class="bg-white p-3 rounded-2xl border border-emerald-200 shadow-2xs flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-base shrink-0">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-bold text-slate-500 uppercase tracking-tight truncate">Hoàn thành bàn giao</p>
+              <div class="flex items-baseline space-x-1">
+                <span id="sc-kpi-hoanthanh-sl" class="text-base font-extrabold text-emerald-700 font-mono">0</span>
+                <span class="text-[11px] text-slate-400 font-medium">phiếu</span>
+              </div>
+              <p id="sc-kpi-hoanthanh-tien" class="text-[11px] font-mono text-emerald-600 font-semibold truncate">0 đ</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- LAYOUT CHÍNH: SIDEBAR BỘ LỌC + BẢNG DANH SÁCH CHUẨN KIOTVIET -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
+          <!-- CỘT BỘ LỌC BÊN TRÁI (CHUẨN GIAO DIỆN KIOTVIET) -->
+          <div class="lg:col-span-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+            <!-- Tabs con Bộ lọc -->
+            <div class="flex items-center border-b border-slate-200 text-xs font-bold text-slate-600">
+              <button type="button" class="pb-2 px-3 border-b-2 border-blue-600 text-blue-600">Giao dịch</button>
+              <button type="button" onclick="showNotification('Tính năng xem theo linh kiện / hàng hóa đang hoàn thiện!', false)" class="pb-2 px-3 text-slate-400 hover:text-slate-600">Hàng hóa</button>
+            </div>
+
+            <!-- Lọc Chi nhánh -->
+            <div class="space-y-1.5">
+              <label class="text-[11.5px] font-bold text-slate-700 block">Chi nhánh</label>
+              <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                <span id="sc-filter-chinhanh-badge" class="inline-flex items-center px-2 py-0.5 rounded-lg bg-blue-500 text-white text-xs font-semibold">
+                  <span id="sc-filter-chinhanh-ten">Toàn hệ thống</span>
+                  <button type="button" onclick="datLaiChiNhanhSuachua('ALL')" class="ml-1 text-white/80 hover:text-white" title="Bỏ lọc">&times;</button>
+                </span>
+                <select id="filter-suachua-chinhanh-select" onchange="chonChiNhanhSuachua(this.value)" class="text-xs border border-slate-200 rounded-lg px-2 py-1 bg-slate-50 font-medium focus:outline-blue-500">
+                  <option value="ALL">-- Tất cả chi nhánh --</option>
+                  <option value="CURRENT">📍 Chi nhánh hiện tại</option>
+                  <option value="Thanh Giang">Thanh Giang</option>
+                  <option value="CN01: Trụ sở chính">CN01: Trụ sở chính</option>
+                  <option value="CN02: Chi nhánh 2">CN02: Chi nhánh 2</option>
+                  <option value="CN03: Chi nhánh 3">CN03: Chi nhánh 3</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Lọc Trạng thái -->
+            <div class="space-y-2 border-t pt-3">
+              <label class="text-[11.5px] font-bold text-slate-700 block">Trạng thái</label>
+              <div class="space-y-1.5 text-xs text-slate-700">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                  <input type="checkbox" id="chk-sc-dangxuly" checked onchange="locDanhSachYeuCauSuaChuaTable()" class="rounded text-blue-600 w-4 h-4">
+                  <span class="font-semibold text-blue-700">Đang xử lý (Chưa xong)</span>
+                </label>
+                <div class="pl-6 space-y-1 text-[11px] text-slate-500">
+                  <label class="flex items-center space-x-1.5 cursor-pointer">
+                    <input type="checkbox" id="chk-sc-tiepnhan" checked onchange="locDanhSachYeuCauSuaChuaTable()" class="rounded text-blue-500 w-3.5 h-3.5">
+                    <span>Mới tiếp nhận / Kiểm tra</span>
+                  </label>
+                  <label class="flex items-center space-x-1.5 cursor-pointer">
+                    <input type="checkbox" id="chk-sc-dangsua" checked onchange="locDanhSachYeuCauSuaChuaTable()" class="rounded text-amber-500 w-3.5 h-3.5">
+                    <span>Đang sửa chữa</span>
+                  </label>
+                  <label class="flex items-center space-x-1.5 cursor-pointer">
+                    <input type="checkbox" id="chk-sc-cholinhkien" checked onchange="locDanhSachYeuCauSuaChuaTable()" class="rounded text-amber-600 w-3.5 h-3.5">
+                    <span>Chờ linh kiện</span>
+                  </label>
+                  <label class="flex items-center space-x-1.5 cursor-pointer">
+                    <input type="checkbox" id="chk-sc-dasuaxong" checked onchange="locDanhSachYeuCauSuaChuaTable()" class="rounded text-purple-600 w-3.5 h-3.5">
+                    <span>Đã sửa xong (Chờ giao)</span>
+                  </label>
+                </div>
+                <label class="flex items-center space-x-2 cursor-pointer pt-1">
+                  <input type="checkbox" id="chk-sc-hoanthanh" checked onchange="locDanhSachYeuCauSuaChuaTable()" class="rounded text-emerald-600 w-4 h-4">
+                  <span class="font-semibold text-emerald-700">Hoàn thành</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                  <input type="checkbox" id="chk-sc-dahuy" onchange="locDanhSachYeuCauSuaChuaTable()" class="rounded text-rose-600 w-4 h-4">
+                  <span class="text-slate-500">Đã hủy</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Lọc Thời gian tiếp nhận -->
+            <div class="space-y-2 border-t pt-3">
+              <label class="text-[11.5px] font-bold text-slate-700 block">Thời gian tiếp nhận</label>
+              <div class="space-y-1.5 text-xs text-slate-700">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                  <input type="radio" name="rad-sc-thoigian" id="rad-sc-tg-all" value="ALL" checked onchange="doiCheDoThoiGianSuachua('ALL')" class="text-blue-600">
+                  <span>Toàn thời gian</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                  <input type="radio" name="rad-sc-thoigian" id="rad-sc-tg-custom" value="CUSTOM" onchange="doiCheDoThoiGianSuachua('CUSTOM')" class="text-blue-600">
+                  <span>Tùy chỉnh ngày</span>
+                </label>
+                <div id="box-sc-tg-custom" class="hidden pl-5 space-y-1.5 pt-1">
+                  <div>
+                    <span class="text-[10px] text-slate-400 block">Từ ngày:</span>
+                    <input type="date" id="filter-sc-tungay" onchange="locDanhSachYeuCauSuaChuaTable()" class="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs">
+                  </div>
+                  <div>
+                    <span class="text-[10px] text-slate-400 block">Đến ngày:</span>
+                    <input type="date" id="filter-sc-denngay" onchange="locDanhSachYeuCauSuaChuaTable()" class="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lọc Loại tiếp nhận -->
+            <div class="space-y-2 border-t pt-3">
+              <label class="text-[11.5px] font-bold text-slate-700 block">Loại tiếp nhận</label>
+              <select id="filter-suachua-loai" onchange="locDanhSachYeuCauSuaChuaTable()" class="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs bg-slate-50 font-medium">
+                <option value="ALL">-- Tất cả loại --</option>
+                <option value="SUA_CHUA">Sửa chữa tính phí</option>
+                <option value="BAO_HANH">Bảo hành miễn phí</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- CỘT CHÍNH: TOOLBAR + BẢNG DANH SÁCH (CHUẨN GIAO DIỆN KIOTVIET) -->
+          <div class="lg:col-span-9 space-y-3">
+            <!-- Toolbar trên bảng -->
+            <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
+              <div class="relative flex-1 min-w-[240px]">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="search-danhsach-suachua" oninput="locDanhSachYeuCauSuaChuaTable()" placeholder="Theo mã yêu cầu, khách, SĐT, máy, IMEI..." class="w-full pl-8 pr-8 py-1.5 border border-slate-300 rounded-xl text-xs bg-slate-50 focus:bg-white focus:outline-blue-500 font-medium">
+                <button type="button" onclick="document.getElementById('search-danhsach-suachua').value='';locDanhSachYeuCauSuaChuaTable();" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+
+              <div class="flex items-center space-x-2">
+                <button type="button" onclick="moModalTiepNhanSuaChua()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1.5 transition">
+                  <i class="fa-solid fa-plus"></i><span>Yêu cầu sửa chữa</span>
+                </button>
+                <button type="button" onclick="xuatExcelYeuCauSuaChua()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition flex items-center space-x-1" title="Xuất file danh sách">
+                  <i class="fa-solid fa-file-export text-emerald-600"></i><span>Xuất file</span>
+                </button>
+                <button type="button" onclick="taiDanhSachYeuCauSuaChua()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition" title="Làm mới dữ liệu">
+                  <i class="fa-solid fa-rotate text-blue-600"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Bảng danh sách phiếu sửa chữa chuẩn KiotViet -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+              <!-- Hàng tổng kết trên đỉnh bảng (Khách cần trả - Khách đã trả) -->
+              <div class="bg-slate-50/90 px-4 py-2 border-b flex items-center justify-between text-xs font-bold text-slate-700">
+                <div class="flex items-center space-x-2">
+                  <span class="text-slate-500 font-medium">Tổng số phiếu:</span>
+                  <span id="sc-tong-sl" class="font-mono text-blue-700 text-sm">0</span>
+                </div>
+                <div class="flex items-center space-x-6">
+                  <div>
+                    <span class="text-slate-500 font-medium mr-1.5">Khách cần trả:</span>
+                    <span id="sc-tong-cantra" class="font-mono text-slate-900 text-sm">0</span>
+                  </div>
+                  <div>
+                    <span class="text-slate-500 font-medium mr-1.5">Khách đã trả:</span>
+                    <span id="sc-tong-datra" class="font-mono text-emerald-700 text-sm">0</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bảng dữ liệu chính -->
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead class="bg-slate-100/90 text-slate-600 uppercase font-semibold border-b">
+                    <tr>
+                      <th class="p-3 w-8 text-center"><input type="checkbox" id="chk-all-suachua" onchange="chonTatCaYeuCauSuaChua(this.checked)" class="rounded text-blue-600 w-3.5 h-3.5"></th>
+                      <th class="p-3 cursor-pointer hover:text-blue-600" onclick="sapXepBangSuachua('ma_yeu_cau')">Mã yêu cầu <i class="fa-solid fa-sort text-[10px] text-slate-400"></i></th>
+                      <th class="p-3 cursor-pointer hover:text-blue-600" onclick="sapXepBangSuachua('ngay_tiep_nhan')">Thời gian <i class="fa-solid fa-sort text-[10px] text-slate-400"></i></th>
+                      <th class="p-3">Khách hàng</th>
+                      <th class="p-3">Thiết bị & IMEI</th>
+                      <th class="p-3 text-right">Khách cần trả</th>
+                      <th class="p-3 text-right">Khách đã trả</th>
+                      <th class="p-3 text-center">Trạng thái</th>
+                      <th class="p-3 text-center w-24">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbl-suachua-danhsach-body" class="divide-y font-medium text-slate-800">
+                    <tr>
+                      <td colspan="9" class="p-8 text-center text-slate-400">
+                        <i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải dữ liệu yêu cầu sửa chữa...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -9100,6 +9342,7 @@ function formatVND(amount) {
           'tab-trahang': '2.3 Khách trả hàng',
           'tab-khachhang': '2.4 Khách hàng & Công nợ',
           'tab-lichsudonhang': '2.5 Lịch sử đơn hàng',
+          'tab-suachua': '2.6 Yêu cầu sửa chữa',
           'tab-hanghoa': '3.1 Danh mục hàng & tồn kho',
           'tab-thietlapgia': '3.2 Thiết lập bảng giá',
           'tab-kiemkho': '3.3 Lịch sử kiểm kho',
@@ -9151,6 +9394,8 @@ function formatVND(amount) {
           if (typeof chuyenViewNhapHang === 'function') chuyenViewNhapHang('danhsach');
         } else if (tabId === 'tab-tranhap') {
           if (typeof chuyenViewTraHangNCC === 'function') chuyenViewTraHangNCC('danhsach');
+        } else if (tabId === 'tab-suachua') {
+          if (typeof taiDanhSachYeuCauSuaChua === 'function') taiDanhSachYeuCauSuaChua();
         } else if (tabId === 'tab-dathang') {
           if (typeof taiDanhSachDonDatHang === 'function') taiDanhSachDonDatHang();
         } else if (tabId === 'tab-banhang' || tabId === 'tab-pos') {
@@ -32861,6 +33106,2906 @@ function loadSoQuy(filter) {
     } else {
       kiemTraVaHienThiIosBanner();
     }
+  </script>
+
+
+  <!-- ==================================================================== -->
+  <!-- MODAL 1: TIẾP NHẬN SỬA CHỮA & BẢO HÀNH MỚI (CHUẨN KIOTVIET) -->
+  <!-- ==================================================================== -->
+  <div id="modal-tiepnhan-suachua" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 md:p-4 hidden overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-4xl w-full p-5 md:p-6 shadow-2xl space-y-4 my-auto max-h-[95vh] flex flex-col">
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b pb-3 shrink-0">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-wrench"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-slate-800 text-base" id="sc-modal-title">Tiếp Nhận Sửa Chữa / Bảo Hành Mới</h3>
+            <p class="text-xs text-slate-400">Lập phiếu tiếp nhận thiết bị, ghi nhận tình trạng máy, linh kiện & cọc</p>
+          </div>
+        </div>
+        <button type="button" onclick="dongModalTiepNhanSuaChua()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center text-slate-500 transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Form Body Scrollable -->
+      <div class="overflow-y-auto pr-1 space-y-4 flex-1 text-xs">
+        <!-- 1. Loại tiếp nhận & Chi nhánh -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Loại tiếp nhận <span class="text-rose-500">*</span></label>
+            <select id="sc-tn-loai" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 font-semibold bg-white text-slate-800 focus:outline-blue-500">
+              <option value="SUA_CHUA">🛠 Sửa chữa dịch vụ (Tính phí)</option>
+              <option value="BAO_HANH">🛡 Nhận máy bảo hành (Miễn phí / Theo phiếu)</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Chi nhánh tiếp nhận</label>
+            <input type="text" id="sc-tn-chinhanh" readonly class="w-full border border-slate-200 rounded-xl px-2.5 py-2 font-semibold bg-slate-100 text-slate-600 cursor-not-allowed">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Người tiếp nhận</label>
+            <input type="text" id="sc-tn-nguoinhan" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 font-medium bg-white text-slate-800 focus:outline-blue-500">
+          </div>
+        </div>
+
+        <!-- 2. Thông tin khách hàng -->
+        <div class="bg-blue-50/50 p-3.5 rounded-2xl border border-blue-100 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-blue-900 text-xs flex items-center space-x-1.5">
+              <i class="fa-solid fa-user text-blue-600"></i><span>Thông tin khách hàng</span>
+            </span>
+            <span class="text-[11px] text-slate-500" id="sc-tn-kh-conno-label"></span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="relative">
+              <label class="font-semibold text-slate-700 block mb-1">Tìm / Nhập khách hàng <span class="text-rose-500">*</span></label>
+              <input type="text" id="sc-tn-timkhach" oninput="timGoiYKhachHangSuachua(this.value)" placeholder="🔍 Gõ tên hoặc SĐT khách..." class="w-full border border-blue-200 rounded-xl px-2.5 py-2 bg-white text-slate-800 focus:outline-blue-500 font-medium">
+              <div id="sc-tn-goiy-khach-box" class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto hidden divide-y divide-slate-100"></div>
+              <input type="hidden" id="sc-tn-makh">
+            </div>
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">Họ tên khách hàng <span class="text-rose-500">*</span></label>
+              <input type="text" id="sc-tn-tenkh" placeholder="Tên khách hàng" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 bg-white text-slate-800 font-semibold focus:outline-blue-500">
+            </div>
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">Số điện thoại <span class="text-rose-500">*</span></label>
+              <input type="text" id="sc-tn-sdt" placeholder="Số điện thoại liên hệ" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 bg-white text-slate-800 font-mono font-semibold focus:outline-blue-500">
+            </div>
+          </div>
+          <div>
+            <label class="font-semibold text-slate-600 block mb-1">Địa chỉ khách</label>
+            <input type="text" id="sc-tn-diachi" placeholder="Địa chỉ (tùy chọn)" class="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 bg-white text-slate-700 text-xs">
+          </div>
+        </div>
+
+        <!-- 3. Thông tin thiết bị máy nhận sửa -->
+        <div class="bg-amber-50/40 p-3.5 rounded-2xl border border-amber-200/60 space-y-3">
+          <span class="font-bold text-amber-900 text-xs flex items-center space-x-1.5">
+            <i class="fa-solid fa-mobile-screen-button text-amber-600"></i><span>Thông tin thiết bị & tình trạng máy</span>
+          </span>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">Thiết bị / Tên máy <span class="text-rose-500">*</span></label>
+              <input type="text" id="sc-tn-model" list="sc-tn-model-datalist" placeholder="Ví dụ: iPhone 11 64GB Đen" class="w-full border border-amber-200 rounded-xl px-2.5 py-2 bg-white text-slate-800 font-semibold focus:outline-amber-500">
+              <datalist id="sc-tn-model-datalist"></datalist>
+            </div>
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">Số IMEI / Serial</label>
+              <div class="relative">
+                <input type="text" id="sc-tn-imei" placeholder="Nhập hoặc quét IMEI" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 bg-white text-slate-800 font-mono focus:outline-blue-500">
+                <button type="button" onclick="document.getElementById('sc-tn-imei').select()" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" title="Chọn nhanh"><i class="fa-solid fa-barcode"></i></button>
+              </div>
+            </div>
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">Mật khẩu màn hình (PIN / Vẽ)</label>
+              <input type="text" id="sc-tn-matkhau" placeholder="Nhập mã pin để KTV test máy" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 bg-white text-slate-800 font-mono focus:outline-blue-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">Phụ kiện nhận kèm</label>
+              <input type="text" id="sc-tn-phukien" placeholder="Ví dụ: Máy trần, không sạc, ốp lưng màu đỏ..." class="w-full border border-slate-300 rounded-xl px-2.5 py-2 bg-white text-slate-700 focus:outline-blue-500">
+            </div>
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">Ngày hẹn trả máy dự kiến</label>
+              <input type="datetime-local" id="sc-tn-ngayhen" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 bg-white text-slate-700 focus:outline-blue-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Triệu chứng lỗi & Yêu cầu của khách <span class="text-rose-500">*</span></label>
+            <textarea id="sc-tn-loi" rows="2" placeholder="Ví dụ: Màn hình vỡ kính sọc mực, pin chai 72%, loa trong rè khi gọi..." class="w-full border border-amber-300 rounded-xl p-2.5 bg-white text-slate-800 font-medium focus:outline-amber-500"></textarea>
+          </div>
+        </div>
+
+        <!-- 4. Danh sách linh kiện dự kiến & tiền công ban đầu -->
+        <div class="bg-white p-3 rounded-2xl border border-slate-200 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800 text-xs flex items-center space-x-1.5">
+              <i class="fa-solid fa-microchip text-indigo-600"></i><span>Dịch vụ & Linh kiện dự kiến (Nếu có)</span>
+            </span>
+            <button type="button" onclick="themDongLinhKienTiepNhan()" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold flex items-center space-x-1 transition">
+              <i class="fa-solid fa-plus text-[10px]"></i><span>Thêm linh kiện / Dịch vụ</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto border rounded-xl">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-50 text-slate-600 font-semibold border-b">
+                <tr>
+                  <th class="p-2 w-32">Mã LK / Dịch vụ</th>
+                  <th class="p-2">Tên Linh Kiện / Tiền Công</th>
+                  <th class="p-2 w-20 text-center">ĐVT</th>
+                  <th class="p-2 w-16 text-center">SL</th>
+                  <th class="p-2 w-28 text-right">Đơn Giá</th>
+                  <th class="p-2 w-28 text-right">Thành Tiền</th>
+                  <th class="p-2 w-24 text-center">Bảo hành</th>
+                  <th class="p-2 w-10 text-center">Xóa</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-sc-tn-linhkien-body" class="divide-y divide-slate-100 font-medium">
+                <!-- Dòng linh kiện động -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="flex justify-end pr-2 text-xs font-semibold text-slate-700 space-x-2">
+            <span>Dự tính tổng tiền:</span>
+            <span id="sc-tn-tongtien-dukien" class="font-mono text-blue-700 font-bold text-sm">0 đ</span>
+          </div>
+        </div>
+
+        <!-- 5. Tiền đặt cọc của khách -->
+        <div class="bg-emerald-50/50 p-3.5 rounded-2xl border border-emerald-200/70 space-y-3">
+          <span class="font-bold text-emerald-900 text-xs flex items-center space-x-1.5">
+            <i class="fa-solid fa-money-bill-wave text-emerald-600"></i><span>Tiền đặt cọc nhận máy (Nếu khách gửi trước)</span>
+          </span>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">Số tiền đặt cọc</label>
+              <input type="text" id="sc-tn-tiencoc" value="0" oninput="dinhDangTienInput(this); tinhToanTaiChinhTiepNhan();" placeholder="0" class="w-full border border-emerald-300 rounded-xl px-2.5 py-2 bg-white text-emerald-800 font-mono font-bold text-sm focus:outline-emerald-500">
+            </div>
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">Hình thức nhận cọc</label>
+              <select id="sc-tn-hinhthuc-coc" onchange="doiHinhThucCoc(this.value)" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 bg-white text-slate-800 font-medium focus:outline-blue-500">
+                <option value="TIEN_MAT">💵 Tiền mặt (Quỹ tiền mặt)</option>
+                <option value="NGAN_HANG">🏦 Chuyển khoản ngân hàng</option>
+              </select>
+            </div>
+            <div id="box-sc-tn-nganhang" class="hidden">
+              <label class="font-semibold text-slate-700 block mb-1">Tài khoản ngân hàng nhận</label>
+              <select id="sc-tn-taikhoan-nhan" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 bg-white text-slate-800 font-medium focus:outline-blue-500">
+                <!-- Danh sách tài khoản ngân hàng -->
+              </select>
+            </div>
+          </div>
+          <p class="text-[11px] text-emerald-700 italic"><i class="fa-solid fa-info-circle mr-1"></i>Khi nhập tiền cọc, hệ thống sẽ tự động tạo Phiếu Thu tương ứng trong Sổ Quỹ để quản lý dòng tiền chuẩn xác.</p>
+        </div>
+
+        <div>
+          <label class="font-semibold text-slate-600 block mb-1">Ghi chú tiếp nhận thêm</label>
+          <input type="text" id="sc-tn-ghichu" placeholder="Ghi chú nội bộ cho kỹ thuật viên..." class="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 bg-slate-50 text-slate-700 text-xs">
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="border-t pt-3 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <button type="button" onclick="dongModalTiepNhanSuaChua()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">Đóng</button>
+        <div class="flex items-center space-x-2">
+          <button type="button" onclick="xacNhanLuuYeuCauSuaChua(false)" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm">
+            <i class="fa-solid fa-floppy-disk"></i><span>Chỉ Lưu Phiếu</span>
+          </button>
+          <button type="button" onclick="xacNhanLuuYeuCauSuaChua(true)" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold transition flex items-center space-x-1.5 shadow-md">
+            <i class="fa-solid fa-print"></i><span>LƯU & IN BIÊN NHẬN MÁY</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==================================================================== -->
+  <!-- MODAL 2: XUẤT HÓA ĐƠN BÁN LINH KIỆN & THU TIỀN SỬA CHỮA (TÍNH NĂNG TRỌNG TÂM) -->
+  <!-- ==================================================================== -->
+  <div id="modal-xuathoadon-suachua" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 md:p-4 hidden overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-4xl w-full p-5 md:p-6 shadow-2xl space-y-4 my-auto max-h-[95vh] flex flex-col">
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b pb-3 shrink-0">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-slate-800 text-base">Xuất Hóa Đơn Bán Linh Kiện & Bàn Giao Thiết Bị</h3>
+            <p class="text-xs text-slate-500">Tự động trừ tồn kho linh kiện thực tế, ghi doanh thu Sổ Quỹ & hoàn thành phiếu</p>
+          </div>
+        </div>
+        <button type="button" onclick="dongModalXuatHoaDonSuaChua()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center text-slate-500 transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Body Scrollable -->
+      <div class="overflow-y-auto pr-1 space-y-4 flex-1 text-xs">
+        <!-- Thông tin tóm tắt phiếu sửa chữa -->
+        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 grid grid-cols-2 md:grid-cols-4 gap-2.5">
+          <div>
+            <span class="text-slate-400 block text-[11px]">Mã yêu cầu:</span>
+            <span id="sc-xhd-mayeucau" class="font-mono font-bold text-blue-700 text-xs">YCSC...</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[11px]">Khách hàng:</span>
+            <span id="sc-xhd-tenkh" class="font-bold text-slate-800 text-xs">Khách hàng</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[11px]">Thiết bị & IMEI:</span>
+            <span id="sc-xhd-thietbi" class="font-semibold text-slate-700 text-xs">Thiết bị</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[11px]">Chi nhánh xuất kho:</span>
+            <span id="sc-xhd-chinhanh" class="font-semibold text-amber-800 text-xs">Thanh Giang</span>
+          </div>
+        </div>
+
+        <!-- Bảng danh sách linh kiện thay thế & công sửa chữa sẽ xuất bán -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800 text-xs flex items-center space-x-1.5">
+              <i class="fa-solid fa-boxes-stacked text-blue-600"></i><span>Danh sách linh kiện xuất kho & tiền công dịch vụ</span>
+            </span>
+            <button type="button" onclick="moModalThemLinhKienSuaChua(window.currentViewingMaYCSC)" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold flex items-center space-x-1 transition">
+              <i class="fa-solid fa-plus text-[10px]"></i><span>Bổ sung linh kiện / công</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto border rounded-xl">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-100/80 text-slate-600 font-semibold border-b">
+                <tr>
+                  <th class="p-2.5 w-8 text-center"><input type="checkbox" id="sc-xhd-chk-all" checked onchange="chonTatCaLinhKienXHD(this.checked)" class="rounded text-blue-600 w-3.5 h-3.5"></th>
+                  <th class="p-2.5">Tên Linh Kiện / Dịch Vụ</th>
+                  <th class="p-2.5 w-16 text-center">ĐVT</th>
+                  <th class="p-2.5 w-20 text-center">Tồn Kho</th>
+                  <th class="p-2.5 w-16 text-center">SL Xuất</th>
+                  <th class="p-2.5 w-28 text-right">Đơn Giá</th>
+                  <th class="p-2.5 w-28 text-right">Thành Tiền</th>
+                  <th class="p-2.5 w-24 text-center">Bảo Hành</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-sc-xhd-linhkien-body" class="divide-y divide-slate-100 font-medium">
+                <!-- Dòng linh kiện -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Chiết tính tài chính & Thanh toán -->
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Cột trái: Tùy chọn hạch toán -->
+            <div class="space-y-2.5">
+              <span class="font-bold text-slate-800 text-xs block">Tùy chọn tự động hóa hệ thống</span>
+              <label class="flex items-start space-x-2 cursor-pointer bg-white p-2.5 rounded-xl border border-slate-200">
+                <input type="checkbox" id="sc-xhd-opt-trukho" checked class="rounded text-emerald-600 w-4 h-4 mt-0.5">
+                <div>
+                  <span class="font-bold text-slate-800 block">Tự động trừ tồn kho linh kiện trong kho hàng</span>
+                  <span class="text-[11px] text-slate-500">Giảm trừ số lượng linh kiện thực tế tại chi nhánh hiện tại.</span>
+                </div>
+              </label>
+
+              <label class="flex items-start space-x-2 cursor-pointer bg-white p-2.5 rounded-xl border border-slate-200">
+                <input type="checkbox" id="sc-xhd-opt-ghisoquy" checked class="rounded text-emerald-600 w-4 h-4 mt-0.5">
+                <div>
+                  <span class="font-bold text-slate-800 block">Tự động ghi phiếu thu tiền vào Sổ Quỹ</span>
+                  <span class="text-[11px] text-slate-500">Hạch toán doanh thu bán linh kiện & tiền công thợ vào quỹ tiền mặt/ngân hàng.</span>
+                </div>
+              </label>
+
+              <div class="space-y-1">
+                <label class="font-semibold text-slate-700 block">Ghi chú trên hóa đơn</label>
+                <input type="text" id="sc-xhd-ghichu" placeholder="Ghi chú in trên hóa đơn bán lẻ..." class="w-full border border-slate-300 rounded-xl px-2.5 py-1.5 bg-white text-slate-700 text-xs">
+              </div>
+            </div>
+
+            <!-- Cột phải: Tính toán tiền & Phương thức thanh toán -->
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-600">Tổng tiền linh kiện & công:</span>
+                <span id="sc-xhd-tongtien" class="font-mono font-bold text-slate-800">0 đ</span>
+              </div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-600">Giảm giá:</span>
+                <input type="text" id="sc-xhd-giamgia" value="0" oninput="dinhDangTienInput(this); tinhToanTaiChinhXHD();" class="w-28 text-right border border-slate-200 rounded-lg px-2 py-0.5 font-mono text-xs">
+              </div>
+              <div class="flex items-center justify-between text-xs font-bold text-slate-900 border-t pt-1.5">
+                <span>Khách cần trả:</span>
+                <span id="sc-xhd-cantra" class="font-mono text-blue-700 text-sm">0 đ</span>
+              </div>
+              <div class="flex items-center justify-between text-xs text-emerald-700">
+                <span>Tiền cọc đã trả trước:</span>
+                <span id="sc-xhd-dacoc" class="font-mono font-bold">- 0 đ</span>
+              </div>
+              <div class="flex items-center justify-between text-xs font-extrabold text-rose-700 bg-rose-50 p-2 rounded-lg">
+                <span>Khách cần thanh toán đợt này:</span>
+                <span id="sc-xhd-conlai" class="font-mono text-base">0 đ</span>
+              </div>
+
+              <!-- Tiền khách đưa & Hình thức -->
+              <div class="space-y-1.5 pt-1">
+                <div class="flex items-center justify-between">
+                  <label class="font-bold text-slate-700">Tiền khách trả lần này:</label>
+                  <input type="text" id="sc-xhd-khachtra" oninput="dinhDangTienInput(this); tinhToanTienThoiXHD();" class="w-32 text-right border-2 border-emerald-400 rounded-xl px-2 py-1 font-mono font-extrabold text-sm text-emerald-800 focus:outline-emerald-500">
+                </div>
+                <div class="flex items-center justify-between text-[11px] text-slate-500">
+                  <span>Tiền thừa trả khách:</span>
+                  <span id="sc-xhd-tienthua" class="font-mono font-bold text-slate-700">0 đ</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                  <div>
+                    <label class="font-semibold text-slate-600 block text-[11px] mb-1">Hình thức thanh toán</label>
+                    <select id="sc-xhd-hinhthuc-tt" onchange="doiHinhThucTTXHD(this.value)" class="w-full border border-slate-300 rounded-xl px-2 py-1.5 bg-slate-50 font-semibold text-slate-800">
+                      <option value="TIEN_MAT">💵 Tiền mặt</option>
+                      <option value="NGAN_HANG">🏦 Chuyển khoản</option>
+                      <option value="QUET_THE">💳 Quẹt thẻ</option>
+                      <option value="GHI_NO">📝 Ghi nợ khách</option>
+                    </select>
+                  </div>
+                  <div id="box-sc-xhd-nganhang" class="hidden">
+                    <label class="font-semibold text-slate-600 block text-[11px] mb-1">Tài khoản nhận</label>
+                    <select id="sc-xhd-taikhoan-nhan" class="w-full border border-slate-300 rounded-xl px-2 py-1.5 bg-slate-50 font-medium text-slate-800 text-[11px]">
+                      <!-- options ngân hàng -->
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="border-t pt-3 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <button type="button" onclick="dongModalXuatHoaDonSuaChua()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">Đóng</button>
+        <button type="button" onclick="xacNhanXuatHoaDonSuaChua()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold transition flex items-center space-x-2 shadow-lg shadow-emerald-600/30">
+          <i class="fa-solid fa-check-double"></i><span>XÁC NHẬN XUẤT HÓA ĐƠN & BÀN GIAO MÁY</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==================================================================== -->
+  <!-- MODAL 3: BỔ SUNG LINH KIỆN / TIỀN CÔNG VÀO PHIẾU (DÀNH CHO KỸ THUẬT VIÊN) -->
+  <!-- ==================================================================== -->
+  <div id="modal-them-linhkien-suachua" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[99999] flex items-center justify-center p-3 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h4 class="font-bold text-slate-800 text-sm flex items-center space-x-1.5">
+          <i class="fa-solid fa-plus-circle text-blue-600"></i><span>Bổ Sung Linh Kiện / Dịch Vụ Sửa Chữa</span>
+        </h4>
+        <button type="button" onclick="dongModalThemLinhKienSuaChua()" class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-rose-100 hover:text-rose-600">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Loại hạng mục</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="btn-sc-loai-linhkien" onclick="chonLoaiThemLK('LINH_KIEN')" class="py-1.5 px-3 rounded-xl border border-blue-500 bg-blue-50 text-blue-700 font-bold text-center">📦 Linh kiện trong kho</button>
+            <button type="button" id="btn-sc-loai-tiencong" onclick="chonLoaiThemLK('TIEN_CONG')" class="py-1.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-semibold text-center">🔧 Tiền công / Dịch vụ</button>
+          </div>
+        </div>
+
+        <div id="box-sc-chon-hanghoa">
+          <label class="font-bold text-slate-700 block mb-1">Tìm linh kiện từ kho hàng</label>
+          <div class="relative">
+            <input type="text" id="sc-tim-linhkien-kho" oninput="timGoiYLinhKienKho(this.value)" placeholder="🔍 Gõ mã hoặc tên linh kiện trong kho..." class="w-full border border-blue-200 rounded-xl px-3 py-2 bg-white text-slate-800 font-medium focus:outline-blue-500">
+            <div id="sc-goiy-linhkien-box" class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto hidden divide-y divide-slate-100"></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Mã linh kiện / dịch vụ</label>
+            <input type="text" id="sc-add-malk" placeholder="Mã LK" class="w-full border border-slate-300 rounded-xl px-2.5 py-1.5 font-mono text-slate-800">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Đơn vị tính</label>
+            <input type="text" id="sc-add-dvt" value="Cái" class="w-full border border-slate-300 rounded-xl px-2.5 py-1.5 text-slate-800">
+          </div>
+        </div>
+
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Tên linh kiện / Dịch vụ tiền công <span class="text-rose-500">*</span></label>
+          <input type="text" id="sc-add-tenlk" placeholder="Ví dụ: Pin iPhone 11 Pisen, Màn hình OLED..." class="w-full border border-slate-300 rounded-xl px-2.5 py-2 font-semibold text-slate-800">
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Số lượng</label>
+            <input type="number" id="sc-add-sl" value="1" min="1" oninput="tinhThanhTienAddLK()" class="w-full border border-slate-300 rounded-xl px-2 py-1.5 text-center font-bold font-mono">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Đơn giá bán</label>
+            <input type="text" id="sc-add-dongia" value="0" oninput="dinhDangTienInput(this); tinhThanhTienAddLK();" class="w-full border border-slate-300 rounded-xl px-2 py-1.5 text-right font-mono font-bold text-blue-700">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Thành tiền</label>
+            <input type="text" id="sc-add-thanhtien" readonly value="0" class="w-full border border-slate-200 bg-slate-100 rounded-xl px-2 py-1.5 text-right font-mono font-bold text-slate-800">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Thời hạn bảo hành</label>
+            <input type="text" id="sc-add-baohanh" placeholder="Ví dụ: 3 tháng, 6 tháng..." class="w-full border border-slate-300 rounded-xl px-2.5 py-1.5 text-slate-700">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Ghi chú linh kiện</label>
+            <input type="text" id="sc-add-ghichu" placeholder="Ghi chú kỹ thuật..." class="w-full border border-slate-300 rounded-xl px-2.5 py-1.5 text-slate-700">
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t pt-3 flex items-center justify-end space-x-2">
+        <button type="button" onclick="dongModalThemLinhKienSuaChua()" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">Hủy</button>
+        <button type="button" onclick="xacNhanThemLinhKienVaoPhieu()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md">Thêm vào phiếu</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==================================================================== -->
+  <!-- MODAL 4: THU TIỀN / ĐẶT CỌC BỔ SUNG (GHI SỔ QUỸ) -->
+  <!-- ==================================================================== -->
+  <div id="modal-thutien-suachua" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[99999] flex items-center justify-center p-3 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h4 class="font-bold text-slate-800 text-sm flex items-center space-x-1.5">
+          <i class="fa-solid fa-hand-holding-dollar text-emerald-600"></i><span>Thu Tiền / Đặt Cọc Sửa Chữa</span>
+        </h4>
+        <button type="button" onclick="dongModalThuTienSuaChua()" class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-rose-100 hover:text-rose-600">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-1">
+          <div class="flex justify-between">
+            <span class="text-slate-500">Mã yêu cầu:</span>
+            <span id="sc-thu-mayeucau" class="font-mono font-bold text-blue-700">YCSC...</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Khách hàng:</span>
+            <span id="sc-thu-tenkh" class="font-bold text-slate-800">...</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Khách cần trả:</span>
+            <span id="sc-thu-cantra" class="font-mono font-bold text-slate-800">0 đ</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Đã trả:</span>
+            <span id="sc-thu-datra" class="font-mono font-bold text-emerald-700">0 đ</span>
+          </div>
+          <div class="flex justify-between border-t pt-1 font-bold">
+            <span class="text-rose-600">Còn nợ:</span>
+            <span id="sc-thu-conno" class="font-mono text-rose-600 text-sm">0 đ</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Số tiền thu lần này <span class="text-rose-500">*</span></label>
+          <input type="text" id="sc-thu-sotien" oninput="dinhDangTienInput(this)" placeholder="0" class="w-full border-2 border-emerald-400 rounded-xl px-3 py-2 bg-white text-emerald-800 font-mono font-bold text-base focus:outline-emerald-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Hình thức thu</label>
+            <select id="sc-thu-hinhthuc" onchange="doiHinhThucThuSuaChua(this.value)" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 bg-slate-50 font-semibold text-slate-800">
+              <option value="TIEN_MAT">💵 Tiền mặt</option>
+              <option value="NGAN_HANG">🏦 Chuyển khoản</option>
+            </select>
+          </div>
+          <div id="box-sc-thu-nganhang" class="hidden">
+            <label class="font-semibold text-slate-700 block mb-1">Tài khoản nhận</label>
+            <select id="sc-thu-taikhoan-nhan" class="w-full border border-slate-300 rounded-xl px-2 py-2 bg-slate-50 text-[11px] font-medium text-slate-800">
+              <!-- options ngân hàng -->
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Lý do / Hạng mục thu</label>
+          <select id="sc-thu-lydo" class="w-full border border-slate-300 rounded-xl px-2.5 py-1.5 bg-white text-slate-800 font-medium">
+            <option value="Thu tiền sửa chữa / Dịch vụ">Thu tiền sửa chữa / Dịch vụ</option>
+            <option value="Tiền đặt cọc sửa chữa">Tiền đặt cọc sửa chữa</option>
+            <option value="Thanh toán khi bàn giao máy">Thanh toán khi bàn giao máy</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Ghi chú phiếu thu</label>
+          <input type="text" id="sc-thu-ghichu" placeholder="Ghi chú thêm..." class="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700">
+        </div>
+      </div>
+
+      <div class="border-t pt-3 flex items-center justify-end space-x-2">
+        <button type="button" onclick="dongModalThuTienSuaChua()" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">Hủy</button>
+        <button type="button" onclick="xacNhanThuTienSuaChua()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md">Xác Nhận Thu & Ghi Sổ Quỹ</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==================================================================== -->
+  <!-- MODAL 5: ĐỔI TRẠNG THÁI SỬA CHỮA -->
+  <!-- ==================================================================== -->
+  <div id="modal-capnhat-trangthai-suachua" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[99999] flex items-center justify-center p-3 hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h4 class="font-bold text-slate-800 text-sm flex items-center space-x-1.5">
+          <i class="fa-solid fa-arrows-rotate text-amber-500"></i><span>Cập Nhật Trạng Thái Sửa Chữa</span>
+        </h4>
+        <button type="button" onclick="dongModalCapNhatTrangThaiSuaChua()" class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-rose-100 hover:text-rose-600">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <span class="text-slate-500 block mb-1">Mã yêu cầu:</span>
+          <span id="sc-tt-mayeucau" class="font-mono font-bold text-blue-700 text-sm">YCSC...</span>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Trạng thái mới <span class="text-rose-500">*</span></label>
+          <select id="sc-tt-trangthai-select" class="w-full border-2 border-amber-300 rounded-xl px-3 py-2 bg-amber-50 font-bold text-slate-800 focus:outline-amber-500">
+            <option value="TiepNhan">⏳ Mới tiếp nhận / Kiểm tra</option>
+            <option value="DangSua">🛠 Đang sửa chữa kỹ thuật</option>
+            <option value="ChoLinhKien">📦 Chờ nhập linh kiện</option>
+            <option value="DaSuaXong">🔔 Đã sửa xong (Sẵn sàng trả khách)</option>
+            <option value="HoanThanh">✅ Hoàn thành bàn giao</option>
+            <option value="DaHuy">❌ Hủy yêu cầu</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Ghi chú cập nhật kỹ thuật</label>
+          <textarea id="sc-tt-ghichu" rows="2" placeholder="Ghi chú tiến độ hoặc tình trạng test..." class="w-full border border-slate-300 rounded-xl p-2 bg-white text-slate-700"></textarea>
+        </div>
+      </div>
+
+      <div class="border-t pt-3 flex items-center justify-end space-x-2">
+        <button type="button" onclick="dongModalCapNhatTrangThaiSuaChua()" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">Hủy</button>
+        <button type="button" onclick="xacNhanCapNhatTrangThaiSuaChua()" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-md">Cập Nhật Trạng Thái</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==================================================================== -->
+  <!-- SCRIPT PHÂN HỆ 2.6: YÊU CẦU SỬA CHỮA & BẢO HÀNH (CHUẨN KIOTVIET) -->
+  <!-- ==================================================================== -->
+  <script id="script-suachua">
+  (function() {
+    // 1. BIẾN TOÀN CỤC PHÂN HỆ SỬA CHỮA
+    window.rawYeuCauSuaChuaList = [];
+    window.currentEditingYCSC = null;
+    window.currentViewingMaYCSC = null;
+    window.activeTabDetailYCSC = 'thong-tin';
+    window.danhSachLinhKienTiepNhanTam = [];
+    window.sapXepYCSC = { cot: 'ngay_tiep_nhan', chieu: 'desc' };
+
+    const STORAGE_KEY_SUACHUA = 'TGDT_YEU_CAU_SUA_CHUA_V1';
+
+    // 2. TẢI DỮ LIỆU YÊU CẦU SỬA CHỮA
+    window.taiDanhSachYeuCauSuaChua = async function() {
+      console.log("Đang tải dữ liệu Yêu cầu sửa chữa...");
+      
+      // 2.1 Đọc từ LocalStorage trước để hiển thị tức thì
+      try {
+        const localData = localStorage.getItem(STORAGE_KEY_SUACHUA);
+        if (localData) {
+          const parsed = JSON.parse(localData);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            window.rawYeuCauSuaChuaList = parsed;
+            renderTableDanhSachYeuCauSuaChua();
+          }
+        }
+      } catch(e) {
+        console.warn("Lỗi đọc YCSC từ localStorage:", e);
+      }
+
+      // 2.2 Tải từ Supabase (nếu có kết nối)
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+          // Thử tải từ bảng yeu_cau_sua_chua
+          const { data, error } = await supabaseClient.from('yeu_cau_sua_chua').select('*').order('ngay_tiep_nhan', { ascending: false });
+          if (!error && Array.isArray(data) && data.length > 0) {
+            const formatted = data.map(item => ({
+              ...item,
+              danh_sach_dich_vu: typeof item.danh_sach_dich_vu === 'string' ? JSON.parse(item.danh_sach_dich_vu) : (item.danh_sach_dich_vu || []),
+              lich_su_thanh_toan: typeof item.lich_su_thanh_toan === 'string' ? JSON.parse(item.lich_su_thanh_toan) : (item.lich_su_thanh_toan || [])
+            }));
+            window.rawYeuCauSuaChuaList = formatted;
+            localStorage.setItem(STORAGE_KEY_SUACHUA, JSON.stringify(formatted));
+          } else {
+            // Dự phòng: tải các đơn có mã YCSC trong bảng don_hang
+            const { data: dOrders, error: errOrders } = await supabaseClient.from('don_hang').select('*').like('ma_don_hang', 'YCSC%').order('ngay_ban', { ascending: false });
+            if (!errOrders && Array.isArray(dOrders) && dOrders.length > 0) {
+              const converted = dOrders.map(dh => {
+                const ct = Array.isArray(dh.chi_tiet_san_pham) ? dh.chi_tiet_san_pham : [];
+                return {
+                  ma_yeu_cau: dh.ma_don_hang,
+                  ngay_tiep_nhan: dh.ngay_ban || new Date().toISOString(),
+                  ngay_cap_nhat: dh.ngay_ban,
+                  chi_nhanh: dh.chi_nhanh || "Thanh Giang",
+                  noi_tiep_nhan: "Tại cửa hàng",
+                  bang_gia: "Bảng giá chung",
+                  nguoi_nhan: dh.nhan_vien || "Nhân viên",
+                  loai_yeu_cau: "SUA_CHUA",
+                  ma_kh: dh.ma_kh || "KHACHLE",
+                  ten_kh: dh.ten_kh || "Khách lẻ",
+                  so_dien_thoai: dh.so_dien_thoai || "",
+                  ten_thiet_bi: ct[0]?.ten_hang || "Điện thoại / Thiết bị",
+                  imei: ct[0]?.imei || "",
+                  tinh_trang_loi: dh.ghi_chu || "",
+                  trang_thai: dh.trang_thai === 'Hoàn thành' ? 'HoanThanh' : 'TiepNhan',
+                  danh_sach_dich_vu: ct,
+                  tong_tien_hang: Number(dh.tong_tien) || 0,
+                  giam_gia: Number(dh.giam_gia) || 0,
+                  khach_can_tra: Number(dh.khach_phai_tra) || 0,
+                  khach_da_tra: Number(dh.khach_tra) || 0,
+                  con_can_tra: (Number(dh.khach_phai_tra) || 0) - (Number(dh.khach_tra) || 0),
+                  lich_su_thanh_toan: []
+                };
+              });
+              if (window.rawYeuCauSuaChuaList.length === 0) {
+                window.rawYeuCauSuaChuaList = converted;
+                localStorage.setItem(STORAGE_KEY_SUACHUA, JSON.stringify(converted));
+              }
+            }
+          }
+        } catch(e) {
+          console.warn("Lỗi đồng bộ YCSC từ Supabase:", e);
+        }
+      }
+
+      // 2.3 Cập nhật giao diện bảng và thẻ KPI
+      renderTableDanhSachYeuCauSuaChua();
+    };
+
+    // 3. RENDER BẢNG DANH SÁCH & KPI THEO CHUẨN KIOTVIET
+    window.renderTableDanhSachYeuCauSuaChua = function() {
+      const tbody = document.getElementById('tbl-suachua-danhsach-body');
+      if (!tbody) return;
+
+      const list = locDanhSachYeuCauSuaChuaData();
+
+      // Cập nhật 4 thẻ KPI dựa trên toàn bộ danh sách
+      let slTiepNhan = 0, tienDangXuLy = 0;
+      let slDangSua = 0;
+      let slDaSuaXong = 0;
+      let slHoanThanh = 0, tienHoanThanh = 0;
+
+      (window.rawYeuCauSuaChuaList || []).forEach(item => {
+        const tt = item.trang_thai || 'TiepNhan';
+        const cantra = Number(item.khach_can_tra) || 0;
+        const datra = Number(item.khach_da_tra) || 0;
+
+        if (tt === 'TiepNhan') {
+          slTiepNhan++;
+          tienDangXuLy += cantra;
+        } else if (tt === 'DangSua' || tt === 'ChoLinhKien') {
+          slDangSua++;
+          tienDangXuLy += cantra;
+        } else if (tt === 'DaSuaXong') {
+          slDaSuaXong++;
+          tienDangXuLy += cantra;
+        } else if (tt === 'HoanThanh') {
+          slHoanThanh++;
+          tienHoanThanh += datra;
+        }
+      });
+
+      const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+      setEl('sc-kpi-dangxuly-sl', slTiepNhan);
+      setEl('sc-kpi-dangxuly-tien', formatVNDKiot(tienDangXuLy) + ' đ');
+      setEl('sc-kpi-dangsua-sl', slDangSua);
+      setEl('sc-kpi-dasuaxong-sl', slDaSuaXong);
+      setEl('sc-kpi-hoanthanh-sl', slHoanThanh);
+      setEl('sc-kpi-hoanthanh-tien', formatVNDKiot(tienHoanThanh) + ' đ');
+
+      // Badge đếm số lượng trên menu
+      const badgeMenu = document.getElementById('badge-suachua-count');
+      if (badgeMenu) {
+        const slChuaXong = slTiepNhan + slDangSua + slDaSuaXong;
+        if (slChuaXong > 0) {
+          badgeMenu.innerText = slChuaXong;
+          badgeMenu.classList.remove('hidden');
+        } else {
+          badgeMenu.classList.add('hidden');
+        }
+      }
+
+      // Hàng tổng kết bên trên bảng
+      let tongSL = list.length;
+      let tongCanTra = 0;
+      let tongDaTra = 0;
+      list.forEach(item => {
+        tongCanTra += Number(item.khach_can_tra) || 0;
+        tongDaTra += Number(item.khach_da_tra) || 0;
+      });
+
+      setEl('sc-tong-sl', tongSL);
+      setEl('sc-tong-cantra', formatVNDKiot(tongCanTra));
+      setEl('sc-tong-datra', formatVNDKiot(tongDaTra));
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">Không tìm thấy yêu cầu sửa chữa nào phù hợp với bộ lọc.</td></tr>`;
+        return;
+      }
+
+      let html = '';
+      list.forEach((item, idx) => {
+        const isExpanded = window.currentViewingMaYCSC === item.ma_yeu_cau;
+        const thoiGianStr = formatNgayGioKiot(item.ngay_tiep_nhan);
+        const canTraStr = formatVNDKiot(item.khach_can_tra || 0);
+        const daTraStr = formatVNDKiot(item.khach_da_tra || 0);
+        const badgeTT = taoBadgeTrangThaiKiot(item.trang_thai);
+
+        html += `
+          <tr class="hover:bg-blue-50/40 transition cursor-pointer ${isExpanded ? 'bg-blue-50/60 font-semibold border-l-4 border-l-blue-600' : ''}" onclick="toggleChiTietYeuCauSuaChua('${item.ma_yeu_cau}', event)">
+            <td class="p-3 text-center" onclick="event.stopPropagation()">
+              <input type="checkbox" class="chk-item-suachua rounded text-blue-600 w-3.5 h-3.5" data-mayeucau="${item.ma_yeu_cau}">
+            </td>
+            <td class="p-3 font-mono font-bold text-blue-600 hover:underline">
+              ${item.ma_yeu_cau}
+            </td>
+            <td class="p-3 text-slate-600 text-[11.5px]">
+              ${thoiGianStr}
+            </td>
+            <td class="p-3 font-bold text-slate-900">
+              <div>${item.ten_kh || 'Khách lẻ'}</div>
+              ${item.so_dien_thoai ? `<div class="text-[11px] font-mono text-slate-400 font-normal">${item.so_dien_thoai}</div>` : ''}
+            </td>
+            <td class="p-3 text-slate-700">
+              <div class="font-semibold text-slate-800">${item.ten_thiet_bi || 'Thiết bị'}</div>
+              ${item.imei ? `<div class="text-[11px] font-mono text-slate-400">IMEI: ${item.imei}</div>` : ''}
+            </td>
+            <td class="p-3 text-right font-mono font-bold text-slate-900">
+              ${canTraStr}
+            </td>
+            <td class="p-3 text-right font-mono font-bold text-emerald-700">
+              ${daTraStr}
+            </td>
+            <td class="p-3 text-center">
+              ${badgeTT}
+            </td>
+            <td class="p-3 text-center" onclick="event.stopPropagation()">
+              <div class="flex items-center justify-center space-x-1">
+                <button type="button" onclick="inPhieuTiepNhanSuaChua('${item.ma_yeu_cau}')" class="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition" title="In phiếu tiếp nhận máy">
+                  <i class="fa-solid fa-print text-xs"></i>
+                </button>
+                ${item.trang_thai !== 'HoanThanh' && item.trang_thai !== 'DaHuy' ? `
+                  <button type="button" onclick="moModalXuatHoaDonSuaChua('${item.ma_yeu_cau}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold shadow-xs transition" title="Xuất hóa đơn bán linh kiện & Bàn giao">
+                    <i class="fa-solid fa-receipt mr-0.5"></i>Xuất HĐ
+                  </button>
+                ` : `
+                  <button type="button" onclick="inHoaDonSuaChua('${item.ma_yeu_cau}')" class="p-1.5 hover:bg-emerald-100 text-emerald-700 rounded-lg transition" title="In hóa đơn bàn giao & bảo hành">
+                    <i class="fa-solid fa-file-invoice text-xs"></i>
+                  </button>
+                `}
+              </div>
+            </td>
+          </tr>
+        `;
+
+        // Render dòng mở rộng chi tiết nếu dòng đang được chọn (Chuẩn KiotViet)
+        if (isExpanded) {
+          html += renderRowChiTietKiotViet(item);
+        }
+      });
+
+      tbody.innerHTML = html;
+    };
+
+    // 4. RENDER GIAO DIỆN CHI TIẾT MỞ RỘNG (EXPAND DETAIL CHUẨN 100% KIOTVIET TRONG ẢNH)
+    function renderRowChiTietKiotViet(item) {
+      const activeTab = window.activeTabDetailYCSC || 'thong-tin';
+      const badgeTT = taoBadgeTrangThaiKiot(item.trang_thai);
+      const thoiGianStr = formatNgayGioKiot(item.ngay_tiep_nhan);
+      const capNhatStr = formatNgayGioKiot(item.ngay_cap_nhat || item.ngay_tiep_nhan);
+      const dsDichVu = Array.isArray(item.danh_sach_dich_vu) ? item.danh_sach_dich_vu : [];
+      const dsThanhToan = Array.isArray(item.lich_su_thanh_toan) ? item.lich_su_thanh_toan : [];
+
+      let tabContentHtml = '';
+
+      if (activeTab === 'thong-tin') {
+        // TAB 1: THÔNG TIN
+        tabContentHtml = `
+          <div class="space-y-4">
+            <!-- Header thông tin khách & mã YCSC -->
+            <div class="flex flex-wrap items-center justify-between border-b pb-2.5 gap-2">
+              <div class="flex items-center space-x-2">
+                <span class="text-base font-extrabold text-slate-800">${item.ten_kh || 'Khách lẻ'}</span>
+                <button type="button" onclick="showNotification('Chỉnh sửa thông tin khách hàng', false)" class="text-blue-600 hover:text-blue-800 text-xs" title="Sửa thông tin"><i class="fa-regular fa-pen-to-square"></i></button>
+                <span class="text-xs font-mono font-bold text-slate-500">${item.ma_yeu_cau}</span>
+                ${badgeTT}
+              </div>
+              <div class="text-xs font-semibold text-slate-600 flex items-center space-x-1">
+                <i class="fa-solid fa-location-dot text-rose-500"></i>
+                <span>${item.chi_nhanh || 'Thanh Giang'}</span>
+              </div>
+            </div>
+
+            <!-- Grid 3 cột thông tin tiếp nhận chuẩn KiotViet -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-600">
+              <div class="space-y-1">
+                <div><span class="text-slate-400">Thời gian:</span> <span class="font-medium text-slate-800">${thoiGianStr}</span></div>
+                <div><span class="text-slate-400">Nơi tiếp nhận:</span> <span class="font-medium text-slate-800">${item.noi_tiep_nhan || 'Tại cửa hàng'}</span></div>
+              </div>
+              <div class="space-y-1">
+                <div><span class="text-slate-400">Ngày cập nhật:</span> <span class="font-medium text-slate-800">${capNhatStr}</span></div>
+                <div><span class="text-slate-400">Bảng giá:</span> <span class="font-medium text-slate-800">${item.bang_gia || 'Bảng giá chung'}</span></div>
+              </div>
+              <div class="space-y-1">
+                <div><span class="text-slate-400">Người nhận:</span> <span class="font-medium text-slate-800">${item.nguoi_nhan || 'Lưu Quang Hữu'}</span></div>
+                <div><span class="text-slate-400">Kỹ thuật viên:</span> <span class="font-medium text-slate-800">${item.ky_thuat_vien || item.nguoi_nhan || 'Chưa phân công'}</span></div>
+              </div>
+            </div>
+
+            <!-- Bảng hàng hóa / thiết bị nhận sửa (Chuẩn như bảng trong ảnh của người dùng) -->
+            <div class="overflow-x-auto border rounded-xl">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100/90 text-slate-600 font-semibold border-b">
+                  <tr>
+                    <th class="p-2.5">Mã hàng</th>
+                    <th class="p-2.5">Tên hàng</th>
+                    <th class="p-2.5">Ghi chú hàng sửa chữa / Triệu chứng lỗi</th>
+                    <th class="p-2.5 text-center">Số lượng</th>
+                    <th class="p-2.5 text-center">Trạng thái sửa chữa</th>
+                    <th class="p-2.5 text-center">Ngày hoàn thành</th>
+                    <th class="p-2.5 text-right">Tổng phí</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-800">
+                  <tr>
+                    <td class="p-2.5 font-mono text-blue-600 font-semibold">${item.ma_hang || 'IPX64BLACKVNA'}</td>
+                    <td class="p-2.5 font-bold">${item.ten_thiet_bi || 'Iphone X - 64G Đen - NEW VNA'}</td>
+                    <td class="p-2.5 text-slate-600 max-w-xs">
+                      <div>${item.tinh_trang_loi || 'Triệu chứng lỗi chưa ghi'}</div>
+                      ${item.imei ? `<div class="text-[11px] font-mono text-slate-400">IMEI: ${item.imei}</div>` : ''}
+                      ${item.mat_khau_may ? `<div class="text-[11px] font-mono text-amber-700 font-semibold">Mật khẩu: ${item.mat_khau_may}</div>` : ''}
+                      ${item.phu_kien ? `<div class="text-[11px] text-slate-500">Phụ kiện: ${item.phu_kien}</div>` : ''}
+                    </td>
+                    <td class="p-2.5 text-center font-bold">1</td>
+                    <td class="p-2.5 text-center">${badgeTT}</td>
+                    <td class="p-2.5 text-center text-slate-600 font-mono">${item.ngay_hoan_thanh ? formatNgayGioKiot(item.ngay_hoan_thanh).split(' ')[0] : (item.trang_thai === 'HoanThanh' ? thoiGianStr.split(' ')[0] : '---')}</td>
+                    <td class="p-2.5 text-right font-mono font-bold text-slate-900">${formatVNDKiot(item.khach_can_tra || 0)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Ghi chú to bên dưới & Bảng tổng kết thanh toán bên phải (Chuẩn KiotViet) -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+              <div class="md:col-span-7">
+                <textarea readonly placeholder="Ghi chú..." class="w-full h-24 p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs text-slate-700 resize-none">${item.ghi_chu || ''}</textarea>
+              </div>
+              <div class="md:col-span-5 bg-slate-50/70 p-3.5 rounded-xl border border-slate-200 space-y-1.5 text-xs">
+                <div class="flex justify-between text-slate-600">
+                  <span>Tổng tiền hàng(1)</span>
+                  <span class="font-mono font-bold text-slate-800">${formatVNDKiot(item.tong_tien_hang || item.khach_can_tra || 0)}</span>
+                </div>
+                <div class="flex justify-between text-slate-600">
+                  <span>Giảm giá đơn hàng</span>
+                  <span class="font-mono text-slate-800">${formatVNDKiot(item.giam_gia || 0)}</span>
+                </div>
+                <div class="flex justify-between text-slate-900 font-bold border-t pt-1.5">
+                  <span>Khách cần trả</span>
+                  <span class="font-mono text-sm">${formatVNDKiot(item.khach_can_tra || 0)}</span>
+                </div>
+                <div class="flex justify-between text-emerald-700 font-bold">
+                  <span>Khách đã trả</span>
+                  <span class="font-mono text-sm">${formatVNDKiot(item.khach_da_tra || 0)}</span>
+                </div>
+                <div class="flex justify-between text-rose-600 font-extrabold border-t pt-1.5">
+                  <span>Còn cần trả</span>
+                  <span class="font-mono text-sm">${formatVNDKiot(Math.max(0, (Number(item.khach_can_tra) || 0) - (Number(item.khach_da_tra) || 0)))}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (activeTab === 'dich-vu') {
+        // TAB 2: DỊCH VỤ SỬA CHỮA VÀ THAY THẾ
+        tabContentHtml = `
+          <div class="space-y-3 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-800 flex items-center space-x-1.5">
+                <i class="fa-solid fa-screwdriver-wrench text-blue-600"></i><span>Bảng kê chi tiết linh kiện thay thế & Tiền công dịch vụ</span>
+              </span>
+              <button type="button" onclick="moModalThemLinhKienSuaChua('${item.ma_yeu_cau}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-xs">
+                <i class="fa-solid fa-plus text-[10px]"></i><span>Thêm linh kiện / Dịch vụ</span>
+              </button>
+            </div>
+
+            <div class="overflow-x-auto border rounded-xl">
+              <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-100 text-slate-600 font-semibold border-b">
+                  <tr>
+                    <th class="p-2.5 w-12 text-center">STT</th>
+                    <th class="p-2.5">Mã linh kiện / DV</th>
+                    <th class="p-2.5">Tên linh kiện / Tiền công</th>
+                    <th class="p-2.5 w-16 text-center">ĐVT</th>
+                    <th class="p-2.5 w-16 text-center">Số lượng</th>
+                    <th class="p-2.5 w-28 text-right">Đơn giá</th>
+                    <th class="p-2.5 w-28 text-right">Thành tiền</th>
+                    <th class="p-2.5 w-28 text-center">Bảo hành</th>
+                    <th class="p-2.5">Ghi chú</th>
+                    <th class="p-2.5 w-12 text-center">Xóa</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-800">
+                  ${dsDichVu.length === 0 ? `
+                    <tr><td colspan="10" class="p-6 text-center text-slate-400 italic">Chưa có linh kiện hoặc tiền công nào được thêm vào phiếu này.</td></tr>
+                  ` : dsDichVu.map((dv, idx) => `
+                    <tr>
+                      <td class="p-2.5 text-center text-slate-400 font-mono">${idx + 1}</td>
+                      <td class="p-2.5 font-mono text-blue-600">${dv.ma_hang || 'LK' + (idx+1)}</td>
+                      <td class="p-2.5 font-bold">${dv.ten_hang || 'Linh kiện'}</td>
+                      <td class="p-2.5 text-center text-slate-600">${dv.dvt || 'Cái'}</td>
+                      <td class="p-2.5 text-center font-bold font-mono">${dv.so_luong || 1}</td>
+                      <td class="p-2.5 text-right font-mono">${formatVNDKiot(dv.don_gia || 0)}</td>
+                      <td class="p-2.5 text-right font-mono font-bold text-slate-900">${formatVNDKiot(dv.thanh_tien || ((dv.so_luong||1)*(dv.don_gia||0)))}</td>
+                      <td class="p-2.5 text-center text-amber-700 font-semibold">${dv.bao_hanh || '---'}</td>
+                      <td class="p-2.5 text-slate-500">${dv.ghi_chu || ''}</td>
+                      <td class="p-2.5 text-center">
+                        <button type="button" onclick="xoaLinhKienKhoiPhieu('${item.ma_yeu_cau}', ${idx})" class="text-rose-500 hover:text-rose-700" title="Xóa dòng này"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      } else if (activeTab === 'thanh-toan') {
+        // TAB 3: LỊCH SỬ THANH TOÁN (CỌC / THANH TOÁN GẮN SỔ QUỸ)
+        tabContentHtml = `
+          <div class="space-y-3 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-800 flex items-center space-x-1.5">
+                <i class="fa-solid fa-money-bill-transfer text-emerald-600"></i><span>Lịch sử các lần đặt cọc & thanh toán (Sổ Quỹ)</span>
+              </span>
+              <button type="button" onclick="moModalThuTienSuaChua('${item.ma_yeu_cau}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-xs">
+                <i class="fa-solid fa-hand-holding-dollar text-[10px]"></i><span>+ Thu tiền / Cọc</span>
+              </button>
+            </div>
+
+            <div class="overflow-x-auto border rounded-xl">
+              <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-100 text-slate-600 font-semibold border-b">
+                  <tr>
+                    <th class="p-2.5 w-12 text-center">STT</th>
+                    <th class="p-2.5">Mã phiếu thu</th>
+                    <th class="p-2.5">Thời gian</th>
+                    <th class="p-2.5 text-right">Số tiền</th>
+                    <th class="p-2.5 text-center">Hình thức</th>
+                    <th class="p-2.5">Người thu</th>
+                    <th class="p-2.5">Hạng mục & Ghi chú</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-800">
+                  ${dsThanhToan.length === 0 ? `
+                    <tr><td colspan="7" class="p-6 text-center text-slate-400 italic">Chưa có giao dịch thanh toán hoặc đặt cọc nào cho phiếu này.</td></tr>
+                  ` : dsThanhToan.map((tt, idx) => `
+                    <tr>
+                      <td class="p-2.5 text-center text-slate-400 font-mono">${idx + 1}</td>
+                      <td class="p-2.5 font-mono text-blue-600 font-bold">${tt.ma_phieu || 'PT' + (idx+1)}</td>
+                      <td class="p-2.5 text-slate-600">${formatNgayGioKiot(tt.ngay_tt || tt.ngay_gd)}</td>
+                      <td class="p-2.5 text-right font-mono font-bold text-emerald-700">${formatVNDKiot(tt.so_tien || tt.gia_tri || 0)}</td>
+                      <td class="p-2.5 text-center font-medium">${tt.phuong_thuc === 'NGAN_HANG' ? '🏦 Ngân hàng' : '💵 Tiền mặt'}</td>
+                      <td class="p-2.5 text-slate-700">${tt.nguoi_thu || 'Nhân viên'}</td>
+                      <td class="p-2.5 text-slate-600">${tt.ghi_chu || tt.loai || 'Thu tiền sửa chữa'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      } else if (activeTab === 'hoa-don') {
+        // TAB 4: LỊCH SỬ HÓA ĐƠN
+        tabContentHtml = `
+          <div class="space-y-3 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-800 flex items-center space-x-1.5">
+                <i class="fa-solid fa-receipt text-indigo-600"></i><span>Hóa đơn bán linh kiện & Bàn giao liên kết</span>
+              </span>
+              ${item.trang_thai !== 'HoanThanh' && item.trang_thai !== 'DaHuy' ? `
+                <button type="button" onclick="moModalXuatHoaDonSuaChua('${item.ma_yeu_cau}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-xs">
+                  <i class="fa-solid fa-check-double text-[10px]"></i><span>Xuất hóa đơn bán linh kiện ngay</span>
+                </button>
+              ` : ''}
+            </div>
+
+            ${item.ma_hoa_don_lien_ket ? `
+              <div class="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-200 flex flex-wrap items-center justify-between gap-3">
+                <div class="space-y-1">
+                  <div class="flex items-center space-x-2">
+                    <span class="text-xs text-slate-500">Mã hóa đơn:</span>
+                    <span class="font-mono font-extrabold text-blue-700 text-sm">${item.ma_hoa_don_lien_ket}</span>
+                    <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Đã xuất kho thành công</span>
+                  </div>
+                  <div class="text-xs text-slate-600">
+                    Thời gian xuất: <span class="font-mono font-medium">${formatNgayGioKiot(item.ngay_hoan_thanh || item.ngay_xuat_hoa_don)}</span>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button type="button" onclick="inHoaDonSuaChua('${item.ma_yeu_cau}')" class="px-3.5 py-1.5 bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-700 rounded-xl font-bold shadow-2xs flex items-center space-x-1 transition">
+                    <i class="fa-solid fa-print"></i><span>In hóa đơn & bảo hành</span>
+                  </button>
+                </div>
+              </div>
+            ` : `
+              <div class="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
+                <i class="fa-solid fa-receipt text-3xl text-slate-300"></i>
+                <p>Phiếu này chưa xuất hóa đơn bán linh kiện.</p>
+                <button type="button" onclick="moModalXuatHoaDonSuaChua('${item.ma_yeu_cau}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs">
+                  Xuất hóa đơn bán linh kiện & Trừ kho ngay
+                </button>
+              </div>
+            `}
+          </div>
+        `;
+      }
+
+      return `
+        <tr class="bg-slate-50/80 border-b-2 border-blue-200" onclick="event.stopPropagation()">
+          <td colspan="9" class="p-4">
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-4">
+              <!-- 4 Tab chuẩn KiotViet trong ảnh -->
+              <div class="flex items-center space-x-6 border-b text-xs font-bold text-slate-500">
+                <button type="button" onclick="doiTabChiTietSuaChua('${item.ma_yeu_cau}', 'thong-tin')" class="pb-2.5 transition flex items-center space-x-1.5 ${activeTab === 'thong-tin' ? 'border-b-2 border-blue-600 text-blue-600 font-extrabold' : 'hover:text-slate-800'}">
+                  <span>Thông tin</span>
+                </button>
+                <button type="button" onclick="doiTabChiTietSuaChua('${item.ma_yeu_cau}', 'dich-vu')" class="pb-2.5 transition flex items-center space-x-1.5 ${activeTab === 'dich-vu' ? 'border-b-2 border-blue-600 text-blue-600 font-extrabold' : 'hover:text-slate-800'}">
+                  <span>Dịch vụ sửa chữa và thay thế</span>
+                  <span class="px-1.5 py-0.2 bg-blue-100 text-blue-700 rounded-full text-[10px]">${dsDichVu.length}</span>
+                </button>
+                <button type="button" onclick="doiTabChiTietSuaChua('${item.ma_yeu_cau}', 'thanh-toan')" class="pb-2.5 transition flex items-center space-x-1.5 ${activeTab === 'thanh-toan' ? 'border-b-2 border-blue-600 text-blue-600 font-extrabold' : 'hover:text-slate-800'}">
+                  <span>Lịch sử thanh toán</span>
+                  <span class="px-1.5 py-0.2 bg-emerald-100 text-emerald-700 rounded-full text-[10px]">${dsThanhToan.length}</span>
+                </button>
+                <button type="button" onclick="doiTabChiTietSuaChua('${item.ma_yeu_cau}', 'hoa-don')" class="pb-2.5 transition flex items-center space-x-1.5 ${activeTab === 'hoa-don' ? 'border-b-2 border-blue-600 text-blue-600 font-extrabold' : 'hover:text-slate-800'}">
+                  <span>Lịch sử hóa đơn</span>
+                  ${item.ma_hoa_don_lien_ket ? '<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>' : ''}
+                </button>
+              </div>
+
+              <!-- Nội dung Tab -->
+              ${tabContentHtml}
+
+              <!-- Action Bar dưới cùng (Chuẩn KiotViet: Hủy, Xuất file, In + Nút nghiệp vụ) -->
+              <div class="flex flex-wrap items-center justify-between border-t pt-3 gap-2 text-xs">
+                <div class="flex items-center space-x-2">
+                  ${item.trang_thai !== 'DaHuy' && item.trang_thai !== 'HoanThanh' ? `
+                    <button type="button" onclick="huyYeuCauSuaChua('${item.ma_yeu_cau}')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl font-semibold border border-rose-200 transition flex items-center space-x-1">
+                      <i class="fa-solid fa-trash-can"></i><span>Hủy</span>
+                    </button>
+                  ` : ''}
+                  <button type="button" onclick="xuatExcelMotPhieuSuachua('${item.ma_yeu_cau}')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold border border-slate-300 transition flex items-center space-x-1">
+                    <i class="fa-solid fa-file-export text-emerald-600"></i><span>Xuất file</span>
+                  </button>
+                  <button type="button" onclick="moModalCapNhatTrangThaiSuaChua('${item.ma_yeu_cau}')" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-xl font-semibold border border-amber-200 transition flex items-center space-x-1">
+                    <i class="fa-solid fa-arrows-rotate text-amber-600"></i><span>Đổi trạng thái</span>
+                  </button>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                  <button type="button" onclick="inPhieuTiepNhanSuaChua('${item.ma_yeu_cau}')" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold transition flex items-center space-x-1.5 shadow-sm">
+                    <i class="fa-solid fa-print"></i><span>In phiếu biên nhận</span>
+                  </button>
+                  ${item.trang_thai !== 'HoanThanh' && item.trang_thai !== 'DaHuy' ? `
+                    <button type="button" onclick="moModalXuatHoaDonSuaChua('${item.ma_yeu_cau}')" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold transition flex items-center space-x-1.5 shadow-md">
+                      <i class="fa-solid fa-receipt"></i><span>XUẤT HÓA ĐƠN BÁN LINH KIỆN</span>
+                    </button>
+                  ` : `
+                    <button type="button" onclick="inHoaDonSuaChua('${item.ma_yeu_cau}')" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition flex items-center space-x-1.5 shadow-sm">
+                      <i class="fa-solid fa-print"></i><span>In hóa đơn hoàn thành</span>
+                    </button>
+                  `}
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+
+    // 5. CÁC HÀM XỬ LÝ LỌC DỮ LIỆU
+    window.locDanhSachYeuCauSuaChuaData = function() {
+      let list = [...(window.rawYeuCauSuaChuaList || [])];
+
+      // Lọc chi nhánh
+      const cnVal = document.getElementById('filter-suachua-chinhanh-select')?.value || 'ALL';
+      if (cnVal === 'CURRENT') {
+        const curCn = typeof currentBranch !== 'undefined' ? currentBranch : '';
+        if (curCn) list = list.filter(x => (x.chi_nhanh || '').toLowerCase().includes(curCn.toLowerCase()));
+      } else if (cnVal !== 'ALL') {
+        list = list.filter(x => (x.chi_nhanh || '').toLowerCase().includes(cnVal.toLowerCase()));
+      }
+
+      // Lọc trạng thái bằng checkbox
+      const chkDangXuLy = document.getElementById('chk-sc-dangxuly')?.checked;
+      const chkTiepNhan = document.getElementById('chk-sc-tiepnhan')?.checked;
+      const chkDangSua = document.getElementById('chk-sc-dangsua')?.checked;
+      const chkChoLinhKien = document.getElementById('chk-sc-cholinhkien')?.checked;
+      const chkDaSuaXong = document.getElementById('chk-sc-dasuaxong')?.checked;
+      const chkHoanThanh = document.getElementById('chk-sc-hoanthanh')?.checked;
+      const chkDaHuy = document.getElementById('chk-sc-dahuy')?.checked;
+
+      list = list.filter(item => {
+        const tt = item.trang_thai || 'TiepNhan';
+        if (tt === 'TiepNhan' && (chkTiepNhan || chkDangXuLy)) return true;
+        if (tt === 'DangSua' && (chkDangSua || chkDangXuLy)) return true;
+        if (tt === 'ChoLinhKien' && (chkChoLinhKien || chkDangXuLy)) return true;
+        if (tt === 'DaSuaXong' && (chkDaSuaXong || chkDangXuLy)) return true;
+        if (tt === 'HoanThanh' && chkHoanThanh) return true;
+        if (tt === 'DaHuy' && chkDaHuy) return true;
+        return false;
+      });
+
+      // Lọc loại tiếp nhận
+      const loaiVal = document.getElementById('filter-suachua-loai')?.value || 'ALL';
+      if (loaiVal !== 'ALL') {
+        list = list.filter(x => (x.loai_yeu_cau || 'SUA_CHUA') === loaiVal);
+      }
+
+      // Lọc thời gian
+      const isCustomDate = document.getElementById('rad-sc-tg-custom')?.checked;
+      if (isCustomDate) {
+        const tuNgay = document.getElementById('filter-sc-tungay')?.value;
+        const denNgay = document.getElementById('filter-sc-denngay')?.value;
+        if (tuNgay) {
+          list = list.filter(x => (x.ngay_tiep_nhan || '').slice(0, 10) >= tuNgay);
+        }
+        if (denNgay) {
+          list = list.filter(x => (x.ngay_tiep_nhan || '').slice(0, 10) <= denNgay);
+        }
+      }
+
+      // Lọc tìm kiếm đa năng
+      const kw = (document.getElementById('search-danhsach-suachua')?.value || '').trim().toLowerCase();
+      if (kw) {
+        list = list.filter(x => {
+          const m1 = (x.ma_yeu_cau || '').toLowerCase();
+          const m2 = (x.ten_kh || '').toLowerCase();
+          const m3 = (x.so_dien_thoai || '').toLowerCase();
+          const m4 = (x.ten_thiet_bi || '').toLowerCase();
+          const m5 = (x.imei || '').toLowerCase();
+          const m6 = (x.tinh_trang_loi || '').toLowerCase();
+          return m1.includes(kw) || m2.includes(kw) || m3.includes(kw) || m4.includes(kw) || m5.includes(kw) || m6.includes(kw);
+        });
+      }
+
+      // Sắp xếp
+      const { cot, chieu } = window.sapXepYCSC;
+      list.sort((a, b) => {
+        let va = a[cot] || '';
+        let vb = b[cot] || '';
+        if (typeof va === 'string') va = va.toLowerCase();
+        if (typeof vb === 'string') vb = vb.toLowerCase();
+        if (va < vb) return chieu === 'asc' ? -1 : 1;
+        if (va > vb) return chieu === 'asc' ? 1 : -1;
+        return 0;
+      });
+
+      return list;
+    };
+
+    window.locDanhSachYeuCauSuaChuaTable = function() {
+      renderTableDanhSachYeuCauSuaChua();
+    };
+
+    window.toggleChiTietYeuCauSuaChua = function(maYCSC, event) {
+      if (window.currentViewingMaYCSC === maYCSC) {
+        window.currentViewingMaYCSC = null;
+      } else {
+        window.currentViewingMaYCSC = maYCSC;
+        window.activeTabDetailYCSC = 'thong-tin';
+      }
+      renderTableDanhSachYeuCauSuaChua();
+    };
+
+    window.doiTabChiTietSuaChua = function(maYCSC, tabName) {
+      window.activeTabDetailYCSC = tabName;
+      renderTableDanhSachYeuCauSuaChua();
+    };
+
+    window.doiCheDoThoiGianSuachua = function(mode) {
+      const box = document.getElementById('box-sc-tg-custom');
+      if (box) {
+        if (mode === 'CUSTOM') box.classList.remove('hidden');
+        else box.classList.add('hidden');
+      }
+      locDanhSachYeuCauSuaChuaTable();
+    };
+
+    window.chonChiNhanhSuachua = function(val) {
+      const label = document.getElementById('sc-filter-chinhanh-ten');
+      if (label) {
+        if (val === 'ALL') label.innerText = 'Toàn hệ thống';
+        else if (val === 'CURRENT') label.innerText = 'Chi nhánh hiện tại';
+        else label.innerText = val;
+      }
+      locDanhSachYeuCauSuaChuaTable();
+    };
+
+    window.datLaiChiNhanhSuachua = function(val) {
+      const sel = document.getElementById('filter-suachua-chinhanh-select');
+      if (sel) sel.value = val;
+      chonChiNhanhSuachua(val);
+    };
+
+    window.sapXepBangSuachua = function(cot) {
+      if (window.sapXepYCSC.cot === cot) {
+        window.sapXepYCSC.chieu = window.sapXepYCSC.chieu === 'asc' ? 'desc' : 'asc';
+      } else {
+        window.sapXepYCSC.cot = cot;
+        window.sapXepYCSC.chieu = 'desc';
+      }
+      renderTableDanhSachYeuCauSuaChua();
+    };
+
+    window.chonTatCaYeuCauSuaChua = function(checked) {
+      document.querySelectorAll('.chk-item-suachua').forEach(chk => chk.checked = checked);
+    };
+
+    // 6. TIẾP NHẬN SỬA CHỮA MỚI (MODAL 1)
+    window.moModalTiepNhanSuaChua = function() {
+      const m = document.getElementById('modal-tiepnhan-suachua');
+      if (!m) return;
+
+      // Reset form
+      document.getElementById('sc-tn-loai').value = 'SUA_CHUA';
+      document.getElementById('sc-tn-chinhanh').value = (typeof currentBranch !== 'undefined' && currentBranch) ? currentBranch : 'Thanh Giang';
+      document.getElementById('sc-tn-nguoinhan').value = (typeof currentUser !== 'undefined' && currentUser) ? (currentUser.fullname || currentUser.username || 'Nhân viên') : 'Lưu Quang Hữu';
+      
+      document.getElementById('sc-tn-timkhach').value = '';
+      document.getElementById('sc-tn-makh').value = '';
+      document.getElementById('sc-tn-tenkh').value = '';
+      document.getElementById('sc-tn-sdt').value = '';
+      document.getElementById('sc-tn-diachi').value = '';
+      document.getElementById('sc-tn-kh-conno-label').innerText = '';
+
+      document.getElementById('sc-tn-model').value = '';
+      document.getElementById('sc-tn-imei').value = '';
+      document.getElementById('sc-tn-matkhau').value = '';
+      document.getElementById('sc-tn-phukien').value = 'Máy trần';
+      document.getElementById('sc-tn-loi').value = '';
+      document.getElementById('sc-tn-ghichu').value = '';
+
+      // Hẹn ngày trả: mặc định 24h sau
+      const dNow = new Date();
+      dNow.setHours(dNow.getHours() + 24);
+      const isoLocal = new Date(dNow.getTime() - dNow.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      document.getElementById('sc-tn-ngayhen').value = isoLocal;
+
+      // Reset cọc
+      document.getElementById('sc-tn-tiencoc').value = '0';
+      document.getElementById('sc-tn-hinhthuc-coc').value = 'TIEN_MAT';
+      document.getElementById('box-sc-tn-nganhang').classList.add('hidden');
+
+      // Danh sách linh kiện tạm ban đầu
+      window.danhSachLinhKienTiepNhanTam = [];
+      renderBLLinhKienTiepNhan();
+
+      // Nạp ngân hàng
+      napDanhSachNganHangSelect('sc-tn-taikhoan-nhan');
+
+      // Nạp datalist model máy
+      napDatalistModelMay();
+
+      m.classList.remove('hidden');
+    };
+
+    window.dongModalTiepNhanSuaChua = function() {
+      const m = document.getElementById('modal-tiepnhan-suachua');
+      if (m) m.classList.add('hidden');
+    };
+
+    function napDatalistModelMay() {
+      const dl = document.getElementById('sc-tn-model-datalist');
+      if (!dl) return;
+      let opts = '';
+      const ds = (typeof rawHangHoaList !== 'undefined' && Array.isArray(rawHangHoaList)) ? rawHangHoaList : [];
+      ds.slice(0, 50).forEach(hh => {
+        opts += `<option value="${hh.tenHang || hh.ten_hang}">Mã: ${hh.maHang || hh.ma_hang}</option>`;
+      });
+      dl.innerHTML = opts;
+    }
+
+    function napDanhSachNganHangSelect(selectId) {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      let opts = '<option value="">-- Chọn tài khoản ngân hàng --</option>';
+      if (typeof window.danhSachTaiKhoanNganHang !== 'undefined' && Array.isArray(window.danhSachTaiKhoanNganHang)) {
+        window.danhSachTaiKhoanNganHang.forEach(nh => {
+          opts += `<option value="${nh.soTaiKhoan} - ${nh.tenNganHang}">${nh.tenNganHang} (${nh.soTaiKhoan} - ${nh.chuTaiKhoan})</option>`;
+        });
+      } else {
+        opts += '<option value="MBBank - 0987654321">MBBank (0987654321 - THANH GIANG)</option>';
+        opts += '<option value="Techcombank - 1903666888">Techcombank (1903666888 - THANH GIANG)</option>';
+      }
+      sel.innerHTML = opts;
+    }
+
+    window.doiHinhThucCoc = function(val) {
+      const box = document.getElementById('box-sc-tn-nganhang');
+      if (box) {
+        if (val === 'NGAN_HANG') box.classList.remove('hidden');
+        else box.classList.add('hidden');
+      }
+    };
+
+    window.timGoiYKhachHangSuachua = function(kw) {
+      const box = document.getElementById('sc-tn-goiy-khach-box');
+      if (!box) return;
+      kw = (kw || '').trim().toLowerCase();
+      if (!kw) { box.classList.add('hidden'); return; }
+
+      const list = (typeof rawDoiTacList !== 'undefined' && Array.isArray(rawDoiTacList)) 
+        ? rawDoiTacList.filter(x => (x.loai || x.loai_doi_tac) === 'KHACH_HANG' || !(x.loai || x.loai_doi_tac))
+        : [];
+
+      const matches = list.filter(k => {
+        const t = (k.ten || k.ten_doi_tac || '').toLowerCase();
+        const s = (k.soDienThoai || k.dien_thoai || '').toLowerCase();
+        const m = (k.ma || k.ma_doi_tac || '').toLowerCase();
+        return t.includes(kw) || s.includes(kw) || m.includes(kw);
+      }).slice(0, 8);
+
+      if (matches.length === 0) {
+        box.innerHTML = `<div class="p-2 text-slate-400 text-center">Không tìm thấy khách hàng. Nhập trực tiếp tên & SĐT bên cạnh.</div>`;
+        box.classList.remove('hidden');
+        return;
+      }
+
+      box.innerHTML = matches.map(k => `
+        <div class="p-2 hover:bg-blue-50 cursor-pointer flex justify-between items-center" onclick="chonKhachHangTiepNhan('${k.ma || k.ma_doi_tac}', '${(k.ten || k.ten_doi_tac || '').replace(/'/g, "\\'")}', '${k.soDienThoai || k.dien_thoai || ''}', '${(k.diaChi || k.dia_chi || '').replace(/'/g, "\\'")}', ${Number(k.congNo || k.cong_no || 0)})">
+          <div>
+            <div class="font-bold text-slate-800">${k.ten || k.ten_doi_tac}</div>
+            <div class="text-[11px] text-slate-500 font-mono">${k.soDienThoai || k.dien_thoai || 'Chưa có SĐT'}</div>
+          </div>
+          <div class="text-right text-[11px]">
+            <span class="text-slate-400 font-mono">${k.ma || k.ma_doi_tac}</span>
+            ${Number(k.congNo || k.cong_no) > 0 ? `<div class="text-rose-600 font-bold">Nợ: ${formatVNDKiot(k.congNo || k.cong_no)} đ</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+      box.classList.remove('hidden');
+    };
+
+    window.chonKhachHangTiepNhan = function(ma, ten, sdt, diachi, congNo) {
+      document.getElementById('sc-tn-makh').value = ma;
+      document.getElementById('sc-tn-tenkh').value = ten;
+      document.getElementById('sc-tn-sdt').value = sdt;
+      document.getElementById('sc-tn-diachi').value = diachi;
+      document.getElementById('sc-tn-timkhach').value = `${ten} (${sdt})`;
+      const lbl = document.getElementById('sc-tn-kh-conno-label');
+      if (lbl) {
+        lbl.innerText = congNo > 0 ? `Khách đang có công nợ cũ: ${formatVNDKiot(congNo)} đ` : 'Khách không có nợ cũ';
+      }
+      document.getElementById('sc-tn-goiy-khach-box').classList.add('hidden');
+    };
+
+    window.themDongLinhKienTiepNhan = function() {
+      window.danhSachLinhKienTiepNhanTam.push({
+        ma_hang: 'LK' + (window.danhSachLinhKienTiepNhanTam.length + 1),
+        ten_hang: '',
+        dvt: 'Cái',
+        so_luong: 1,
+        don_gia: 0,
+        thanh_tien: 0,
+        bao_hanh: '3 tháng',
+        loai: 'LINH_KIEN',
+        ghi_chu: ''
+      });
+      renderBLLinhKienTiepNhan();
+    };
+
+    window.xoaDongLinhKienTiepNhan = function(idx) {
+      window.danhSachLinhKienTiepNhanTam.splice(idx, 1);
+      renderBLLinhKienTiepNhan();
+      tinhToanTaiChinhTiepNhan();
+    };
+
+    function renderBLLinhKienTiepNhan() {
+      const tbody = document.getElementById('tbl-sc-tn-linhkien-body');
+      if (!tbody) return;
+
+      if (window.danhSachLinhKienTiepNhanTam.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">Chưa có linh kiện dự kiến (có thể bổ sung sau khi kiểm tra máy).</td></tr>`;
+        tinhToanTaiChinhTiepNhan();
+        return;
+      }
+
+      tbody.innerHTML = window.danhSachLinhKienTiepNhanTam.map((item, idx) => `
+        <tr>
+          <td class="p-1.5"><input type="text" value="${item.ma_hang}" onchange="updateItemLKTam(${idx}, 'ma_hang', this.value)" class="w-full border rounded-lg px-2 py-1 font-mono text-xs"></td>
+          <td class="p-1.5"><input type="text" value="${item.ten_hang}" placeholder="Tên linh kiện / Tiền công..." onchange="updateItemLKTam(${idx}, 'ten_hang', this.value)" class="w-full border rounded-lg px-2 py-1 font-semibold text-xs"></td>
+          <td class="p-1.5 text-center"><input type="text" value="${item.dvt}" onchange="updateItemLKTam(${idx}, 'dvt', this.value)" class="w-16 border rounded-lg px-1 py-1 text-center text-xs"></td>
+          <td class="p-1.5 text-center"><input type="number" min="1" value="${item.so_luong}" onchange="updateItemLKTam(${idx}, 'so_luong', Number(this.value)); tinhToanTaiChinhTiepNhan();" class="w-14 border rounded-lg px-1 py-1 text-center font-bold font-mono text-xs"></td>
+          <td class="p-1.5 text-right"><input type="text" value="${formatVNDKiot(item.don_gia)}" onchange="updateItemLKTam(${idx}, 'don_gia', parseVND(this.value)); tinhToanTaiChinhTiepNhan();" class="w-24 border rounded-lg px-2 py-1 text-right font-mono font-bold text-xs"></td>
+          <td class="p-1.5 text-right font-mono font-bold text-slate-800 text-xs">${formatVNDKiot((item.so_luong || 1) * (item.don_gia || 0))}</td>
+          <td class="p-1.5 text-center"><input type="text" value="${item.bao_hanh}" placeholder="3 tháng" onchange="updateItemLKTam(${idx}, 'bao_hanh', this.value)" class="w-20 border rounded-lg px-1 py-1 text-center text-xs"></td>
+          <td class="p-1.5 text-center">
+            <button type="button" onclick="xoaDongLinhKienTiepNhan(${idx})" class="text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash-can"></i></button>
+          </td>
+        </tr>
+      `).join('');
+
+      tinhToanTaiChinhTiepNhan();
+    }
+
+    window.updateItemLKTam = function(idx, field, val) {
+      if (window.danhSachLinhKienTiepNhanTam[idx]) {
+        window.danhSachLinhKienTiepNhanTam[idx][field] = val;
+        if (field === 'so_luong' || field === 'don_gia') {
+          const sl = window.danhSachLinhKienTiepNhanTam[idx].so_luong || 1;
+          const dg = window.danhSachLinhKienTiepNhanTam[idx].don_gia || 0;
+          window.danhSachLinhKienTiepNhanTam[idx].thanh_tien = sl * dg;
+        }
+      }
+    };
+
+    window.tinhToanTaiChinhTiepNhan = function() {
+      let tong = 0;
+      (window.danhSachLinhKienTiepNhanTam || []).forEach(x => {
+        tong += (Number(x.so_luong) || 1) * (Number(x.don_gia) || 0);
+      });
+      const lbl = document.getElementById('sc-tn-tongtien-dukien');
+      if (lbl) lbl.innerText = formatVNDKiot(tong) + ' đ';
+    };
+
+    // 7. LƯU PHIẾU TIẾP NHẬN SỬA CHỮA
+    window.xacNhanLuuYeuCauSuaChua = async function(inBienNhan) {
+      const tenKh = document.getElementById('sc-tn-tenkh')?.value.trim();
+      const sdt = document.getElementById('sc-tn-sdt')?.value.trim();
+      const model = document.getElementById('sc-tn-model')?.value.trim();
+      const loi = document.getElementById('sc-tn-loi')?.value.trim();
+
+      if (!tenKh) return showNotification("Vui lòng nhập tên khách hàng!", true);
+      if (!sdt) return showNotification("Vui lòng nhập số điện thoại liên hệ!", true);
+      if (!model) return showNotification("Vui lòng nhập thông tin thiết bị / model máy!", true);
+      if (!loi) return showNotification("Vui lòng ghi nhận triệu chứng lỗi hoặc yêu cầu sửa chữa!", true);
+
+      // Sinh mã YCSC tự động: YCSC + 6 số (chuẩn KiotViet ví dụ YCSC002220)
+      const existingCodes = (window.rawYeuCauSuaChuaList || []).map(x => x.ma_yeu_cau);
+      let nextNum = 2221;
+      existingCodes.forEach(c => {
+        const m = (c || '').match(/^YCSC0*(\d+)$/);
+        if (m) {
+          const n = parseInt(m[1], 10);
+          if (n >= nextNum) nextNum = n + 1;
+        }
+      });
+      const maYCSC = 'YCSC' + String(nextNum).padStart(6, '0');
+
+      const loaiYC = document.getElementById('sc-tn-loai')?.value || 'SUA_CHUA';
+      const chiNhanh = document.getElementById('sc-tn-chinhanh')?.value || 'Thanh Giang';
+      const nguoiNhan = document.getElementById('sc-tn-nguoinhan')?.value || 'Nhân viên';
+      const maKH = document.getElementById('sc-tn-makh')?.value || 'KH' + Date.now().toString().slice(-6);
+      const diaChi = document.getElementById('sc-tn-diachi')?.value.trim();
+      const imei = document.getElementById('sc-tn-imei')?.value.trim();
+      const matKhau = document.getElementById('sc-tn-matkhau')?.value.trim();
+      const phuKien = document.getElementById('sc-tn-phukien')?.value.trim();
+      const ngayHen = document.getElementById('sc-tn-ngayhen')?.value || '';
+      const ghiChu = document.getElementById('sc-tn-ghichu')?.value.trim();
+
+      // Tính tổng tiền & tiền cọc
+      let tongTienLinhKien = 0;
+      (window.danhSachLinhKienTiepNhanTam || []).forEach(x => {
+        tongTienLinhKien += (Number(x.so_luong) || 1) * (Number(x.don_gia) || 0);
+      });
+
+      const tienCoc = parseVND(document.getElementById('sc-tn-tiencoc')?.value || '0');
+      const hinhThucCoc = document.getElementById('sc-tn-hinhthuc-coc')?.value || 'TIEN_MAT';
+      const tkNhanCoc = document.getElementById('sc-tn-taikhoan-nhan')?.value || '';
+
+      const nowISO = new Date().toISOString();
+      const lichSuThanhToan = [];
+
+      // Nếu có tiền cọc: Tự động ghi phiếu thu Sổ Quỹ
+      if (tienCoc > 0) {
+        const maPhieuThuCoc = 'PT' + Date.now().toString().slice(-7);
+        const giaoDichCoc = {
+          chi_nhanh: chiNhanh,
+          ma_phieu: maPhieuThuCoc,
+          loai_phieu: "THU",
+          loai_quy: hinhThucCoc === 'NGAN_HANG' ? "NGAN_HANG" : "TIEN_MAT",
+          hang_muc: "Tiền đặt cọc sửa chữa",
+          gia_tri: tienCoc,
+          ngay_gd: nowISO,
+          doi_tuong: tenKh,
+          ma_doi_tuong: maKH,
+          ma_chung_tu: maYCSC,
+          ghi_chu: `Đặt cọc nhận máy sửa chữa ${model} (${maYCSC})`,
+          tai_khoan_ngan_hang: tkNhanCoc,
+          nguoi_tao: nguoiNhan
+        };
+
+        // Ghi vào window.rawSoQuyAllRecords
+        if (typeof window.rawSoQuyAllRecords !== 'undefined' && Array.isArray(window.rawSoQuyAllRecords)) {
+          window.rawSoQuyAllRecords.unshift(giaoDichCoc);
+        }
+
+        // Đẩy lên Supabase so_quy
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          try {
+            await supabaseClient.from('so_quy').upsert([giaoDichCoc]);
+          } catch(e) {
+            console.error("Lỗi sync so_quy tiền cọc:", e);
+          }
+        }
+
+        lichSuThanhToan.push({
+          ma_phieu: maPhieuThuCoc,
+          ngay_tt: nowISO,
+          so_tien: tienCoc,
+          phuong_thuc: hinhThucCoc,
+          tai_khoan_nhan: tkNhanCoc,
+          nguoi_thu: nguoiNhan,
+          loai: "DAT_COC",
+          ghi_chu: `Đặt cọc khi tiếp nhận máy`
+        });
+      }
+
+      // Tạo object phiếu YCSC hoàn chỉnh
+      const newYCSC = {
+        ma_yeu_cau: maYCSC,
+        ngay_tiep_nhan: nowISO,
+        ngay_cap_nhat: nowISO,
+        ngay_hen_tra: ngayHen,
+        ngay_hoan_thanh: null,
+        chi_nhanh: chiNhanh,
+        noi_tiep_nhan: "Tại cửa hàng",
+        bang_gia: "Bảng giá chung",
+        nguoi_nhan: nguoiNhan,
+        ky_thuat_vien: nguoiNhan,
+        loai_yeu_cau: loaiYC,
+
+        ma_kh: maKH,
+        ten_kh: tenKh,
+        so_dien_thoai: sdt,
+        dia_chi: diaChi,
+
+        ma_hang: 'IPX' + Date.now().toString().slice(-6),
+        ten_thiet_bi: model,
+        imei: imei,
+        mat_khau_may: matKhau,
+        phu_kien: phuKien,
+        tinh_trang_loi: loi,
+        ghi_chu: ghiChu,
+
+        trang_thai: "TiepNhan",
+        danh_sach_dich_vu: [...window.danhSachLinhKienTiepNhanTam],
+
+        tong_tien_hang: tongTienLinhKien,
+        giam_gia: 0,
+        khach_can_tra: tongTienLinhKien,
+        khach_da_tra: tienCoc,
+        con_can_tra: Math.max(0, tongTienLinhKien - tienCoc),
+
+        lich_su_thanh_toan: lichSuThanhToan,
+        ma_hoa_don_lien_ket: null
+      };
+
+      // Thêm vào danh sách và lưu LocalStorage
+      window.rawYeuCauSuaChuaList.unshift(newYCSC);
+      try {
+        localStorage.setItem(STORAGE_KEY_SUACHUA, JSON.stringify(window.rawYeuCauSuaChuaList));
+      } catch(e) {}
+
+      // Lưu lên Supabase
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+          // Thử lưu bảng yeu_cau_sua_chua
+          await supabaseClient.from('yeu_cau_sua_chua').upsert([{
+            ...newYCSC,
+            danh_sach_dich_vu: JSON.stringify(newYCSC.danh_sach_dich_vu),
+            lich_su_thanh_toan: JSON.stringify(newYCSC.lich_su_thanh_toan)
+          }]);
+        } catch(e) {
+          console.warn("Lỗi lưu yeu_cau_sua_chua lên Supabase:", e);
+        }
+
+        // Lưu song song vào don_hang để dự phòng
+        try {
+          await supabaseClient.from('don_hang').upsert([{
+            ma_don_hang: maYCSC,
+            ngay_ban: nowISO,
+            ma_kh: maKH,
+            ten_kh: tenKh,
+            so_dien_thoai: sdt,
+            chi_nhanh: chiNhanh,
+            tong_tien: tongTienLinhKien,
+            giam_gia: 0,
+            khach_phai_tra: tongTienLinhKien,
+            khach_tra: tienCoc,
+            hinh_thuc_tt: hinhThucCoc,
+            trang_thai: "Đang sửa chữa",
+            nhan_vien: nguoiNhan,
+            ghi_chu: `[YÊU CẦU SỬA CHỮA] Model: ${model} | IMEI: ${imei} | Lỗi: ${loi}`,
+            chi_tiet_san_pham: [{
+              ma_hang: newYCSC.ma_hang,
+              ten_hang: model,
+              imei: imei,
+              so_luong: 1,
+              don_gia: tongTienLinhKien,
+              thanh_tien: tongTienLinhKien,
+              loi: loi
+            }]
+          }]);
+        } catch(e) {
+          console.warn("Lỗi lưu dự phòng don_hang:", e);
+        }
+      }
+
+      showNotification(`Tiếp nhận máy sửa chữa thành công! Mã: ${maYCSC}`);
+      dongModalTiepNhanSuaChua();
+
+      // Mở ngay chi tiết dòng vừa tạo
+      window.currentViewingMaYCSC = maYCSC;
+      renderTableDanhSachYeuCauSuaChua();
+
+      if (inBienNhan) {
+        inPhieuTiepNhanSuaChua(maYCSC);
+      }
+    };
+
+    // 8. XUẤT HÓA ĐƠN BÁN LINH KIỆN SAU KHI SỬA XONG (CORE REQUIREMENT)
+    window.moModalXuatHoaDonSuaChua = function(maYCSC) {
+      const item = (window.rawYeuCauSuaChuaList || []).find(x => x.ma_yeu_cau === maYCSC);
+      if (!item) return showNotification("Không tìm thấy thông tin phiếu yêu cầu sửa chữa!", true);
+
+      window.currentEditingYCSC = item;
+      const m = document.getElementById('modal-xuathoadon-suachua');
+      if (!m) return;
+
+      // Fill header thông tin
+      document.getElementById('sc-xhd-mayeucau').innerText = item.ma_yeu_cau;
+      document.getElementById('sc-xhd-tenkh').innerText = `${item.ten_kh || 'Khách lẻ'} - ${item.so_dien_thoai || ''}`;
+      document.getElementById('sc-xhd-thietbi').innerText = `${item.ten_thiet_bi || 'Thiết bị'} ${item.imei ? '(IMEI: ' + item.imei + ')' : ''}`;
+      document.getElementById('sc-xhd-chinhanh').innerText = item.chi_nhanh || (typeof currentBranch !== 'undefined' ? currentBranch : 'Thanh Giang');
+
+      // Danh sách linh kiện & kiểm tra tồn kho thực tế
+      const tbody = document.getElementById('tbl-sc-xhd-linhkien-body');
+      const dsDichVu = Array.isArray(item.danh_sach_dich_vu) ? item.danh_sach_dich_vu : [];
+
+      if (dsDichVu.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400 italic">Phiếu này chưa kê linh kiện hoặc tiền công. Vui lòng bấm [Bổ sung linh kiện / công] trước khi xuất hóa đơn!</td></tr>`;
+      } else {
+        tbody.innerHTML = dsDichVu.map((dv, idx) => {
+          // Tìm tồn kho hiện tại của mã này trong rawHangHoaList
+          let tonKhoHienTai = '---';
+          let duTon = true;
+          if (dv.loai !== 'TIEN_CONG' && typeof rawHangHoaList !== 'undefined' && Array.isArray(rawHangHoaList)) {
+            const found = rawHangHoaList.find(h => (h.maHang || h.ma_hang) === dv.ma_hang);
+            if (found) {
+              tonKhoHienTai = Number(found.tonKho ?? found.ton_kho ?? 0);
+              duTon = tonKhoHienTai >= (dv.so_luong || 1);
+            }
+          }
+
+          return `
+            <tr class="hover:bg-slate-50">
+              <td class="p-2.5 text-center">
+                <input type="checkbox" class="chk-sc-xhd-item rounded text-blue-600 w-3.5 h-3.5" checked data-idx="${idx}" onchange="tinhToanTaiChinhXHD()">
+              </td>
+              <td class="p-2.5 font-bold text-slate-800">
+                <div>${dv.ten_hang || 'Linh kiện'}</div>
+                <div class="text-[10.5px] font-mono text-slate-400 font-normal">Mã: ${dv.ma_hang || 'LK'} | Loại: ${dv.loai === 'TIEN_CONG' ? 'Dịch vụ/Công' : 'Linh kiện kho'}</div>
+              </td>
+              <td class="p-2.5 text-center text-slate-600">${dv.dvt || 'Cái'}</td>
+              <td class="p-2.5 text-center font-mono font-bold ${dv.loai === 'TIEN_CONG' ? 'text-slate-400' : (duTon ? 'text-emerald-700' : 'text-rose-600')}">
+                ${tonKhoHienTai}
+              </td>
+              <td class="p-2.5 text-center">
+                <input type="number" min="1" value="${dv.so_luong || 1}" onchange="updateXHDItemSL(${idx}, Number(this.value))" class="w-14 border rounded-lg px-1 py-1 text-center font-bold font-mono text-xs">
+              </td>
+              <td class="p-2.5 text-right font-mono font-semibold">
+                <input type="text" value="${formatVNDKiot(dv.don_gia || 0)}" onchange="updateXHDItemGia(${idx}, parseVND(this.value))" class="w-24 border rounded-lg px-1 py-1 text-right font-mono font-bold text-xs">
+              </td>
+              <td class="p-2.5 text-right font-mono font-bold text-slate-900" id="sc-xhd-item-thanhtien-${idx}">
+                ${formatVNDKiot((dv.so_luong || 1) * (dv.don_gia || 0))}
+              </td>
+              <td class="p-2.5 text-center text-amber-700 font-semibold">${dv.bao_hanh || '---'}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Nạp ngân hàng
+      napDanhSachNganHangSelect('sc-xhd-taikhoan-nhan');
+
+      // Tính tiền
+      tinhToanTaiChinhXHD();
+
+      m.classList.remove('hidden');
+    };
+
+    window.updateXHDItemSL = function(idx, sl) {
+      if (window.currentEditingYCSC && window.currentEditingYCSC.danh_sach_dich_vu[idx]) {
+        window.currentEditingYCSC.danh_sach_dich_vu[idx].so_luong = sl;
+        tinhToanTaiChinhXHD();
+      }
+    };
+
+    window.updateXHDItemGia = function(idx, gia) {
+      if (window.currentEditingYCSC && window.currentEditingYCSC.danh_sach_dich_vu[idx]) {
+        window.currentEditingYCSC.danh_sach_dich_vu[idx].don_gia = gia;
+        tinhToanTaiChinhXHD();
+      }
+    };
+
+    window.dongModalXuatHoaDonSuaChua = function() {
+      const m = document.getElementById('modal-xuathoadon-suachua');
+      if (m) m.classList.add('hidden');
+    };
+
+    window.chonTatCaLinhKienXHD = function(checked) {
+      document.querySelectorAll('.chk-sc-xhd-item').forEach(c => c.checked = checked);
+      tinhToanTaiChinhXHD();
+    };
+
+    window.tinhToanTaiChinhXHD = function() {
+      const item = window.currentEditingYCSC;
+      if (!item) return;
+
+      const dsDichVu = Array.isArray(item.danh_sach_dich_vu) ? item.danh_sach_dich_vu : [];
+      let tongTien = 0;
+
+      document.querySelectorAll('.chk-sc-xhd-item').forEach(chk => {
+        if (chk.checked) {
+          const idx = parseInt(chk.getAttribute('data-idx'), 10);
+          const dv = dsDichVu[idx];
+          if (dv) {
+            const tt = (Number(dv.so_luong) || 1) * (Number(dv.don_gia) || 0);
+            tongTien += tt;
+            const elTT = document.getElementById(`sc-xhd-item-thanhtien-${idx}`);
+            if (elTT) elTT.innerText = formatVNDKiot(tt);
+          }
+        }
+      });
+
+      const giamGia = parseVND(document.getElementById('sc-xhd-giamgia')?.value || '0');
+      const canTra = Math.max(0, tongTien - giamGia);
+      const daCoc = Number(item.khach_da_tra) || 0;
+      const conLai = Math.max(0, canTra - daCoc);
+
+      document.getElementById('sc-xhd-tongtien').innerText = formatVNDKiot(tongTien) + ' đ';
+      document.getElementById('sc-xhd-cantra').innerText = formatVNDKiot(canTra) + ' đ';
+      document.getElementById('sc-xhd-dacoc').innerText = '- ' + formatVNDKiot(daCoc) + ' đ';
+      document.getElementById('sc-xhd-conlai').innerText = formatVNDKiot(conLai) + ' đ';
+
+      // Tiền khách trả mặc định = số tiền còn lại
+      const inputKhachTra = document.getElementById('sc-xhd-khachtra');
+      if (inputKhachTra) {
+        inputKhachTra.value = formatVNDKiot(conLai);
+      }
+      tinhToanTienThoiXHD();
+    };
+
+    window.tinhToanTienThoiXHD = function() {
+      const conLai = parseVND(document.getElementById('sc-xhd-conlai')?.innerText.replace(' đ', '') || '0');
+      const khachDua = parseVND(document.getElementById('sc-xhd-khachtra')?.value || '0');
+      const thoi = Math.max(0, khachDua - conLai);
+      document.getElementById('sc-xhd-tienthua').innerText = formatVNDKiot(thoi) + ' đ';
+    };
+
+    window.doiHinhThucTTXHD = function(val) {
+      const box = document.getElementById('box-sc-xhd-nganhang');
+      if (box) {
+        if (val === 'NGAN_HANG') box.classList.remove('hidden');
+        else box.classList.add('hidden');
+      }
+    };
+
+    // XÁC NHẬN XUẤT HÓA ĐƠN & BÀN GIAO MÁY
+    window.xacNhanXuatHoaDonSuaChua = async function() {
+      const item = window.currentEditingYCSC;
+      if (!item) return showNotification("Lỗi: Không tìm thấy yêu cầu sửa chữa!", true);
+
+      const dsDichVu = Array.isArray(item.danh_sach_dich_vu) ? item.danh_sach_dich_vu : [];
+      const selectedItems = [];
+      document.querySelectorAll('.chk-sc-xhd-item').forEach(chk => {
+        if (chk.checked) {
+          const idx = parseInt(chk.getAttribute('data-idx'), 10);
+          if (dsDichVu[idx]) selectedItems.push(dsDichVu[idx]);
+        }
+      });
+
+      if (selectedItems.length === 0) {
+        return showNotification("Vui lòng tích chọn ít nhất 1 linh kiện hoặc dịch vụ để xuất hóa đơn!", true);
+      }
+
+      // Sinh mã hóa đơn bán lẻ HD...
+      const maHD = 'HD' + Date.now().toString().slice(-8);
+      const nowISO = new Date().toISOString();
+      const chiNhanh = item.chi_nhanh || (typeof currentBranch !== 'undefined' ? currentBranch : 'Thanh Giang');
+      const nhanVien = (typeof currentUser !== 'undefined' && currentUser) ? (currentUser.fullname || currentUser.username) : 'Nhân viên';
+
+      const tongTien = selectedItems.reduce((acc, x) => acc + ((Number(x.so_luong)||1) * (Number(x.don_gia)||0)), 0);
+      const giamGia = parseVND(document.getElementById('sc-xhd-giamgia')?.value || '0');
+      const canTra = Math.max(0, tongTien - giamGia);
+      const daCoc = Number(item.khach_da_tra) || 0;
+      const phaiThuLanNay = Math.max(0, canTra - daCoc);
+      const khachDua = parseVND(document.getElementById('sc-xhd-khachtra')?.value || '0');
+      const hinhThucTT = document.getElementById('sc-xhd-hinhthuc-tt')?.value || 'TIEN_MAT';
+      const tkNganHang = document.getElementById('sc-xhd-taikhoan-nhan')?.value || '';
+      const ghiChuHD = document.getElementById('sc-xhd-ghichu')?.value.trim() || `Xuất hóa đơn bán linh kiện & sửa chữa máy ${item.ten_thiet_bi} (${item.ma_yeu_cau})`;
+
+      const optTruKho = document.getElementById('sc-xhd-opt-trukho')?.checked;
+      const optGhiSoQuy = document.getElementById('sc-xhd-opt-ghisoquy')?.checked;
+
+      // 1. TỰ ĐỘNG TRỪ TỒN KHO LINH KIỆN TRONG DANH MỤC dm_hanghoa
+      if (optTruKho && typeof rawHangHoaList !== 'undefined' && Array.isArray(rawHangHoaList)) {
+        for (const lk of selectedItems) {
+          if (lk.loai !== 'TIEN_CONG' && lk.ma_hang) {
+            const spKho = rawHangHoaList.find(h => (h.maHang || h.ma_hang) === lk.ma_hang);
+            if (spKho) {
+              const slTru = Number(lk.so_luong) || 1;
+              const tonMoi = Math.max(0, (Number(spKho.tonKho ?? spKho.ton_kho ?? 0)) - slTru);
+              spKho.tonKho = tonMoi;
+              spKho.ton_kho = tonMoi;
+
+              // Update Supabase dm_hanghoa
+              if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+                try {
+                  await supabaseClient.from('dm_hanghoa').update({ ton_kho: tonMoi }).eq('ma_hang', lk.ma_hang);
+                } catch(e) {
+                  console.warn("Lỗi trừ tồn kho linh kiện:", e);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // 2. TỰ ĐỘNG GHI SỔ QUỸ (Phiếu Thu) CHO KHOẢN TIỀN KHÁCH THANH TOÁN LẦN NÀY
+      if (optGhiSoQuy && phaiThuLanNay > 0) {
+        const maPT = 'PT' + Date.now().toString().slice(-7);
+        const giaoDichThu = {
+          chi_nhanh: chiNhanh,
+          ma_phieu: maPT,
+          loai_phieu: "THU",
+          loai_quy: hinhThucTT === 'NGAN_HANG' ? "NGAN_HANG" : "TIEN_MAT",
+          hang_muc: "Thu tiền bán linh kiện & sửa chữa",
+          gia_tri: phaiThuLanNay,
+          ngay_gd: nowISO,
+          doi_tuong: item.ten_kh || 'Khách lẻ',
+          ma_doi_tuong: item.ma_kh || 'KHACHLE',
+          ma_chung_tu: maHD,
+          ghi_chu: `Thanh toán sửa chữa ${item.ten_thiet_bi} (HĐ: ${maHD} - ${item.ma_yeu_cau})`,
+          tai_khoan_ngan_hang: tkNganHang,
+          nguoi_tao: nhanVien
+        };
+
+        if (typeof window.rawSoQuyAllRecords !== 'undefined' && Array.isArray(window.rawSoQuyAllRecords)) {
+          window.rawSoQuyAllRecords.unshift(giaoDichThu);
+        }
+
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          try {
+            await supabaseClient.from('so_quy').upsert([giaoDichThu]);
+          } catch(e) {}
+        }
+
+        // Ghi vào lịch sử thanh toán của phiếu YCSC
+        item.lich_su_thanh_toan.push({
+          ma_phieu: maPT,
+          ngay_tt: nowISO,
+          so_tien: phaiThuLanNay,
+          phuong_thuc: hinhThucTT,
+          tai_khoan_nhan: tkNganHang,
+          nguoi_thu: nhanVien,
+          loai: "THANH_TOAN",
+          ghi_chu: `Thanh toán khi bàn giao máy xuất HĐ ${maHD}`
+        });
+      }
+
+      // 3. TẠO HÓA ĐƠN BÁN LẺ MỚI TRONG don_hang
+      const donHangMoi = {
+        maDonHang: maHD,
+        ma_don_hang: maHD,
+        ngayBan: nowISO,
+        ngay_ban: nowISO,
+        maKH: item.ma_kh || 'KHACHLE',
+        ma_kh: item.ma_kh || 'KHACHLE',
+        tenKH: item.ten_kh || 'Khách lẻ',
+        ten_kh: item.ten_kh || 'Khách lẻ',
+        soDienThoai: item.so_dien_thoai || '',
+        so_dien_thoai: item.so_dien_thoai || '',
+        chiNhanh: chiNhanh,
+        chi_nhanh: chiNhanh,
+        tongTien: tongTien,
+        tong_tien: tongTien,
+        giamGia: giamGia,
+        giam_gia: giamGia,
+        khachPhaiTra: canTra,
+        khach_phai_tra: canTra,
+        khachTra: daCoc + phaiThuLanNay,
+        khach_tra: daCoc + phaiThuLanNay,
+        hinhThucTT: hinhThucTT,
+        hinh_thuc_tt: hinhThucTT,
+        nganHangNhan: tkNganHang,
+        ngan_hang_nhan: tkNganHang,
+        trangThai: "Hoàn thành",
+        trang_thai: "Hoàn thành",
+        nhanVien: nhanVien,
+        nhan_vien: nhanVien,
+        ghiChu: ghiChuHD,
+        ghi_chu: ghiChuHD,
+        chiTietSanPham: selectedItems.map(x => ({
+          maHang: x.ma_hang,
+          ma_hang: x.ma_hang,
+          tenHang: x.ten_hang,
+          ten_hang: x.ten_hang,
+          dvt: x.dvt || 'Cái',
+          soLuong: x.so_luong || 1,
+          so_luong: x.so_luong || 1,
+          donGia: x.don_gia || 0,
+          don_gia: x.don_gia || 0,
+          thanhTien: (x.so_luong || 1) * (x.don_gia || 0),
+          thanh_tien: (x.so_luong || 1) * (x.don_gia || 0),
+          baoHanh: x.bao_hanh || '',
+          bao_hanh: x.bao_hanh || ''
+        }))
+      };
+
+      if (typeof rawDonHangList !== 'undefined' && Array.isArray(rawDonHangList)) {
+        rawDonHangList.unshift(donHangMoi);
+      }
+
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+          await supabaseClient.from('don_hang').upsert([donHangMoi]);
+        } catch(e) {
+          console.warn("Lỗi lưu đơn hàng bán linh kiện lên Supabase:", e);
+        }
+      }
+
+      // 4. CẬP NHẬT TRẠNG THÁI PHIẾU YCSC -> HOÀN THÀNH & GẮN MÃ HÓA ĐƠN
+      item.trang_thai = "HoanThanh";
+      item.ma_hoa_don_lien_ket = maHD;
+      item.ngay_hoan_thanh = nowISO;
+      item.ngay_cap_nhat = nowISO;
+      item.tong_tien_hang = tongTien;
+      item.giam_gia = giamGia;
+      item.khach_can_tra = canTra;
+      item.khach_da_tra = daCoc + phaiThuLanNay;
+      item.con_can_tra = Math.max(0, canTra - item.khach_da_tra);
+
+      try {
+        localStorage.setItem(STORAGE_KEY_SUACHUA, JSON.stringify(window.rawYeuCauSuaChuaList));
+      } catch(e) {}
+
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+          await supabaseClient.from('yeu_cau_sua_chua').update({
+            trang_thai: 'HoanThanh',
+            ma_hoa_don_lien_ket: maHD,
+            ngay_hoan_thanh: nowISO,
+            khach_da_tra: item.khach_da_tra,
+            con_can_tra: item.con_can_tra,
+            lich_su_thanh_toan: JSON.stringify(item.lich_su_thanh_toan)
+          }).eq('ma_yeu_cau', item.ma_yeu_cau);
+        } catch(e) {}
+      }
+
+      showNotification(`Xuất hóa đơn thành công! Mã HĐ: ${maHD}. Đã trừ kho linh kiện & hoàn thành phiếu.`);
+      dongModalXuatHoaDonSuaChua();
+
+      // Cập nhật lại UI bảng
+      renderTableDanhSachYeuCauSuaChua();
+
+      // In hóa đơn bán linh kiện & bảo hành ngay
+      inHoaDonSuaChua(item.ma_yeu_cau);
+    };
+
+    // 9. BỔ SUNG LINH KIỆN / TIỀN CÔNG VÀO PHIẾU (MODAL 3)
+    window.moModalThemLinhKienSuaChua = function(maYCSC) {
+      const item = (window.rawYeuCauSuaChuaList || []).find(x => x.ma_yeu_cau === maYCSC);
+      if (!item) return showNotification("Vui lòng chọn phiếu sửa chữa!", true);
+
+      window.currentEditingYCSC = item;
+      const m = document.getElementById('modal-them-linhkien-suachua');
+      if (!m) return;
+
+      document.getElementById('sc-tim-linhkien-kho').value = '';
+      document.getElementById('sc-add-malk').value = 'LK' + Date.now().toString().slice(-4);
+      document.getElementById('sc-add-tenlk').value = '';
+      document.getElementById('sc-add-dvt').value = 'Cái';
+      document.getElementById('sc-add-sl').value = '1';
+      document.getElementById('sc-add-dongia').value = '0';
+      document.getElementById('sc-add-thanhtien').value = '0';
+      document.getElementById('sc-add-baohanh').value = '3 tháng';
+      document.getElementById('sc-add-ghichu').value = '';
+
+      chonLoaiThemLK('LINH_KIEN');
+      m.classList.remove('hidden');
+    };
+
+    window.dongModalThemLinhKienSuaChua = function() {
+      const m = document.getElementById('modal-them-linhkien-suachua');
+      if (m) m.classList.add('hidden');
+    };
+
+    window.chonLoaiThemLK = function(loai) {
+      window.currentLoaiThemLK = loai;
+      const bLK = document.getElementById('btn-sc-loai-linhkien');
+      const bTC = document.getElementById('btn-sc-loai-tiencong');
+      const boxKho = document.getElementById('box-sc-chon-hanghoa');
+
+      if (loai === 'LINH_KIEN') {
+        bLK.className = 'py-1.5 px-3 rounded-xl border border-blue-500 bg-blue-50 text-blue-700 font-bold text-center';
+        bTC.className = 'py-1.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-semibold text-center';
+        if (boxKho) boxKho.classList.remove('hidden');
+        document.getElementById('sc-add-dvt').value = 'Cái';
+        document.getElementById('sc-add-baohanh').value = '3 tháng';
+      } else {
+        bTC.className = 'py-1.5 px-3 rounded-xl border border-blue-500 bg-blue-50 text-blue-700 font-bold text-center';
+        bLK.className = 'py-1.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-semibold text-center';
+        if (boxKho) boxKho.classList.add('hidden');
+        document.getElementById('sc-add-malk').value = 'CONG' + Date.now().toString().slice(-4);
+        document.getElementById('sc-add-dvt').value = 'Lần';
+        document.getElementById('sc-add-baohanh').value = '';
+      }
+    };
+
+    window.timGoiYLinhKienKho = function(kw) {
+      const box = document.getElementById('sc-goiy-linhkien-box');
+      if (!box) return;
+      kw = (kw || '').trim().toLowerCase();
+      if (!kw) { box.classList.add('hidden'); return; }
+
+      const list = (typeof rawHangHoaList !== 'undefined' && Array.isArray(rawHangHoaList)) ? rawHangHoaList : [];
+      const matches = list.filter(h => {
+        const mh = (h.maHang || h.ma_hang || '').toLowerCase();
+        const th = (h.tenHang || h.ten_hang || '').toLowerCase();
+        return mh.includes(kw) || th.includes(kw);
+      }).slice(0, 8);
+
+      if (matches.length === 0) {
+        box.innerHTML = `<div class="p-2 text-slate-400 text-center">Không tìm thấy linh kiện trong kho.</div>`;
+        box.classList.remove('hidden');
+        return;
+      }
+
+      box.innerHTML = matches.map(h => `
+        <div class="p-2 hover:bg-blue-50 cursor-pointer flex justify-between items-center" onclick="chonLinhKienKho('${h.maHang || h.ma_hang}', '${(h.tenHang || h.ten_hang || '').replace(/'/g, "\\'")}', '${h.donViTinh || h.dvt || 'Cái'}', ${Number(h.giaBan || h.gia_ban || 0)}, ${Number(h.tonKho ?? h.ton_kho ?? 0)})">
+          <div>
+            <div class="font-bold text-slate-800">${h.tenHang || h.ten_hang}</div>
+            <div class="text-[11px] text-slate-500 font-mono">Mã: ${h.maHang || h.ma_hang} | Tồn kho: <span class="font-bold text-emerald-700">${h.tonKho ?? h.ton_kho ?? 0}</span></div>
+          </div>
+          <div class="text-right font-bold text-blue-700 font-mono text-xs">
+            ${formatVNDKiot(h.giaBan || h.gia_ban || 0)} đ
+          </div>
+        </div>
+      `).join('');
+      box.classList.remove('hidden');
+    };
+
+    window.chonLinhKienKho = function(ma, ten, dvt, gia, tonKho) {
+      document.getElementById('sc-add-malk').value = ma;
+      document.getElementById('sc-add-tenlk').value = ten;
+      document.getElementById('sc-add-dvt').value = dvt;
+      document.getElementById('sc-add-dongia').value = formatVNDKiot(gia);
+      tinhThanhTienAddLK();
+      document.getElementById('sc-goiy-linhkien-box').classList.add('hidden');
+    };
+
+    window.tinhThanhTienAddLK = function() {
+      const sl = Number(document.getElementById('sc-add-sl')?.value) || 1;
+      const dg = parseVND(document.getElementById('sc-add-dongia')?.value || '0');
+      document.getElementById('sc-add-thanhtien').value = formatVNDKiot(sl * dg);
+    };
+
+    window.xacNhanThemLinhKienVaoPhieu = async function() {
+      const item = window.currentEditingYCSC;
+      if (!item) return;
+
+      const ten = document.getElementById('sc-add-tenlk')?.value.trim();
+      if (!ten) return showNotification("Vui lòng nhập tên linh kiện hoặc dịch vụ!", true);
+
+      const ma = document.getElementById('sc-add-malk')?.value.trim() || 'LK' + Date.now().toString().slice(-4);
+      const dvt = document.getElementById('sc-add-dvt')?.value.trim() || 'Cái';
+      const sl = Number(document.getElementById('sc-add-sl')?.value) || 1;
+      const dg = parseVND(document.getElementById('sc-add-dongia')?.value || '0');
+      const tt = sl * dg;
+      const baohanh = document.getElementById('sc-add-baohanh')?.value.trim();
+      const ghichu = document.getElementById('sc-add-ghichu')?.value.trim();
+      const loai = window.currentLoaiThemLK || 'LINH_KIEN';
+
+      if (!Array.isArray(item.danh_sach_dich_vu)) item.danh_sach_dich_vu = [];
+      item.danh_sach_dich_vu.push({
+        ma_hang: ma,
+        ten_hang: ten,
+        dvt: dvt,
+        so_luong: sl,
+        don_gia: dg,
+        thanh_tien: tt,
+        bao_hanh: baohanh,
+        loai: loai,
+        ghi_chu: ghichu
+      });
+
+      // Cập nhật lại tổng tiền phiếu
+      let tongMoi = item.danh_sach_dich_vu.reduce((acc, x) => acc + ((Number(x.so_luong)||1) * (Number(x.don_gia)||0)), 0);
+      item.tong_tien_hang = tongMoi;
+      item.khach_can_tra = Math.max(0, tongMoi - (Number(item.giam_gia) || 0));
+      item.con_can_tra = Math.max(0, item.khach_can_tra - (Number(item.khach_da_tra) || 0));
+      item.ngay_cap_nhat = new Date().toISOString();
+
+      try {
+        localStorage.setItem(STORAGE_KEY_SUACHUA, JSON.stringify(window.rawYeuCauSuaChuaList));
+      } catch(e) {}
+
+      showNotification(`Đã thêm linh kiện/dịch vụ "${ten}" vào phiếu!`);
+      dongModalThemLinhKienSuaChua();
+      renderTableDanhSachYeuCauSuaChua();
+    };
+
+    window.xoaLinhKienKhoiPhieu = function(maYCSC, idx) {
+      const item = (window.rawYeuCauSuaChuaList || []).find(x => x.ma_yeu_cau === maYCSC);
+      if (!item || !Array.isArray(item.danh_sach_dich_vu)) return;
+
+      if (!confirm(`Bạn có chắc chắn muốn xóa linh kiện này khỏi phiếu?`)) return;
+
+      item.danh_sach_dich_vu.splice(idx, 1);
+      let tongMoi = item.danh_sach_dich_vu.reduce((acc, x) => acc + ((Number(x.so_luong)||1) * (Number(x.don_gia)||0)), 0);
+      item.tong_tien_hang = tongMoi;
+      item.khach_can_tra = Math.max(0, tongMoi - (Number(item.giam_gia) || 0));
+      item.con_can_tra = Math.max(0, item.khach_can_tra - (Number(item.khach_da_tra) || 0));
+      item.ngay_cap_nhat = new Date().toISOString();
+
+      try {
+        localStorage.setItem(STORAGE_KEY_SUACHUA, JSON.stringify(window.rawYeuCauSuaChuaList));
+      } catch(e) {}
+
+      showNotification("Đã xóa linh kiện khỏi phiếu.");
+      renderTableDanhSachYeuCauSuaChua();
+    };
+
+    // 10. THU TIỀN / CỌC BỔ SUNG (MODAL 4)
+    window.moModalThuTienSuaChua = function(maYCSC) {
+      const item = (window.rawYeuCauSuaChuaList || []).find(x => x.ma_yeu_cau === maYCSC);
+      if (!item) return;
+
+      window.currentEditingYCSC = item;
+      const m = document.getElementById('modal-thutien-suachua');
+      if (!m) return;
+
+      const canTra = Number(item.khach_can_tra) || 0;
+      const daTra = Number(item.khach_da_tra) || 0;
+      const conNo = Math.max(0, canTra - daTra);
+
+      document.getElementById('sc-thu-mayeucau').innerText = item.ma_yeu_cau;
+      document.getElementById('sc-thu-tenkh').innerText = item.ten_kh || 'Khách lẻ';
+      document.getElementById('sc-thu-cantra').innerText = formatVNDKiot(canTra) + ' đ';
+      document.getElementById('sc-thu-datra').innerText = formatVNDKiot(daTra) + ' đ';
+      document.getElementById('sc-thu-conno').innerText = formatVNDKiot(conNo) + ' đ';
+
+      document.getElementById('sc-thu-sotien').value = formatVNDKiot(conNo);
+      document.getElementById('sc-thu-hinhthuc').value = 'TIEN_MAT';
+      document.getElementById('box-sc-thu-nganhang').classList.add('hidden');
+      document.getElementById('sc-thu-ghichu').value = `Thu tiền dịch vụ sửa chữa ${item.ten_thiet_bi} (${item.ma_yeu_cau})`;
+
+      napDanhSachNganHangSelect('sc-thu-taikhoan-nhan');
+      m.classList.remove('hidden');
+    };
+
+    window.dongModalThuTienSuaChua = function() {
+      const m = document.getElementById('modal-thutien-suachua');
+      if (m) m.classList.add('hidden');
+    };
+
+    window.doiHinhThucThuSuaChua = function(val) {
+      const box = document.getElementById('box-sc-thu-nganhang');
+      if (box) {
+        if (val === 'NGAN_HANG') box.classList.remove('hidden');
+        else box.classList.add('hidden');
+      }
+    };
+
+    window.xacNhanThuTienSuaChua = async function() {
+      const item = window.currentEditingYCSC;
+      if (!item) return;
+
+      const soTien = parseVND(document.getElementById('sc-thu-sotien')?.value || '0');
+      if (soTien <= 0) return showNotification("Vui lòng nhập số tiền hợp lệ lớn hơn 0!", true);
+
+      const hinhThuc = document.getElementById('sc-thu-hinhthuc')?.value || 'TIEN_MAT';
+      const tkNhan = document.getElementById('sc-thu-taikhoan-nhan')?.value || '';
+      const lyDo = document.getElementById('sc-thu-lydo')?.value || 'Thu tiền sửa chữa / Dịch vụ';
+      const ghiChu = document.getElementById('sc-thu-ghichu')?.value.trim();
+      const nowISO = new Date().toISOString();
+      const maPT = 'PT' + Date.now().toString().slice(-7);
+      const nhanVien = (typeof currentUser !== 'undefined' && currentUser) ? (currentUser.fullname || currentUser.username) : 'Nhân viên';
+
+      // 1. Ghi Sổ Quỹ
+      const giaoDich = {
+        chi_nhanh: item.chi_nhanh || 'Thanh Giang',
+        ma_phieu: maPT,
+        loai_phieu: "THU",
+        loai_quy: hinhThuc === 'NGAN_HANG' ? "NGAN_HANG" : "TIEN_MAT",
+        hang_muc: lyDo,
+        gia_tri: soTien,
+        ngay_gd: nowISO,
+        doi_tuong: item.ten_kh || 'Khách lẻ',
+        ma_doi_tuong: item.ma_kh || 'KHACHLE',
+        ma_chung_tu: item.ma_yeu_cau,
+        ghi_chu: ghiChu,
+        tai_khoan_ngan_hang: tkNhan,
+        nguoi_tao: nhanVien
+      };
+
+      if (typeof window.rawSoQuyAllRecords !== 'undefined' && Array.isArray(window.rawSoQuyAllRecords)) {
+        window.rawSoQuyAllRecords.unshift(giaoDich);
+      }
+
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+          await supabaseClient.from('so_quy').upsert([giaoDich]);
+        } catch(e) {}
+      }
+
+      // 2. Cập nhật phiếu YCSC
+      if (!Array.isArray(item.lich_su_thanh_toan)) item.lich_su_thanh_toan = [];
+      item.lich_su_thanh_toan.push({
+        ma_phieu: maPT,
+        ngay_tt: nowISO,
+        so_tien: soTien,
+        phuong_thuc: hinhThuc,
+        tai_khoan_nhan: tkNhan,
+        nguoi_thu: nhanVien,
+        loai: lyDo.includes('cọc') ? "DAT_COC" : "THANH_TOAN",
+        ghi_chu: ghiChu
+      });
+
+      item.khach_da_tra = (Number(item.khach_da_tra) || 0) + soTien;
+      item.con_can_tra = Math.max(0, (Number(item.khach_can_tra) || 0) - item.khach_da_tra);
+      item.ngay_cap_nhat = nowISO;
+
+      try {
+        localStorage.setItem(STORAGE_KEY_SUACHUA, JSON.stringify(window.rawYeuCauSuaChuaList));
+      } catch(e) {}
+
+      showNotification(`Thu tiền thành công! Phiếu thu: ${maPT}. Đã cập nhật Sổ Quỹ.`);
+      dongModalThuTienSuaChua();
+      renderTableDanhSachYeuCauSuaChua();
+    };
+
+    // 11. ĐỔI TRẠNG THÁI SỬA CHỮA (MODAL 5)
+    window.moModalCapNhatTrangThaiSuaChua = function(maYCSC) {
+      const item = (window.rawYeuCauSuaChuaList || []).find(x => x.ma_yeu_cau === maYCSC);
+      if (!item) return;
+
+      window.currentEditingYCSC = item;
+      const m = document.getElementById('modal-capnhat-trangthai-suachua');
+      if (!m) return;
+
+      document.getElementById('sc-tt-mayeucau').innerText = item.ma_yeu_cau;
+      document.getElementById('sc-tt-trangthai-select').value = item.trang_thai || 'TiepNhan';
+      document.getElementById('sc-tt-ghichu').value = '';
+
+      m.classList.remove('hidden');
+    };
+
+    window.dongModalCapNhatTrangThaiSuaChua = function() {
+      const m = document.getElementById('modal-capnhat-trangthai-suachua');
+      if (m) m.classList.add('hidden');
+    };
+
+    window.xacNhanCapNhatTrangThaiSuaChua = async function() {
+      const item = window.currentEditingYCSC;
+      if (!item) return;
+
+      const ttMoi = document.getElementById('sc-tt-trangthai-select')?.value;
+      const ghichu = document.getElementById('sc-tt-ghichu')?.value.trim();
+      const nowISO = new Date().toISOString();
+
+      item.trang_thai = ttMoi;
+      item.ngay_cap_nhat = nowISO;
+      if (ttMoi === 'HoanThanh' && !item.ngay_hoan_thanh) {
+        item.ngay_hoan_thanh = nowISO;
+      }
+      if (ghichu) {
+        item.ghi_chu = (item.ghi_chu ? item.ghi_chu + '\n' : '') + `[${formatNgayGioKiot(nowISO)}] ${ghichu}`;
+      }
+
+      try {
+        localStorage.setItem(STORAGE_KEY_SUACHUA, JSON.stringify(window.rawYeuCauSuaChuaList));
+      } catch(e) {}
+
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+          await supabaseClient.from('yeu_cau_sua_chua').update({
+            trang_thai: ttMoi,
+            ngay_cap_nhat: nowISO,
+            ghi_chu: item.ghi_chu
+          }).eq('ma_yeu_cau', item.ma_yeu_cau);
+        } catch(e) {}
+      }
+
+      showNotification(`Đã chuyển trạng thái phiếu ${item.ma_yeu_cau} sang "${layTenTrangThaiKiot(ttMoi)}"`);
+      dongModalCapNhatTrangThaiSuaChua();
+      renderTableDanhSachYeuCauSuaChua();
+    };
+
+    window.huyYeuCauSuaChua = function(maYCSC) {
+      const item = (window.rawYeuCauSuaChuaList || []).find(x => x.ma_yeu_cau === maYCSC);
+      if (!item) return;
+
+      if (!confirm(`Bạn có chắc chắn muốn HỦY yêu cầu sửa chữa ${maYCSC}?`)) return;
+
+      item.trang_thai = 'DaHuy';
+      item.ngay_cap_nhat = new Date().toISOString();
+
+      try {
+        localStorage.setItem(STORAGE_KEY_SUACHUA, JSON.stringify(window.rawYeuCauSuaChuaList));
+      } catch(e) {}
+
+      showNotification(`Đã hủy phiếu ${maYCSC}`);
+      renderTableDanhSachYeuCauSuaChua();
+    };
+
+    // 12. IN ẤN CHUYÊN NGHIỆP: BIÊN NHẬN MÁY & HÓA ĐƠN HOÀN THÀNH
+    window.inPhieuTiepNhanSuaChua = function(maYCSC) {
+      const item = (window.rawYeuCauSuaChuaList || []).find(x => x.ma_yeu_cau === maYCSC);
+      if (!item) return showNotification("Không tìm thấy thông tin phiếu sửa chữa!", true);
+
+      const w = window.open('', '_blank', 'width=800,height=900');
+      if (!w) return showNotification("Trình duyệt đã chặn cửa sổ in popup!", true);
+
+      const chinhanh = item.chi_nhanh || 'Thanh Giang';
+      const tg = formatNgayGioKiot(item.ngay_tiep_nhan);
+      const hen = item.ngay_hen_tra ? formatNgayGioKiot(item.ngay_hen_tra) : 'Khi sửa xong sẽ liên hệ';
+
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Phiếu Tiếp Nhận Sửa Chữa - ${item.ma_yeu_cau}</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 24px; color: #1e293b; line-height: 1.5; font-size: 13px; }
+            .header { text-align: center; border-bottom: 2px dashed #94a3b8; padding-bottom: 12px; margin-bottom: 16px; }
+            .shop-name { font-size: 18px; font-weight: 900; text-transform: uppercase; color: #1d4ed8; letter-spacing: 0.5px; }
+            .shop-sub { font-size: 11px; color: #64748b; margin-top: 2px; }
+            .title { font-size: 16px; font-weight: 800; text-transform: uppercase; margin-top: 10px; color: #0f172a; }
+            .barcode { font-family: monospace; font-size: 16px; font-weight: bold; letter-spacing: 2px; color: #2563eb; }
+            .section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; color: #334155; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin: 12px 0 8px 0; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; font-size: 12px; }
+            .info-grid div { display: flex; justify-content: space-between; }
+            .label { color: #64748b; font-weight: 500; }
+            .val { font-weight: 600; color: #0f172a; }
+            table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+            th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; }
+            th { background: #f8fafc; font-weight: 700; color: #475569; }
+            .text-right { text-align: right; }
+            .text-center { text-align: center; }
+            .terms { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; font-size: 10.5px; color: #475569; margin-top: 14px; }
+            .terms ol { margin: 4px 0 0 16px; padding: 0; }
+            .signatures { display: grid; grid-template-columns: 1fr 1fr; text-align: center; margin-top: 24px; font-size: 12px; }
+            .sig-name { margin-top: 50px; font-weight: bold; }
+            @media print {
+              body { padding: 10px; }
+              @page { margin: 10mm; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="shop-name">HỆ THỐNG CỬA HÀNG ĐIỆN THOẠI & PHỤ KIỆN</div>
+            <div class="shop-sub">Chi nhánh: ${chinhanh} | Hotline: 098.765.4321</div>
+            <div class="title">PHIẾU TIẾP NHẬN SỬA CHỮA / BẢO HÀNH</div>
+            <div class="barcode">*${item.ma_yeu_cau}*</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Ngày tiếp nhận: ${tg}</div>
+          </div>
+
+          <div class="section-title">1. THÔNG TIN KHÁCH HÀNG & THIẾT BỊ</div>
+          <div class="info-grid">
+            <div><span class="label">Họ tên khách:</span> <span class="val">${item.ten_kh || 'Khách lẻ'}</span></div>
+            <div><span class="label">Số điện thoại:</span> <span class="val">${item.so_dien_thoai || '---'}</span></div>
+            <div><span class="label">Tên thiết bị:</span> <span class="val" style="color: #1d4ed8; font-weight: 800;">${item.ten_thiet_bi || 'Điện thoại'}</span></div>
+            <div><span class="label">Số IMEI / Serial:</span> <span class="val font-mono">${item.imei || 'Không có'}</span></div>
+            <div><span class="label">Mật khẩu màn hình:</span> <span class="val">${item.mat_khau_may || 'Không có'}</span></div>
+            <div><span class="label">Phụ kiện kèm theo:</span> <span class="val">${item.phu_kien || 'Máy trần'}</span></div>
+            <div><span class="label">Ngày hẹn trả máy:</span> <span class="val" style="color: #d97706;">${hen}</span></div>
+            <div><span class="label">Kỹ thuật viên nhận:</span> <span class="val">${item.nguoi_nhan || 'Lưu Quang Hữu'}</span></div>
+          </div>
+
+          <div class="section-title">2. TÌNH TRẠNG LỖI & YÊU CẦU CỦA KHÁCH</div>
+          <div style="padding: 8px; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 6px; font-weight: 600; color: #92400e; font-size: 12px;">
+            ${item.tinh_trang_loi || 'Chưa ghi nhận'}
+          </div>
+
+          <div class="section-title">3. TÀI CHÍNH & TIỀN ĐẶT CỌC</div>
+          <div class="info-grid">
+            <div><span class="label">Dự tính chi phí:</span> <span class="val">${formatVNDKiot(item.khach_can_tra || 0)} đ</span></div>
+            <div><span class="label">Tiền khách đã cọc:</span> <span class="val" style="color: #059669; font-weight: 800;">${formatVNDKiot(item.khach_da_tra || 0)} đ</span></div>
+            <div><span class="label">Số tiền còn thiếu:</span> <span class="val" style="color: #dc2626; font-weight: 800;">${formatVNDKiot(Math.max(0, (Number(item.khach_can_tra)||0) - (Number(item.khach_da_tra)||0)))} đ</span></div>
+          </div>
+
+          <div class="terms">
+            <b>QUY ĐỊNH TIẾP NHẬN & BẢO HÀNH:</b>
+            <ol>
+              <li>Khách hàng vui lòng mang theo Phiếu tiếp nhận này khi đến nhận lại thiết bị.</li>
+              <li>Cửa hàng không chịu trách nhiệm về dữ liệu cá nhân (danh bạ, ảnh, tin nhắn, tài khoản iCloud/Google). Khách hàng chủ động sao lưu trước khi bàn giao.</li>
+              <li>Sau 30 ngày kể từ ngày hẹn nếu khách hàng không đến nhận máy, cửa hàng sẽ tiến hành thanh lý theo quy định.</li>
+              <li>Kiểm tra toàn bộ chức năng máy trước khi rời quầy tiếp nhận.</li>
+            </ol>
+          </div>
+
+          <div class="signatures">
+            <div>
+              <div style="font-weight: bold;">KHÁCH HÀNG</div>
+              <div style="font-size: 11px; color: #64748b;">(Ký & ghi rõ họ tên)</div>
+              <div class="sig-name">${item.ten_kh || ''}</div>
+            </div>
+            <div>
+              <div style="font-weight: bold;">NGƯỜI TIẾP NHẬN</div>
+              <div style="font-size: 11px; color: #64748b;">(Ký & xác nhận)</div>
+              <div class="sig-name">${item.nguoi_nhan || 'Lưu Quang Hữu'}</div>
+            </div>
+          </div>
+
+          <script>
+            window.onload = function() { window.print(); };
+          <\/script>
+        </body>
+        </html>
+      `;
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+    };
+
+    window.inHoaDonSuaChua = function(maYCSC) {
+      const item = (window.rawYeuCauSuaChuaList || []).find(x => x.ma_yeu_cau === maYCSC);
+      if (!item) return showNotification("Không tìm thấy thông tin phiếu!", true);
+
+      const w = window.open('', '_blank', 'width=800,height=900');
+      if (!w) return showNotification("Trình duyệt đã chặn popup in!", true);
+
+      const chinhanh = item.chi_nhanh || 'Thanh Giang';
+      const tg = formatNgayGioKiot(item.ngay_hoan_thanh || new Date().toISOString());
+      const dsDichVu = Array.isArray(item.danh_sach_dich_vu) ? item.danh_sach_dich_vu : [];
+
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Hóa Đơn Bàn Giao & Bảo Hành - ${item.ma_yeu_cau}</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 24px; color: #1e293b; line-height: 1.5; font-size: 13px; }
+            .header { text-align: center; border-bottom: 2px dashed #94a3b8; padding-bottom: 12px; margin-bottom: 16px; }
+            .shop-name { font-size: 18px; font-weight: 900; text-transform: uppercase; color: #15803d; letter-spacing: 0.5px; }
+            .shop-sub { font-size: 11px; color: #64748b; margin-top: 2px; }
+            .title { font-size: 16px; font-weight: 800; text-transform: uppercase; margin-top: 10px; color: #0f172a; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; font-size: 12px; margin-bottom: 12px; }
+            .info-grid div { display: flex; justify-content: space-between; }
+            .label { color: #64748b; font-weight: 500; }
+            .val { font-weight: 600; color: #0f172a; }
+            table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; }
+            th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; }
+            th { background: #f8fafc; font-weight: 700; color: #475569; }
+            .text-right { text-align: right; }
+            .text-center { text-align: center; }
+            .summary { margin-left: auto; width: 280px; margin-top: 10px; font-size: 12.5px; }
+            .summary-row { display: flex; justify-content: space-between; padding: 3px 0; }
+            .signatures { display: grid; grid-template-columns: 1fr 1fr; text-align: center; margin-top: 30px; font-size: 12px; }
+            .sig-name { margin-top: 50px; font-weight: bold; }
+            @media print {
+              body { padding: 10px; }
+              @page { margin: 10mm; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="shop-name">HỆ THỐNG CỬA HÀNG ĐIỆN THOẠI & PHỤ KIỆN</div>
+            <div class="shop-sub">Chi nhánh: ${chinhanh} | Hotline: 098.765.4321</div>
+            <div class="title">HÓA ĐƠN BÁN LINH KIỆN & PHIẾU BÀN GIAO THIẾT BỊ</div>
+            <div style="font-family: monospace; font-size: 13px; font-weight: bold; color: #2563eb; margin-top: 4px;">
+              HĐ: ${item.ma_hoa_don_lien_ket || 'HD' + item.ma_yeu_cau} | YCSC: ${item.ma_yeu_cau}
+            </div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Ngày bàn giao: ${tg}</div>
+          </div>
+
+          <div class="info-grid">
+            <div><span class="label">Khách hàng:</span> <span class="val">${item.ten_kh || 'Khách lẻ'}</span></div>
+            <div><span class="label">Số điện thoại:</span> <span class="val font-mono">${item.so_dien_thoai || '---'}</span></div>
+            <div><span class="label">Thiết bị:</span> <span class="val" style="color: #1d4ed8; font-weight: 800;">${item.ten_thiet_bi || 'Điện thoại'}</span></div>
+            <div><span class="label">Số IMEI:</span> <span class="val font-mono">${item.imei || 'Không có'}</span></div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th class="text-center" style="width: 30px;">STT</th>
+                <th>Tên Linh Kiện / Dịch Vụ Sửa Chữa</th>
+                <th class="text-center" style="width: 50px;">ĐVT</th>
+                <th class="text-center" style="width: 40px;">SL</th>
+                <th class="text-right" style="width: 90px;">Đơn Giá</th>
+                <th class="text-right" style="width: 100px;">Thành Tiền</th>
+                <th class="text-center" style="width: 80px;">Bảo Hành</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${dsDichVu.map((dv, idx) => `
+                <tr>
+                  <td class="text-center">${idx + 1}</td>
+                  <td><b>${dv.ten_hang}</b></td>
+                  <td class="text-center">${dv.dvt || 'Cái'}</td>
+                  <td class="text-center">${dv.so_luong || 1}</td>
+                  <td class="text-right">${formatVNDKiot(dv.don_gia || 0)}</td>
+                  <td class="text-right"><b>${formatVNDKiot((dv.so_luong||1)*(dv.don_gia||0))}</b></td>
+                  <td class="text-center" style="color: #b45309; font-weight: 600;">${dv.bao_hanh || '---'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="summary">
+            <div class="summary-row"><span>Tổng tiền dịch vụ & LK:</span> <b>${formatVNDKiot(item.tong_tien_hang || item.khach_can_tra || 0)} đ</b></div>
+            <div class="summary-row"><span>Giảm giá:</span> <span>${formatVNDKiot(item.giam_gia || 0)} đ</span></div>
+            <div class="summary-row" style="font-weight: bold; border-top: 1px solid #cbd5e1; padding-top: 4px;"><span>Khách cần trả:</span> <span>${formatVNDKiot(item.khach_can_tra || 0)} đ</span></div>
+            <div class="summary-row" style="color: #059669; font-weight: bold;"><span>Đã thanh toán / Cọc:</span> <span>${formatVNDKiot(item.khach_da_tra || 0)} đ</span></div>
+            <div class="summary-row" style="color: #dc2626; font-weight: 800; border-top: 1px solid #cbd5e1; padding-top: 4px;"><span>Còn nợ:</span> <span>${formatVNDKiot(Math.max(0, (Number(item.khach_can_tra)||0) - (Number(item.khach_da_tra)||0)))} đ</span></div>
+          </div>
+
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px; font-size: 11px; color: #166534; margin-top: 16px;">
+            <b>CAM KẾT BẢO HÀNH LINH KIỆN CHÍNH HÃNG:</b>
+            <div style="margin-top: 2px;">
+              - Linh kiện được bảo hành 1 đổi 1 trong thời gian bảo hành nêu trên đối với các lỗi do nhà sản xuất.<br>
+              - Từ chối bảo hành đối với các trường hợp: Rơi vỡ, cấn móp, ngấm nước, tem bảo hành bị rách hoặc có dấu hiệu can thiệp của bên thứ ba.
+            </div>
+          </div>
+
+          <div class="signatures">
+            <div>
+              <div style="font-weight: bold;">KHÁCH HÀNG NHẬN MÁY</div>
+              <div style="font-size: 11px; color: #64748b;">(Đã test máy hoạt động tốt)</div>
+              <div class="sig-name">${item.ten_kh || ''}</div>
+            </div>
+            <div>
+              <div style="font-weight: bold;">KỸ THUẬT VIÊN BÀN GIAO</div>
+              <div style="font-size: 11px; color: #64748b;">(Ký & ghi rõ họ tên)</div>
+              <div class="sig-name">${item.nguoi_nhan || 'Lưu Quang Hữu'}</div>
+            </div>
+          </div>
+
+          <script>
+            window.onload = function() { window.print(); };
+          <\/script>
+        </body>
+        </html>
+      `;
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+    };
+
+    // 13. XUẤT EXCEL
+    window.xuatExcelYeuCauSuaChua = function() {
+      const list = locDanhSachYeuCauSuaChuaData();
+      if (list.length === 0) return showNotification("Không có dữ liệu để xuất Excel!", true);
+
+      if (typeof XLSX === 'undefined') return showNotification("Thư viện SheetJS chưa được tải!", true);
+
+      const data = list.map((item, idx) => ({
+        "STT": idx + 1,
+        "Mã Yêu Cầu": item.ma_yeu_cau,
+        "Thời Gian Tiếp Nhận": formatNgayGioKiot(item.ngay_tiep_nhan),
+        "Khách Hàng": item.ten_kh || '',
+        "Số Điện Thoại": item.so_dien_thoai || '',
+        "Địa Chỉ": item.dia_chi || '',
+        "Thiết Bị": item.ten_thiet_bi || '',
+        "Số IMEI": item.imei || '',
+        "Mật Khẩu Máy": item.mat_khau_may || '',
+        "Triệu Chứng Lỗi": item.tinh_trang_loi || '',
+        "Khách Cần Trả": Number(item.khach_can_tra) || 0,
+        "Khách Đã Trả": Number(item.khach_da_tra) || 0,
+        "Còn Nợ": Math.max(0, (Number(item.khach_can_tra) || 0) - (Number(item.khach_da_tra) || 0)),
+        "Trạng Thái": layTenTrangThaiKiot(item.trang_thai),
+        "Chi Nhánh": item.chi_nhanh || '',
+        "Người Tiếp Nhận": item.nguoi_nhan || '',
+        "Mã Hóa Đơn Bán LK": item.ma_hoa_don_lien_ket || ''
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "YeuCauSuaChua");
+      XLSX.writeFile(wb, `Danh_Sach_Yeu_Cau_Sua_Chua_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      showNotification("Xuất file Excel thành công!");
+    };
+
+    window.xuatExcelMotPhieuSuachua = function(maYCSC) {
+      const item = (window.rawYeuCauSuaChuaList || []).find(x => x.ma_yeu_cau === maYCSC);
+      if (!item) return;
+
+      if (typeof XLSX === 'undefined') return showNotification("Thư viện SheetJS chưa được tải!", true);
+
+      const ds = Array.isArray(item.danh_sach_dich_vu) ? item.danh_sach_dich_vu : [];
+      const data = ds.map((dv, idx) => ({
+        "STT": idx + 1,
+        "Mã Linh Kiện": dv.ma_hang || '',
+        "Tên Linh Kiện / Dịch Vụ": dv.ten_hang || '',
+        "ĐVT": dv.dvt || 'Cái',
+        "Số Lượng": dv.so_luong || 1,
+        "Đơn Giá": dv.don_gia || 0,
+        "Thành Tiền": (dv.so_luong || 1) * (dv.don_gia || 0),
+        "Bảo Hành": dv.bao_hanh || '',
+        "Ghi Chú": dv.ghi_chu || ''
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "LinhKienSuaChua");
+      XLSX.writeFile(wb, `Phieu_Sua_Chua_${maYCSC}.xlsx`);
+      showNotification("Đã xuất file Excel cho phiếu " + maYCSC);
+    };
+
+    // 14. TIỆN ÍCH HELPER ĐỊNH DẠNG THEO KIOTVIET
+    function formatVNDKiot(num) {
+      return (Number(num) || 0).toLocaleString('en-US');
+    }
+
+    function parseVND(str) {
+      if (!str) return 0;
+      return Number(String(str).replace(/[^0-9]/g, '')) || 0;
+    }
+
+    window.dinhDangTienInput = function(el) {
+      if (!el) return;
+      const v = parseVND(el.value);
+      el.value = formatVNDKiot(v);
+    };
+
+    function formatNgayGioKiot(iso) {
+      if (!iso) return '---';
+      try {
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return iso;
+        const pad = n => String(n).padStart(2, '0');
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      } catch(e) {
+        return iso;
+      }
+    }
+
+    function taoBadgeTrangThaiKiot(tt) {
+      switch(tt) {
+        case 'TiepNhan':
+          return '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold">Tiếp nhận</span>';
+        case 'DangSua':
+          return '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[11px] font-bold">Đang sửa</span>';
+        case 'ChoLinhKien':
+          return '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold">Chờ linh kiện</span>';
+        case 'DaSuaXong':
+          return '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[11px] font-bold">Đã sửa xong</span>';
+        case 'HoanThanh':
+          return '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold">Hoàn thành</span>';
+        case 'DaHuy':
+          return '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 text-[11px] font-bold">Đã hủy</span>';
+        default:
+          return '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold">Đang xử lý</span>';
+      }
+    }
+
+    function layTenTrangThaiKiot(tt) {
+      switch(tt) {
+        case 'TiepNhan': return 'Mới tiếp nhận / Kiểm tra';
+        case 'DangSua': return 'Đang sửa chữa';
+        case 'ChoLinhKien': return 'Chờ linh kiện';
+        case 'DaSuaXong': return 'Đã sửa xong (Chờ giao)';
+        case 'HoanThanh': return 'Hoàn thành';
+        case 'DaHuy': return 'Đã hủy';
+        default: return 'Đang xử lý';
+      }
+    }
+
+    // Tự động nạp dữ liệu mẫu ban đầu nếu danh sách đang rỗng (Khớp dữ liệu mẫu KiotViet của người dùng)
+    function khoiTaoDuLieuMauNeuRong() {
+      const local = localStorage.getItem(STORAGE_KEY_SUACHUA);
+      if (!local || JSON.parse(local).length === 0) {
+        const sample = [
+          {
+            ma_yeu_cau: "YCSC002220",
+            ngay_tiep_nhan: "2026-11-03T07:59:00",
+            ngay_cap_nhat: "2026-11-03T08:02:00",
+            ngay_hen_tra: "2026-11-03T12:00:00",
+            ngay_hoan_thanh: "2026-11-03T08:02:00",
+            chi_nhanh: "Thanh Giang",
+            noi_tiep_nhan: "Tại cửa hàng",
+            bang_gia: "Bảng giá chung",
+            nguoi_nhan: "Lưu Quang Hữu",
+            ky_thuat_vien: "Lưu Quang Hữu",
+            loai_yeu_cau: "SUA_CHUA",
+            ma_kh: "KH00022",
+            ten_kh: "Vũ Thị Gái",
+            so_dien_thoai: "0984123456",
+            dia_chi: "Thanh Giang",
+            ma_hang: "IPX64BLACKVNA",
+            ten_thiet_bi: "Iphone X - 64G Đen - NEW VNA",
+            imei: "356890123456789",
+            mat_khau_may: "000000",
+            phu_kien: "Máy trần",
+            tinh_trang_loi: "Thay màn hình iPhone X OLED + vệ sinh loa",
+            ghi_chu: "Khách sửa lấy liền trong buổi sáng",
+            trang_thai: "HoanThanh",
+            danh_sach_dich_vu: [
+              {
+                ma_hang: "MH_IPX_OLED",
+                ten_hang: "Màn hình iPhone X GX OLED",
+                dvt: "Cái",
+                so_luong: 1,
+                don_gia: 500000,
+                thanh_tien: 500000,
+                bao_hanh: "6 tháng",
+                loai: "LINH_KIEN",
+                ghi_chu: "Bảo hành cảm ứng"
+              },
+              {
+                ma_hang: "CONG_THAY",
+                ten_hang: "Tiền công thay màn hình & vệ sinh máy",
+                dvt: "Lần",
+                so_luong: 1,
+                don_gia: 100000,
+                thanh_tien: 100000,
+                bao_hanh: "",
+                loai: "TIEN_CONG",
+                ghi_chu: "Đã test full chức năng"
+              }
+            ],
+            tong_tien_hang: 600000,
+            giam_gia: 0,
+            khach_can_tra: 600000,
+            khach_da_tra: 600000,
+            con_can_tra: 0,
+            lich_su_thanh_toan: [
+              {
+                ma_phieu: "PT261103001",
+                ngay_tt: "2026-11-03T07:59:00",
+                so_tien: 200000,
+                phuong_thuc: "TIEN_MAT",
+                tai_khoan_nhan: "",
+                nguoi_thu: "Lưu Quang Hữu",
+                loai: "DAT_COC",
+                ghi_chu: "Cọc nhận máy"
+              },
+              {
+                ma_phieu: "PT261103002",
+                ngay_tt: "2026-11-03T08:02:00",
+                so_tien: 400000,
+                phuong_thuc: "TIEN_MAT",
+                tai_khoan_nhan: "",
+                nguoi_thu: "Lưu Quang Hữu",
+                loai: "THANH_TOAN",
+                ghi_chu: "Thanh toán khi bàn giao máy"
+              }
+            ],
+            ma_hoa_don_lien_ket: "HD261103001"
+          },
+          {
+            ma_yeu_cau: "YCSC002205",
+            ngay_tiep_nhan: "2026-10-29T17:45:00",
+            ngay_cap_nhat: "2026-10-29T18:00:00",
+            ngay_hen_tra: "2026-10-30T10:00:00",
+            ngay_hoan_thanh: "2026-10-29T18:00:00",
+            chi_nhanh: "Thanh Giang",
+            noi_tiep_nhan: "Tại cửa hàng",
+            bang_gia: "Bảng giá chung",
+            nguoi_nhan: "Lưu Quang Hữu",
+            ky_thuat_vien: "Lưu Quang Hữu",
+            loai_yeu_cau: "BAO_HANH",
+            ma_kh: "KH00021",
+            ten_kh: "Bùi Thị Liễu",
+            so_dien_thoai: "0977888999",
+            dia_chi: "Thanh Giang",
+            ma_hang: "IP1164W",
+            ten_thiet_bi: "iPhone 11 64GB Trắng",
+            imei: "359871234567890",
+            mat_khau_may: "112233",
+            phu_kien: "Máy trần",
+            tinh_trang_loi: "Vệ sinh chân sạc và kiểm tra loa trong",
+            ghi_chu: "Bảo hành miễn phí khách mua máy",
+            trang_thai: "HoanThanh",
+            danh_sach_dich_vu: [],
+            tong_tien_hang: 0,
+            giam_gia: 0,
+            khach_can_tra: 0,
+            khach_da_tra: 0,
+            con_can_tra: 0,
+            lich_su_thanh_toan: [],
+            ma_hoa_don_lien_ket: null
+          },
+          {
+            ma_yeu_cau: "YCSC002203",
+            ngay_tiep_nhan: "2026-10-29T08:13:00",
+            ngay_cap_nhat: "2026-10-29T09:30:00",
+            ngay_hen_tra: "2026-10-29T11:00:00",
+            ngay_hoan_thanh: "2026-10-29T09:30:00",
+            chi_nhanh: "Thanh Giang",
+            noi_tiep_nhan: "Tại cửa hàng",
+            bang_gia: "Bảng giá chung",
+            nguoi_nhan: "Lưu Quang Hữu",
+            ky_thuat_vien: "Lưu Quang Hữu",
+            loai_yeu_cau: "SUA_CHUA",
+            ma_kh: "KH00020",
+            ten_kh: "Nguyễn Văn Thảo",
+            so_dien_thoai: "0912345678",
+            dia_chi: "Thanh Giang",
+            ma_hang: "IP12PIN",
+            ten_thiet_bi: "iPhone 12 128GB Xanh",
+            imei: "354455667788990",
+            mat_khau_may: "1234",
+            phu_kien: "Ốp lưng",
+            tinh_trang_loi: "Thay pin dung lượng cao deji",
+            ghi_chu: "",
+            trang_thai: "HoanThanh",
+            danh_sach_dich_vu: [
+              {
+                ma_hang: "PIN_IP12_DEJI",
+                ten_hang: "Pin iPhone 12 Deji",
+                dvt: "Cái",
+                so_luong: 1,
+                don_gia: 200000,
+                thanh_tien: 200000,
+                bao_hanh: "12 tháng",
+                loai: "LINH_KIEN",
+                ghi_chu: "Bảo hành 12 tháng"
+              }
+            ],
+            tong_tien_hang: 200000,
+            giam_gia: 0,
+            khach_can_tra: 200000,
+            khach_da_tra: 200000,
+            con_can_tra: 0,
+            lich_su_thanh_toan: [
+              {
+                ma_phieu: "PT261029001",
+                ngay_tt: "2026-10-29T09:30:00",
+                so_tien: 200000,
+                phuong_thuc: "TIEN_MAT",
+                tai_khoan_nhan: "",
+                nguoi_thu: "Lưu Quang Hữu",
+                loai: "THANH_TOAN",
+                ghi_chu: "Thanh toán thay pin"
+              }
+            ],
+            ma_hoa_don_lien_ket: "HD261029001"
+          }
+        ];
+        window.rawYeuCauSuaChuaList = sample;
+        try {
+          localStorage.setItem(STORAGE_KEY_SUACHUA, JSON.stringify(sample));
+        } catch(e) {}
+      }
+    }
+
+    khoiTaoDuLieuMauNeuRong();
+  })();
   </script>
 
 </body>
