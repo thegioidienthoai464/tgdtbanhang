@@ -24437,160 +24437,528 @@ function formatVND(amount) {
       }
     });
 
-let danhSachTamXuatExcel = [];
 
-    function moModalChonXuatExcelHang() {
-      // 1. Đổ danh sách nhóm hàng (Bao gồm cả Nhóm Cha và các Nhóm Con thuộc nhóm cha đó)
-      const sel = document.getElementById('excel-chon-nhom');
-      if (sel) {
-        let html = '<option value="ALL">📁 Tất cả nhóm hàng (Toàn bộ)</option>';
-        if (typeof rawNhomHang !== 'undefined' && rawNhomHang.length) {
-          const nhomCha = rawNhomHang.filter(n => !n.MaNhomCha);
-          nhomCha.forEach(cha => {
-            html += `<option value="CHA_${cha.MaNhom}">📁 [Nhóm Cha] ${cha.TenNhom}</option>`;
-            const con = rawNhomHang.filter(n => n.MaNhomCha === cha.MaNhom);
-            con.forEach(c => {
-              html += `<option value="${c.MaNhom}">&nbsp;&nbsp;└── ${c.TenNhom}</option>`;
+    // ====================================================================
+    // NÂNG CẤP XUẤT EXCEL DANH MỤC HÀNG HÓA: QUẢN LÝ NHÓM CHA / CON LINH HOẠT
+    // ====================================================================
+    let danhSachTamXuatExcel = []; // Danh sách maHang được tích chọn xuất
+    window.danhSachNhomExcelDuocChon = new Set(); // Danh sách mã nhóm được tích chọn
+    window.isCayNhomExcelExpanded = true; // Trạng thái mở rộng cây nhóm
+
+    // 1. Chuẩn hóa và tự động phục hồi danh sách nhóm hàng cha/con
+    function layDanhSachNhomHangChuan() {
+      let list = [];
+      if (typeof rawNhomHang !== 'undefined' && Array.isArray(rawNhomHang) && rawNhomHang.length > 0) {
+        list = [...rawNhomHang];
+      } else {
+        // Thử lấy từ cache localStorage
+        try {
+          const cached = localStorage.getItem('TGDT_RAW_NHOM_HANG_CACHE');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) list = parsed;
+          }
+        } catch(e) {}
+      }
+
+      // Chuẩn hóa tên trường
+      let normalized = list.map(n => ({
+        MaNhom: String(n.MaNhom || n.ma_nhom || n.maNhom || '').trim(),
+        TenNhom: String(n.TenNhom || n.ten_nhom || n.tenNhom || n.MaNhom || '').trim(),
+        MaNhomCha: String(n.MaNhomCha || n.ma_nhom_cha || n.maNhomCha || '').trim(),
+        GhiChu: n.GhiChu || n.ghi_chu || ''
+      })).filter(n => n.MaNhom);
+
+      // TỰ ĐỘNG BẢO HIỂM: Quét toàn bộ rawHangHoa để phát hiện các mã nhóm thực tế chưa có trong danh mục
+      const existingMaSet = new Set(normalized.map(n => n.MaNhom.toUpperCase()));
+      const spGroupMap = {};
+      (rawHangHoa || []).forEach(h => {
+        const m = String(h.maNhom || '').trim();
+        if (m) {
+          spGroupMap[m] = (spGroupMap[m] || 0) + 1;
+          if (!existingMaSet.has(m.toUpperCase())) {
+            existingMaSet.add(m.toUpperCase());
+            normalized.push({
+              MaNhom: m,
+              TenNhom: `Nhóm ${m}`,
+              MaNhomCha: '',
+              GhiChu: 'Tự động trích xuất từ dữ liệu hàng hóa'
             });
-          });
+          }
         }
-        sel.innerHTML = html;
+      });
+
+      // Lưu lại cache để lần sau mở modal tức thì
+      try {
+        if (normalized.length > 0) {
+          localStorage.setItem('TGDT_RAW_NHOM_HANG_CACHE', JSON.stringify(normalized));
+        }
+      } catch(e) {}
+
+      // Nếu rawNhomHang toàn cục đang rỗng, cập nhật luôn
+      if (typeof rawNhomHang !== 'undefined' && (!rawNhomHang || !rawNhomHang.length)) {
+        rawNhomHang = normalized;
       }
 
-      // Khởi tạo mặc định chọn toàn bộ sản phẩm
-      danhSachTamXuatExcel = rawHangHoa.map(h => h.maHang);
-      document.getElementById('excel-search-item').value = "";
+      return normalized;
+    }
+
+    // 2. Mở modal xuất Excel hàng hóa
+    window.moModalChonXuatExcelHang = function() {
+      const modal = document.getElementById('modal-xuat-excel-hang');
+      if (!modal) return;
+
+      const nhomList = layDanhSachNhomHangChuan();
+
+      // Mặc định chọn tất cả các nhóm hàng và tất cả sản phẩm
+      window.danhSachNhomExcelDuocChon = new Set(nhomList.map(n => n.MaNhom));
+      danhSachTamXuatExcel = (rawHangHoa || []).map(h => h.maHang);
+
+      // Reset các ô lọc
+      if (document.getElementById('excel-search-nhom')) document.getElementById('excel-search-nhom').value = '';
+      if (document.getElementById('excel-search-item')) document.getElementById('excel-search-item').value = '';
+      if (document.getElementById('excel-filter-view-mode')) document.getElementById('excel-filter-view-mode').value = 'ALL';
+
+      // Render Cây nhóm hàng & Bảng sản phẩm
+      renderCayNhomHangExcel('');
       renderModalBangXuatExcel();
+
+      // Mở modal
       moModal('modal-xuat-excel-hang');
-    }
+    };
 
-    function locDanhSachChonXuatExcel() {
-      renderModalBangXuatExcel();
-    }
+    // 3. Render cây danh mục nhóm hàng Cha - Con chuyên nghiệp
+    window.renderCayNhomHangExcel = function(tuKhoa) {
+      const container = document.getElementById('excel-tree-nhom-container');
+      if (!container) return;
 
-    function renderModalBangXuatExcel() {
-      const nhomVal = document.getElementById('excel-chon-nhom').value;
-      const kw = (document.getElementById('excel-search-item')?.value || '').toLowerCase().trim();
-
-      // Xử lý lọc theo nhóm (nếu chọn Nhóm Cha thì lấy cả sản phẩm của nhóm cha đó và các nhóm con trực thuộc)
-      let matchedNhom = rawHangHoa;
-      if (nhomVal !== 'ALL') {
-        if (nhomVal.startsWith('CHA_')) {
-          const maCha = nhomVal.replace('CHA_', '');
-          const listConMa = rawNhomHang.filter(n => n.MaNhomCha === maCha).map(n => n.MaNhom);
-          listConMa.push(maCha);
-          matchedNhom = rawHangHoa.filter(h => listConMa.includes(h.maNhom));
-        } else {
-          matchedNhom = rawHangHoa.filter(h => h.maNhom === nhomVal);
-        }
+      const nhomList = layDanhSachNhomHangChuan();
+      if (!nhomList.length) {
+        container.innerHTML = '<div class="p-6 text-center text-slate-400">Không tìm thấy nhóm hàng nào trong hệ thống.</div>';
+        return;
       }
 
-      // Lọc tiếp theo từ khóa tìm kiếm
-      const filtered = matchedNhom.filter(h => 
-        String(h.maHang).toLowerCase().includes(kw) || String(h.tenHang).toLowerCase().includes(kw)
-      );
+      // Đếm số sản phẩm trực tiếp thuộc từng nhóm
+      const spCountMap = {};
+      (rawHangHoa || []).forEach(h => {
+        const m = String(h.maNhom || '').trim();
+        if (m) spCountMap[m] = (spCountMap[m] || 0) + 1;
+      });
 
+      // Tạo map tra cứu
+      const nhomMap = {};
+      nhomList.forEach(n => { nhomMap[n.MaNhom] = n; });
+
+      // Phân tách Nhóm Cha và Nhóm Con
+      const nhomCha = nhomList.filter(n => {
+        const p = n.MaNhomCha;
+        return !p || p === '' || p === 'null' || p === 'NONE' || p === '0' || p === n.MaNhom || !nhomMap[p];
+      });
+
+      const kw = (tuKhoa || '').toLowerCase().trim();
+      let html = '';
+      let tongNhomHienThi = 0;
+
+      nhomCha.forEach((cha, chaIdx) => {
+        // Tìm các nhóm con của nhóm cha này
+        const nhomCon = nhomList.filter(n => n.MaNhomCha === cha.MaNhom && n.MaNhom !== cha.MaNhom);
+
+        // Tính tổng sản phẩm nhóm cha = sp của cha + sp của các con
+        let tongSpCha = spCountMap[cha.MaNhom] || 0;
+        nhomCon.forEach(c => {
+          tongSpCha += (spCountMap[c.MaNhom] || 0);
+        });
+
+        // Kiểm tra lọc theo từ khóa
+        const khopCha = !kw || cha.TenNhom.toLowerCase().includes(kw) || cha.MaNhom.toLowerCase().includes(kw);
+        const conFiltered = nhomCon.filter(c => !kw || c.TenNhom.toLowerCase().includes(kw) || c.MaNhom.toLowerCase().includes(kw));
+
+        if (!khopCha && !conFiltered.length) return;
+
+        tongNhomHienThi += 1 + conFiltered.length;
+
+        // Trạng thái checkbox nhóm cha
+        const isChaChecked = window.danhSachNhomExcelDuocChon.has(cha.MaNhom);
+        const allConChecked = nhomCon.length > 0 && nhomCon.every(c => window.danhSachNhomExcelDuocChon.has(c.MaNhom));
+        const someConChecked = nhomCon.some(c => window.danhSachNhomExcelDuocChon.has(c.MaNhom));
+        const isIndeterminate = !allConChecked && (someConChecked || (isChaChecked && nhomCon.length > 0));
+
+        const collapseId = `nhom-con-box-${chaIdx}`;
+
+        html += `
+          <div class="py-1.5 space-y-1">
+            <!-- Node Nhóm Cha -->
+            <div class="flex items-center justify-between p-1.5 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-200">
+              <div class="flex items-center space-x-2 min-w-0 flex-1">
+                ${nhomCon.length > 0 ? `
+                  <button type="button" onclick="toggleNhanhConCayExcel('${collapseId}', this)" class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-700 transition shrink-0" title="Thu gọn / Mở rộng nhóm con">
+                    <i class="fa-solid ${window.isCayNhomExcelExpanded ? 'fa-chevron-down' : 'fa-chevron-right'} text-[10px]"></i>
+                  </button>
+                ` : `<span class="w-5 shrink-0"></span>`}
+
+                <input type="checkbox" id="chk-nhom-cha-${cha.MaNhom}" ${isChaChecked || allConChecked ? 'checked' : ''} onchange="toggleNhomChaExcel('${cha.MaNhom}', this.checked)" class="rounded text-indigo-600 w-4 h-4 shrink-0 cursor-pointer">
+
+                <label for="chk-nhom-cha-${cha.MaNhom}" class="font-bold text-slate-800 hover:text-indigo-600 cursor-pointer flex items-center space-x-1.5 min-w-0 truncate text-xs">
+                  <i class="fa-solid fa-folder text-amber-500 text-xs shrink-0"></i>
+                  <span class="truncate">${cha.TenNhom}</span>
+                  <span class="text-[10px] font-mono text-slate-400 font-normal">(${cha.MaNhom})</span>
+                </label>
+              </div>
+
+              <div class="flex items-center space-x-1.5 shrink-0 pl-1">
+                ${nhomCon.length > 0 ? `<span class="text-[9.5px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">${nhomCon.length} con</span>` : ''}
+                <span class="text-[10.5px] font-mono font-bold ${tongSpCha > 0 ? 'text-blue-700 bg-blue-50' : 'text-slate-400 bg-slate-50'} px-2 py-0.5 rounded-full border border-slate-100">${tongSpCha} SP</span>
+              </div>
+            </div>
+
+            <!-- Danh sách Nhóm Con thuộc Nhóm Cha này -->
+            ${nhomCon.length > 0 ? `
+              <div id="${collapseId}" class="${window.isCayNhomExcelExpanded ? '' : 'hidden'} pl-6 space-y-1 border-l-2 border-indigo-100 ml-4 py-0.5">
+                ${nhomCon.map(con => {
+                  if (kw && !khopCha && !con.TenNhom.toLowerCase().includes(kw) && !con.MaNhom.toLowerCase().includes(kw)) return '';
+                  const isConChecked = window.danhSachNhomExcelDuocChon.has(con.MaNhom);
+                  const countCon = spCountMap[con.MaNhom] || 0;
+                  return `
+                    <div class="flex items-center justify-between p-1 rounded-lg hover:bg-indigo-50/50 transition">
+                      <div class="flex items-center space-x-2 min-w-0 flex-1">
+                        <span class="text-slate-300 text-[11px] select-none font-mono">└──</span>
+                        <input type="checkbox" id="chk-nhom-con-${con.MaNhom}" ${isConChecked ? 'checked' : ''} onchange="toggleNhomConExcel('${con.MaNhom}', '${cha.MaNhom}', this.checked)" class="rounded text-indigo-600 w-3.5 h-3.5 shrink-0 cursor-pointer">
+                        <label for="chk-nhom-con-${con.MaNhom}" class="font-medium text-slate-700 hover:text-indigo-600 cursor-pointer flex items-center space-x-1 min-w-0 truncate text-[11.5px]">
+                          <i class="fa-regular fa-folder text-amber-500 text-[11px] shrink-0"></i>
+                          <span class="truncate">${con.TenNhom}</span>
+                          <span class="text-[9.5px] font-mono text-slate-400">(${con.MaNhom})</span>
+                        </label>
+                      </div>
+                      <span class="text-[10px] font-mono font-semibold ${countCon > 0 ? 'text-slate-600' : 'text-slate-300'} px-1.5 py-0.2 rounded shrink-0">${countCon} SP</span>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+
+      if (!html) {
+        html = `<div class="p-4 text-center text-slate-400 italic">Không có nhóm hàng nào khớp với từ khóa "${tuKhoa}".</div>`;
+      }
+
+      container.innerHTML = html;
+      capNhatBadgeSoNhomChon();
+    };
+
+    // 4. Toggle nhóm cha: Chọn/Bỏ chọn tất cả nhóm con & sản phẩm thuộc nhóm
+    window.toggleNhomChaExcel = function(maCha, isChecked) {
+      const nhomList = layDanhSachNhomHangChuan();
+      const nhomCon = nhomList.filter(n => n.MaNhomCha === maCha && n.MaNhom !== maCha);
+      const allRelatedGroups = [maCha, ...nhomCon.map(c => c.MaNhom)];
+
+      allRelatedGroups.forEach(m => {
+        if (isChecked) window.danhSachNhomExcelDuocChon.add(m);
+        else window.danhSachNhomExcelDuocChon.delete(m);
+      });
+
+      // Cập nhật sản phẩm thuộc các nhóm này vào danhSachTamXuatExcel
+      (rawHangHoa || []).forEach(h => {
+        if (allRelatedGroups.includes(h.maNhom)) {
+          const idx = danhSachTamXuatExcel.indexOf(h.maHang);
+          if (isChecked && idx === -1) danhSachTamXuatExcel.push(h.maHang);
+          else if (!isChecked && idx !== -1) danhSachTamXuatExcel.splice(idx, 1);
+        }
+      });
+
+      // Cập nhật lại giao diện cây nhóm & bảng sản phẩm
+      renderCayNhomHangExcel(document.getElementById('excel-search-nhom')?.value || '');
+      renderModalBangXuatExcel();
+    };
+
+    // 5. Toggle nhóm con riêng lẻ
+    window.toggleNhomConExcel = function(maCon, maCha, isChecked) {
+      if (isChecked) window.danhSachNhomExcelDuocChon.add(maCon);
+      else window.danhSachNhomExcelDuocChon.delete(maCon);
+
+      // Cập nhật sản phẩm của nhóm con này
+      (rawHangHoa || []).forEach(h => {
+        if (h.maNhom === maCon) {
+          const idx = danhSachTamXuatExcel.indexOf(h.maHang);
+          if (isChecked && idx === -1) danhSachTamXuatExcel.push(h.maHang);
+          else if (!isChecked && idx !== -1) danhSachTamXuatExcel.splice(idx, 1);
+        }
+      });
+
+      // Kiểm tra xem nhóm cha có nên được chọn hay không
+      const nhomList = layDanhSachNhomHangChuan();
+      const tatCaCon = nhomList.filter(n => n.MaNhomCha === maCha && n.MaNhom !== maCha);
+      const allConChecked = tatCaCon.every(c => window.danhSachNhomExcelDuocChon.has(c.MaNhom));
+      if (allConChecked) window.danhSachNhomExcelDuocChon.add(maCha);
+      else if (!isChecked) window.danhSachNhomExcelDuocChon.delete(maCha);
+
+      renderCayNhomHangExcel(document.getElementById('excel-search-nhom')?.value || '');
+      renderModalBangXuatExcel();
+    };
+
+    // 6. Chọn / Bỏ chọn tất cả nhóm hàng
+    window.chonTatCaNhomExcel = function(status) {
+      const nhomList = layDanhSachNhomHangChuan();
+      if (status) {
+        window.danhSachNhomExcelDuocChon = new Set(nhomList.map(n => n.MaNhom));
+        danhSachTamXuatExcel = (rawHangHoa || []).map(h => h.maHang);
+      } else {
+        window.danhSachNhomExcelDuocChon.clear();
+        danhSachTamXuatExcel = [];
+      }
+      renderCayNhomHangExcel(document.getElementById('excel-search-nhom')?.value || '');
+      renderModalBangXuatExcel();
+    };
+
+    // 7. Thu gọn / Mở rộng cây nhóm hàng
+    window.toggleThuGonCayNhomExcel = function() {
+      window.isCayNhomExcelExpanded = !window.isCayNhomExcelExpanded;
+      const nhomList = layDanhSachNhomHangChuan();
+      nhomList.forEach((_, idx) => {
+        const el = document.getElementById(`nhom-con-box-${idx}`);
+        if (el) {
+          if (window.isCayNhomExcelExpanded) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        }
+      });
+      const btn = document.getElementById('btn-toggle-expand-nhom');
+      if (btn) {
+        btn.innerHTML = window.isCayNhomExcelExpanded 
+          ? '<i class="fa-solid fa-chevron-up mr-0.5"></i>Thu gọn cây' 
+          : '<i class="fa-solid fa-chevron-down mr-0.5"></i>Mở rộng cây';
+      }
+    };
+
+    window.toggleNhanhConCayExcel = function(boxId, btn) {
+      const box = document.getElementById(boxId);
+      if (!box) return;
+      box.classList.toggle('hidden');
+      const icon = btn.querySelector('i');
+      if (icon) {
+        if (box.classList.contains('hidden')) {
+          icon.className = 'fa-solid fa-chevron-right text-[10px]';
+        } else {
+          icon.className = 'fa-solid fa-chevron-down text-[10px]';
+        }
+      }
+    };
+
+    window.locCayNhomHangExcel = function(kw) {
+      renderCayNhomHangExcel(kw);
+    };
+
+    function capNhatBadgeSoNhomChon() {
+      const b = document.getElementById('excel-nhom-selected-badge');
+      if (b) {
+        const selCount = window.danhSachNhomExcelDuocChon.size;
+        b.innerText = `${selCount} nhóm chọn`;
+      }
+    }
+
+    // 8. Render Bảng sản phẩm bên phải
+    window.renderModalBangXuatExcel = function() {
       const tbody = document.getElementById('excel-modal-tbody');
       if (!tbody) return;
 
-      if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400">Không tìm thấy sản phẩm phù hợp</td></tr>';
+      const kw = (document.getElementById('excel-search-item')?.value || '').toLowerCase().trim();
+      const viewMode = document.getElementById('excel-filter-view-mode')?.value || 'ALL';
+
+      // Lọc sản phẩm theo các nhóm hàng đã được chọn trên Cây Nhóm
+      let list = (rawHangHoa || []).filter(h => {
+        // Nếu không có nhóm nào được chọn thì không hiển thị
+        if (window.danhSachNhomExcelDuocChon.size === 0) return false;
+        // Kiểm tra xem sản phẩm có thuộc nhóm được chọn không
+        return window.danhSachNhomExcelDuocChon.has(h.maNhom);
+      });
+
+      // Lọc theo chế độ xem (Đã chọn / Chưa chọn)
+      if (viewMode === 'SELECTED_ONLY') {
+        list = list.filter(h => danhSachTamXuatExcel.includes(h.maHang));
+      } else if (viewMode === 'UNSELECTED_ONLY') {
+        list = list.filter(h => !danhSachTamXuatExcel.includes(h.maHang));
+      }
+
+      // Lọc tiếp theo từ khóa tìm kiếm
+      if (kw) {
+        list = list.filter(h => {
+          const m1 = String(h.maHang || '').toLowerCase();
+          const m2 = String(h.tenHang || '').toLowerCase();
+          const m3 = String(h.maNhom || '').toLowerCase();
+          const tenNhom = layTenDayDuNhomHang(h.maNhom).toLowerCase();
+          return m1.includes(kw) || m2.includes(kw) || m3.includes(kw) || tenNhom.includes(kw);
+        });
+      }
+
+      // Cập nhật tổng số sản phẩm trong bộ lọc
+      const elTotal = document.getElementById('excel-count-total');
+      if (elTotal) elTotal.innerText = (rawHangHoa || []).length.toLocaleString();
+
+      if (!list.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="p-8 text-center text-slate-400">
+              <i class="fa-solid fa-box-open text-2xl mb-1.5 block opacity-40"></i>
+              ${window.danhSachNhomExcelDuocChon.size === 0 
+                ? 'Chưa tích chọn nhóm hàng nào bên trái. Hãy tích chọn nhóm hàng để xem sản phẩm!' 
+                : 'Không tìm thấy sản phẩm phù hợp với bộ lọc.'}
+            </td>
+          </tr>
+        `;
         capNhatDemSoLuongChon();
         return;
       }
 
-      tbody.innerHTML = filtered.map(h => {
+      tbody.innerHTML = list.map(h => {
         const isChecked = danhSachTamXuatExcel.includes(h.maHang);
+        const tenNhomDayDu = layTenDayDuNhomHang(h.maNhom);
+        const tonKhoNum = Number(h.tonKho) || 0;
+        const giaBanNum = Number(h.giaBan) || 0;
+
         return `
-          <tr class="hover:bg-slate-50 border-b cursor-pointer" onclick="toggleCheckRowExcel('${h.maHang}')">
-            <td class="p-2.5 text-center" onclick="event.stopPropagation()">
-              <input type="checkbox" value="${h.maHang}" ${isChecked ? 'checked' : ''} onchange="toggleCheckRowExcel('${h.maHang}')" class="rounded text-blue-600 w-3.5 h-3.5 row-excel-chk">
+          <tr class="hover:bg-blue-50/40 border-b cursor-pointer transition ${isChecked ? 'bg-blue-50/20' : ''}" onclick="toggleCheckRowExcel('${h.maHang}')">
+            <td class="p-2 text-center" onclick="event.stopPropagation()">
+              <input type="checkbox" value="${h.maHang}" ${isChecked ? 'checked' : ''} onchange="toggleCheckRowExcel('${h.maHang}')" class="rounded text-blue-600 w-3.5 h-3.5 cursor-pointer">
             </td>
-            <td class="p-2.5 font-semibold text-blue-600 font-mono">${h.maHang}</td>
-            <td class="p-2.5 font-medium text-slate-800">${h.tenHang}</td>
-            <td class="p-2.5 text-slate-500">${h.maNhom || '-'}</td>
-            <td class="p-2.5 text-right font-mono font-bold ${h.tonKho > 0 ? 'text-emerald-600' : 'text-rose-500'}">${h.tonKho.toLocaleString()}</td>
+            <td class="p-2 font-mono font-bold text-blue-600">${h.maHang}</td>
+            <td class="p-2 font-medium text-slate-800">${h.tenHang}</td>
+            <td class="p-2">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 text-[10.5px] font-semibold border border-indigo-100 max-w-full truncate" title="${tenNhomDayDu}">
+                ${tenNhomDayDu}
+              </span>
+              <span class="text-[9.5px] font-mono text-slate-400 block">${h.maNhom || ''}</span>
+            </td>
+            <td class="p-2 text-right font-mono font-bold ${tonKhoNum > 0 ? 'text-emerald-700' : 'text-rose-500'}">
+              ${tonKhoNum.toLocaleString()}
+            </td>
+            <td class="p-2 text-right font-mono font-bold text-slate-900">
+              ${giaBanNum.toLocaleString()} đ
+            </td>
           </tr>
         `;
       }).join('');
 
       capNhatDemSoLuongChon();
-    }
+    };
 
-    function toggleCheckRowExcel(maHang) {
+    window.locBangSanPhamXuatExcel = function() {
+      renderModalBangXuatExcel();
+    };
+
+    window.toggleCheckRowExcel = function(maHang) {
       const idx = danhSachTamXuatExcel.indexOf(maHang);
-      if (idx > -1) {
-        danhSachTamXuatExcel.splice(idx, 1);
-      } else {
-        danhSachTamXuatExcel.push(maHang);
-      }
+      if (idx > -1) danhSachTamXuatExcel.splice(idx, 1);
+      else danhSachTamXuatExcel.push(maHang);
+
       capNhatDemSoLuongChon();
-    }
+    };
 
-    function chonTatCaXuatExcel(status) {
-      const nhomVal = document.getElementById('excel-chon-nhom').value;
+    window.chonTatCaSanPhamHienThi = function(status) {
       const kw = (document.getElementById('excel-search-item')?.value || '').toLowerCase().trim();
+      const viewMode = document.getElementById('excel-filter-view-mode')?.value || 'ALL';
 
-      let matchedNhom = rawHangHoa;
-      if (nhomVal !== 'ALL') {
-        if (nhomVal.startsWith('CHA_')) {
-          const maCha = nhomVal.replace('CHA_', '');
-          const listConMa = rawNhomHang.filter(n => n.MaNhomCha === maCha).map(n => n.MaNhom);
-          listConMa.push(maCha);
-          matchedNhom = rawHangHoa.filter(h => listConMa.includes(h.maNhom));
-        } else {
-          matchedNhom = rawHangHoa.filter(h => h.maNhom === nhomVal);
-        }
+      let list = (rawHangHoa || []).filter(h => window.danhSachNhomExcelDuocChon.has(h.maNhom));
+      if (viewMode === 'SELECTED_ONLY') list = list.filter(h => danhSachTamXuatExcel.includes(h.maHang));
+      else if (viewMode === 'UNSELECTED_ONLY') list = list.filter(h => !danhSachTamXuatExcel.includes(h.maHang));
+
+      if (kw) {
+        list = list.filter(h => {
+          const m1 = String(h.maHang || '').toLowerCase();
+          const m2 = String(h.tenHang || '').toLowerCase();
+          const m3 = String(h.maNhom || '').toLowerCase();
+          const tenNhom = layTenDayDuNhomHang(h.maNhom).toLowerCase();
+          return m1.includes(kw) || m2.includes(kw) || m3.includes(kw) || tenNhom.includes(kw);
+        });
       }
 
-      const filtered = matchedNhom.filter(h => 
-        String(h.maHang).toLowerCase().includes(kw) || String(h.tenHang).toLowerCase().includes(kw)
-      );
-
-      filtered.forEach(h => {
-        const exists = danhSachTamXuatExcel.includes(h.maHang);
-        if (status && !exists) danhSachTamXuatExcel.push(h.maHang);
-        if (!status && exists) {
-          danhSachTamXuatExcel = danhSachTamXuatExcel.filter(m => m !== h.maHang);
-        }
+      list.forEach(h => {
+        const idx = danhSachTamXuatExcel.indexOf(h.maHang);
+        if (status && idx === -1) danhSachTamXuatExcel.push(h.maHang);
+        else if (!status && idx !== -1) danhSachTamXuatExcel.splice(idx, 1);
       });
 
       renderModalBangXuatExcel();
-    }
+    };
 
     function capNhatDemSoLuongChon() {
       const countEl = document.getElementById('excel-count-selected');
-      if (countEl) countEl.innerText = danhSachTamXuatExcel.length;
+      if (countEl) countEl.innerText = danhSachTamXuatExcel.length.toLocaleString();
+
+      const footerSp = document.getElementById('excel-footer-count-sp');
+      if (footerSp) footerSp.innerText = danhSachTamXuatExcel.length.toLocaleString();
+
+      const footerNhom = document.getElementById('excel-footer-count-nhom');
+      if (footerNhom) footerNhom.innerText = window.danhSachNhomExcelDuocChon.size.toLocaleString();
+
+      const chkAll = document.getElementById('excel-chk-all');
+      if (chkAll) {
+        chkAll.checked = danhSachTamXuatExcel.length > 0;
+      }
     }
 
-    function thucHienXuatExcelHangTuyChon() {
+    // 9. THỰC HIỆN XUẤT FILE EXCEL ĐẦY ĐỦ CÁC CỘT CHUẨN
+    window.thucHienXuatExcelHangTuyChon = function() {
       if (!danhSachTamXuatExcel.length) {
-        showNotification("Vui lòng tích chọn ít nhất một sản phẩm để xuất Excel!", true);
+        showNotification("Vui lòng tích chọn ít nhất một sản phẩm hoặc nhóm hàng để xuất Excel!", true);
         return;
       }
 
-      // Lấy danh sách sản phẩm tương ứng với các mã đã được tích chọn
-      const list = rawHangHoa.filter(h => danhSachTamXuatExcel.includes(h.maHang));
+      if (typeof XLSX === 'undefined') {
+        showNotification("Thư viện SheetJS chưa được tải. Vui lòng thử lại sau giây lát!", true);
+        return;
+      }
 
-      const rows = list.map(h => ({
-        "Mã hàng": h.maHang,
-        "Tên sản phẩm": h.tenHang,
-        "Mã nhóm": h.maNhom || "",
-        "Đơn vị tính": h.donViTinh || "Cái",
-        "Giá vốn": h.giaVon,
-        "Giá bán": h.giaBan,
-        "Tồn kho": h.tonKho,
-        "Trạng thái": h.trangThai
-      }));
+      const nhomList = layDanhSachNhomHangChuan();
+      const nhomMap = {};
+      nhomList.forEach(n => { nhomMap[n.MaNhom] = n; });
+
+      // Lấy danh sách sản phẩm tương ứng với các mã đã được tích chọn
+      const list = (rawHangHoa || []).filter(h => danhSachTamXuatExcel.includes(h.maHang));
+
+      const rows = list.map((h, idx) => {
+        const nhom = nhomMap[h.maNhom];
+        let tenCha = '';
+        let tenCon = '';
+        let tenDayDu = layTenDayDuNhomHang(h.maNhom);
+
+        if (nhom) {
+          if (nhom.MaNhomCha && nhomMap[nhom.MaNhomCha]) {
+            tenCha = nhomMap[nhom.MaNhomCha].TenNhom;
+            tenCon = nhom.TenNhom;
+          } else {
+            tenCha = nhom.TenNhom;
+            tenCon = '';
+          }
+        }
+
+        return {
+          "STT": idx + 1,
+          "Mã Hàng": h.maHang,
+          "Tên Sản Phẩm": h.tenHang,
+          "Nhóm Hàng Cha": tenCha || h.maNhom || '',
+          "Nhóm Hàng Con": tenCon || '',
+          "Nhóm Hàng Đầy Đủ": tenDayDu,
+          "Mã Nhóm": h.maNhom || '',
+          "Đơn Vị Tính": h.donViTinh || "Cái",
+          "Giá Vốn": Number(h.giaVon) || 0,
+          "Giá Bán": Number(h.giaBan) || 0,
+          "Tồn Kho Tổng": Number(h.tonKho) || 0,
+          "Quản Lý IMEI": h.coQuanLyIMEI ? 'Có' : 'Không',
+          "Trạng Thái": h.trangThai || 'Kinh doanh'
+        };
+      });
 
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "DanhSachHangHoa");
-      XLSX.writeFile(wb, `Danh_Sach_Hang_Hoa_TuyChon_${Date.now().toString().slice(-4)}.xlsx`);
-      
+
+      const nowStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      XLSX.writeFile(wb, `Danh_Sach_Hang_Hoa_Xuat_Excel_${nowStr}_${Date.now().toString().slice(-4)}.xlsx`);
+
       dongModal('modal-xuat-excel-hang');
-      showNotification(`Đã xuất thành công ${list.length} sản phẩm đã chọn ra file Excel!`);
-    }
+      showNotification(`Đã xuất thành công ${list.length.toLocaleString()} sản phẩm ra file Excel!`);
+    };
+
 
     let currentHangHoaDangXem = null;
     let currentTheKhoList = [];
@@ -32038,65 +32406,152 @@ function loadSoQuy(filter) {
   </div>
 </div>
 
-  <!-- MODAL TÙY CHỌN XUẤT EXCEL HÀNG HÓA (NÂNG CẤP) -->
-<div id="modal-xuat-excel-hang" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 hidden">
-  <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 border border-slate-100 text-xs max-h-[90vh] flex flex-col">
+  <!-- MODAL TÙY CHỌN XUẤT EXCEL HÀNG HÓA (NÂNG CẤP CHUYÊN NGHIỆP: CHI TIẾT NHÓM HÀNG CHA - CON) -->
+<div id="modal-xuat-excel-hang" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 md:p-4 hidden overflow-y-auto">
+  <div class="bg-white rounded-3xl max-w-5xl w-full p-4 md:p-6 shadow-2xl space-y-4 border border-slate-100 text-xs my-auto max-h-[95vh] flex flex-col">
+    <!-- Header Modal -->
     <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
-      <h3 class="font-extrabold text-slate-800 text-sm flex items-center space-x-2">
-        <i class="fa-solid fa-file-excel text-emerald-600 text-base"></i>
-        <span>Tùy Chọn Xuất Excel Danh Mục Hàng Hóa</span>
-      </h3>
+      <div class="flex items-center space-x-2.5">
+        <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-file-excel"></i>
+        </div>
+        <div>
+          <h3 class="font-extrabold text-slate-800 text-sm md:text-base flex items-center space-x-2">
+            <span>Tùy Chọn Xuất Excel Danh Mục Hàng Hóa</span>
+            <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Lọc linh hoạt Cha / Con</span>
+          </h3>
+          <p class="text-slate-400 text-[11px]">Chọn chi tiết theo từng nhóm hàng cha, nhóm hàng con hoặc tìm kiếm sản phẩm cần xuất</p>
+        </div>
+      </div>
       <button type="button" onclick="dongModal('modal-xuat-excel-hang')" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition">
         <i class="fa-solid fa-xmark text-sm"></i>
       </button>
     </div>
 
-    <div class="space-y-3 flex-shrink-0">
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="font-semibold text-slate-700 block mb-1">Lọc theo nhóm hàng (Cha / Con):</label>
-          <select id="excel-chon-nhom" onchange="locDanhSachChonXuatExcel()" class="w-full border border-slate-300 rounded-xl p-2.5 bg-slate-50 font-medium"></select>
+    <!-- Bố cục 2 Cột: Bên trái Cây Nhóm Hàng Cha/Con, Bên phải Bảng Sản Phẩm -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 flex-1 min-h-0 overflow-hidden">
+      <!-- CỘT 1: CÂY DANH MỤC NHÓM HÀNG (CHA / CON) - Chiếm 5/12 cột -->
+      <div class="md:col-span-5 flex flex-col border border-slate-200 rounded-2xl bg-slate-50/60 p-3 space-y-2.5 overflow-hidden">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-slate-800 text-xs flex items-center space-x-1.5">
+            <i class="fa-solid fa-folder-tree text-indigo-600"></i>
+            <span>Cây Nhóm Hàng (Cha / Con)</span>
+          </span>
+          <span class="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100" id="excel-nhom-selected-badge">0 nhóm chọn</span>
         </div>
-        <div>
-          <label class="font-semibold text-slate-700 block mb-1">Thao tác nhanh:</label>
-          <div class="flex items-center space-x-2 pt-0.5">
-            <button type="button" onclick="chonTatCaXuatExcel(true)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition">Chọn tất cả</button>
-            <button type="button" onclick="chonTatCaXuatExcel(false)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition">Bỏ chọn tất cả</button>
+
+        <!-- Thao tác nhanh cho nhóm hàng -->
+        <div class="flex flex-wrap items-center justify-between gap-1.5 text-[11px]">
+          <div class="flex items-center space-x-1">
+            <button type="button" onclick="chonTatCaNhomExcel(true)" class="px-2.5 py-1 bg-white hover:bg-indigo-50 text-indigo-700 rounded-lg font-semibold border border-slate-200 transition">
+              <i class="fa-solid fa-check-double mr-1 text-[10px]"></i>Chọn tất cả
+            </button>
+            <button type="button" onclick="chonTatCaNhomExcel(false)" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 rounded-lg font-semibold border border-slate-200 transition">
+              Bỏ chọn tất cả
+            </button>
+          </div>
+          <button type="button" onclick="toggleThuGonCayNhomExcel()" id="btn-toggle-expand-nhom" class="text-slate-500 hover:text-slate-700 px-1 py-0.5 text-[10.5px]">
+            <i class="fa-solid fa-arrows-up-down mr-0.5"></i>Thu gọn / Mở rộng
+          </button>
+        </div>
+
+        <!-- Ô lọc nhanh tên nhóm hàng -->
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[11px]"></i>
+          <input type="text" id="excel-search-nhom" oninput="locCayNhomHangExcel(this.value)" placeholder="Lọc nhanh tên hoặc mã nhóm..." class="w-full pl-7 pr-7 py-1.5 border border-slate-200 rounded-xl bg-white text-xs text-slate-800 focus:outline-indigo-500">
+          <button type="button" onclick="document.getElementById('excel-search-nhom').value=''; locCayNhomHangExcel('');" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- Vùng cuộn cây nhóm hàng -->
+        <div id="excel-tree-nhom-container" class="flex-1 overflow-y-auto space-y-1 pr-1 max-h-[50vh] md:max-h-[54vh] scrollbar-thin divide-y divide-slate-100 bg-white rounded-xl p-2 border border-slate-200/80">
+          <div class="p-6 text-center text-slate-400">
+            <i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang tải cây nhóm hàng...
           </div>
         </div>
+
+        <!-- Ghi chú tiện ích -->
+        <div class="text-[10.5px] text-slate-500 italic flex items-center space-x-1">
+          <i class="fa-solid fa-circle-info text-blue-500 text-[10px]"></i>
+          <span>Tích nhóm cha sẽ tự động chọn toàn bộ các nhóm con trực thuộc.</span>
+        </div>
       </div>
-      <div class="flex items-center justify-between pt-1">
-        <span class="text-slate-500 font-medium">Danh sách sản phẩm (<b id="excel-count-selected" class="text-blue-600">0</b> được chọn):</span>
-        <input type="text" id="excel-search-item" oninput="locDanhSachChonXuatExcel()" placeholder="Tìm nhanh sản phẩm trong bảng..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs w-56 bg-slate-50">
+
+      <!-- CỘT 2: BẢNG SẢN PHẨM & TÙY CHỌN DỮ LIỆU - Chiếm 7/12 cột -->
+      <div class="md:col-span-7 flex flex-col border border-slate-200 rounded-2xl p-3 space-y-2.5 overflow-hidden">
+        <!-- Toolbar lọc & tìm kiếm sản phẩm -->
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-slate-800 text-xs flex items-center space-x-1">
+              <i class="fa-solid fa-boxes-stacked text-blue-600"></i>
+              <span>Danh sách sản phẩm</span>
+            </span>
+            <span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold font-mono text-[11px] border border-blue-100">
+              <span id="excel-count-selected">0</span> / <span id="excel-count-total">0</span> SP
+            </span>
+          </div>
+
+          <div class="flex items-center space-x-1 text-[11px]">
+            <button type="button" onclick="chonTatCaSanPhamHienThi(true)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition" title="Chọn tất cả sản phẩm đang hiển thị">Chọn tất cả SP</button>
+            <button type="button" onclick="chonTatCaSanPhamHienThi(false)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition" title="Bỏ chọn các sản phẩm đang hiển thị">Bỏ chọn SP</button>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="excel-search-item" oninput="locBangSanPhamXuatExcel()" placeholder="Tìm nhanh theo mã hàng, tên sản phẩm..." class="w-full pl-7 pr-7 py-1.5 border border-slate-300 rounded-xl text-xs bg-slate-50 focus:bg-white focus:outline-blue-500 font-medium">
+            <button type="button" onclick="document.getElementById('excel-search-item').value=''; locBangSanPhamXuatExcel();" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <!-- Dropdown lọc trạng thái chọn -->
+          <select id="excel-filter-view-mode" onchange="locBangSanPhamXuatExcel()" class="border border-slate-300 rounded-xl px-2 py-1.5 text-[11px] bg-slate-50 font-medium">
+            <option value="ALL">Xem tất cả</option>
+            <option value="SELECTED_ONLY">Chỉ xem SP đã chọn</option>
+            <option value="UNSELECTED_ONLY">Chỉ xem SP chưa chọn</option>
+          </select>
+        </div>
+
+        <!-- Bảng danh sách sản phẩm có checkbox từng hàng -->
+        <div class="flex-1 overflow-y-auto border border-slate-200 rounded-xl max-h-[46vh] md:max-h-[50vh] scrollbar-thin">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-100 uppercase sticky top-0 font-semibold border-b text-slate-600 z-10 text-[11px]">
+              <tr>
+                <th class="p-2 w-8 text-center">
+                  <input type="checkbox" id="excel-chk-all" onchange="chonTatCaSanPhamHienThi(this.checked)" class="rounded text-blue-600 w-3.5 h-3.5" title="Chọn / Bỏ chọn toàn bộ">
+                </th>
+                <th class="p-2 w-28">Mã Hàng</th>
+                <th class="p-2">Tên Sản Phẩm</th>
+                <th class="p-2 w-44">Nhóm Hàng (Cha > Con)</th>
+                <th class="p-2 w-20 text-right">Tồn Kho</th>
+                <th class="p-2 w-24 text-right">Giá Bán</th>
+              </tr>
+            </thead>
+            <tbody id="excel-modal-tbody" class="divide-y divide-slate-100 font-medium text-slate-800">
+              <!-- Render động -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- Bảng danh sách sản phẩm có checkbox từng hàng -->
-    <div class="flex-1 overflow-y-auto border border-slate-200 rounded-2xl max-h-64 scrollbar-thin">
-      <table class="w-full text-left text-xs">
-        <thead class="bg-slate-100 uppercase sticky top-0 font-semibold border-b text-slate-600">
-          <tr>
-            <th class="p-2.5 w-10 text-center"><input type="checkbox" id="excel-chk-all" onchange="chonTatCaXuatExcel(this.checked)" class="rounded text-blue-600 w-3.5 h-3.5"></th>
-            <th class="p-2.5">Mã Hàng</th>
-            <th class="p-2.5">Tên Sản Phẩm</th>
-            <th class="p-2.5">Nhóm Hàng</th>
-            <th class="p-2.5 text-right">Tồn Kho</th>
-          </tr>
-        </thead>
-        <tbody id="excel-modal-tbody" class="divide-y divide-slate-100 font-medium"></tbody>
-      </table>
-    </div>
+    <!-- Footer Modal -->
+    <div class="flex flex-wrap items-center justify-between pt-3 border-t border-slate-100 flex-shrink-0 gap-2">
+      <div class="text-[11.5px] text-slate-600 flex items-center space-x-1.5">
+        <i class="fa-solid fa-circle-check text-emerald-600"></i>
+        <span>Sẵn sàng xuất file cho <b id="excel-footer-count-sp" class="text-blue-700 font-mono text-sm">0</b> sản phẩm thuộc <b id="excel-footer-count-nhom" class="text-indigo-700 font-mono text-sm">0</b> nhóm hàng đã chọn.</span>
+      </div>
 
-    <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100 flex-shrink-0">
-      <button type="button" onclick="dongModal('modal-xuat-excel-hang')" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition">Hủy</button>
-      <button type="button" onclick="thucHienXuatExcelHangTuyChon()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md transition flex items-center space-x-1.5">
-        <i class="fa-solid fa-file-excel"></i><span>Tải file Excel các mục đã chọn</span>
-      </button>
+      <div class="flex items-center space-x-2">
+        <button type="button" onclick="dongModal('modal-xuat-excel-hang')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition">Hủy</button>
+        <button type="button" onclick="thucHienXuatExcelHangTuyChon()" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-extrabold shadow-md transition flex items-center space-x-2">
+          <i class="fa-solid fa-file-excel text-sm"></i>
+          <span>TẢI FILE EXCEL CÁC MỤC ĐÃ CHỌN</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ==================================================================== -->
+  <!-- ==================================================================== -->
 <!-- MODAL THÔNG BÁO YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI -->
 <!-- ==================================================================== -->
 <div id="modal-capnhat-hethong" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[9999999] flex items-center justify-center p-4 hidden">
