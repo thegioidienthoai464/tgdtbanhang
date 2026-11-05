@@ -657,7 +657,7 @@
               <option value="ALL">🌐 Tổng tồn toàn chuỗi</option>
             </select>
             <input type="text" id="filter-search-hang" oninput="locDanhSachHangHoa(true)" placeholder="Tìm mã, tên sản phẩm..." class="border border-slate-300 rounded-xl px-3 py-1 text-xs w-44 bg-slate-50">
-            <select id="filter-nhom-hang" onchange="locDanhSachHangHoa(true)" class="border border-slate-300 rounded-xl px-2 py-1 text-xs bg-slate-50"></select>
+            <select id="filter-nhom-hang" onchange="locDanhSachHangHoa(true)" class="border border-slate-300 rounded-xl px-2.5 py-1 text-xs bg-slate-50 font-medium min-w-[190px] focus:outline-blue-500 shadow-2xs" title="Chọn nhóm hàng cần hiển thị"><option value="">📁 Tất cả nhóm hàng</option></select>
             <select id="filter-ton-kho" onchange="locDanhSachHangHoa(true)" class="border border-slate-300 rounded-xl px-2 py-1 text-xs bg-slate-50">
               <option value="ALL">Tất cả tồn kho</option>
               <option value="CON_HANG">Còn tồn hàng</option>
@@ -4337,7 +4337,7 @@
         </div>
         <div>
           <label class="font-semibold text-slate-600">Nhóm hàng:</label>
-          <select id="form-nhomhang" class="w-full border rounded-xl p-2 bg-slate-50 mt-1"></select>
+          <select id="form-nhomhang" class="w-full border rounded-xl p-2 bg-slate-50 mt-1 font-semibold text-slate-800 focus:outline-blue-500"><option value="">(Chọn nhóm hàng)</option></select>
         </div>
         <div class="col-span-2">
           <label class="font-semibold text-slate-600">Tên hàng hóa (*):</label>
@@ -12053,6 +12053,7 @@ function formatVND(amount) {
           khoiTaoTonKhoDaChiNhanh();
           locDanhSachHangHoa(false);
           console.log(`⚡ Đã tải trước ${rawHangHoa.length} sản phẩm từ bộ nhớ máy!`);
+          hienThiSelectNhomHang();
         }
       } catch(e) {}
 
@@ -12200,37 +12201,205 @@ function formatVND(amount) {
     }
 
     // Lấy tên đầy đủ của nhóm hàng (gồm cả nhóm cha và nhóm con: "Điện thoại > iPhone")
+    // ====================================================================
+    // ĐỒNG BỘ VÀ HIỂN THỊ DROPDOWN NHÓM HÀNG ĐẦY ĐỦ (BỘ LỌC & MODAL SỬA/THÊM)
+    // ====================================================================
+    function layDanhSachNhomHangChuan() {
+      let list = [];
+      if (typeof rawNhomHang !== 'undefined' && Array.isArray(rawNhomHang) && rawNhomHang.length > 0) {
+        list = [...rawNhomHang];
+      } else {
+        try {
+          const cached = localStorage.getItem('TGDT_RAW_NHOM_HANG_CACHE');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) list = parsed;
+          }
+        } catch(e) {}
+      }
+
+      // Chuẩn hóa tên trường
+      let normalized = list.map(n => ({
+        MaNhom: String(n.MaNhom || n.ma_nhom || n.maNhom || '').trim(),
+        TenNhom: String(n.TenNhom || n.ten_nhom || n.tenNhom || n.MaNhom || '').trim(),
+        MaNhomCha: String(n.MaNhomCha || n.ma_nhom_cha || n.maNhomCha || '').trim(),
+        GhiChu: n.GhiChu || n.ghi_chu || ''
+      })).filter(n => n.MaNhom);
+
+      // Bảng map tên nhóm gợi ý thông minh từ dữ liệu thực tế
+      const mapTenNhomGoiY = {
+        'NH001': 'Đồng hồ (Citizen, Seiko)',
+        'NH002': 'Điện thoại (iPhone, Samsung)',
+        'NH003': 'Máy tính bảng / iPad',
+        'NH004': 'Laptop / Máy tính',
+        'NH009': 'Bao da / Ốp lưng',
+        'NH010': 'Cáp sạc & Củ sạc',
+        'NH011': 'Pin sạc dự phòng',
+        'NH012': 'Tai nghe Bluetooth / Dây',
+        'NH020': 'Dịch vụ sửa chữa',
+        'NH025': 'Linh kiện (Màn hình/Pin)'
+      };
+
+      // TỰ ĐỘNG BẢO HIỂM: Quét toàn bộ rawHangHoa để phát hiện các mã nhóm thực tế trong kho
+      const existingMaSet = new Set(normalized.map(n => n.MaNhom.toUpperCase()));
+      (rawHangHoa || []).forEach(h => {
+        const m = String(h.maNhom || '').trim();
+        if (m && !existingMaSet.has(m.toUpperCase())) {
+          existingMaSet.add(m.toUpperCase());
+          const tenGoiY = mapTenNhomGoiY[m] || `Nhóm ${m}`;
+          normalized.push({
+            MaNhom: m,
+            TenNhom: tenGoiY,
+            MaNhomCha: '',
+            GhiChu: 'Tự động trích xuất từ dữ liệu hàng hóa'
+          });
+        }
+      });
+
+      // Lưu lại cache để lần sau mở modal tức thì
+      try {
+        if (normalized.length > 0) {
+          localStorage.setItem('TGDT_RAW_NHOM_HANG_CACHE', JSON.stringify(normalized));
+        }
+      } catch(e) {}
+
+      if (typeof rawNhomHang !== 'undefined') {
+        rawNhomHang = normalized;
+      }
+
+      return normalized;
+    }
+
+    // Hiển thị tên đầy đủ của nhóm hàng (gồm cả nhóm cha và nhóm con: "Điện thoại > iPhone")
     function layTenDayDuNhomHang(maNhomHoacTen) {
       if (!maNhomHoacTen) return '-';
       const clean = String(maNhomHoacTen).trim();
       if (!clean) return '-';
 
-      const nhomList = (typeof rawNhomHang !== 'undefined' && Array.isArray(rawNhomHang)) ? rawNhomHang : [];
-      // 1. Tìm nhóm theo Mã hoặc Tên
+      const nhomList = layDanhSachNhomHangChuan();
       const n = nhomList.find(x => 
         String(x.MaNhom || '').toUpperCase() === clean.toUpperCase() ||
         String(x.TenNhom || '').toLowerCase() === clean.toLowerCase()
       );
 
       if (n) {
-        if (n.MaNhomCha) {
+        if (n.MaNhomCha && n.MaNhomCha !== n.MaNhom) {
           const cha = nhomList.find(x => String(x.MaNhom || '').toUpperCase() === String(n.MaNhomCha || '').toUpperCase());
           if (cha) {
             return `${cha.TenNhom} > ${n.TenNhom}`;
           }
         }
-        return n.TenNhom;
+        return `${n.TenNhom} (${n.MaNhom})`;
       }
 
-      // 2. Nếu chuỗi đã có ký tự phân cách >
-      if (clean.includes('>')) {
-        return clean;
+      if (clean.includes('>')) return clean;
+
+      // Map tên gợi ý nếu mã nhóm chưa có trong danh mục
+      const mapTenNhomGoiY = {
+        'NH001': 'Đồng hồ (Citizen, Seiko)',
+        'NH002': 'Điện thoại (iPhone, Samsung)',
+        'NH003': 'Máy tính bảng / iPad',
+        'NH004': 'Laptop / Máy tính',
+        'NH009': 'Bao da / Ốp lưng',
+        'NH010': 'Cáp sạc & Củ sạc',
+        'NH011': 'Pin sạc dự phòng',
+        'NH012': 'Tai nghe Bluetooth / Dây',
+        'NH020': 'Dịch vụ sửa chữa',
+        'NH025': 'Linh kiện (Màn hình/Pin)'
+      };
+      if (mapTenNhomGoiY[clean.toUpperCase()]) {
+        return `${mapTenNhomGoiY[clean.toUpperCase()]} (${clean})`;
       }
 
       return clean;
     }
 
-    // Tự động tìm hoặc tạo mới nhóm hàng cha & con khi nhập danh sách hàng hóa
+    function hienThiSelectNhomHang(list, selectedMaNhom = null) {
+      const nhomList = (list && list.length) ? list : layDanhSachNhomHangChuan();
+
+      // Đếm số sản phẩm thuộc từng nhóm
+      const spCountMap = {};
+      (rawHangHoa || []).forEach(h => {
+        const m = String(h.maNhom || '').trim();
+        if (m) spCountMap[m] = (spCountMap[m] || 0) + 1;
+      });
+
+      const nhomMap = {};
+      nhomList.forEach(n => { nhomMap[n.MaNhom] = n; });
+
+      const nhomCha = nhomList.filter(n => {
+        const p = n.MaNhomCha;
+        return !p || p === '' || p === 'null' || p === 'NONE' || p === '0' || p === n.MaNhom || !nhomMap[p];
+      });
+
+      nhomCha.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
+
+      let filterHtml = '<option value="">📁 Tất cả nhóm hàng</option>';
+      let formHtml = '<option value="">(Chọn nhóm hàng)</option>';
+
+      nhomCha.forEach(cha => {
+        const con = nhomList.filter(n => n.MaNhomCha === cha.MaNhom && n.MaNhom !== cha.MaNhom);
+        con.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
+
+        let countTongCha = spCountMap[cha.MaNhom] || 0;
+        con.forEach(c => { countTongCha += (spCountMap[c.MaNhom] || 0); });
+        const countLabelCha = countTongCha > 0 ? ` (${countTongCha} SP)` : '';
+
+        filterHtml += `<option value="CHA_${cha.MaNhom}">📁 [Nhóm Cha] ${cha.TenNhom} (${cha.MaNhom})${countLabelCha}</option>`;
+        formHtml += `<option value="${cha.MaNhom}">📁 [Nhóm Cha] ${cha.TenNhom} (${cha.MaNhom})</option>`;
+
+        con.forEach(c => {
+          const countCon = spCountMap[c.MaNhom] || 0;
+          const countLabelCon = countCon > 0 ? ` (${countCon} SP)` : '';
+          filterHtml += `<option value="${c.MaNhom}">&nbsp;&nbsp;&nbsp;&nbsp;└── 📂 ${c.TenNhom} (${c.MaNhom})${countLabelCon}</option>`;
+          formHtml += `<option value="${c.MaNhom}">&nbsp;&nbsp;&nbsp;&nbsp;└── 📂 ${c.TenNhom} (${c.MaNhom})</option>`;
+        });
+      });
+
+      // Nhóm mồ côi
+      nhomList.filter(n => n.MaNhomCha && !nhomCha.some(p => p.MaNhom === n.MaNhomCha)).forEach(orphan => {
+        const countOrphan = spCountMap[orphan.MaNhom] || 0;
+        const countLabel = countOrphan > 0 ? ` (${countOrphan} SP)` : '';
+        filterHtml += `<option value="${orphan.MaNhom}">📁 ${orphan.TenNhom} (${orphan.MaNhom})${countLabel}</option>`;
+        formHtml += `<option value="${orphan.MaNhom}">📁 ${orphan.TenNhom} (${orphan.MaNhom})</option>`;
+      });
+
+      // 1. Cập nhật thẻ select bộ lọc danh mục hàng hóa
+      const elFilter = document.getElementById('filter-nhom-hang');
+      if (elFilter) {
+        const curVal = elFilter.value;
+        elFilter.innerHTML = filterHtml;
+        if (curVal) elFilter.value = curVal;
+      }
+
+      // 2. Cập nhật thẻ select form Thêm/Sửa hàng hóa
+      const elForm = document.getElementById('form-nhomhang');
+      if (elForm) {
+        elForm.innerHTML = formHtml;
+        if (selectedMaNhom) {
+          const cleanSel = String(selectedMaNhom).trim();
+          const hasOpt = Array.from(elForm.options).some(opt => opt.value === cleanSel);
+          if (!hasOpt && cleanSel) {
+            const optNew = document.createElement('option');
+            optNew.value = cleanSel;
+            optNew.innerText = `📁 ${layTenDayDuNhomHang(cleanSel)}`;
+            elForm.appendChild(optNew);
+          }
+          elForm.value = cleanSel;
+        }
+      }
+
+      // 3. Cập nhật thẻ select nhóm cha
+      const elCha = document.getElementById('input-nhom-cha');
+      if (elCha) {
+        let chaHtml = '<option value="">(Không chọn nhóm cha - Là nhóm chính)</option>';
+        nhomCha.forEach(cha => {
+          chaHtml += `<option value="${cha.MaNhom}">📁 ${cha.TenNhom} (${cha.MaNhom})</option>`;
+        });
+        elCha.innerHTML = chaHtml;
+      }
+    }
+
     function timHoacTaoNhomHang(tenChaRaw, tenConRaw, maNhomCu) {
       let tenCha = String(tenChaRaw || '').trim();
       let tenCon = String(tenConRaw || '').trim();
@@ -12373,11 +12542,17 @@ function formatVND(amount) {
 
         let mNhom = true;
         if (nhom) {
-          if (h.maNhom === nhom) {
-            mNhom = true;
+          if (nhom.startsWith('CHA_')) {
+            const maCha = nhom.replace('CHA_', '');
+            const childGroups = (rawNhomHang || []).filter(n => n.MaNhomCha === maCha).map(n => n.MaNhom);
+            mNhom = (h.maNhom === maCha) || childGroups.includes(h.maNhom);
           } else {
-            const childGroups = (rawNhomHang || []).filter(n => n.MaNhomCha === nhom).map(n => n.MaNhom);
-            mNhom = childGroups.includes(h.maNhom);
+            if (h.maNhom === nhom) {
+              mNhom = true;
+            } else {
+              const childGroups = (rawNhomHang || []).filter(n => n.MaNhomCha === nhom).map(n => n.MaNhom);
+              mNhom = childGroups.includes(h.maNhom);
+            }
           }
         }
         const mTon = (ton === 'ALL') || (ton === 'CON_HANG' && h.tonKho > 0) || (ton === 'HET_HANG' && h.tonKho <= 0);
@@ -12717,6 +12892,7 @@ function formatVND(amount) {
       document.getElementById('form-mahang').value = (typeof taoMaHangHoaMoi === 'function') ? taoMaHangHoaMoi() : ('SP' + Date.now().toString().slice(-6));
       document.getElementById('form-mahang').disabled = false;
       document.getElementById('form-tenhang').value = "";
+      hienThiSelectNhomHang(rawNhomHang, "");
       document.getElementById('form-giavon').value = 0;
       document.getElementById('form-giaban').value = 0;
       document.getElementById('form-coimei').checked = false;
@@ -12737,7 +12913,7 @@ function formatVND(amount) {
       document.getElementById('form-mahang').value = h.maHang;
       document.getElementById('form-mahang').disabled = true;
       document.getElementById('form-tenhang').value = h.tenHang;
-      document.getElementById('form-nhomhang').value = h.maNhom || "";
+      hienThiSelectNhomHang(rawNhomHang, h.maNhom || "");
       document.getElementById('form-dvt').value = h.donViTinh || "Cái";
       document.getElementById('form-giavon').value = h.giaVon || 0;
       document.getElementById('form-giaban').value = h.giaBan || 0;
