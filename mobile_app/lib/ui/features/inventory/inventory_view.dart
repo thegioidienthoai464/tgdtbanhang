@@ -209,7 +209,7 @@ class _InventoryViewState extends State<InventoryView> {
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                               ),
                               subtitle: Text(
-                                '${p.maHang} • Vốn: ${Formatters.formatCurrency(pGiaVon)} • Giá: ${Formatters.formatCurrency(p.giaBan)}${p.coQuanLyImei ? " • 📱 ${pImeis.length} IMEI" : " • 🚫 Không IMEI"}',
+                                '${p.maHang} • [${p.displayGroupName}] • Vốn: ${Formatters.formatCurrency(pGiaVon)} • Giá: ${Formatters.formatCurrency(p.giaBan)}${p.coQuanLyImei ? " • 📱 ${pImeis.length} IMEI" : " • 🚫 Không IMEI"}',
                                 style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
                               ),
                               trailing: const Icon(Icons.edit_outlined, color: AppTheme.primaryBlue, size: 20),
@@ -236,7 +236,7 @@ class _InventoryViewState extends State<InventoryView> {
 
     final codeCtrl = TextEditingController(text: defaultCode);
     final nameCtrl = TextEditingController(text: isEdit ? product.tenHang : '');
-    final groupCtrl = TextEditingController(text: isEdit ? product.maNhom : 'Điện thoại');
+    final groupCtrl = TextEditingController(text: isEdit ? (product.tenNhom.isNotEmpty ? product.tenNhom : product.maNhom) : 'Điện thoại');
     final unitCtrl = TextEditingController(text: isEdit ? product.donViTinh : 'Cái');
     final costCtrl = TextEditingController(text: isEdit ? Formatters.formatNumber(product.giaVon) : '0');
     final priceCtrl = TextEditingController(text: isEdit ? Formatters.formatNumber(product.giaBan) : '0');
@@ -578,7 +578,8 @@ class _InventoryViewState extends State<InventoryView> {
                                 id: isEdit ? product.id : null,
                                 maHang: code,
                                 tenHang: name,
-                                maNhom: groupCtrl.text.trim(),
+                                maNhom: isEdit ? product.maNhom : groupCtrl.text.trim(),
+                                tenNhom: groupCtrl.text.trim(),
                                 donViTinh: unitCtrl.text.trim().isNotEmpty ? unitCtrl.text.trim() : 'Cái',
                                 giaVon: cost,
                                 giaBan: price,

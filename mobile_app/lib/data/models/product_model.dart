@@ -3,6 +3,7 @@ class ProductModel {
   final String maHang;
   final String tenHang;
   final String maNhom;
+  final String tenNhom;
   final String donViTinh;
   final double giaVon;
   final double giaBan;
@@ -25,23 +26,31 @@ class ProductModel {
     required this.maHang,
     required this.tenHang,
     this.maNhom = '',
+    this.tenNhom = '',
     this.donViTinh = 'Cái',
     this.giaVon = 0,
     this.giaBan = 0,
     this.coQuanLyImei = false,
     this.tonKho = 0,
     this.trangThai = 'Kinh doanh',
-    this.chiNhanh = 'CN01: Trụ sở chính',
+    this.chiNhanh = 'CN02: Chi nhánh Thanh Giang',
     this.tonKhoTheoChiNhanh = const {},
     this.giaVonTheoChiNhanh = const {},
     this.imeiTheoChiNhanh = const {},
   });
+
+  String get displayGroupName {
+    if (tenNhom.isNotEmpty) return tenNhom;
+    if (maNhom.isNotEmpty) return maNhom;
+    return 'Chưa phân nhóm';
+  }
 
   ProductModel copyWith({
     int? id,
     String? maHang,
     String? tenHang,
     String? maNhom,
+    String? tenNhom,
     String? donViTinh,
     double? giaVon,
     double? giaBan,
@@ -58,6 +67,7 @@ class ProductModel {
       maHang: maHang ?? this.maHang,
       tenHang: tenHang ?? this.tenHang,
       maNhom: maNhom ?? this.maNhom,
+      tenNhom: tenNhom ?? this.tenNhom,
       donViTinh: donViTinh ?? this.donViTinh,
       giaVon: giaVon ?? this.giaVon,
       giaBan: giaBan ?? this.giaBan,
@@ -74,21 +84,24 @@ class ProductModel {
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     return ProductModel(
       id: json['id'] as int?,
-      maHang: json['ma_hang']?.toString() ?? '',
-      tenHang: json['ten_hang']?.toString() ?? '',
-      maNhom: json['ma_nhom']?.toString() ?? '',
-      donViTinh: json['don_vi_tinh']?.toString() ?? 'Cái',
-      giaVon: (json['gia_von'] as num?)?.toDouble() ?? 0.0,
-      giaBan: (json['gia_ban'] as num?)?.toDouble() ?? 0.0,
+      maHang: json['ma_hang']?.toString() ?? json['maHang']?.toString() ?? '',
+      tenHang: json['ten_hang']?.toString() ?? json['tenHang']?.toString() ?? '',
+      maNhom: json['ma_nhom']?.toString() ?? json['maNhom']?.toString() ?? '',
+      tenNhom: json['ten_nhom']?.toString() ?? json['nhomHang']?.toString() ?? json['tenNhom']?.toString() ?? json['nhom_hang']?.toString() ?? '',
+      donViTinh: json['don_vi_tinh']?.toString() ?? json['donViTinh']?.toString() ?? 'Cái',
+      giaVon: (json['gia_von'] as num?)?.toDouble() ?? (json['giaVon'] as num?)?.toDouble() ?? 0.0,
+      giaBan: (json['gia_ban'] as num?)?.toDouble() ?? (json['giaBan'] as num?)?.toDouble() ?? 0.0,
       coQuanLyImei: json['co_quan_ly_imei'] == true ||
           json['co_quan_ly_imei']?.toString().toLowerCase() == 'true' ||
           json['co_quan_ly_imei']?.toString() == '1' ||
           json['coQuanLyImei'] == true ||
           json['coQuanLyImei']?.toString().toLowerCase() == 'true' ||
-          json['coQuanLyImei']?.toString() == '1',
-      tonKho: (json['ton_kho'] as num?)?.toDouble() ?? 0.0,
-      trangThai: json['trang_thai']?.toString() ?? 'Kinh doanh',
-      chiNhanh: json['chi_nhanh']?.toString() ?? 'CN01: Trụ sở chính',
+          json['coQuanLyImei']?.toString() == '1' ||
+          json['coQuanLyIMEI'] == true ||
+          json['coQuanLyIMEI']?.toString().toLowerCase() == 'true',
+      tonKho: (json['ton_kho'] as num?)?.toDouble() ?? (json['tonKho'] as num?)?.toDouble() ?? 0.0,
+      trangThai: json['trang_thai']?.toString() ?? json['trangThai']?.toString() ?? 'Kinh doanh',
+      chiNhanh: json['chi_nhanh']?.toString() ?? json['chiNhanh']?.toString() ?? 'CN02: Chi nhánh Thanh Giang',
     );
   }
 
@@ -97,6 +110,7 @@ class ProductModel {
       'ma_hang': maHang,
       'ten_hang': tenHang,
       'ma_nhom': maNhom,
+      'ten_nhom': tenNhom,
       'don_vi_tinh': donViTinh,
       'gia_von': giaVon,
       'gia_ban': giaBan,
@@ -109,17 +123,17 @@ class ProductModel {
 
   /// Chuẩn hóa chuỗi tên chi nhánh hoặc mã chi nhánh về mã chuẩn: 'CN01', 'CN02', 'CN03', 'CN04'
   static String normalizeBranchCode(String? str) {
-    if (str == null || str.isEmpty) return 'CN01';
+    if (str == null || str.isEmpty) return 'CN02';
     final s = str.trim().toUpperCase();
-    if (s.startsWith('CN01')) return 'CN01';
     if (s.startsWith('CN02')) return 'CN02';
+    if (s.startsWith('CN01')) return 'CN01';
     if (s.startsWith('CN03')) return 'CN03';
     if (s.startsWith('CN04')) return 'CN04';
-    if (s.contains('THANH MIỆN') || s.contains('THANH MIEN') || s.contains('TRỤ SỞ') || s.contains('TRU SO')) return 'CN01';
     if (s.contains('THANH GIANG')) return 'CN02';
+    if (s.contains('THANH MIỆN') || s.contains('THANH MIEN') || s.contains('TRỤ SỞ') || s.contains('TRU SO')) return 'CN01';
     if (s.contains('BÌNH GIANG') || s.contains('BINH GIANG')) return 'CN03';
     if (s.contains('ONLINE')) return 'CN04';
-    return 'CN01';
+    return 'CN02';
   }
 
   /// Lấy tồn kho của sản phẩm tại một chi nhánh cụ thể (hoặc Toàn hệ thống nếu ALL)

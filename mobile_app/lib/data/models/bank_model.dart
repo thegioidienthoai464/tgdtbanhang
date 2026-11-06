@@ -17,11 +17,11 @@ class BankModel {
 
   factory BankModel.fromJson(Map<String, dynamic> json) {
     return BankModel(
-      maNH: json['ma_nh']?.toString() ?? '',
-      tenNH: json['ten_nh']?.toString() ?? '',
-      soTK: json['so_tk']?.toString() ?? '',
-      chuTK: json['chu_tk']?.toString() ?? '',
-      ghiChu: json['ghi_chu']?.toString() ?? '',
+      maNH: json['ma_nh']?.toString() ?? json['maNH']?.toString() ?? '',
+      tenNH: json['ten_nh']?.toString() ?? json['tenNH']?.toString() ?? json['tenNganHang']?.toString() ?? '',
+      soTK: json['so_tk']?.toString() ?? json['soTK']?.toString() ?? json['soTaiKhoan']?.toString() ?? '',
+      chuTK: json['chu_tk']?.toString() ?? json['chuTK']?.toString() ?? json['chuTaiKhoan']?.toString() ?? '',
+      ghiChu: json['ghi_chu']?.toString() ?? json['ghiChu']?.toString() ?? '',
     );
   }
 

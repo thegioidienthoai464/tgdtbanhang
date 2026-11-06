@@ -1,10 +1,10 @@
 {
-  "version": "1.2.2",
-  "build_number": 23,
+  "version": "1.2.3",
+  "build_number": 24,
   "force_update": false,
-  "release_notes": "• Sổ quỹ Thu/Chi: Bổ sung hạng mục mẫu \"Chuyển/ rút\" hỗ trợ điều chuyển tiền giữa quỹ tiền mặt và tài khoản ngân hàng, hoặc giữa các tài khoản ngân hàng với tính năng tự động tạo cặp phiếu đối ứng.\n• Quản lý hạng mục mẫu: Cho phép thêm mới và lưu lại các hạng mục thu/chi mẫu tùy chỉnh dùng nhiều lần.",
+  "release_notes": "• Đồng bộ toàn diện dữ liệu Chi nhánh Thanh Giang: Nạp 21.433 sản phẩm, 8.030 đơn hàng, sổ quỹ, đối tác khách hàng/nhà cung cấp và 10 tài khoản ngân hàng.\n• Cơ chế hoạt động Offline-First: Tự động nạp dữ liệu cục bộ siêu tốc, hoạt động độc lập ngay cả khi gián đoạn kết nối máy chủ Cloud.\n• Hiển thị tên nhóm hàng: Cột và thông tin sản phẩm hiển thị đầy đủ tên nhóm hàng chi tiết (thay vì chỉ mã nhóm).\n• Tối ưu chi nhánh mặc định: Tự động ưu tiên Chi nhánh Thanh Giang (CN02) và hỗ trợ lọc nhanh tồn kho theo chi nhánh.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.2/TT_POS_v1.2.2.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.2/TT_POS_v1.2.2.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.2"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.3/TT_POS_v1.2.3.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.3/TT_POS_v1.2.3.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.3"
 }

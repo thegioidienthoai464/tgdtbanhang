@@ -338,7 +338,7 @@ class _PosViewState extends State<PosView> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    '• Tồn: ${posStock.toInt()}',
+                                    '• [${p.displayGroupName}] • Tồn: ${posStock.toInt()}',
                                     style: TextStyle(
                                       color: posStock > 0 ? AppTheme.textMuted : AppTheme.dangerRed,
                                       fontSize: 12,

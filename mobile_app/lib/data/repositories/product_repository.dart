@@ -39,8 +39,19 @@ class ProductRepository {
         if (chunk.length < batchSize) break;
         from += batchSize;
       } catch (e) {
-        debugPrint("Lỗi tải dm_hanghoa: $e");
+        debugPrint("Lỗi tải dm_hanghoa từ Supabase: $e");
         break;
+      }
+    }
+
+    // Nếu không tải được từ Supabase, nạp từ file JSON assets đính kèm
+    if (allRows.isEmpty) {
+      try {
+        final jsonStr = await rootBundle.loadString('assets/data/danh_sach_hang_hoa_full.json');
+        final localList = jsonDecode(jsonStr) as List;
+        allRows.addAll(localList);
+      } catch (e) {
+        debugPrint("Lỗi nạp offline danh_sach_hang_hoa_full.json: $e");
       }
     }
 
@@ -48,9 +59,22 @@ class ProductRepository {
     final baseline = await _loadBaselineData();
     final rawTonKho = (baseline['tonKho'] as Map<String, dynamic>?) ?? {};
     final rawGiaVon = (baseline['giaVon'] as Map<String, dynamic>?) ?? {};
+    final rawImei = (baseline['imei'] as Map<String, dynamic>?) ?? {};
 
-    // 3. Tải danh sách IMEI đang TrongKho từ Supabase kho_imei
+    // 3. Khởi tạo danh sách IMEI từ baseline trước
     final Map<String, Map<String, List<String>>> imeiMap = {};
+    rawImei.forEach((ma, map) {
+      if (map is Map) {
+        final maUpper = ma.toString().trim().toUpperCase();
+        imeiMap[maUpper] = {
+          'CN01': (map['CN01'] as List?)?.map((e) => e.toString()).toList() ?? [],
+          'CN02': (map['CN02'] as List?)?.map((e) => e.toString()).toList() ?? [],
+          'CN03': (map['CN03'] as List?)?.map((e) => e.toString()).toList() ?? [],
+          'CN04': (map['CN04'] as List?)?.map((e) => e.toString()).toList() ?? [],
+        };
+      }
+    });
+
     try {
       final imeiResponse = await SupabaseService.client
           .from('kho_imei')
@@ -117,11 +141,17 @@ class ProductRepository {
       final p = ProductModel.fromJson(item as Map<String, dynamic>);
       final maHang = p.maHang.trim().toUpperCase();
 
-      // Lấy tồn ban đầu từ baseline Excel
+      // Lấy tồn ban đầu từ baseline Excel hoặc từ dữ liệu import
       final baselineTon = (rawTonKho[maHang] as List?) ?? [];
-      double cn01 = (baselineTon.isNotEmpty && baselineTon[0] != null) ? (baselineTon[0] as num).toDouble() : p.tonKho;
-      double cn02 = (baselineTon.length > 1 && baselineTon[1] != null) ? (baselineTon[1] as num).toDouble() : 0.0;
-      double cn03 = (baselineTon.length > 2 && baselineTon[2] != null) ? (baselineTon[2] as num).toDouble() : 0.0;
+      double cn01 = (baselineTon.isNotEmpty && baselineTon[0] != null)
+          ? (baselineTon[0] as num).toDouble()
+          : ((item is Map ? (item['tonKho_CN01'] as num?)?.toDouble() : null) ?? 0.0);
+      double cn02 = (baselineTon.length > 1 && baselineTon[1] != null)
+          ? (baselineTon[1] as num).toDouble()
+          : ((item is Map ? (item['tonKho_CN02'] as num?)?.toDouble() : null) ?? p.tonKho);
+      double cn03 = (baselineTon.length > 2 && baselineTon[2] != null)
+          ? (baselineTon[2] as num).toDouble()
+          : ((item is Map ? (item['tonKho_CN03'] as num?)?.toDouble() : null) ?? 0.0);
 
       // Lấy giá vốn ban đầu theo chi nhánh
       final baselineGv = (rawGiaVon[maHang] as List?) ?? [];
@@ -131,6 +161,12 @@ class ProductRepository {
 
       // Xử lý sản phẩm IMEI
       final productImeis = imeiMap[maHang] ?? {'CN01': [], 'CN02': [], 'CN03': [], 'CN04': []};
+      if (item is Map && item['danhSachIMEI'] is List && (item['danhSachIMEI'] as List).isNotEmpty) {
+        final listImeis = (item['danhSachIMEI'] as List).map((e) => e.toString().trim()).where((s) => s.isNotEmpty).toList();
+        if (listImeis.isNotEmpty && (productImeis['CN02']?.isEmpty ?? true)) {
+          productImeis['CN02'] = listImeis;
+        }
+      }
       final bool hasImeisInDb = productImeis.values.any((l) => l.isNotEmpty);
 
       final tenLower = p.tenHang.toLowerCase();
@@ -201,28 +237,54 @@ class ProductRepository {
   }
 
   Future<List<String>> fetchImeis(String maHang, {String? branchCode}) async {
-    var query = SupabaseService.client
-        .from('kho_imei')
-        .select('imei,chi_nhanh')
-        .eq('ma_hang', maHang)
-        .eq('trang_thai', 'TrongKho');
+    try {
+      var query = SupabaseService.client
+          .from('kho_imei')
+          .select('imei,chi_nhanh')
+          .eq('ma_hang', maHang)
+          .eq('trang_thai', 'TrongKho');
 
-    final response = await query;
-    final list = response as List;
+      final response = await query;
+      final list = response as List;
 
-    if (branchCode != null && branchCode.toUpperCase() != 'ALL') {
-      final target = ProductModel.normalizeBranchCode(branchCode);
+      if (branchCode != null && branchCode.toUpperCase() != 'ALL') {
+        final target = ProductModel.normalizeBranchCode(branchCode);
+        return list
+            .where((e) => ProductModel.normalizeBranchCode((e['chi_nhanh'] ?? '').toString()) == target)
+            .map((e) => (e['imei'] ?? '').toString().trim())
+            .where((s) => s.isNotEmpty)
+            .toList();
+      }
+
       return list
-          .where((e) => ProductModel.normalizeBranchCode((e['chi_nhanh'] ?? '').toString()) == target)
           .map((e) => (e['imei'] ?? '').toString().trim())
           .where((s) => s.isNotEmpty)
           .toList();
+    } catch (_) {
+      // Fallback nạp danh sách IMEI từ baseline offline
+      try {
+        final baseline = await _loadBaselineData();
+        final rawImei = (baseline['imei'] as Map<String, dynamic>?) ?? {};
+        final itemImei = rawImei[maHang.trim().toUpperCase()] as Map<String, dynamic>?;
+        if (itemImei != null) {
+          if (branchCode != null && branchCode.toUpperCase() != 'ALL') {
+            final target = ProductModel.normalizeBranchCode(branchCode);
+            final targetList = (itemImei[target] as List?)?.map((e) => e.toString().trim()).where((s) => s.isNotEmpty).toList();
+            return targetList ?? [];
+          }
+          final allImeis = <String>[];
+          for (final val in itemImei.values) {
+            if (val is List) {
+              allImeis.addAll(val.map((e) => e.toString().trim()).where((s) => s.isNotEmpty));
+            }
+          }
+          return allImeis;
+        }
+      } catch (err) {
+        debugPrint("Lỗi fallback fetchImeis: $err");
+      }
+      return [];
     }
-
-    return list
-        .map((e) => (e['imei'] ?? '').toString().trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
   }
 
   Future<ProductModel?> createProduct(ProductModel product) async {

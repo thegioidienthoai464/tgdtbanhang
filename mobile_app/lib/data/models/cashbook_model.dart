@@ -28,26 +28,49 @@ class CashbookModel {
   bool get isIncome => loaiPhieu == 'THU';
   bool get isExpense => loaiPhieu == 'CHI';
 
-  factory CashbookModel.fromJson(Map<String, dynamic> json) {
-    DateTime dt;
+  static DateTime parseCustomDate(dynamic raw) {
+    if (raw == null) return DateTime.now();
+    final str = raw.toString().trim();
+    if (str.isEmpty) return DateTime.now();
     try {
-      dt = json['ngay_gd'] != null ? DateTime.parse(json['ngay_gd'].toString()) : DateTime.now();
-    } catch (_) {
-      dt = DateTime.now();
+      return DateTime.parse(str);
+    } catch (_) {}
+
+    final parts = str.split(' ');
+    final dateParts = parts[0].split(RegExp(r'[/.-]'));
+    if (dateParts.length == 3) {
+      final day = int.tryParse(dateParts[0]) ?? 1;
+      final month = int.tryParse(dateParts[1]) ?? 1;
+      final year = int.tryParse(dateParts[2]) ?? 2026;
+      int hour = 0, min = 0, sec = 0;
+      if (parts.length > 1) {
+        final timeParts = parts[1].split(':');
+        if (timeParts.isNotEmpty) hour = int.tryParse(timeParts[0]) ?? 0;
+        if (timeParts.length > 1) min = int.tryParse(timeParts[1]) ?? 0;
+        if (timeParts.length > 2) sec = int.tryParse(timeParts[2]) ?? 0;
+      }
+      return DateTime(year, month, day, hour, min, sec);
     }
+    return DateTime.now();
+  }
+
+  factory CashbookModel.fromJson(Map<String, dynamic> json) {
+    final dt = parseCustomDate(json['ngay_gd'] ?? json['ngayGD'] ?? json['thoiGian']);
+    final rawLoaiQuy = (json['loai_quy'] ?? json['loaiQuy'] ?? 'TIEN_MAT').toString().toUpperCase();
+    final rawLoaiPhieu = (json['loai_phieu'] ?? json['loaiPhieu'] ?? 'THU').toString().toUpperCase();
 
     return CashbookModel(
-      maPhieu: json['ma_phieu']?.toString() ?? '',
-      chiNhanh: json['chi_nhanh']?.toString() ?? 'CN01: Trụ sở chính',
-      loaiPhieu: json['loai_phieu']?.toString() ?? 'THU',
-      loaiQuy: json['loai_quy']?.toString() ?? 'TIEN_MAT',
+      maPhieu: json['ma_phieu']?.toString() ?? json['maPhieu']?.toString() ?? '',
+      chiNhanh: json['chi_nhanh']?.toString() ?? json['chiNhanh']?.toString() ?? 'CN02: Chi nhánh Thanh Giang',
+      loaiPhieu: rawLoaiPhieu.contains('CHI') ? 'CHI' : 'THU',
+      loaiQuy: (rawLoaiQuy.contains('TAI_KHOAN') || rawLoaiQuy.contains('NGAN_HANG')) ? 'TAI_KHOAN' : 'TIEN_MAT',
       ngayGD: dt,
-      soTien: (json['so_tien'] as num?)?.toDouble() ?? 0.0,
-      doiTuong: json['doi_tuong']?.toString() ?? '',
-      maDoiTuong: json['ma_doi_tuong']?.toString() ?? '',
-      maChungTu: json['ma_chung_tu']?.toString() ?? '',
-      trangThai: json['trang_thai']?.toString() ?? 'DaThanhToan',
-      ghiChu: json['ghi_chu']?.toString() ?? '',
+      soTien: (json['so_tien'] as num?)?.toDouble() ?? (json['soTien'] as num?)?.toDouble() ?? 0.0,
+      doiTuong: json['doi_tuong']?.toString() ?? json['doiTuong']?.toString() ?? json['nguoiNopNhan']?.toString() ?? '',
+      maDoiTuong: json['ma_doi_tuong']?.toString() ?? json['maDoiTuong']?.toString() ?? '',
+      maChungTu: json['ma_chung_tu']?.toString() ?? json['maChungTu']?.toString() ?? '',
+      trangThai: json['trang_thai']?.toString() ?? json['trangThai']?.toString() ?? 'DaThanhToan',
+      ghiChu: json['ghi_chu']?.toString() ?? json['ghiChu']?.toString() ?? json['lyDoThuChi']?.toString() ?? '',
     );
   }
 

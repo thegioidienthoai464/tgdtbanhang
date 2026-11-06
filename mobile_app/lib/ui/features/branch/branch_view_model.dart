@@ -9,7 +9,7 @@ class BranchViewModel extends ChangeNotifier {
   static const String _prefKey = 'tt_pos_selected_chinhanh_codes';
 
   List<BranchModel> _branches = List.from(BranchModel.defaultBranches);
-  Set<String> _selectedBranchCodes = {'CN01'};
+  Set<String> _selectedBranchCodes = {'CN02'};
   bool _isLoading = false;
 
   List<BranchModel> get branches => _branches;
@@ -100,8 +100,8 @@ class BranchViewModel extends ChangeNotifier {
       if (savedList != null && savedList.isNotEmpty) {
         _selectedBranchCodes = savedList.map((e) => e.toUpperCase()).toSet();
       } else {
-        // Mặc định chọn CN01
-        _selectedBranchCodes = {'CN01'};
+        // Mặc định chọn CN02: Chi nhánh Thanh Giang
+        _selectedBranchCodes = {'CN02'};
       }
     } catch (e) {
       debugPrint("Lỗi khởi tạo BranchViewModel: $e");

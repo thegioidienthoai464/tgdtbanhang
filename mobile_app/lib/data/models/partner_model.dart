@@ -24,14 +24,14 @@ class PartnerModel {
 
   factory PartnerModel.fromJson(Map<String, dynamic> json) {
     return PartnerModel(
-      maDoiTac: json['ma_doi_tac']?.toString() ?? '',
-      loaiDoiTac: json['loai_doi_tac']?.toString() ?? 'KH',
-      tenDoiTac: json['ten_doi_tac']?.toString() ?? 'Khách lẻ',
-      soDienThoai: json['so_dien_thoai']?.toString() ?? '',
-      diaChi: json['dia_chi']?.toString() ?? '',
-      congNo: (json['cong_no'] as num?)?.toDouble() ?? 0.0,
-      trangThai: json['trang_thai']?.toString() ?? 'HoatDong',
-      ghiChu: json['ghi_chu']?.toString() ?? '',
+      maDoiTac: json['ma_doi_tac']?.toString() ?? json['maDoiTac']?.toString() ?? '',
+      loaiDoiTac: json['loai_doi_tac']?.toString() ?? json['loaiDoiTac']?.toString() ?? 'KH',
+      tenDoiTac: json['ten_doi_tac']?.toString() ?? json['tenDoiTac']?.toString() ?? 'Khách lẻ',
+      soDienThoai: json['so_dien_thoai']?.toString() ?? json['soDienThoai']?.toString() ?? json['dienThoai']?.toString() ?? '',
+      diaChi: json['dia_chi']?.toString() ?? json['diaChi']?.toString() ?? '',
+      congNo: (json['cong_no'] as num?)?.toDouble() ?? (json['conNo'] as num?)?.toDouble() ?? (json['congNo'] as num?)?.toDouble() ?? 0.0,
+      trangThai: json['trang_thai']?.toString() ?? json['trangThai']?.toString() ?? 'HoatDong',
+      ghiChu: json['ghi_chu']?.toString() ?? json['ghiChu']?.toString() ?? '',
     );
   }
 
