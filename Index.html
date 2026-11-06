@@ -1293,6 +1293,7 @@
                   <th class="p-3">Chi Nhánh Nhận (Đến)</th>
                   <th class="p-3 text-center">Số Mặt Hàng</th>
                   <th class="p-3 text-right">Tổng SL Chuyển</th>
+                  <th class="p-3 text-right">Tổng Giá Trị</th>
                   <th class="p-3">Người Lập</th>
                   <th class="p-3 text-center">Trạng Thái</th>
                   <th class="p-3 text-center">Thao Tác</th>
@@ -1345,19 +1346,23 @@
                 </div>
                 <div class="overflow-x-auto">
                   <table class="w-full text-left text-xs border-collapse">
-                    <thead class="bg-slate-100/70 text-slate-600 uppercase font-semibold border-b">
-                      <tr>
+                    <thead>
+                      <tr class="bg-slate-50 text-slate-500 text-left uppercase text-[10px] tracking-wider border-b">
                         <th class="p-2.5">Sản Phẩm</th>
-                        <th class="p-2.5 text-center w-14">ĐVT</th>
-                        <th class="p-2.5 text-center w-24">Tồn Kho Xuất</th>
-                        <th class="p-2.5 text-center w-24">Tồn Kho Nhận</th>
-                        <th class="p-2.5 text-center w-28">SL Chuyển</th>
-                        <th class="p-2.5">Mã Serial / IMEI</th>
-                        <th class="p-2.5 text-center w-12">Xóa</th>
+                        <th class="p-2.5 text-center w-12">ĐVT</th>
+                        <th class="p-2.5 text-center w-16">Tồn Xuất</th>
+                        <th class="p-2.5 text-center w-16">Tồn Nhận</th>
+                        <th class="p-2.5 text-center w-24">SL Chuyển</th>
+                        <th class="p-2.5 min-w-[130px]">Mã Serial / IMEI</th>
+                        <th class="p-2.5 text-right w-32" title="Giá nhập (đối với IMEI) hoặc giá vốn trung bình (đối với hàng không IMEI). Có thể tự do điều chỉnh">
+                          Đơn Giá Chuyển <i class="fa-solid fa-pen text-[9px] text-indigo-500 ml-0.5"></i>
+                        </th>
+                        <th class="p-2.5 text-right w-28">Thành Tiền</th>
+                        <th class="p-2.5 text-center w-10">Xóa</th>
                       </tr>
                     </thead>
                     <tbody id="tbl-chuyenkho-cart-body" class="divide-y divide-slate-100 font-medium">
-                      <tr><td colspan="7" class="p-8 text-center text-slate-400">Chưa có sản phẩm nào trong phiếu chuyển kho. Hãy tìm kiếm ở trên để thêm vào.</td></tr>
+                      <tr><td colspan="9" class="p-8 text-center text-slate-400">Chưa có sản phẩm nào trong phiếu chuyển kho. Hãy tìm kiếm ở trên để thêm vào.</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -1405,6 +1410,10 @@
                 <div class="flex justify-between items-center text-indigo-900 text-sm font-bold border-t border-indigo-200/60 pt-1.5">
                   <span>Tổng số lượng chuyển:</span>
                   <span id="summary-chuyenkho-tongsl" class="font-mono text-base text-indigo-700">0</span>
+                </div>
+                <div class="flex justify-between items-center text-amber-900 text-sm font-bold border-t border-indigo-200/60 pt-1.5">
+                  <span>Tổng giá trị chuyển:</span>
+                  <span id="summary-chuyenkho-tongtien" class="font-mono text-base text-amber-600">0 đ</span>
                 </div>
               </div>
 
@@ -12204,6 +12213,23 @@ function formatVND(amount) {
     // ====================================================================
     // ĐỒNG BỘ VÀ HIỂN THỊ DROPDOWN NHÓM HÀNG ĐẦY ĐỦ (BỘ LỌC & MODAL SỬA/THÊM)
     // ====================================================================
+    // ====================================================================
+    // BẢNG MAP TÊN NHÓM HÀNG CHUẨN (HIỂN THỊ TÊN THAY VÌ MÃ NHÓM)
+    // ====================================================================
+    const MAP_TEN_NHOM_CHUAN = {
+      'NH001': 'Đồng hồ',
+      'NH002': 'Điện thoại',
+      'NH003': 'Máy tính bảng / iPad',
+      'NH004': 'Laptop & Máy tính',
+      'NH009': 'Bao da & Ốp lưng',
+      'NH010': 'Cáp sạc & Củ sạc',
+      'NH011': 'Pin sạc dự phòng',
+      'NH012': 'Loa & Tai nghe Bluetooth',
+      'NH020': 'Dịch vụ sửa chữa',
+      'NH025': 'Linh kiện điện thoại',
+      'NH000000': 'Hàng hóa khác'
+    };
+
     function layDanhSachNhomHangChuan() {
       let list = [];
       if (typeof rawNhomHang !== 'undefined' && Array.isArray(rawNhomHang) && rawNhomHang.length > 0) {
@@ -12218,27 +12244,21 @@ function formatVND(amount) {
         } catch(e) {}
       }
 
-      // Chuẩn hóa tên trường
-      let normalized = list.map(n => ({
-        MaNhom: String(n.MaNhom || n.ma_nhom || n.maNhom || '').trim(),
-        TenNhom: String(n.TenNhom || n.ten_nhom || n.tenNhom || n.MaNhom || '').trim(),
-        MaNhomCha: String(n.MaNhomCha || n.ma_nhom_cha || n.maNhomCha || '').trim(),
-        GhiChu: n.GhiChu || n.ghi_chu || ''
-      })).filter(n => n.MaNhom);
-
-      // Bảng map tên nhóm gợi ý thông minh từ dữ liệu thực tế
-      const mapTenNhomGoiY = {
-        'NH001': 'Đồng hồ (Citizen, Seiko)',
-        'NH002': 'Điện thoại (iPhone, Samsung)',
-        'NH003': 'Máy tính bảng / iPad',
-        'NH004': 'Laptop / Máy tính',
-        'NH009': 'Bao da / Ốp lưng',
-        'NH010': 'Cáp sạc & Củ sạc',
-        'NH011': 'Pin sạc dự phòng',
-        'NH012': 'Tai nghe Bluetooth / Dây',
-        'NH020': 'Dịch vụ sửa chữa',
-        'NH025': 'Linh kiện (Màn hình/Pin)'
-      };
+      // Chuẩn hóa tên trường và làm sạch tên nhóm
+      let normalized = list.map(n => {
+        const ma = String(n.MaNhom || n.ma_nhom || n.maNhom || '').trim();
+        let ten = String(n.TenNhom || n.ten_nhom || n.tenNhom || '').trim();
+        // Nếu tên nhóm đang là "Nhóm NH..." hoặc trùng mã nhóm thì map sang tên tiếng Việt chuẩn
+        if (!ten || ten.toLowerCase() === ma.toLowerCase() || /^nhóm\s+nh\d+$/i.test(ten)) {
+          ten = MAP_TEN_NHOM_CHUAN[ma.toUpperCase()] || (ma ? `Nhóm ${ma}` : 'Hàng hóa khác');
+        }
+        return {
+          MaNhom: ma,
+          TenNhom: ten,
+          MaNhomCha: String(n.MaNhomCha || n.ma_nhom_cha || n.maNhomCha || '').trim(),
+          GhiChu: n.GhiChu || n.ghi_chu || ''
+        };
+      }).filter(n => n.MaNhom);
 
       // TỰ ĐỘNG BẢO HIỂM: Quét toàn bộ rawHangHoa để phát hiện các mã nhóm thực tế trong kho
       const existingMaSet = new Set(normalized.map(n => n.MaNhom.toUpperCase()));
@@ -12246,7 +12266,7 @@ function formatVND(amount) {
         const m = String(h.maNhom || '').trim();
         if (m && !existingMaSet.has(m.toUpperCase())) {
           existingMaSet.add(m.toUpperCase());
-          const tenGoiY = mapTenNhomGoiY[m] || `Nhóm ${m}`;
+          const tenGoiY = MAP_TEN_NHOM_CHUAN[m.toUpperCase()] || `Nhóm ${m}`;
           normalized.push({
             MaNhom: m,
             TenNhom: tenGoiY,
@@ -12276,6 +12296,12 @@ function formatVND(amount) {
       const clean = String(maNhomHoacTen).trim();
       if (!clean) return '-';
 
+      // 1. Kiểm tra trực tiếp bảng map tên nhóm chuẩn
+      if (MAP_TEN_NHOM_CHUAN[clean.toUpperCase()]) {
+        return MAP_TEN_NHOM_CHUAN[clean.toUpperCase()];
+      }
+
+      // 2. Tìm trong danh mục nhóm hàng chuẩn hóa
       const nhomList = layDanhSachNhomHangChuan();
       const n = nhomList.find(x => 
         String(x.MaNhom || '').toUpperCase() === clean.toUpperCase() ||
@@ -12283,32 +12309,27 @@ function formatVND(amount) {
       );
 
       if (n) {
+        let ten = n.TenNhom;
+        if (!ten || ten.toLowerCase() === n.MaNhom.toLowerCase() || /^nhóm\s+nh\d+$/i.test(ten)) {
+          ten = MAP_TEN_NHOM_CHUAN[n.MaNhom.toUpperCase()] || ten || n.MaNhom;
+        }
         if (n.MaNhomCha && n.MaNhomCha !== n.MaNhom) {
           const cha = nhomList.find(x => String(x.MaNhom || '').toUpperCase() === String(n.MaNhomCha || '').toUpperCase());
           if (cha) {
-            return `${cha.TenNhom} > ${n.TenNhom}`;
+            let tenCha = cha.TenNhom;
+            if (MAP_TEN_NHOM_CHUAN[cha.MaNhom.toUpperCase()]) tenCha = MAP_TEN_NHOM_CHUAN[cha.MaNhom.toUpperCase()];
+            return `${tenCha} > ${ten}`;
           }
         }
-        return `${n.TenNhom} (${n.MaNhom})`;
+        return ten;
       }
 
       if (clean.includes('>')) return clean;
 
-      // Map tên gợi ý nếu mã nhóm chưa có trong danh mục
-      const mapTenNhomGoiY = {
-        'NH001': 'Đồng hồ (Citizen, Seiko)',
-        'NH002': 'Điện thoại (iPhone, Samsung)',
-        'NH003': 'Máy tính bảng / iPad',
-        'NH004': 'Laptop / Máy tính',
-        'NH009': 'Bao da / Ốp lưng',
-        'NH010': 'Cáp sạc & Củ sạc',
-        'NH011': 'Pin sạc dự phòng',
-        'NH012': 'Tai nghe Bluetooth / Dây',
-        'NH020': 'Dịch vụ sửa chữa',
-        'NH025': 'Linh kiện (Màn hình/Pin)'
-      };
-      if (mapTenNhomGoiY[clean.toUpperCase()]) {
-        return `${mapTenNhomGoiY[clean.toUpperCase()]} (${clean})`;
+      // Xóa tiền tố "Nhóm " nếu chỉ là mã nhóm
+      if (/^nhóm\s+nh\d+$/i.test(clean)) {
+        const maCode = clean.replace(/^nhóm\s+/i, '').trim().toUpperCase();
+        if (MAP_TEN_NHOM_CHUAN[maCode]) return MAP_TEN_NHOM_CHUAN[maCode];
       }
 
       return clean;
@@ -12378,25 +12399,15 @@ function formatVND(amount) {
         elForm.innerHTML = formHtml;
         if (selectedMaNhom) {
           const cleanSel = String(selectedMaNhom).trim();
-          const hasOpt = Array.from(elForm.options).some(opt => opt.value === cleanSel);
-          if (!hasOpt && cleanSel) {
+          let optExists = Array.from(elForm.options).some(o => o.value === cleanSel);
+          if (!optExists && cleanSel) {
             const optNew = document.createElement('option');
             optNew.value = cleanSel;
-            optNew.innerText = `📁 ${layTenDayDuNhomHang(cleanSel)}`;
+            optNew.innerText = `📁 ${layTenDayDuNhomHang(cleanSel)} (${cleanSel})`;
             elForm.appendChild(optNew);
           }
           elForm.value = cleanSel;
         }
-      }
-
-      // 3. Cập nhật thẻ select nhóm cha
-      const elCha = document.getElementById('input-nhom-cha');
-      if (elCha) {
-        let chaHtml = '<option value="">(Không chọn nhóm cha - Là nhóm chính)</option>';
-        nhomCha.forEach(cha => {
-          chaHtml += `<option value="${cha.MaNhom}">📁 ${cha.TenNhom} (${cha.MaNhom})</option>`;
-        });
-        elCha.innerHTML = chaHtml;
       }
     }
 
@@ -24621,65 +24632,8 @@ function formatVND(amount) {
     window.danhSachNhomExcelDuocChon = new Set(); // Danh sách mã nhóm được tích chọn
     window.isCayNhomExcelExpanded = true; // Trạng thái mở rộng cây nhóm
 
-    // 1. Chuẩn hóa và tự động phục hồi danh sách nhóm hàng cha/con
-    function layDanhSachNhomHangChuan() {
-      let list = [];
-      if (typeof rawNhomHang !== 'undefined' && Array.isArray(rawNhomHang) && rawNhomHang.length > 0) {
-        list = [...rawNhomHang];
-      } else {
-        // Thử lấy từ cache localStorage
-        try {
-          const cached = localStorage.getItem('TGDT_RAW_NHOM_HANG_CACHE');
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed) && parsed.length > 0) list = parsed;
-          }
-        } catch(e) {}
-      }
-
-      // Chuẩn hóa tên trường
-      let normalized = list.map(n => ({
-        MaNhom: String(n.MaNhom || n.ma_nhom || n.maNhom || '').trim(),
-        TenNhom: String(n.TenNhom || n.ten_nhom || n.tenNhom || n.MaNhom || '').trim(),
-        MaNhomCha: String(n.MaNhomCha || n.ma_nhom_cha || n.maNhomCha || '').trim(),
-        GhiChu: n.GhiChu || n.ghi_chu || ''
-      })).filter(n => n.MaNhom);
-
-      // TỰ ĐỘNG BẢO HIỂM: Quét toàn bộ rawHangHoa để phát hiện các mã nhóm thực tế chưa có trong danh mục
-      const existingMaSet = new Set(normalized.map(n => n.MaNhom.toUpperCase()));
-      const spGroupMap = {};
-      (rawHangHoa || []).forEach(h => {
-        const m = String(h.maNhom || '').trim();
-        if (m) {
-          spGroupMap[m] = (spGroupMap[m] || 0) + 1;
-          if (!existingMaSet.has(m.toUpperCase())) {
-            existingMaSet.add(m.toUpperCase());
-            normalized.push({
-              MaNhom: m,
-              TenNhom: `Nhóm ${m}`,
-              MaNhomCha: '',
-              GhiChu: 'Tự động trích xuất từ dữ liệu hàng hóa'
-            });
-          }
-        }
-      });
-
-      // Lưu lại cache để lần sau mở modal tức thì
-      try {
-        if (normalized.length > 0) {
-          localStorage.setItem('TGDT_RAW_NHOM_HANG_CACHE', JSON.stringify(normalized));
-        }
-      } catch(e) {}
-
-      // Nếu rawNhomHang toàn cục đang rỗng, cập nhật luôn
-      if (typeof rawNhomHang !== 'undefined' && (!rawNhomHang || !rawNhomHang.length)) {
-        rawNhomHang = normalized;
-      }
-
-      return normalized;
-    }
-
-    // 2. Mở modal xuất Excel hàng hóa
+    // 1. Sử dụng danh mục nhóm hàng chuẩn hóa từ hệ thống
+    // (layDanhSachNhomHangChuan đã được định nghĩa tập trung ở trên)
     window.moModalChonXuatExcelHang = function() {
       const modal = document.getElementById('modal-xuat-excel-hang');
       if (!modal) return;
@@ -31308,10 +31262,77 @@ function loadSoQuy(filter) {
     var ckCurrentMaHangIMEI = null;
     var chiTietPhieuCKDangXem = null;
 
+    // ====================================================================
+    // HÀM TÌM GIÁ NHẬP CỦA HÀNG HÓA CÓ IMEI & GIÁ NHẬP TRUNG BÌNH
+    // ====================================================================
+    function timGiaNhapCuaIMEI(maHang, imei, cnXuat) {
+      const cleanMa = String(maHang || '').trim().toUpperCase();
+      const cleanImei = String(imei || '').trim();
+
+      // 1. Quét từ danh sách đơn nhập hàng (rawNhapHangList)
+      if (cleanImei && Array.isArray(rawNhapHangList) && rawNhapHangList.length > 0) {
+        for (const phieu of rawNhapHangList) {
+          if (phieu.trangThai === 'Đã hủy') continue;
+          const items = Array.isArray(phieu.chiTietSanPham) ? phieu.chiTietSanPham : [];
+          for (const it of items) {
+            if (cleanMa && String(it.maHang || '').trim().toUpperCase() !== cleanMa) continue;
+            if (it.imeiStr) {
+              const imeis = (typeof tachDanhSachImei === 'function') ? tachDanhSachImei(it.imeiStr) : it.imeiStr.split(/[,;\\n\\r\\t]+/).map(s=>s.trim()).filter(Boolean);
+              if (imeis.some(im => im.toLowerCase() === cleanImei.toLowerCase())) {
+                const gn = Number(it.donGia || it.giaNhap);
+                if (gn > 0) return gn;
+              }
+            }
+          }
+        }
+      }
+
+      // 2. Quét từ bản lưu tạm đơn nhập (localStorage)
+      if (cleanImei) {
+        try {
+          const allDraftKeys = JSON.parse(localStorage.getItem('SMART_ERP_DRAFT_KEYS') || '[]');
+          for (const key of allDraftKeys) {
+            const dStr = localStorage.getItem('SMART_ERP_DRAFT_DON_NHAP_' + key);
+            if (dStr) {
+              const dObj = JSON.parse(dStr);
+              if (dObj && Array.isArray(dObj.chiTietSanPham)) {
+                for (const it of dObj.chiTietSanPham) {
+                  if (cleanMa && String(it.maHang || '').trim().toUpperCase() !== cleanMa) continue;
+                  if (it.imeiStr) {
+                    const imeis = (typeof tachDanhSachImei === 'function') ? tachDanhSachImei(it.imeiStr) : it.imeiStr.split(/[,;\\n\\r\\t]+/).map(s=>s.trim()).filter(Boolean);
+                    if (imeis.some(im => im.toLowerCase() === cleanImei.toLowerCase())) {
+                      const gn = Number(it.donGia || it.giaNhap);
+                      if (gn > 0) return gn;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } catch(e) {}
+      }
+
+      // 3. Fallback: Lấy giá vốn tại chi nhánh xuất hoặc giá vốn chung của sản phẩm
+      const gvCN = (typeof layGiaVonSanPhamTaiChiNhanh === 'function') ? layGiaVonSanPhamTaiChiNhanh(cleanMa, cnXuat) : 0;
+      if (gvCN > 0) return gvCN;
+
+      const sp = (rawHangHoa || []).find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa);
+      return sp ? (Number(sp.giaVon || sp.giaVonBanDau) || 0) : 0;
+    }
+
+    function timGiaNhapTrungBinh(maHang, cnXuat) {
+      const cleanMa = String(maHang || '').trim().toUpperCase();
+      const gvCN = (typeof layGiaVonSanPhamTaiChiNhanh === 'function') ? layGiaVonSanPhamTaiChiNhanh(cleanMa, cnXuat) : 0;
+      if (gvCN > 0) return gvCN;
+
+      const sp = (rawHangHoa || []).find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa);
+      return sp ? (Number(sp.giaVon || sp.giaVonBanDau) || 0) : 0;
+    }
+
     async function loadDanhSachChuyenKho() {
       const tbody = document.getElementById('tbl-chuyenkho-body');
       if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải dữ liệu phiếu chuyển kho...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải dữ liệu phiếu chuyển hàng...</td></tr>`;
       }
 
       // 1. Tải danh sách chi nhánh vào bộ lọc
@@ -31341,6 +31362,7 @@ function loadSoQuy(filter) {
               const cnXuat = cnArr[0] || 'CN01';
               const cnNhan = cnArr[1] || 'CN02';
               const tongSL = chiTiet.reduce((sum, it) => sum + (Number(it.soLuong) || 0), 0);
+              const tongTien = Number(d.tong_tien) || chiTiet.reduce((sum, it) => sum + ((Number(it.soLuong) || 0) * (Number(it.donGia || it.giaNhap) || 0)), 0);
 
               return {
                 maPhieu: d.ma_don_hang,
@@ -31353,6 +31375,8 @@ function loadSoQuy(filter) {
                 ghiChu: d.ghi_chu || '',
                 tongSoMatHang: chiTiet.length,
                 tongSoLuong: tongSL,
+                tongTien: tongTien,
+                tongGiaTri: tongTien,
                 trangThai: d.trang_thai || 'Hoàn thành',
                 chiTietSanPham: chiTiet
               };
@@ -31378,41 +31402,48 @@ function loadSoQuy(filter) {
         { ma: 'CN01', ten: 'Trụ sở chính Thanh Miện' },
         { ma: 'CN02', ten: 'Chi nhánh Hải Dương' },
         { ma: 'CN03', ten: 'Chi nhánh Hà Nội' },
-        { ma: 'CN04', ten: 'Kho Tổng Trung Tâm' }
+        { ma: 'CN04', ten: 'Chi nhánh TP.HCM' }
       ];
 
-      // Dropdown lọc
+      // Dropdown bộ lọc
       const fXuat = document.getElementById('filter-chuyenkho-xuat');
       const fNhan = document.getElementById('filter-chuyenkho-nhan');
-      if (fXuat) {
-        const curX = fXuat.value || 'ALL';
-        fXuat.innerHTML = `<option value="ALL">📍 Kho xuất: Tất cả</option>` + branches.map(c => `<option value="${c.ma}">${c.ma}: ${c.ten}</option>`).join('');
-        fXuat.value = curX;
+      if (fXuat && fXuat.options.length <= 1) {
+        branches.forEach(b => {
+          const opt = document.createElement('option');
+          opt.value = b.ma;
+          opt.innerText = `📍 Kho xuất: ${b.ten} (${b.ma})`;
+          fXuat.appendChild(opt);
+        });
       }
-      if (fNhan) {
-        const curN = fNhan.value || 'ALL';
-        fNhan.innerHTML = `<option value="ALL">🎯 Kho nhận: Tất cả</option>` + branches.map(c => `<option value="${c.ma}">${c.ma}: ${c.ten}</option>`).join('');
-        fNhan.value = curN;
+      if (fNhan && fNhan.options.length <= 1) {
+        branches.forEach(b => {
+          const opt = document.createElement('option');
+          opt.value = b.ma;
+          opt.innerText = `🎯 Kho nhận: ${b.ten} (${b.ma})`;
+          fNhan.appendChild(opt);
+        });
       }
 
       // Dropdown tạo phiếu
       const sXuat = document.getElementById('select-chuyenkho-xuat');
       const sNhan = document.getElementById('select-chuyenkho-nhan');
       if (sXuat) {
-        sXuat.innerHTML = branches.map(c => `<option value="${c.ma}">${c.ma}: ${c.ten}</option>`).join('');
-        sXuat.value = layMaChiNhanh(currentChiNhanh || 'CN01');
+        sXuat.innerHTML = branches.map((b, idx) => `
+          <option value="${b.ma}" ${idx === 0 ? 'selected' : ''}>${b.ma}: ${b.ten}</option>
+        `).join('');
       }
       if (sNhan) {
-        sNhan.innerHTML = branches.map(c => `<option value="${c.ma}">${c.ma}: ${c.ten}</option>`).join('');
-        const otherCN = branches.find(c => c.ma !== layMaChiNhanh(currentChiNhanh || 'CN01')) || branches[1] || branches[0];
-        sNhan.value = otherCN.ma;
+        sNhan.innerHTML = branches.map((b, idx) => `
+          <option value="${b.ma}" ${idx === 1 ? 'selected' : ''}>${b.ma}: ${b.ten}</option>
+        `).join('');
       }
     }
 
     function locDanhSachChuyenKho() {
       const fXuat = document.getElementById('filter-chuyenkho-xuat')?.value || 'ALL';
       const fNhan = document.getElementById('filter-chuyenkho-nhan')?.value || 'ALL';
-      const kw = (document.getElementById('search-chuyenkho')?.value || '').trim().toLowerCase();
+      const kw = (document.getElementById('search-chuyenkho')?.value || '').toLowerCase().trim();
 
       const tuNgayCK = document.getElementById('filter-chuyenkho-tungay')?.value || '';
       const denNgayCK = document.getElementById('filter-chuyenkho-denngay')?.value || '';
@@ -31439,29 +31470,33 @@ function loadSoQuy(filter) {
       if (!tbody) return;
 
       if (!list || list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">Chưa có phiếu chuyển hàng nào phù hợp!</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400">Chưa có phiếu chuyển hàng nào phù hợp!</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = list.map(p => `
-        <tr class="hover:bg-slate-50 transition border-b border-slate-100">
-          <td class="p-3 font-mono font-bold text-indigo-700 cursor-pointer hover:underline" onclick="xemChiTietChuyenKho('${p.maPhieu}')">${p.maPhieu}</td>
-          <td class="p-3 text-slate-600">${p.ngayChuyen ? new Date(p.ngayChuyen).toLocaleString('vi-VN') : '-'}</td>
-          <td class="p-3 font-semibold text-amber-800">${p.tenCnXuat || p.cnXuat}</td>
-          <td class="p-3 font-semibold text-indigo-900">${p.tenCnNhan || p.cnNhan}</td>
-          <td class="p-3 text-center font-bold text-slate-700">${p.tongSoMatHang || (p.chiTietSanPham ? p.chiTietSanPham.length : 0)}</td>
-          <td class="p-3 text-right font-mono font-bold text-indigo-700">${(Number(p.tongSoLuong) || 0).toLocaleString()}</td>
-          <td class="p-3 text-slate-700 font-medium">${p.nguoiLap || 'Quản trị viên'}</td>
-          <td class="p-3 text-center">
-            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700">Hoàn thành</span>
-          </td>
-          <td class="p-3 text-center space-x-1 whitespace-nowrap">
-            <button type="button" onclick="xemChiTietChuyenKho('${p.maPhieu}')" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition" title="Xem chi tiết & In phiếu">
-              <i class="fa-solid fa-file-invoice mr-1"></i>Chi tiết
-            </button>
-          </td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = list.map(p => {
+        const tongTienNum = Number(p.tongTien || p.tongGiaTri) || 0;
+        return `
+          <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+            <td class="p-3 font-mono font-bold text-indigo-700 cursor-pointer hover:underline" onclick="xemChiTietChuyenKho('${p.maPhieu}')">${p.maPhieu}</td>
+            <td class="p-3 text-slate-600">${p.ngayChuyen ? new Date(p.ngayChuyen).toLocaleString('vi-VN') : '-'}</td>
+            <td class="p-3 font-semibold text-amber-800">${p.tenCnXuat || p.cnXuat}</td>
+            <td class="p-3 font-semibold text-indigo-900">${p.tenCnNhan || p.cnNhan}</td>
+            <td class="p-3 text-center font-bold text-slate-700">${p.tongSoMatHang || (p.chiTietSanPham ? p.chiTietSanPham.length : 0)}</td>
+            <td class="p-3 text-right font-mono font-bold text-indigo-700">${(Number(p.tongSoLuong) || 0).toLocaleString()}</td>
+            <td class="p-3 text-right font-mono font-bold text-amber-700">${tongTienNum.toLocaleString('vi-VN')} đ</td>
+            <td class="p-3 text-slate-700 font-medium">${p.nguoiLap || 'Quản trị viên'}</td>
+            <td class="p-3 text-center">
+              <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700">Hoàn thành</span>
+            </td>
+            <td class="p-3 text-center space-x-1 whitespace-nowrap">
+              <button type="button" onclick="xemChiTietChuyenKho('${p.maPhieu}')" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition" title="Xem chi tiết & In phiếu">
+                <i class="fa-solid fa-file-invoice mr-1"></i>Chi tiết
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function moLapPhieuChuyenKho() {
@@ -31482,7 +31517,9 @@ function loadSoQuy(filter) {
 
       // Người lập & ngày giờ
       const inpNguoi = document.getElementById('input-chuyenkho-nguoilap');
-      if (inpNguoi) inpNguoi.value = 'Quản trị viên';
+      if (inpNguoi) {
+        inpNguoi.value = (typeof currentUser !== 'undefined' && currentUser) ? (currentUser.hoTen || currentUser.username) : 'Quản trị viên';
+      }
 
       const inpNgay = document.getElementById('input-chuyenkho-ngay');
       if (inpNgay) {
@@ -31519,6 +31556,22 @@ function loadSoQuy(filter) {
         const branches = (rawChiNhanhList || []).filter(c => c.ma !== val);
         if (branches.length > 0) sNhan.value = branches[0].ma;
       }
+
+      // Cập nhật lại giá nhập mặc định nếu người dùng chưa sửa tay
+      danhSachChuyenKhoCart.forEach(it => {
+        if (!it.daSuaGia) {
+          if (it.coQuanLyIMEI && it.imeiDaChon && it.imeiDaChon.length > 0) {
+            let tongGiaNhap = 0;
+            it.imeiDaChon.forEach(im => {
+              tongGiaNhap += timGiaNhapCuaIMEI(it.maHang, im, val);
+            });
+            it.donGia = Math.round(tongGiaNhap / it.imeiDaChon.length);
+          } else {
+            it.donGia = timGiaNhapTrungBinh(it.maHang, val);
+          }
+        }
+      });
+
       capNhatTonKhoTrongCartChuyenKho();
     }
 
@@ -31565,13 +31618,24 @@ function loadSoQuy(filter) {
 
       box.innerHTML = matched.map(h => {
         const tonXuat = layTonKhoSanPhamTaiChiNhanh(h.maHang, cnXuat);
+        const qlIMEI = Boolean(
+          (h.tonIMEI && h.tonIMEI > 0) ||
+          (h.danhSachIMEI && h.danhSachIMEI.length > 0) ||
+          h.coQuanLyIMEI === true || 
+          String(h.coQuanLyIMEI).trim().toLowerCase() === 'true' || 
+          String(h.coQuanLyIMEI).trim().toLowerCase().indexOf('c') === 0 || 
+          String(h.coQuanLyIMEI).trim() === '1'
+        );
+        const giaGoiY = qlIMEI ? timGiaNhapCuaIMEI(h.maHang, null, cnXuat) : timGiaNhapTrungBinh(h.maHang, cnXuat);
+
         return `
           <div onclick="themHangVaoChuyenKho('${h.maHang}')" class="p-2.5 hover:bg-indigo-50 cursor-pointer flex justify-between items-center transition">
             <div>
               <p class="font-bold text-slate-800 text-xs">${h.tenHang} <span class="font-mono text-indigo-600 font-semibold">(${h.maHang})</span></p>
               <p class="text-[11px] text-slate-500">
                 Kho xuất: <b class="${tonXuat > 0 ? 'text-emerald-600' : 'text-rose-600'} font-mono">${tonXuat}</b> ${h.donViTinh || 'Cái'}
-                ${h.coQuanLyIMEI ? '<span class="ml-2 text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.2 rounded font-bold">IMEI</span>' : ''}
+                ${qlIMEI ? '<span class="ml-2 text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.2 rounded font-bold">IMEI</span>' : ''}
+                <span class="ml-2 text-slate-400">Giá vốn: <b class="font-mono text-slate-700">${(giaGoiY || 0).toLocaleString()}đ</b></span>
               </p>
             </div>
             <button type="button" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[11px] font-bold">
@@ -31617,6 +31681,14 @@ function loadSoQuy(filter) {
           exist.soLuong++;
         }
       } else {
+        // Lấy giá chuyển ban đầu:
+        // - Với hàng IMEI: lấy giá vốn xuất trước, khi chọn IMEI sẽ tự động cập nhật theo IMEI đó
+        // - Với hàng không IMEI: lấy giá nhập trung bình (giá vốn bình quân) của sản phẩm
+        let donGiaBanDau = qlIMEI ? timGiaNhapCuaIMEI(sp.maHang, null, cnXuat) : timGiaNhapTrungBinh(sp.maHang, cnXuat);
+        if (!donGiaBanDau && (sp.giaVon || sp.giaVonBanDau)) {
+          donGiaBanDau = Number(sp.giaVon || sp.giaVonBanDau) || 0;
+        }
+
         danhSachChuyenKhoCart.push({
           maHang: sp.maHang,
           tenHang: sp.tenHang,
@@ -31624,6 +31696,8 @@ function loadSoQuy(filter) {
           tonXuat: tonXuat,
           tonNhan: tonNhan,
           soLuong: qlIMEI ? 0 : 1,
+          donGia: donGiaBanDau,
+          daSuaGia: false, // đánh dấu người dùng có chủ động sửa giá hay không
           coQuanLyIMEI: qlIMEI,
           imeiDaChon: []
         });
@@ -31646,18 +31720,27 @@ function loadSoQuy(filter) {
       const badgeCount = document.getElementById('chuyenkho-cart-count');
       const sumMH = document.getElementById('summary-chuyenkho-somathang');
       const sumSL = document.getElementById('summary-chuyenkho-tongsl');
+      const sumTien = document.getElementById('summary-chuyenkho-tongtien');
 
       if (!danhSachChuyenKhoCart || danhSachChuyenKhoCart.length === 0) {
-        if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">Chưa có sản phẩm nào trong phiếu chuyển kho. Hãy tìm kiếm ở trên để thêm vào.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">Chưa có sản phẩm nào trong phiếu chuyển kho. Hãy tìm kiếm ở trên để thêm vào.</td></tr>`;
         if (badgeCount) badgeCount.innerText = '0 mặt hàng';
         if (sumMH) sumMH.innerText = '0';
         if (sumSL) sumSL.innerText = '0';
+        if (sumTien) sumTien.innerText = '0 đ';
         return;
       }
 
       let totalSL = 0;
+      let totalTien = 0;
+
       tbody.innerHTML = danhSachChuyenKhoCart.map((it, idx) => {
-        totalSL += (Number(it.soLuong) || 0);
+        const slNum = Number(it.soLuong) || 0;
+        const giaNum = Number(it.donGia) || 0;
+        const thanhTien = slNum * giaNum;
+        totalSL += slNum;
+        totalTien += thanhTien;
+
         return `
           <tr class="hover:bg-slate-50/70 border-b border-slate-100 transition">
             <td class="p-2.5">
@@ -31693,6 +31776,21 @@ function loadSoQuy(filter) {
                 </div>
               ` : `<span class="text-slate-400 text-[11px]">-</span>`}
             </td>
+            <td class="p-2.5 text-right">
+              <div class="relative inline-block w-32">
+                <input type="text" 
+                       value="${giaNum > 0 ? giaNum.toLocaleString('vi-VN') : '0'}" 
+                       oninput="xuLyNhapDonGiaChuyenKho('${it.maHang}', this)"
+                       onfocus="this.select()"
+                       class="w-full text-right border border-indigo-200 rounded-lg px-2 py-1 font-mono font-bold text-slate-800 bg-white focus:outline-indigo-500 focus:border-indigo-500 text-xs shadow-2xs pr-5"
+                       title="${it.coQuanLyIMEI ? 'Giá nhập của hàng hóa có IMEI (có thể điều chỉnh)' : 'Giá nhập trung bình của hàng hóa (có thể điều chỉnh)'}"
+                       placeholder="0">
+                <span class="absolute right-1.5 top-1 text-[10px] text-slate-400 pointer-events-none">đ</span>
+              </div>
+            </td>
+            <td class="p-2.5 text-right font-mono font-bold text-indigo-700 whitespace-nowrap text-xs" id="thanh-tien-ck-${it.maHang}">
+              ${thanhTien.toLocaleString('vi-VN')} đ
+            </td>
             <td class="p-2.5 text-center">
               <button type="button" onclick="xoaHangChuyenKho('${it.maHang}')" class="text-rose-400 hover:text-rose-600 p-1 transition" title="Xóa mặt hàng này">
                 <i class="fa-solid fa-trash-can"></i>
@@ -31705,6 +31803,33 @@ function loadSoQuy(filter) {
       if (badgeCount) badgeCount.innerText = danhSachChuyenKhoCart.length + ' mặt hàng';
       if (sumMH) sumMH.innerText = danhSachChuyenKhoCart.length;
       if (sumSL) sumSL.innerText = totalSL.toLocaleString();
+      if (sumTien) sumTien.innerText = totalTien.toLocaleString('vi-VN') + ' đ';
+    }
+
+    function xuLyNhapDonGiaChuyenKho(maHang, inputEl) {
+      const it = danhSachChuyenKhoCart.find(i => i.maHang === maHang);
+      if (!it) return;
+
+      let rawVal = inputEl.value.replace(/[^0-9]/g, '');
+      let valNum = parseInt(rawVal, 10) || 0;
+      it.donGia = valNum;
+      it.daSuaGia = true; // Người dùng đã chủ động chỉnh sửa giá
+
+      inputEl.value = valNum.toLocaleString('vi-VN');
+
+      // Cập nhật thành tiền dòng này
+      const ttEl = document.getElementById(`thanh-tien-ck-${maHang}`);
+      const slNum = Number(it.soLuong) || 0;
+      const rowTT = slNum * valNum;
+      if (ttEl) ttEl.innerText = rowTT.toLocaleString('vi-VN') + ' đ';
+
+      // Cập nhật tổng tiền toàn phiếu
+      let totalTien = 0;
+      danhSachChuyenKhoCart.forEach(x => {
+        totalTien += (Number(x.soLuong) || 0) * (Number(x.donGia) || 0);
+      });
+      const sumTien = document.getElementById('summary-chuyenkho-tongtien');
+      if (sumTien) sumTien.innerText = totalTien.toLocaleString('vi-VN') + ' đ';
     }
 
     function capNhatSLChuyenKho(maHang, val) {
@@ -31723,12 +31848,13 @@ function loadSoQuy(filter) {
     function tangGiamSLChuyenKho(maHang, delta) {
       const it = danhSachChuyenKhoCart.find(i => i.maHang === maHang);
       if (!it) return;
-      const newVal = it.soLuong + Number(delta);
-      if (newVal < 1) return;
-      if (newVal > it.tonXuat) {
-        return showNotification(`Số lượng chuyển không thể vượt quá tồn kho xuất (${it.tonXuat})!`, true);
+      let sl = (Number(it.soLuong) || 0) + delta;
+      if (sl < 1) sl = 1;
+      if (sl > it.tonXuat) {
+        sl = it.tonXuat;
+        showNotification(`Số lượng chuyển không thể vượt quá tồn kho xuất (${it.tonXuat})!`, true);
       }
-      it.soLuong = newVal;
+      it.soLuong = sl;
       renderChuyenKhoCart();
     }
 
@@ -31737,32 +31863,31 @@ function loadSoQuy(filter) {
       renderChuyenKhoCart();
     }
 
-    // Modal chọn IMEI khi chuyển kho
     var ckAvailableIMEIs = [];
 
     async function moModalChonIMEIChuyenKho(maHang) {
       const it = danhSachChuyenKhoCart.find(i => i.maHang === maHang);
       if (!it) return;
-      ckCurrentMaHangIMEI = maHang;
 
+      ckCurrentMaHangIMEI = maHang;
+      const cleanMa = String(maHang || '').trim().toUpperCase();
       const cnXuat = document.getElementById('select-chuyenkho-xuat')?.value || 'CN01';
+      const targetCNXuat = layMaChiNhanh(cnXuat);
+
       const titleEl = document.getElementById('modal-imei-ck-title');
-      if (titleEl) titleEl.innerText = `${it.tenHang} (${it.maHang}) - Kho: ${cnXuat}`;
+      if (titleEl) titleEl.innerText = `Chọn IMEI Chuyển Kho: ${it.tenHang}`;
+
+      const subEl = document.getElementById('modal-imei-ck-sub');
+      if (subEl) subEl.innerText = `Mã hàng: ${it.maHang} | Kho xuất: ${layTenChiNhanhDayDu(cnXuat)} (Tồn: ${it.tonXuat})`;
 
       const sInp = document.getElementById('search-imei-ck');
       if (sInp) sInp.value = '';
 
-      const container = document.getElementById('list-imei-ck-container');
-      if (container) container.innerHTML = `<p class="text-slate-400 text-center py-4 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Đang tải danh sách IMEI từ kho...</p>`;
-
       moModal('modal-chon-imei-chuyenkho');
 
-      // Nạp IMEI khả dụng tại chi nhánh xuất
       let imeis = [];
-      const cleanMa = String(maHang || '').trim().toUpperCase();
-      const targetCNXuat = layMaChiNhanh(cnXuat);
 
-      // 1. Kiểm tra cache tức thời từ bộ nhớ
+      // 1. Lấy từ window.imeiListByProductAndBranch nếu có
       if (window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa] && window.imeiListByProductAndBranch[cleanMa][targetCNXuat]) {
         imeis = [...window.imeiListByProductAndBranch[cleanMa][targetCNXuat]];
       }
@@ -31847,6 +31972,19 @@ function loadSoQuy(filter) {
       it.imeiDaChon = selected;
       it.soLuong = selected.length;
 
+      // ĐỐI VỚI HÀNG HÓA IMEI: Nếu người dùng chưa tự sửa tay đơn giá, tự động nạp giá nhập của các IMEI đã chọn
+      if (!it.daSuaGia && selected.length > 0) {
+        const cnXuat = document.getElementById('select-chuyenkho-xuat')?.value || 'CN01';
+        let tongGiaNhap = 0;
+        selected.forEach(im => {
+          tongGiaNhap += timGiaNhapCuaIMEI(it.maHang, im, cnXuat);
+        });
+        const giaTB = Math.round(tongGiaNhap / selected.length);
+        if (giaTB > 0) {
+          it.donGia = giaTB;
+        }
+      }
+
       dongModal('modal-chon-imei-chuyenkho');
       renderChuyenKhoCart();
       showNotification(`Đã chọn ${selected.length} mã IMEI cho sản phẩm [${it.tenHang}]!`);
@@ -31885,8 +32023,9 @@ function loadSoQuy(filter) {
       const tenXuat = layTenChiNhanhDayDu(cnXuat);
       const tenNhan = layTenChiNhanhDayDu(cnNhan);
       const tongSL = danhSachChuyenKhoCart.reduce((sum, it) => sum + (Number(it.soLuong) || 0), 0);
+      const tongTien = danhSachChuyenKhoCart.reduce((sum, it) => sum + ((Number(it.soLuong) || 0) * (Number(it.donGia) || 0)), 0);
 
-      const xacNhan = confirm(`XÁC NHẬN CHUYỂN KHO:\n\n• Từ: ${tenXuat}\n• Đến: ${tenNhan}\n• Tổng số mặt hàng: ${danhSachChuyenKhoCart.length}\n• Tổng số lượng: ${tongSL}\n\nBạn có chắc chắn muốn thực hiện điều chuyển ngay bây giờ không?`);
+      const xacNhan = confirm(`XÁC NHẬN CHUYỂN KHO:\n\n• Từ: ${tenXuat}\n• Đến: ${tenNhan}\n• Tổng số mặt hàng: ${danhSachChuyenKhoCart.length}\n• Tổng số lượng: ${tongSL}\n• Tổng giá trị điều chuyển: ${tongTien.toLocaleString('vi-VN')} đ\n\nBạn có chắc chắn muốn thực hiện điều chuyển ngay bây giờ không?`);
       if (!xacNhan) return;
 
       const btn = document.getElementById('btn-xacnhan-chuyenkho');
@@ -31900,13 +32039,39 @@ function loadSoQuy(filter) {
       const nguoiLap = document.getElementById('input-chuyenkho-nguoilap')?.value || 'Quản trị viên';
       const ghiChu = document.getElementById('input-chuyenkho-ghichu')?.value || '';
 
-      const chiTietCopy = JSON.parse(JSON.stringify(danhSachChuyenKhoCart));
+      const chiTietCopy = danhSachChuyenKhoCart.map(it => ({
+        maHang: it.maHang,
+        tenHang: it.tenHang,
+        donViTinh: it.donViTinh || 'Cái',
+        soLuong: Number(it.soLuong) || 0,
+        donGia: Number(it.donGia) || 0,
+        giaNhap: Number(it.donGia) || 0,
+        thanhTien: (Number(it.soLuong) || 0) * (Number(it.donGia) || 0),
+        coQuanLyIMEI: it.coQuanLyIMEI,
+        imeiDaChon: Array.isArray(it.imeiDaChon) ? [...it.imeiDaChon] : []
+      }));
 
       // 1. Cập nhật tồn kho đa chi nhánh (Trừ kho xuất, Cộng kho nhận)
       try {
         chiTietCopy.forEach(it => {
           dieuChinhTonKhoChiNhanh(it.maHang, cnXuat, -it.soLuong);
           dieuChinhTonKhoChiNhanh(it.maHang, cnNhan, it.soLuong);
+
+          // Cập nhật giá vốn tại chi nhánh nhận thông minh theo giá chuyển
+          const cleanMa = String(it.maHang || '').trim().toUpperCase();
+          if (it.donGia > 0) {
+            if (!window.giaVonChiNhanhMap) window.giaVonChiNhanhMap = {};
+            if (!window.giaVonChiNhanhMap[cleanMa]) {
+              window.giaVonChiNhanhMap[cleanMa] = { CN01: 0, CN02: 0, CN03: 0, CN04: 0 };
+            }
+            const gvCu = Number(window.giaVonChiNhanhMap[cleanMa][cnNhan]) || 0;
+            const tonNhanCu = layTonKhoSanPhamTaiChiNhanh(cleanMa, cnNhan) - it.soLuong;
+            if (tonNhanCu <= 0 || gvCu <= 0) {
+              window.giaVonChiNhanhMap[cleanMa][cnNhan] = it.donGia;
+            } else {
+              window.giaVonChiNhanhMap[cleanMa][cnNhan] = Math.round(((tonNhanCu * gvCu) + (it.soLuong * it.donGia)) / (tonNhanCu + it.soLuong));
+            }
+          }
         });
         if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
       } catch(e) {
@@ -31936,7 +32101,6 @@ function loadSoQuy(filter) {
               .update({ chi_nhanh: toCN })
               .in('imei', allTransferredIMEIs);
             console.log(`Đã chuyển chi nhánh ${allTransferredIMEIs.length} IMEI sang ${toCN}`);
-            if (typeof capNhatTonKhoTheoChiNhanhHienTai === 'function') capNhatTonKhoTheoChiNhanhHienTai();
           }
         }
       } catch(e) {
@@ -31955,6 +32119,8 @@ function loadSoQuy(filter) {
         ghiChu: ghiChu,
         tongSoMatHang: chiTietCopy.length,
         tongSoLuong: tongSL,
+        tongTien: tongTien,
+        tongGiaTri: tongTien,
         trangThai: 'Hoàn thành',
         chiTietSanPham: chiTietCopy
       };
@@ -31972,8 +32138,8 @@ function loadSoQuy(filter) {
             ngay_tao: ngayChuyen,
             chi_nhanh: `${cnXuat} -> ${cnNhan}`,
             nhan_vien: nguoiLap,
-            tong_tien: 0,
-            da_thanh_toan: 0,
+            tong_tien: tongTien,
+            da_thanh_toan: tongTien,
             trang_thai: 'Hoàn thành',
             hinh_thuc_tt: 'CHUYEN_KHO',
             ghi_chu: ghiChu,
@@ -31984,16 +32150,11 @@ function loadSoQuy(filter) {
         console.warn("Lỗi lưu Supabase don_hang phiếu CK:", e);
       }
 
+      showNotification(`Chuyển kho thành công phiếu [${maPhieu}]! Đã xuất kho từ [${tenXuat}] sang [${tenNhan}].`);
+
       if (btn) {
         btn.disabled = false;
         btn.innerHTML = `<i class="fa-solid fa-check"></i><span>XÁC NHẬN CHUYỂN KHO</span>`;
-      }
-
-      showNotification(`Điều chuyển thành công phiếu [${maPhieu}] từ ${cnXuat} sang ${cnNhan}!`);
-
-      // 5. Nếu cài đặt in phiếu BẬT thì mở xem chi tiết & in
-      if (layCaiDatInPhieuChuyenKho()) {
-        xemChiTietChuyenKho(maPhieu);
       }
 
       troVeDanhSachChuyenKho();
@@ -32011,6 +32172,7 @@ function loadSoQuy(filter) {
       const elNguoi = document.getElementById('ct-ck-nguoilap');
       const elGhiChu = document.getElementById('ct-ck-ghichu');
       const elTongSL = document.getElementById('ct-ck-tongsl');
+      const elTongTien = document.getElementById('ct-ck-tongtien');
       const elKyNguoi = document.getElementById('ct-ck-ky-nguoilap');
       const tbody = document.getElementById('ct-ck-tbl-body');
 
@@ -32024,19 +32186,32 @@ function loadSoQuy(filter) {
       if (elKyNguoi) elKyNguoi.innerText = p.nguoiLap || 'Quản trị viên';
 
       const items = Array.isArray(p.chiTietSanPham) ? p.chiTietSanPham : [];
+      let tongTienPhiu = Number(p.tongTien || p.tongGiaTri) || 0;
+      if (!tongTienPhiu && items.length > 0) {
+        tongTienPhiu = items.reduce((sum, it) => sum + ((Number(it.soLuong) || 0) * (Number(it.donGia || it.giaNhap) || 0)), 0);
+      }
+      if (elTongTien) elTongTien.innerText = tongTienPhiu.toLocaleString('vi-VN') + ' đ';
+
       if (tbody) {
-        tbody.innerHTML = items.map((it, idx) => `
-          <tr class="hover:bg-slate-50 border-b border-slate-100">
-            <td class="p-2.5 text-center font-bold text-slate-500">${idx + 1}</td>
-            <td class="p-2.5 font-mono font-bold text-indigo-700">${it.maHang}</td>
-            <td class="p-2.5 font-semibold text-slate-800">${it.tenHang}</td>
-            <td class="p-2.5 text-center text-slate-600">${it.donViTinh || 'Cái'}</td>
-            <td class="p-2.5 text-center font-mono font-bold text-indigo-700 text-sm">${it.soLuong}</td>
-            <td class="p-2.5 font-mono text-[11px] text-slate-600">
-              ${it.imeiDaChon && it.imeiDaChon.length > 0 ? it.imeiDaChon.join(', ') : '-'}
-            </td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = items.map((it, idx) => {
+          const sl = Number(it.soLuong) || 0;
+          const gia = Number(it.donGia || it.giaNhap) || 0;
+          const tt = sl * gia;
+          return `
+            <tr class="hover:bg-slate-50 border-b border-slate-100">
+              <td class="p-2.5 text-center font-bold text-slate-500">${idx + 1}</td>
+              <td class="p-2.5 font-mono font-bold text-indigo-700">${it.maHang}</td>
+              <td class="p-2.5 font-semibold text-slate-800">${it.tenHang}</td>
+              <td class="p-2.5 text-center text-slate-600">${it.donViTinh || 'Cái'}</td>
+              <td class="p-2.5 text-center font-mono font-bold text-indigo-700 text-sm">${sl}</td>
+              <td class="p-2.5 font-mono text-[11px] text-slate-600">
+                ${it.imeiDaChon && it.imeiDaChon.length > 0 ? it.imeiDaChon.join(', ') : '-'}
+              </td>
+              <td class="p-2.5 text-right font-mono font-medium">${gia.toLocaleString('vi-VN')} đ</td>
+              <td class="p-2.5 text-right font-mono font-bold text-indigo-700">${tt.toLocaleString('vi-VN')} đ</td>
+            </tr>
+          `;
+        }).join('');
       }
 
       moModal('modal-chitiet-chuyenkho');
@@ -32047,16 +32222,28 @@ function loadSoQuy(filter) {
       if (!p) return;
 
       const items = Array.isArray(p.chiTietSanPham) ? p.chiTietSanPham : [];
-      const rowsHtml = items.map((it, idx) => `
-        <tr>
-          <td style="text-align:center; padding: 6px; border: 1px solid #cbd5e1;">${idx + 1}</td>
-          <td style="font-family: monospace; font-weight: bold; padding: 6px; border: 1px solid #cbd5e1;">${it.maHang}</td>
-          <td style="padding: 6px; border: 1px solid #cbd5e1;">${it.tenHang}</td>
-          <td style="text-align:center; padding: 6px; border: 1px solid #cbd5e1;">${it.donViTinh || 'Cái'}</td>
-          <td style="text-align:center; font-family: monospace; font-weight: bold; font-size: 13px; padding: 6px; border: 1px solid #cbd5e1;">${it.soLuong}</td>
-          <td style="font-family: monospace; font-size: 11px; padding: 6px; border: 1px solid #cbd5e1;">${it.imeiDaChon && it.imeiDaChon.length > 0 ? it.imeiDaChon.join(', ') : '-'}</td>
-        </tr>
-      `).join('');
+      let tongTienPhiu = Number(p.tongTien || p.tongGiaTri) || 0;
+      if (!tongTienPhiu && items.length > 0) {
+        tongTienPhiu = items.reduce((sum, it) => sum + ((Number(it.soLuong) || 0) * (Number(it.donGia || it.giaNhap) || 0)), 0);
+      }
+
+      const rowsHtml = items.map((it, idx) => {
+        const sl = Number(it.soLuong) || 0;
+        const gia = Number(it.donGia || it.giaNhap) || 0;
+        const tt = sl * gia;
+        return `
+          <tr>
+            <td style="text-align:center; padding: 6px; border: 1px solid #cbd5e1;">${idx + 1}</td>
+            <td style="font-family: monospace; font-weight: bold; padding: 6px; border: 1px solid #cbd5e1;">${it.maHang}</td>
+            <td style="padding: 6px; border: 1px solid #cbd5e1;">${it.tenHang}</td>
+            <td style="text-align:center; padding: 6px; border: 1px solid #cbd5e1;">${it.donViTinh || 'Cái'}</td>
+            <td style="text-align:center; font-family: monospace; font-weight: bold; font-size: 13px; padding: 6px; border: 1px solid #cbd5e1;">${sl}</td>
+            <td style="font-family: monospace; font-size: 11px; padding: 6px; border: 1px solid #cbd5e1;">${it.imeiDaChon && it.imeiDaChon.length > 0 ? it.imeiDaChon.join(', ') : '-'}</td>
+            <td style="text-align:right; font-family: monospace; padding: 6px; border: 1px solid #cbd5e1;">${gia.toLocaleString('vi-VN')} đ</td>
+            <td style="text-align:right; font-family: monospace; font-weight: bold; color: #4338ca; padding: 6px; border: 1px solid #cbd5e1;">${tt.toLocaleString('vi-VN')} đ</td>
+          </tr>
+        `;
+      }).join('');
 
       const printHtml = `
         <!DOCTYPE html>
@@ -32103,11 +32290,13 @@ function loadSoQuy(filter) {
             <thead>
               <tr>
                 <th style="width: 35px; text-align: center;">STT</th>
-                <th style="width: 100px;">Mã Hàng</th>
+                <th style="width: 95px;">Mã Hàng</th>
                 <th>Tên Hàng Hóa</th>
-                <th style="width: 50px; text-align: center;">ĐVT</th>
-                <th style="width: 70px; text-align: center;">Số Lượng</th>
+                <th style="width: 45px; text-align: center;">ĐVT</th>
+                <th style="width: 60px; text-align: center;">Số Lượng</th>
                 <th>Mã Serial / IMEI Chi Tiết</th>
+                <th style="width: 95px; text-align: right;">Đơn Giá</th>
+                <th style="width: 105px; text-align: right;">Thành Tiền</th>
               </tr>
             </thead>
             <tbody>
@@ -32115,9 +32304,10 @@ function loadSoQuy(filter) {
             </tbody>
             <tfoot>
               <tr style="background: #f8fafc; font-weight: bold;">
-                <td colspan="4" style="text-align: right; padding: 8px; border: 1px solid #cbd5e1;">TỔNG CỘNG SỐ LƯỢNG:</td>
+                <td colspan="4" style="text-align: right; padding: 8px; border: 1px solid #cbd5e1;">TỔNG CỘNG:</td>
                 <td style="text-align: center; font-family: monospace; font-size: 14px; color: #4338ca; padding: 8px; border: 1px solid #cbd5e1;">${(Number(p.tongSoLuong) || 0).toLocaleString()}</td>
                 <td style="border: 1px solid #cbd5e1;"></td>
+                <td colspan="2" style="text-align: right; font-family: monospace; font-size: 14px; color: #d97706; padding: 8px; border: 1px solid #cbd5e1;">${tongTienPhiu.toLocaleString('vi-VN')} đ</td>
               </tr>
             </tfoot>
           </table>
@@ -32168,6 +32358,8 @@ function loadSoQuy(filter) {
         const items = Array.isArray(p.chiTietSanPham) ? p.chiTietSanPham : [];
         if (items.length > 0) {
           items.forEach(it => {
+            const sl = Number(it.soLuong) || 0;
+            const gia = Number(it.donGia || it.giaNhap) || 0;
             rows.push({
               "Mã Phiếu": p.maPhieu,
               "Ngày Chuyển": p.ngayChuyen ? new Date(p.ngayChuyen).toLocaleString('vi-VN') : '',
@@ -32176,8 +32368,11 @@ function loadSoQuy(filter) {
               "Mã Hàng": it.maHang,
               "Tên Hàng Hóa": it.tenHang,
               "ĐVT": it.donViTinh || 'Cái',
-              "Số Lượng": it.soLuong,
+              "Số Lượng": sl,
               "Danh Sách IMEI": (it.imeiDaChon && it.imeiDaChon.length > 0) ? it.imeiDaChon.join(', ') : '',
+              "Đơn Giá Chuyển": gia,
+              "Thành Tiền": sl * gia,
+              "Tổng Tiền Phiếu": Number(p.tongTien || p.tongGiaTri) || 0,
               "Người Lập": p.nguoiLap || 'Quản trị viên',
               "Ghi Chú": p.ghiChu || ''
             });
@@ -32193,6 +32388,9 @@ function loadSoQuy(filter) {
             "ĐVT": '',
             "Số Lượng": p.tongSoLuong || 0,
             "Danh Sách IMEI": '',
+            "Đơn Giá Chuyển": 0,
+            "Thành Tiền": 0,
+            "Tổng Tiền Phiếu": Number(p.tongTien || p.tongGiaTri) || 0,
             "Người Lập": p.nguoiLap || 'Quản trị viên',
             "Ghi Chú": p.ghiChu || ''
           });
@@ -32207,7 +32405,6 @@ function loadSoQuy(filter) {
       showNotification(`Đã xuất ${rows.length} dòng dữ liệu điều chuyển ra file [${fName}]!`);
     }
 
-    // Gắn các hàm mới vào window
     window.layCaiDatTinhGiaVonTB = layCaiDatTinhGiaVonTB;
     window.layCaiDatChanBanNgungKD = layCaiDatChanBanNgungKD;
     window.layCaiDatInPhieuChuyenKho = layCaiDatInPhieuChuyenKho;
@@ -32228,6 +32425,13 @@ function loadSoQuy(filter) {
 
     // Tự động kích hoạt cấu hình ẩn/hiện cột ngay lập tức
     try { apDungCaiDatAnHienCot(); } catch (eCot) {}
+    // Làm mới cache nhóm hàng để hiển thị đúng tên nhóm chuẩn tiếng Việt
+    try {
+      const oldNhomCache = localStorage.getItem('TGDT_RAW_NHOM_HANG_CACHE');
+      if (oldNhomCache && oldNhomCache.includes('Nhóm NH')) {
+        localStorage.removeItem('TGDT_RAW_NHOM_HANG_CACHE');
+      }
+    } catch(eNhomCache) {}
 
     window.kiemTraSanPhamNgungKinhDoanh = kiemTraSanPhamNgungKinhDoanh;
     window.layHtmlBadgeTrangThaiHangHoa = layHtmlBadgeTrangThaiHangHoa;
@@ -32254,6 +32458,13 @@ function loadSoQuy(filter) {
     window.locDanhSachIMEIChuyenKho = locDanhSachIMEIChuyenKho;
     window.capNhatDemIMEIChuyenKho = capNhatDemIMEIChuyenKho;
     window.xacNhanChonIMEIChuyenKho = xacNhanChonIMEIChuyenKho;
+    window.timGiaNhapCuaIMEI = timGiaNhapCuaIMEI;
+    window.timGiaNhapTrungBinh = timGiaNhapTrungBinh;
+    window.xuLyNhapDonGiaChuyenKho = xuLyNhapDonGiaChuyenKho;
+    window.xacNhanThucHienChuyenKho = xacNhanThucHienChuyenKho;
+    window.xemChiTietChuyenKho = xemChiTietChuyenKho;
+    window.inPhieuChuyenKho = inPhieuChuyenKho;
+    window.xuatExcelPhieuChuyenKho = xuatExcelPhieuChuyenKho;
     // ====================================================================
     // IN HÓA ĐƠN BÁN HÀNG (POS & LỊCH SỬ ĐƠN HÀNG)
     // ====================================================================
@@ -33040,14 +33251,17 @@ function loadSoQuy(filter) {
                 <th class="p-2.5 text-center w-14">ĐVT</th>
                 <th class="p-2.5 text-center w-20">Số Lượng</th>
                 <th class="p-2.5">Chi Tiết Serial / IMEI</th>
+                <th class="p-2.5 text-right w-24">Đơn Giá</th>
+                <th class="p-2.5 text-right w-28">Thành Tiền</th>
               </tr>
             </thead>
             <tbody id="ct-ck-tbl-body" class="divide-y divide-slate-100 font-medium"></tbody>
             <tfoot class="bg-slate-50 font-bold border-t">
               <tr>
-                <td colspan="4" class="p-2.5 text-right text-slate-700">TỔNG CỘNG SỐ LƯỢNG:</td>
+                <td colspan="4" class="p-2.5 text-right text-slate-700">TỔNG CỘNG:</td>
                 <td class="p-2.5 text-center font-mono text-indigo-700 text-sm" id="ct-ck-tongsl">0</td>
                 <td></td>
+                <td colspan="2" class="p-2.5 text-right font-mono font-bold text-amber-600 text-sm" id="ct-ck-tongtien">0 đ</td>
               </tr>
             </tfoot>
           </table>
