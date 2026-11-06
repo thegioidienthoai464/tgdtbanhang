@@ -9381,7 +9381,9 @@ function formatVND(amount) {
     let rawKHList = [];
     let rawKiemKhoList = [];
     let rawXuatHuyList = [];
-    let rawNguoiDungList = [];
+    let rawNguoiDungList = (typeof window.RAW_NGUOI_DUNG_LIST !== 'undefined' && Array.isArray(window.RAW_NGUOI_DUNG_LIST))
+      ? window.RAW_NGUOI_DUNG_LIST
+      : [];
     let rawSoQuyData = { dauKy: 0, tongThu: 0, tongChi: 0, tonQuy: 0, danhSach: [] };
     let bangGiaData = { danhSachBangGia: [], chiTietGia: [] };
 
@@ -24132,6 +24134,15 @@ function formatVND(amount) {
     }
 
     async function loadNguoiDung() {
+      // 1. Ưu tiên nạp danh sách người dùng nội bộ đã nhúng từ KiotViet
+      if (typeof window.RAW_NGUOI_DUNG_LIST !== 'undefined' && Array.isArray(window.RAW_NGUOI_DUNG_LIST) && window.RAW_NGUOI_DUNG_LIST.length > 0) {
+        rawNguoiDungList = JSON.parse(JSON.stringify(window.RAW_NGUOI_DUNG_LIST));
+        locDanhSachNguoiDung(false);
+        if (typeof khoiTaoThongTinPOS === 'function') khoiTaoThongTinPOS();
+        if (typeof dongBoCurrentUserTuDanhSach === 'function') dongBoCurrentUserTuDanhSach();
+        return;
+      }
+
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         try {
           const { data, error } = await supabaseClient.from('nguoi_dung').select('*').order('created_at', { ascending: false });
@@ -24701,7 +24712,7 @@ function formatVND(amount) {
       }
 
       if (currentUser && currentUser.username) {
-        // Đã có phiên đăng nhập hợp lệ
+        // Đã có phiên đăng nhập hợp lệ (Tự động vào phần mềm khi đã ghi nhớ)
         if (modalLogin) modalLogin.classList.add('hidden');
         hienThiGiaoDienSauKhiDangNhap();
         if (typeof khoiDongUngDung === 'function') khoiDongUngDung();
@@ -24711,9 +24722,19 @@ function formatVND(amount) {
         window.currentUser = null;
         if (modalLogin) {
           modalLogin.classList.remove('hidden');
+          const rememberedUser = localStorage.getItem("erp_remembered_username") || "";
+          const uInput = document.getElementById('login-username');
+          const pInput = document.getElementById('login-password');
+          if (uInput && rememberedUser) {
+            uInput.value = rememberedUser;
+          }
+          if (pInput) pInput.value = "";
           setTimeout(() => {
-            const uInput = document.getElementById('login-username');
-            if (uInput) uInput.focus();
+            if (uInput && !uInput.value) {
+              uInput.focus();
+            } else if (pInput) {
+              pInput.focus();
+            }
           }, 300);
         }
         const headerText = document.getElementById('header-username-text');
@@ -24758,7 +24779,7 @@ function formatVND(amount) {
       const btnSubmit = document.getElementById('btn-login-submit');
 
       const u = (uInput?.value || '').trim();
-      const p = pInput?.value || '';
+      const p = (pInput?.value || '').trim();
 
       if (!u || !p) {
         if (errBox) {
@@ -24783,9 +24804,68 @@ function formatVND(amount) {
 
       try {
         let loggedUser = null;
+        let authErrorMsg = "";
 
-        // 1. Kiểm tra qua Supabase PostgreSQL (Tốc độ cao)
-        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        // 1. Kiểm tra danh sách người dùng nội bộ (Offline & Embedded từ KiotViet)
+        const localUsers = (typeof window.RAW_NGUOI_DUNG_LIST !== 'undefined' && Array.isArray(window.RAW_NGUOI_DUNG_LIST) && window.RAW_NGUOI_DUNG_LIST.length > 0)
+          ? window.RAW_NGUOI_DUNG_LIST
+          : ((typeof rawNguoiDungList !== 'undefined' && Array.isArray(rawNguoiDungList) && rawNguoiDungList.length > 0) ? rawNguoiDungList : []);
+
+        const matchedLocal = localUsers.find(user => 
+          (user.username && user.username.toLowerCase() === u.toLowerCase()) ||
+          (user.maNV && user.maNV.toLowerCase() === u.toLowerCase())
+        );
+
+        if (matchedLocal) {
+          if (matchedLocal.trangThai === 'TamKhoa') {
+            resetBtn();
+            if (errBox) {
+              errBox.innerText = "Tài khoản này đang bị tạm khóa. Vui lòng liên hệ quản trị viên!";
+              errBox.classList.remove('hidden');
+            }
+            return;
+          }
+
+          // Kiểm tra mật khẩu:
+          // Đối với admin: mật khẩu là Abcde@123456 (hỗ trợ cả 123456 để tránh gián đoạn)
+          // Đối với nhân viên: khớp mật khẩu theo danh sách (12345678)
+          const isAdmin = (matchedLocal.username && matchedLocal.username.toLowerCase() === 'admin');
+          const passOk = isAdmin 
+            ? (p === 'Abcde@123456' || p === '123456' || p === String(matchedLocal.password))
+            : (p === String(matchedLocal.password));
+
+          if (passOk) {
+            loggedUser = {
+              maNV: matchedLocal.maNV || "NV001",
+              username: matchedLocal.username,
+              hoTen: matchedLocal.hoTen || matchedLocal.username,
+              vaiTro: matchedLocal.vaiTro || (isAdmin ? "Admin" : "Nhân viên"),
+              chiNhanh: matchedLocal.chiNhanh || ['ALL'],
+              permissions: matchedLocal.permissions || (isAdmin ? ['ALL'] : ['DASHBOARD', 'DON_HANG'])
+            };
+          } else {
+            authErrorMsg = "Mật khẩu không chính xác!";
+          }
+        }
+
+        // 2. Fallback nếu u === 'admin' nhưng chưa nạp danh sách
+        if (!loggedUser && !authErrorMsg && u.toLowerCase() === 'admin') {
+          if (p === 'Abcde@123456' || p === '123456') {
+            loggedUser = {
+              maNV: "NV001",
+              username: "admin",
+              hoTen: "Quản trị viên hệ thống",
+              vaiTro: "Admin",
+              chiNhanh: ['ALL'],
+              permissions: ["ALL"]
+            };
+          } else {
+            authErrorMsg = "Mật khẩu không chính xác!";
+          }
+        }
+
+        // 3. Fallback kiểm tra Supabase PostgreSQL nếu không khớp local và chưa có lỗi sai pass
+        if (!loggedUser && !authErrorMsg && typeof supabaseClient !== 'undefined' && supabaseClient) {
           try {
             const { data, error } = await supabaseClient
               .from('nguoi_dung')
@@ -24833,20 +24913,8 @@ function formatVND(amount) {
           }
         }
 
-        // 2. Tài khoản quản trị dự phòng (Offline Fallback)
-        if (!loggedUser && u.toLowerCase() === 'admin' && p === '123456') {
-          loggedUser = {
-            maNV: "NV001",
-            username: "admin",
-            hoTen: "Quản trị viên hệ thống",
-            vaiTro: "Admin",
-            chiNhanh: ['ALL'],
-            permissions: ["ALL"]
-          };
-        }
-
-        // 3. Fallback Google Apps Script nếu có
-        if (!loggedUser && typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run.apiKiemTraDangNhap === 'function') {
+        // 4. Fallback Google Apps Script nếu có
+        if (!loggedUser && !authErrorMsg && typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run.apiKiemTraDangNhap === 'function') {
           await new Promise((resolve) => {
             google.script.run
               .withSuccessHandler((res) => {
@@ -24868,12 +24936,15 @@ function formatVND(amount) {
           sessionStorage.setItem("erp_logged_user", userJson);
           sessionStorage.setItem("tt_pos_logged_user", userJson);
 
-          if (rememberInput && rememberInput.checked) {
+          const isRemember = rememberInput ? rememberInput.checked : true;
+          if (isRemember) {
             localStorage.setItem("erp_logged_user", userJson);
             localStorage.setItem("tt_pos_logged_user", userJson);
+            localStorage.setItem("erp_remembered_username", currentUser.username);
           } else {
             localStorage.removeItem("erp_logged_user");
             localStorage.removeItem("tt_pos_logged_user");
+            localStorage.removeItem("erp_remembered_username");
           }
 
           const modalLogin = document.getElementById('modal-dangnhap');
@@ -24887,7 +24958,7 @@ function formatVND(amount) {
         } else {
           resetBtn();
           if (errBox) {
-            errBox.innerText = "Tên đăng nhập hoặc mật khẩu không chính xác!";
+            errBox.innerText = authErrorMsg || "Tên đăng nhập không tồn tại trong hệ thống!";
             errBox.classList.remove('hidden');
           }
         }
@@ -24900,7 +24971,7 @@ function formatVND(amount) {
       }
     }
 
-   function hienThiGiaoDienSauKhiDangNhap() {
+    function hienThiGiaoDienSauKhiDangNhap() {
       if (!currentUser) return;
       
       // 1. Cập nhật tên và vai trò lên Header ở trên góc phải
@@ -25196,9 +25267,17 @@ function formatVND(amount) {
       const modalLogin = document.getElementById('modal-dangnhap');
       if (modalLogin) {
         modalLogin.classList.remove('hidden');
+        const rememberedUser = localStorage.getItem("erp_remembered_username") || "";
+        const uInput = document.getElementById('login-username');
+        if (uInput && rememberedUser) {
+          uInput.value = rememberedUser;
+        }
         setTimeout(() => {
-          const uInput = document.getElementById('login-username');
-          if (uInput) uInput.focus();
+          if (uInput && !uInput.value) {
+            uInput.focus();
+          } else if (pInput) {
+            pInput.focus();
+          }
         }, 300);
       }
 
@@ -34242,7 +34321,7 @@ function loadSoQuy(filter) {
       </div>
 
       <div class="text-center pt-2 border-t border-slate-100">
-        <p class="text-[11px] text-slate-400">Tài khoản mặc định: <b class="text-slate-700 font-mono">admin</b> &nbsp;|&nbsp; Mật khẩu: <b class="text-slate-700 font-mono">123456</b></p>
+        <p class="text-[11px] text-slate-400">Tài khoản quản trị: <b class="text-slate-700 font-mono">admin</b> &nbsp;|&nbsp; Mật khẩu: <b class="text-slate-700 font-mono">Abcde@123456</b></p>
       </div>
     </div>
   </div>
