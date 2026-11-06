@@ -8454,7 +8454,7 @@ function formatVND(amount) {
       const rawImeiMap = window.RAW_IMEI_3_CHI_NHANH || {};
 
       // Tự động dọn sạch cache tồn kho cũ khi hệ thống vừa nạp lại tồn kho mới
-      const RESET_INVENTORY_KEY = 'tt_pos_reset_inventory_thanhgiang_v20261106_final';
+      const RESET_INVENTORY_KEY = 'tt_pos_reset_inventory_tm_tg_v20261106_all';
       try {
         if (!localStorage.getItem(RESET_INVENTORY_KEY)) {
           localStorage.removeItem('tt_pos_tonkho_chinhanh');
