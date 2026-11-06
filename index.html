@@ -38,6 +38,78 @@
   <script src="du_lieu_thanh_giang.js"></script>
 
   <script>
+    
+    // ====================================================================
+    // TIỆN ÍCH TOÀN CỤC: XỬ LÝ NGÀY THÁNG VÀ CHI NHÁNH CHUẨN XÁC 100%
+    // ====================================================================
+    function parseDateTimeGlobal(dateVal) {
+      if (!dateVal) return null;
+      if (dateVal instanceof Date && !isNaN(dateVal.getTime())) return dateVal;
+      if (typeof dateVal === 'string') {
+        const s = dateVal.trim();
+        const mVn = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+        if (mVn) {
+          return new Date(
+            Number(mVn[3]),
+            Number(mVn[2]) - 1,
+            Number(mVn[1]),
+            Number(mVn[4] || 0),
+            Number(mVn[5] || 0),
+            Number(mVn[6] || 0)
+          );
+        }
+        const d = new Date(s);
+        if (!isNaN(d.getTime())) return d;
+      }
+      return null;
+    }
+    window.parseDateTimeGlobal = parseDateTimeGlobal;
+
+    function chuanHoaNgayISO(dateVal) {
+      if (!dateVal) return '';
+      if (dateVal instanceof Date && !isNaN(dateVal.getTime())) {
+        const pad = n => String(n).padStart(2, '0');
+        return `${dateVal.getFullYear()}-${pad(dateVal.getMonth()+1)}-${pad(dateVal.getDate())}`;
+      }
+      if (typeof dateVal === 'string') {
+        const s = dateVal.trim();
+        const mIso = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+        if (mIso) {
+          return `${mIso[1]}-${String(mIso[2]).padStart(2, '0')}-${String(mIso[3]).padStart(2, '0')}`;
+        }
+        const mVn = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+        if (mVn) {
+          return `${mVn[3]}-${String(mVn[2]).padStart(2, '0')}-${String(mVn[1]).padStart(2, '0')}`;
+        }
+        const d = new Date(s);
+        if (!isNaN(d.getTime())) {
+          const pad = n => String(n).padStart(2, '0');
+          return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+        }
+      }
+      return '';
+    }
+    window.chuanHoaNgayISO = chuanHoaNgayISO;
+
+    function layMaChiNhanh(str) {
+      if (!str) return 'CN01';
+      const s = String(str).toUpperCase();
+      if (s.includes('CN01') || s.includes('THANH MIỆN') || s.includes('THANH MIEN') || s.includes('TRỤ SỞ') || s.includes('TRU SO')) return 'CN01';
+      if (s.includes('CN02') || s.includes('THANH GIANG')) return 'CN02';
+      if (s.includes('CN03') || s.includes('BÌNH GIANG') || s.includes('BINH GIANG') || s.includes('THÁI HỌC') || s.includes('THAI HOC')) return 'CN03';
+      return 'CN01';
+    }
+    window.layMaChiNhanh = layMaChiNhanh;
+
+    function layTenChiNhanhDayDu(ma) {
+      const c = layMaChiNhanh(ma);
+      if (c === 'CN01') return 'CN01: Trụ sở chính Thanh Miện';
+      if (c === 'CN02') return 'CN02: Chi nhánh Thanh Giang';
+      if (c === 'CN03') return 'CN03: Chi nhánh Bình Giang';
+      return 'CN01: Trụ sở chính Thanh Miện';
+    }
+    window.layTenChiNhanhDayDu = layTenChiNhanhDayDu;
+    
     tailwind.config = {
       theme: {
         extend: {
@@ -1306,6 +1378,26 @@
                 <tr><td colspan="9" class="p-8 text-center text-slate-400">Đang nạp danh sách phiếu chuyển hàng...</td></tr>
               </tbody>
             </table>
+            <!-- Thanh phân trang phiếu chuyển kho -->
+            <div class="p-3 bg-slate-50 border-t border-slate-200 flex flex-wrap justify-between items-center gap-3 text-xs text-slate-600">
+              <div class="flex items-center space-x-2">
+                <span>Hiển thị</span>
+                <select id="select-pagesize-chuyenkho" onchange="doiSoLuongHienThiChuyenKho(this.value)" class="border border-slate-300 rounded-lg px-2 py-1 bg-white font-medium text-xs">
+                  <option value="10" selected>10</option>
+                  <option value="20">20</option>
+                  <option value="30">30</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                  <option value="ALL">Tất cả</option>
+                </select>
+                <span>phiếu / trang</span>
+                <span class="text-slate-400">|</span>
+                <span id="chuyenkho-total-count" class="font-bold text-slate-700">Tổng: 0 phiếu</span>
+              </div>
+              <div class="flex items-center space-x-1" id="chuyenkho-pagination-controls">
+                <!-- Nút phân trang tạo tự động -->
+              </div>
+            </div>
           </div>
         </div>
 
@@ -8700,6 +8792,7 @@ function formatVND(amount) {
       if (typeof taiDanhSachNhapHang === 'function') taiDanhSachNhapHang();
       if (typeof taiDanhSachDonDatHang === 'function') taiDanhSachDonDatHang();
       if (typeof loadLichSuDonHang === 'function') loadLichSuDonHang();
+      if (typeof loadDanhSachChuyenKho === 'function') loadDanhSachChuyenKho();
       if (typeof taiDanhSachTraHangNCC === 'function') taiDanhSachTraHangNCC();
       if (typeof loadDuLieuSoQuy === 'function') loadDuLieuSoQuy(currentLoaiQuy);
       if (typeof loadKiemKho === 'function') loadKiemKho();
@@ -11463,6 +11556,36 @@ function formatVND(amount) {
     }
 
     // Lấy khoảng thời gian [tuNgay, denNgay] dạng 'YYYY-MM-DD'
+    function layDanhSachDonHangHienTai() {
+      if (Array.isArray(rawDonHangList) && rawDonHangList.length > 0) return rawDonHangList;
+      if (window.RAW_DON_HANG_THANH_GIANG && window.RAW_DON_HANG_THANH_GIANG.length > 0) {
+        rawDonHangList = window.RAW_DON_HANG_THANH_GIANG;
+        return rawDonHangList;
+      }
+      if (window.danhSachDonHangFull && window.danhSachDonHangFull.length > 0) {
+        rawDonHangList = window.danhSachDonHangFull;
+        return rawDonHangList;
+      }
+      return [];
+    }
+
+    function layThongTinDonHangChuan(d) {
+      const ma = String(d.maDon || d.ma_don || d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
+      const nv = String(d.nhanVien || d.nhan_vien || d.nguoiBan || 'Nhân viên').trim();
+      const rawDate = d.thoiGian || d.ngayTao || d.ngay_tao || d.ngayBan || d.ngay_ban || '';
+      const dateISO = chuanHoaNgayISO(rawDate);
+      const dtObj = parseDateTimeGlobal(rawDate);
+      const isTra = ma.startsWith('TH') || String(d.trangThai || d.trang_thai || '').includes('Trả');
+      const isHuy = String(d.trangThai || d.trang_thai || '') === 'Đã hủy';
+      const isTam = ma.startsWith('PNH') || ma.startsWith('DDH') || nv.toLowerCase().includes('tự động');
+      const tien = Number(d.khachCanTra ?? d.tongTien ?? d.khachPhaiTra ?? d.khach_phai_tra) || 0;
+      const maCN = layMaChiNhanh(d.chiNhanh || d.chi_nhanh);
+      const tenKH = String(d.tenKhachHang || d.ten_kh || d.tenKH || 'Khách lẻ').trim();
+      const items = Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (Array.isArray(d.sanPham) ? d.sanPham : []);
+      return { ma, nv, rawDate, dateISO, dtObj, isTra, isHuy, isTam, tien, maCN, tenKH, items };
+    }
+
+    // Lấy khoảng thời gian [tuNgay, denNgay] dạng 'YYYY-MM-DD'
     function layKhoangThoiGianDashboard(rangeKey) {
       const now = new Date();
       const pad = n => String(n).padStart(2, '0');
@@ -11503,7 +11626,7 @@ function formatVND(amount) {
     }
 
     function capNhatKPIDashboard() {
-      const orders = Array.isArray(rawDonHangList) ? rawDonHangList : [];
+      const orders = layDanhSachDonHangHienTai();
       const now = new Date();
       const pad = n => String(n).padStart(2, '0');
       const fmt = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -11514,46 +11637,78 @@ function formatVND(amount) {
       yesterday.setDate(now.getDate() - 1);
       const yesterdayStr = fmt(yesterday);
 
-      const lastMonth = new Date(now);
-      lastMonth.setMonth(now.getMonth() - 1);
-      const lastMonthStr = fmt(lastMonth);
+      const thisMonthPrefix = todayStr.slice(0, 7);
+      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lastMonthPrefix = `${lastMonth.getFullYear()}-${pad(lastMonth.getMonth() + 1)}`;
 
       let dtHomNay = 0, soDonHomNay = 0, traHomNay = 0, soDonTraHomNay = 0;
       let dtHomQua = 0, traHomQua = 0;
+      let dtThangNay = 0, traThangNay = 0;
       let dtThangTruoc = 0, traThangTruoc = 0;
 
+      let latestActiveDateISO = '';
+      let dtLatestDay = 0, soDonLatestDay = 0;
+
+      const targetCN = (typeof currentChiNhanh !== 'undefined' && currentChiNhanh !== 'ALL') ? currentChiNhanh : 'ALL';
+
       orders.forEach(d => {
-        if (d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy') return;
-        const ma = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
-        const nv = String(d.nhanVien || d.nhan_vien || '').trim().toLowerCase();
-        if (ma.startsWith('PNH') || ma.startsWith('DDH') || nv === 'hệ thống tự động' || nv === 'he thong tu dong') return;
+        const info = layThongTinDonHangChuan(d);
+        if (info.isHuy || info.isTam) return;
+        if (targetCN !== 'ALL' && info.maCN !== targetCN) return;
 
-        const dateStr = String(d.ngayBan || d.ngay_ban || d.ngay || '').slice(0, 10);
-        const isTra = ma.startsWith('TH') || String(d.trangThai || '').includes('Trả');
-        const tien = Number(d.khachPhaiTra ?? d.tongTien) || 0;
+        const dateISO = info.dateISO;
+        if (!dateISO) return;
 
-        if (dateStr === todayStr) {
-          if (isTra) { traHomNay += tien; soDonTraHomNay++; }
-          else { dtHomNay += tien; soDonHomNay++; }
-        } else if (dateStr === yesterdayStr) {
-          if (isTra) traHomQua += tien;
-          else dtHomQua += tien;
-        } else if (dateStr === lastMonthStr) {
-          if (isTra) traThangTruoc += tien;
-          else dtThangTruoc += tien;
+        if (!latestActiveDateISO || dateISO > latestActiveDateISO) {
+          latestActiveDateISO = dateISO;
+          dtLatestDay = 0;
+          soDonLatestDay = 0;
+        }
+        if (dateISO === latestActiveDateISO && !info.isTra) {
+          dtLatestDay += info.tien;
+          soDonLatestDay++;
+        }
+
+        if (dateISO === todayStr) {
+          if (info.isTra) { traHomNay += info.tien; soDonTraHomNay++; }
+          else { dtHomNay += info.tien; soDonHomNay++; }
+        } else if (dateISO === yesterdayStr) {
+          if (info.isTra) traHomQua += info.tien;
+          else dtHomQua += info.tien;
+        }
+
+        if (dateISO.startsWith(thisMonthPrefix)) {
+          if (info.isTra) traThangNay += info.tien;
+          else dtThangNay += info.tien;
+        } else if (dateISO.startsWith(lastMonthPrefix)) {
+          if (info.isTra) traThangTruoc += info.tien;
+          else dtThangTruoc += info.tien;
         }
       });
 
       const thuanHomNay = Math.max(0, dtHomNay - traHomNay);
       const thuanHomQua = Math.max(0, dtHomQua - traHomQua);
+      const thuanThangNay = Math.max(0, dtThangNay - traThangNay);
       const thuanThangTruoc = Math.max(0, dtThangTruoc - traThangTruoc);
 
-      // Cập nhật DOM
+      // Cập nhật DOM Doanh thu
       const elDT = document.getElementById('dash-kpi-doanhthu');
-      if (elDT) elDT.innerText = Number(dtHomNay).toLocaleString('vi-VN');
       const elSD = document.getElementById('dash-kpi-sodon');
-      if (elSD) elSD.innerText = `${soDonHomNay} hóa đơn`;
+      if (elDT) {
+        if (soDonHomNay > 0) {
+          elDT.innerText = Number(dtHomNay).toLocaleString('vi-VN');
+          if (elSD) elSD.innerText = `${soDonHomNay} hóa đơn`;
+        } else if (soDonLatestDay > 0 && latestActiveDateISO) {
+          const parts = latestActiveDateISO.split('-');
+          elDT.innerText = Number(dtLatestDay).toLocaleString('vi-VN');
+          if (elSD) elSD.innerHTML = `<span class="text-indigo-600 font-semibold">${soDonLatestDay} HĐ</span> <span class="text-slate-400">(${parts[2]}/${parts[1]})</span>`;
+        } else {
+          elDT.innerText = '0';
+          if (elSD) elSD.innerText = '0 hóa đơn';
+        }
+      }
 
+      // Cập nhật DOM Trả hàng
       const elTH = document.getElementById('dash-kpi-trahang');
       if (elTH) elTH.innerText = Number(traHomNay).toLocaleString('vi-VN');
       const elSDT = document.getElementById('dash-kpi-sodontra');
@@ -11570,38 +11725,46 @@ function formatVND(amount) {
       const elIconHQ = document.getElementById('dash-icon-trend-homqua');
       if (elTrendHQ && elIconHQ) {
         const sign = pctHomQua > 0 ? '+' : '';
-        elTrendHQ.innerText = `${sign}${pctHomQua.toFixed(2)}%`;
+        elTrendHQ.innerText = `${sign}${pctHomQua.toFixed(1)}%`;
         if (pctHomQua >= 0) {
           elTrendHQ.className = 'text-lg font-bold font-mono tracking-tight text-emerald-600';
-          elIconHQ.className = 'text-emerald-500 text-lg font-bold shrink-0 w-5 text-center';
-          elIconHQ.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+          if (elIconHQ) {
+            elIconHQ.className = 'text-emerald-500 text-lg font-bold shrink-0 w-5 text-center';
+            elIconHQ.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+          }
         } else {
           elTrendHQ.className = 'text-lg font-bold font-mono tracking-tight text-rose-600';
-          elIconHQ.className = 'text-rose-500 text-lg font-bold shrink-0 w-5 text-center';
-          elIconHQ.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+          if (elIconHQ) {
+            elIconHQ.className = 'text-rose-500 text-lg font-bold shrink-0 w-5 text-center';
+            elIconHQ.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+          }
         }
       }
 
-      // Trend so với cùng kỳ tháng trước
+      // Trend so với tháng trước
       let pctThangTruoc = 0;
       if (thuanThangTruoc > 0) {
-        pctThangTruoc = ((thuanHomNay - thuanThangTruoc) / thuanThangTruoc) * 100;
-      } else if (thuanHomNay > 0) {
+        pctThangTruoc = ((thuanThangNay - thuanThangTruoc) / thuanThangTruoc) * 100;
+      } else if (thuanThangNay > 0) {
         pctThangTruoc = 100;
       }
       const elTrendTT = document.getElementById('dash-kpi-trend-thangtruoc');
       const elIconTT = document.getElementById('dash-icon-trend-thangtruoc');
       if (elTrendTT && elIconTT) {
-        const sign = pctThangTruoc > 0 ? '+' : '';
-        elTrendTT.innerText = `${sign}${pctThangTruoc.toFixed(2)}%`;
+        const signTT = pctThangTruoc > 0 ? '+' : '';
+        elTrendTT.innerText = `${signTT}${pctThangTruoc.toFixed(1)}%`;
         if (pctThangTruoc >= 0) {
           elTrendTT.className = 'text-lg font-bold font-mono tracking-tight text-emerald-600';
-          elIconTT.className = 'text-emerald-500 text-lg font-bold shrink-0 w-5 text-center';
-          elIconTT.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+          if (elIconTT) {
+            elIconTT.className = 'text-emerald-500 text-lg font-bold shrink-0 w-5 text-center';
+            elIconTT.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+          }
         } else {
           elTrendTT.className = 'text-lg font-bold font-mono tracking-tight text-rose-600';
-          elIconTT.className = 'text-rose-500 text-lg font-bold shrink-0 w-5 text-center';
-          elIconTT.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+          if (elIconTT) {
+            elIconTT.className = 'text-rose-500 text-lg font-bold shrink-0 w-5 text-center';
+            elIconTT.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+          }
         }
       }
     }
@@ -11610,30 +11773,16 @@ function formatVND(amount) {
       const ctx = document.getElementById('chartDoanhThuThuan');
       if (!ctx) return;
 
-      const orders = Array.isArray(rawDonHangList) ? rawDonHangList : [];
+      const orders = layDanhSachDonHangHienTai();
       const timeRange = layKhoangThoiGianDashboard(window.dashTimeRange || 'THANG_NAY');
       const tab = window.dashCurrentTab || 'ngay';
 
-      // 1. Xác định danh sách chi nhánh và màu sắc (chuẩn KiotViet)
       const branchList = [
-        { ma: 'CN03', ten: 'Thái Học - Bình Giang', color: '#0070e0' },
-        { ma: 'CN02', ten: 'Thanh Giang', color: '#00a651' },
-        { ma: 'CN01', ten: 'Thanh Miện', color: '#f59e0b' },
-        { ma: 'CN04', ten: 'Bán Online', color: '#8b5cf6' }
+        { ma: 'CN01', ten: 'Thanh Miện', color: '#2563eb' },
+        { ma: 'CN02', ten: 'Thanh Giang', color: '#16a34a' },
+        { ma: 'CN03', ten: 'Bình Giang', color: '#f59e0b' }
       ];
 
-      // Bổ sung các chi nhánh từ rawChiNhanhList nếu có
-      if (Array.isArray(rawChiNhanhList)) {
-        rawChiNhanhList.forEach((cn, idx) => {
-          const clean = layMaChiNhanh(cn.ma);
-          if (!branchList.some(b => b.ma === clean)) {
-            const fallbackColors = ['#ec4899', '#06b6d4', '#10b981', '#6366f1'];
-            branchList.push({ ma: clean, ten: cn.ten || clean, color: fallbackColors[idx % fallbackColors.length] });
-          }
-        });
-      }
-
-      // 2. Tạo labels tùy theo tab
       let labels = [];
       let numBins = 0;
       const pad = n => String(n).padStart(2, '0');
@@ -11645,60 +11794,42 @@ function formatVND(amount) {
         labels = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
         numBins = 7;
       } else {
-        // Theo ngày
         const endDay = timeRange.endDate.getDate();
         labels = Array.from({ length: endDay }, (_, i) => pad(i + 1));
         numBins = endDay;
       }
 
-      // 3. Khởi tạo mảng dữ liệu cho từng chi nhánh
       const datasetsData = branchList.map(b => ({
         ...b,
         data: new Array(numBins).fill(0)
       }));
 
       let tongTienKy = 0;
+      const targetCN = (typeof currentChiNhanh !== 'undefined' && currentChiNhanh !== 'ALL') ? currentChiNhanh : 'ALL';
 
-      // 4. Phân bổ doanh số đơn hàng vào các bins
       orders.forEach(d => {
-        if (d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy') return;
-        const ma = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
-        const nv = String(d.nhanVien || d.nhan_vien || '').trim().toLowerCase();
-        if (ma.startsWith('PNH') || ma.startsWith('DDH') || nv === 'hệ thống tự động' || nv === 'he thong tu dong') return;
+        const info = layThongTinDonHangChuan(d);
+        if (info.isHuy || info.isTam) return;
+        if (targetCN !== 'ALL' && info.maCN !== targetCN) return;
 
-        const dateRaw = String(d.ngayBan || d.ngay_ban || d.ngay || '');
-        const dateStr = dateRaw.slice(0, 10);
-        if (dateStr < timeRange.tuNgay || dateStr > timeRange.denNgay) return;
+        const dateISO = info.dateISO;
+        if (!dateISO || dateISO < timeRange.tuNgay || dateISO > timeRange.denNgay) return;
 
-        const isTra = ma.startsWith('TH') || String(d.trangThai || '').includes('Trả');
-        const tien = (Number(d.khachPhaiTra ?? d.tongTien) || 0) * (isTra ? -1 : 1);
+        const tien = info.isTra ? -info.tien : info.tien;
         tongTienKy += tien;
 
-        // Xác định chi nhánh của đơn
-        const maCN = layMaChiNhanh(d.chiNhanh || 'CN01');
-        let branchObj = datasetsData.find(b => b.ma === maCN);
-        if (!branchObj) branchObj = datasetsData[0];
+        let branchObj = datasetsData.find(b => b.ma === info.maCN) || datasetsData[0];
 
-        // Xác định index bin
         let binIdx = -1;
         if (tab === 'gio') {
-          let h = 0;
-          if (dateRaw.length >= 13) {
-            h = parseInt(dateRaw.slice(11, 13), 10);
-          } else {
-            const dt = new Date(dateRaw);
-            if (!isNaN(dt.getTime())) h = dt.getHours();
-          }
-          if (h >= 0 && h < 24) binIdx = h;
+          if (info.dtObj) binIdx = info.dtObj.getHours();
         } else if (tab === 'thu') {
-          const dt = new Date(dateStr);
-          if (!isNaN(dt.getTime())) {
-            const dayOfWeek = dt.getDay(); // 0 is Sun, 1 is Mon
+          if (info.dtObj) {
+            const dayOfWeek = info.dtObj.getDay();
             binIdx = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
           }
         } else {
-          // Theo ngày (01 - 31)
-          const dNum = parseInt(dateStr.slice(8, 10), 10);
+          const dNum = parseInt(dateISO.slice(8, 10), 10);
           if (dNum >= 1 && dNum <= numBins) binIdx = dNum - 1;
         }
 
@@ -11707,14 +11838,12 @@ function formatVND(amount) {
         }
       });
 
-      // Cập nhật tổng tiền kỳ hiển thị trên header
       const elTong = document.getElementById('dash-chart-tong-tien');
       if (elTong) elTong.innerText = Math.max(0, tongTienKy).toLocaleString('vi-VN');
 
-      // 5. Chuẩn bị datasets cho Chart.js
       const isBar = (window.dashChartType === 'bar');
       const chartDatasets = datasetsData
-        .filter(b => b.data.some(v => v !== 0) || ['CN01', 'CN02', 'CN03'].includes(b.ma))
+        .filter(b => (targetCN === 'ALL' || b.ma === targetCN))
         .map(b => ({
           label: b.ten,
           data: b.data.map(v => Math.max(0, Math.round(v))),
@@ -11723,71 +11852,49 @@ function formatVND(amount) {
           borderWidth: isBar ? 0 : 2,
           fill: false,
           stack: isBar ? 'stackGroup' : undefined,
-          borderRadius: isBar ? 2 : 0
+          borderRadius: isBar ? 4 : 0
         }));
 
-      // 6. Vẽ lại hoặc tạo mới Chart.js instance
       if (window.chartDoanhThuThuanInstance) {
         window.chartDoanhThuThuanInstance.destroy();
       }
 
-      window.chartDoanhThuThuanInstance = new Chart(ctx, {
-        type: isBar ? 'bar' : 'line',
-        data: {
-          labels: labels,
-          datasets: chartDatasets
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: {
-            mode: 'index',
-            intersect: false
+      if (typeof Chart !== 'undefined') {
+        window.chartDoanhThuThuanInstance = new Chart(ctx, {
+          type: isBar ? 'bar' : 'line',
+          data: {
+            labels: labels,
+            datasets: chartDatasets
           },
-          plugins: {
-            legend: {
-              display: false // Sử dụng legend HTML custom bên dưới
-            },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return ` ${context.dataset.label}: ${Number(context.raw || 0).toLocaleString('vi-VN')} đ`;
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: (targetCN === 'ALL'),
+                position: 'top',
+                labels: { boxWidth: 12, font: { size: 11, weight: 'bold' } }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(c) {
+                    return `${c.dataset.label}: ${Number(c.raw || 0).toLocaleString('vi-VN')} đ`;
+                  }
                 }
               }
-            }
-          },
-          scales: {
-            x: {
-              stacked: isBar,
-              grid: { display: false },
-              ticks: { font: { size: 10 } }
             },
-            y: {
-              stacked: isBar,
-              beginAtZero: true,
-              grid: { color: '#f1f5f9' },
-              ticks: {
-                font: { size: 10 },
-                callback: function(val) {
-                  if (val >= 1e6) return (val / 1e6).toFixed(0) + ' tr';
-                  if (val >= 1e3) return (val / 1e3).toFixed(0) + ' k';
-                  return val;
+            scales: {
+              x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  font: { size: 10 },
+                  callback: v => (v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : (v >= 1e3 ? `${(v / 1e3).toFixed(0)}k` : v))
                 }
               }
             }
           }
-        }
-      });
-
-      // 7. Cập nhật Legend HTML bên dưới
-      const legendEl = document.getElementById('dash-chart-legend');
-      if (legendEl) {
-        legendEl.innerHTML = chartDatasets.map(ds => `
-          <div class="flex items-center space-x-1.5 cursor-pointer">
-            <span class="w-3 h-3 rounded-xs shrink-0" style="background-color: ${ds.backgroundColor}"></span>
-            <span class="text-slate-700 font-medium text-[11px]">${ds.label}</span>
-          </div>
-        `).join('');
+        });
       }
     }
 
@@ -11799,22 +11906,21 @@ function formatVND(amount) {
       const timeKey = document.getElementById('dash-tophang-time')?.value || 'THANG_NAY';
       const timeRange = layKhoangThoiGianDashboard(timeKey);
 
-      const orders = Array.isArray(rawDonHangList) ? rawDonHangList : [];
+      const orders = layDanhSachDonHangHienTai();
       const prodMap = {};
+      const targetCN = (typeof currentChiNhanh !== 'undefined' && currentChiNhanh !== 'ALL') ? currentChiNhanh : 'ALL';
 
       orders.forEach(d => {
-        if (d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy') return;
-        const ma = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
-        if (ma.startsWith('PNH') || ma.startsWith('DDH')) return;
+        const info = layThongTinDonHangChuan(d);
+        if (info.isHuy || info.isTam) return;
+        if (targetCN !== 'ALL' && info.maCN !== targetCN) return;
 
-        const dateStr = String(d.ngayBan || d.ngay_ban || d.ngay || '').slice(0, 10);
-        if (dateStr < timeRange.tuNgay || dateStr > timeRange.denNgay) return;
+        const dateISO = info.dateISO;
+        if (!dateISO || dateISO < timeRange.tuNgay || dateISO > timeRange.denNgay) return;
 
-        const isTra = ma.startsWith('TH') || String(d.trangThai || '').includes('Trả');
-        const factor = isTra ? -1 : 1;
+        const factor = info.isTra ? -1 : 1;
 
-        const items = Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : [];
-        items.forEach(it => {
+        info.items.forEach(it => {
           const name = String(it.tenHang || it.ten_hang || it.maHang || 'Sản phẩm').trim();
           if (!name) return;
           const sl = (Number(it.soLuong) || 1) * factor;
@@ -11826,30 +11932,38 @@ function formatVND(amount) {
         });
       });
 
-      const list = Object.values(prodMap).filter(p => (type === 'DOANH_THU' ? p.doanhThu > 0 : p.soLuong > 0));
+      const list = Object.values(prodMap).filter(p => (type === 'DOANH_THU' ? p.doanhThu : p.soLuong) > 0);
       list.sort((a, b) => (type === 'DOANH_THU' ? b.doanhThu - a.doanhThu : b.soLuong - a.soLuong));
       const top10 = list.slice(0, 10);
 
       if (!top10.length) {
-        container.innerHTML = '<div class="text-center py-10 text-slate-400 text-xs italic">Chưa có dữ liệu bán hàng trong kỳ này</div>';
+        container.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs italic">Không có dữ liệu trong khoảng thời gian này</div>';
         return;
       }
 
-      const maxVal = Math.max(...top10.map(p => (type === 'DOANH_THU' ? p.doanhThu : p.soLuong))) || 1;
+      const maxVal = top10[0] ? (type === 'DOANH_THU' ? top10[0].doanhThu : top10[0].soLuong) : 1;
 
-      container.innerHTML = top10.map(p => {
+      container.innerHTML = top10.map((p, idx) => {
         const val = type === 'DOANH_THU' ? p.doanhThu : p.soLuong;
-        const pct = Math.max(8, Math.round((val / maxVal) * 85));
-        const valStr = type === 'DOANH_THU' 
-          ? (val >= 1e6 ? (val / 1e6).toFixed(1) + ' tr' : (val >= 1e3 ? (val / 1e3).toFixed(0) + ' k' : val.toLocaleString()))
-          : (val.toLocaleString() + ' cái');
+        const valStr = type === 'DOANH_THU' ? `${Number(p.doanhThu).toLocaleString('vi-VN')} đ` : `${Number(p.soLuong).toLocaleString('vi-VN')}`;
+        const pct = Math.min(100, Math.round((val / (maxVal || 1)) * 100));
+
+        let rankBadge = `<span class="w-5 h-5 rounded-full bg-slate-100 text-slate-600 font-bold text-[10px] flex items-center justify-center">${idx + 1}</span>`;
+        if (idx === 0) rankBadge = `<span class="w-5 h-5 rounded-full bg-amber-500 text-white font-bold text-[10px] flex items-center justify-center shadow-xs">1</span>`;
+        else if (idx === 1) rankBadge = `<span class="w-5 h-5 rounded-full bg-slate-400 text-white font-bold text-[10px] flex items-center justify-center">2</span>`;
+        else if (idx === 2) rankBadge = `<span class="w-5 h-5 rounded-full bg-amber-700 text-white font-bold text-[10px] flex items-center justify-center">3</span>`;
 
         return `
           <div class="space-y-1">
-            <div class="text-[11px] text-slate-700 font-medium truncate" title="${p.ten}">| ${p.ten}</div>
-            <div class="flex items-center space-x-2">
-              <div class="h-4 bg-blue-600 rounded-r-xs transition-all duration-300" style="width: ${pct}%;"></div>
-              <span class="text-[11px] font-semibold text-slate-700 font-mono whitespace-nowrap">${valStr}</span>
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center space-x-2 truncate pr-2">
+                ${rankBadge}
+                <span class="font-medium text-slate-800 truncate" title="${p.ten}">${p.ten}</span>
+              </div>
+              <span class="font-mono font-bold text-slate-900 shrink-0">${valStr}</span>
+            </div>
+            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-blue-600 h-full rounded-full transition-all duration-300" style="width: ${pct}%"></div>
             </div>
           </div>
         `;
@@ -11863,22 +11977,22 @@ function formatVND(amount) {
       const timeKey = document.getElementById('dash-topkh-time')?.value || 'THANG_NAY';
       const timeRange = layKhoangThoiGianDashboard(timeKey);
 
-      const orders = Array.isArray(rawDonHangList) ? rawDonHangList : [];
+      const orders = layDanhSachDonHangHienTai();
       const khMap = {};
+      const targetCN = (typeof currentChiNhanh !== 'undefined' && currentChiNhanh !== 'ALL') ? currentChiNhanh : 'ALL';
 
       orders.forEach(d => {
-        if (d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy') return;
-        const ma = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
-        if (ma.startsWith('PNH') || ma.startsWith('DDH')) return;
+        const info = layThongTinDonHangChuan(d);
+        if (info.isHuy || info.isTam) return;
+        if (targetCN !== 'ALL' && info.maCN !== targetCN) return;
 
-        const dateStr = String(d.ngayBan || d.ngay_ban || d.ngay || '').slice(0, 10);
-        if (dateStr < timeRange.tuNgay || dateStr > timeRange.denNgay) return;
+        const dateISO = info.dateISO;
+        if (!dateISO || dateISO < timeRange.tuNgay || dateISO > timeRange.denNgay) return;
 
-        const isTra = ma.startsWith('TH') || String(d.trangThai || '').includes('Trả');
-        const factor = isTra ? -1 : 1;
-        const tien = (Number(d.khachPhaiTra ?? d.tongTien) || 0) * factor;
+        const factor = info.isTra ? -1 : 1;
+        const tien = info.tien * factor;
 
-        let tenKH = String(d.tenKH || d.ten_kh || '').trim();
+        let tenKH = info.tenKH;
         if (!tenKH || tenKH.toLowerCase() === 'khách lẻ') tenKH = 'Bán cho người tiêu dùng';
 
         if (!khMap[tenKH]) khMap[tenKH] = { ten: tenKH, doanhThu: 0 };
@@ -11890,23 +12004,32 @@ function formatVND(amount) {
       const top10 = list.slice(0, 10);
 
       if (!top10.length) {
-        container.innerHTML = '<div class="text-center py-10 text-slate-400 text-xs italic">Chưa có dữ liệu khách hàng trong kỳ này</div>';
+        container.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs italic">Không có dữ liệu trong khoảng thời gian này</div>';
         return;
       }
 
-      const maxVal = Math.max(...top10.map(k => k.doanhThu)) || 1;
+      const maxVal = top10[0] ? top10[0].doanhThu : 1;
 
-      container.innerHTML = top10.map(k => {
-        const val = k.doanhThu;
-        const pct = Math.max(8, Math.round((val / maxVal) * 85));
-        const valStr = (val >= 1e6 ? (val / 1e6).toFixed(1) + ' tr' : (val >= 1e3 ? (val / 1e3).toFixed(0) + ' k' : val.toLocaleString()));
+      container.innerHTML = top10.map((k, idx) => {
+        const valStr = `${Number(k.doanhThu).toLocaleString('vi-VN')} đ`;
+        const pct = Math.min(100, Math.round((k.doanhThu / (maxVal || 1)) * 100));
+
+        let rankBadge = `<span class="w-5 h-5 rounded-full bg-slate-100 text-slate-600 font-bold text-[10px] flex items-center justify-center">${idx + 1}</span>`;
+        if (idx === 0) rankBadge = `<span class="w-5 h-5 rounded-full bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center shadow-xs">1</span>`;
+        else if (idx === 1) rankBadge = `<span class="w-5 h-5 rounded-full bg-slate-400 text-white font-bold text-[10px] flex items-center justify-center">2</span>`;
+        else if (idx === 2) rankBadge = `<span class="w-5 h-5 rounded-full bg-amber-700 text-white font-bold text-[10px] flex items-center justify-center">3</span>`;
 
         return `
           <div class="space-y-1">
-            <div class="text-[11px] text-slate-700 font-medium truncate" title="${k.ten}">| ${k.ten}</div>
-            <div class="flex items-center space-x-2">
-              <div class="h-4 bg-blue-600 rounded-r-xs transition-all duration-300" style="width: ${pct}%;"></div>
-              <span class="text-[11px] font-semibold text-slate-700 font-mono whitespace-nowrap">${valStr}</span>
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center space-x-2 truncate pr-2">
+                ${rankBadge}
+                <span class="font-medium text-slate-800 truncate" title="${k.ten}">${k.ten}</span>
+              </div>
+              <span class="font-mono font-bold text-slate-900 shrink-0">${valStr}</span>
+            </div>
+            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width: ${pct}%"></div>
             </div>
           </div>
         `;
@@ -11917,17 +12040,17 @@ function formatVND(amount) {
       const container = document.getElementById('dash-recent-activities');
       if (!container) return;
 
-      const orders = Array.isArray(rawDonHangList) ? [...rawDonHangList] : [];
-      orders.sort((a, b) => {
-        const tA = new Date(a.ngayBan || a.ngay_ban || a.created_at || 0).getTime();
-        const tB = new Date(b.ngayBan || b.ngay_ban || b.created_at || 0).getTime();
-        return tB - tA;
+      const orders = layDanhSachDonHangHienTai();
+      const targetCN = (typeof currentChiNhanh !== 'undefined' && currentChiNhanh !== 'ALL') ? currentChiNhanh : 'ALL';
+
+      const filtered = orders.filter(d => {
+        const info = layThongTinDonHangChuan(d);
+        if (info.isTam) return false;
+        if (targetCN !== 'ALL' && info.maCN !== targetCN) return false;
+        return true;
       });
 
-      const recent = orders.filter(d => {
-        const ma = String(d.maDonHang || d.ma_don_hang || '').trim().toUpperCase();
-        return !ma.startsWith('PNH') && !ma.startsWith('DDH');
-      }).slice(0, 15);
+      const recent = filtered.slice(0, 15);
 
       if (!recent.length) {
         container.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs italic">Chưa có giao dịch gần đây</div>';
@@ -11938,8 +12061,8 @@ function formatVND(amount) {
 
       function formatTimeAgo(timeStr) {
         if (!timeStr) return 'Gần đây';
-        const d = new Date(timeStr);
-        if (isNaN(d.getTime())) return timeStr.slice(0, 16);
+        const d = parseDateTimeGlobal(timeStr);
+        if (!d || isNaN(d.getTime())) return String(timeStr).slice(0, 16);
         const diffSec = Math.floor((now - d.getTime()) / 1000);
         if (diffSec < 60) return 'Vừa xong';
         const diffMin = Math.floor(diffSec / 60);
@@ -11949,21 +12072,18 @@ function formatVND(amount) {
         const diffDay = Math.floor(diffHour / 24);
         if (diffDay === 1) return 'Hôm qua';
         if (diffDay < 7) return `${diffDay} ngày trước`;
-        return timeStr.slice(0, 10);
+        return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
       }
 
       container.innerHTML = recent.map(d => {
-        const ma = d.maDonHang || d.ma_don_hang;
-        const nv = d.nguoiBan || d.nhanVien || d.nhan_vien || 'Nhân viên';
-        const isTra = String(ma).startsWith('TH') || String(d.trangThai || '').includes('Trả');
-        const tien = Number(d.khachPhaiTra ?? d.tongTien) || 0;
-        const timeAgo = formatTimeAgo(d.ngayBan || d.ngay_ban || d.created_at);
+        const info = layThongTinDonHangChuan(d);
+        const timeAgo = formatTimeAgo(info.rawDate);
 
         let iconClass = 'fa-bag-shopping text-slate-400';
         let actionStr = 'bán đơn hàng';
         let actionColor = 'text-blue-600';
 
-        if (isTra) {
+        if (info.isTra) {
           iconClass = 'fa-arrow-rotate-left text-amber-500';
           actionStr = 'nhận trả hàng';
           actionColor = 'text-amber-600';
@@ -11976,9 +12096,9 @@ function formatVND(amount) {
             </div>
             <div class="flex-1 min-w-0 text-xs">
               <p class="text-slate-700 leading-snug">
-                <strong class="font-bold text-slate-800">${nv}</strong> vừa 
-                <a href="javascript:void(0)" onclick="xemChiTietDonHang('${ma}')" class="font-semibold ${actionColor} hover:underline">${actionStr}</a> 
-                với giá trị <strong class="font-bold text-slate-900">${tien.toLocaleString('vi-VN')} đ</strong>
+                <strong class="font-bold text-slate-800">${info.nv}</strong> vừa 
+                <a href="javascript:void(0)" onclick="xemChiTietDonHang('${info.ma}')" class="font-semibold ${actionColor} hover:underline">${actionStr}</a> 
+                với giá trị <strong class="font-bold text-slate-900">${info.tien.toLocaleString('vi-VN')} đ</strong>
               </p>
               <span class="text-[10px] text-slate-400 mt-0.5 inline-block">${timeAgo}</span>
             </div>
@@ -11988,26 +12108,28 @@ function formatVND(amount) {
     }
 
     function capNhatCanhBaoDashboard() {
-      // 1. Sinh nhật khách hàng hôm nay
-      const customers = Array.isArray(rawKHList) ? rawKHList : [];
+      const customers = (typeof rawKHList !== 'undefined' && Array.isArray(rawKHList) && rawKHList.length > 0) ? rawKHList : (window.RAW_KHACH_HANG_THANH_GIANG || []);
       const now = new Date();
       const pad = n => String(n).padStart(2, '0');
-      const mmdd = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+      const mmdd1 = pad(now.getDate()) + '/' + pad(now.getMonth() + 1);
+      const mmdd2 = pad(now.getMonth() + 1) + '-' + pad(now.getDate());
       let countSN = 0;
       customers.forEach(k => {
         const dob = String(k.ngaySinh || k.ngay_sinh || k.sinhNhat || '');
-        if (dob.includes(mmdd)) countSN++;
+        if (dob.includes(mmdd1) || dob.includes(mmdd2)) countSN++;
       });
       const elSN = document.getElementById('dash-alert-sinhnhat');
-      if (elSN) elSN.innerText = countSN > 0 ? countSN : 312;
+      if (elSN) elSN.innerText = countSN;
 
-      // 2. Cảnh báo HĐĐT
       const elHDDT = document.getElementById('dash-alert-hddt');
-      if (elHDDT) elHDDT.innerText = 1;
+      if (elHDDT) elHDDT.innerText = 0;
 
-      // 3. Cảnh báo đăng nhập
       const elLogin = document.getElementById('dash-alert-login');
-      if (elLogin) elLogin.innerText = 16;
+      if (elLogin) {
+        const products = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa) && rawHangHoa.length > 0) ? rawHangHoa : (window.RAW_HANG_HOA_THANH_GIANG || []);
+        const hetHang = products.filter(p => Number(p.tonKho || 0) <= 0).length;
+        elLogin.innerText = hetHang;
+      }
     }
 
     /* 1. Dashboard chính */
@@ -19967,6 +20089,48 @@ function formatVND(amount) {
       setTbodyLoading('tbl-bc-khachhang-body', 7);
       setTbodyLoading('tbl-bc-ncc-body', 7);
 
+      // Đảm bảo nạp đầy đủ 100% dữ liệu gốc của 3 chi nhánh nếu biến tạm đang rỗng
+      if (!rawDonHangList || rawDonHangList.length === 0) {
+        if (window.RAW_DON_HANG_THANH_GIANG && window.RAW_DON_HANG_THANH_GIANG.length > 0) {
+          rawDonHangList = window.RAW_DON_HANG_THANH_GIANG;
+        } else if (window.danhSachDonHangFull && window.danhSachDonHangFull.length > 0) {
+          rawDonHangList = window.danhSachDonHangFull;
+        }
+      }
+      if (!rawHangHoa || rawHangHoa.length === 0) {
+        if (window.RAW_HANG_HOA_THANH_GIANG && window.RAW_HANG_HOA_THANH_GIANG.length > 0) {
+          rawHangHoa = window.RAW_HANG_HOA_THANH_GIANG;
+        } else if (window.danhMucHangHoaFull && window.danhMucHangHoaFull.length > 0) {
+          rawHangHoa = window.danhMucHangHoaFull;
+        }
+      }
+      if (!rawKHList || rawKHList.length === 0) {
+        if (window.RAW_KHACH_HANG_THANH_GIANG && window.RAW_KHACH_HANG_THANH_GIANG.length > 0) {
+          rawKHList = window.RAW_KHACH_HANG_THANH_GIANG;
+        }
+      }
+      if (!rawNCCList || rawNCCList.length === 0) {
+        if (window.RAW_NCC_THANH_GIANG && window.RAW_NCC_THANH_GIANG.length > 0) {
+          rawNCCList = window.RAW_NCC_THANH_GIANG;
+        }
+      }
+      if (!window.rawSoQuyAllRecords || window.rawSoQuyAllRecords.length === 0) {
+        if (window.RAW_SO_QUY_THANH_GIANG && window.RAW_SO_QUY_THANH_GIANG.length > 0) {
+          window.rawSoQuyAllRecords = window.RAW_SO_QUY_THANH_GIANG;
+        }
+      }
+      if (!window.rawNhapHangList || window.rawNhapHangList.length === 0) {
+        if (window.RAW_NHAP_HANG_THANH_GIANG && window.RAW_NHAP_HANG_THANH_GIANG.length > 0) {
+          window.rawNhapHangList = window.RAW_NHAP_HANG_THANH_GIANG;
+        }
+      }
+      if (!window.rawTraHangNCCList || window.rawTraHangNCCList.length === 0) {
+        if (window.RAW_TRA_HANG_NCC_THANH_GIANG && window.RAW_TRA_HANG_NCC_THANH_GIANG.length > 0) {
+          window.rawTraHangNCCList = window.RAW_TRA_HANG_NCC_THANH_GIANG;
+        }
+      }
+
+
       // 1. Đảm bảo nạp đủ các nguồn dữ liệu từ Supabase nếu bộ nhớ tạm đang rỗng
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         try {
@@ -20596,8 +20760,9 @@ function formatVND(amount) {
 
     function formatNgayGioBaoCao(val) {
       if (!val) return '';
-      const d = new Date(val);
-      if (isNaN(d.getTime())) return String(val).replace('T', ' ').slice(0, 16);
+      if (typeof val === 'string' && val.includes('/') && val.length >= 10) return val.slice(0, 19);
+      const d = parseDateTimeGlobal(val);
+      if (!d || isNaN(d.getTime())) return String(val).replace('T', ' ').slice(0, 16);
       const dd = String(d.getDate()).padStart(2, '0');
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const yyyy = d.getFullYear();
@@ -20607,7 +20772,15 @@ function formatVND(amount) {
     }
 
     function tinhToanVaRenderBaoCaoBanHang() {
-      if (!rawDonHangList || !Array.isArray(rawDonHangList)) return;
+      if (!rawDonHangList || !Array.isArray(rawDonHangList) || rawDonHangList.length === 0) {
+        if (window.RAW_DON_HANG_THANH_GIANG && window.RAW_DON_HANG_THANH_GIANG.length > 0) {
+          rawDonHangList = window.RAW_DON_HANG_THANH_GIANG;
+        } else if (window.danhSachDonHangFull && window.danhSachDonHangFull.length > 0) {
+          rawDonHangList = window.danhSachDonHangFull;
+        } else {
+          return;
+        }
+      }
 
       const { startDate, endDate, titlePeriod } = tinhKhoangThoiGianBaoCao();
       capNhatTieuDeBaoCao();
@@ -20644,13 +20817,14 @@ function formatVND(amount) {
         if (filterKenh === 'ONLINE' && !isOnline) return false;
         if (filterKenh === 'CUAHANG' && isOnline) return false;
 
-        const dateStr = d.ngayBan || d.ngay_ban || d.ngayTao || '';
+        const dateStr = d.thoiGian || d.ngayTao || d.ngay_tao || d.ngayBan || d.ngay_ban || '';
         if (!dateStr) return true;
-        const dTime = new Date(dateStr).getTime();
-        if (isNaN(dTime)) return true;
-        if (startDate && dTime < startDate.getTime()) return false;
-        if (endDate && dTime > endDate.getTime()) return false;
-
+        const dObj = parseDateTimeGlobal(dateStr);
+        if (dObj) {
+          const dTime = dObj.getTime();
+          if (startDate && dTime < startDate.getTime()) return false;
+          if (endDate && dTime > endDate.getTime()) return false;
+        }
         return true;
       });
 
@@ -20703,20 +20877,20 @@ function formatVND(amount) {
       }
 
       donHangFiltered.forEach(d => {
-        const ma = String(d.maDonHang || d.ma_don_hang || '').trim();
+        const ma = String(d.maDon || d.ma_don || d.maDonHang || d.ma_don_hang || '').trim();
         const isTra = String(d.trangThai || d.trang_thai || '').includes('Trả') || ma.startsWith('TH');
-        let tt = Number(d.khachPhaiTra || d.khach_phai_tra || 0);
+        let tt = Number(d.khachCanTra ?? d.khachPhaiTra ?? d.khach_phai_tra ?? d.tongTien ?? d.tong_tien ?? 0);
         let gg = Number(d.giamGia || d.giam_gia || 0);
-        let rawTong = Number(d.tongTien || d.tong_tien || 0);
+        let rawTong = Number(d.tongTien || d.tong_tien || tt);
         if (tt <= 0 && rawTong > 0) tt = Math.max(0, rawTong - gg);
         let tongTienHang = (rawTong > 0 && rawTong >= tt) ? rawTong : (tt + gg);
-        const kt = Number(d.khachTra || d.khach_tra || tt);
-        const nv = String(d.nhanVien || d.nhan_vien || 'Quản trị viên');
-        const kh = String(d.tenKH || d.ten_kh || 'Khách lẻ');
-        const cn = String(d.chiNhanh || '');
+        const kt = Number(d.khachDaTra ?? d.khachTra ?? d.da_tra ?? tt);
+        const nv = String(d.nhanVien || d.nhan_vien || d.nguoiBan || 'Quản trị viên');
+        const kh = String(d.tenKhachHang || d.ten_kh || d.tenKH || 'Khách lẻ');
+        const cn = String(d.chiNhanh || d.chi_nhanh || '');
 
         let donGiaVon = 0;
-        const chiTiet = Array.isArray(d.chiTietSanPham || d.chi_tiet_san_pham) ? (d.chiTietSanPham || d.chi_tiet_san_pham) : [];
+        const chiTiet = Array.isArray(d.chiTietSanPham || d.chi_tiet_san_pham) ? (d.chiTietSanPham || d.chi_tiet_san_pham) : (Array.isArray(d.sanPham) ? d.sanPham : []);
         chiTiet.forEach(sp => {
           const sl = Number(sp.soLuong || sp.so_luong || 1);
           let gv = Number(sp.giaVon || sp.gia_von || 0);
@@ -20729,14 +20903,14 @@ function formatVND(amount) {
           donGiaVon += (sl * gv);
         });
 
-        const dateStr = d.ngayBan || d.ngay_ban || d.ngayTao || '';
-        const dObj = dateStr ? new Date(dateStr) : new Date();
+        const dateStr = d.thoiGian || d.ngayTao || d.ngay_tao || d.ngayBan || d.ngay_ban || '';
+        const dObj = parseDateTimeGlobal(dateStr) || new Date();
         const rawTime = isNaN(dObj.getTime()) ? 0 : dObj.getTime();
         const yyyy = dObj.getFullYear();
         const mm = String(dObj.getMonth() + 1).padStart(2, '0');
         const dd = String(dObj.getDate()).padStart(2, '0');
         const keyDate = `${yyyy}-${mm}-${dd}`;
-        const ngayGioFormatted = formatNgayGioBaoCao(dateStr);
+        const ngayGioFormatted = formatNgayGioBaoCao(dObj);
 
         let dt = isTra ? -tt : tt;
         let gv = isTra ? -donGiaVon : donGiaVon;
@@ -21632,7 +21806,18 @@ function formatVND(amount) {
     }
 
     function tinhToanVaRenderBaoCaoHangHoa() {
-      if (typeof rawHangHoa === 'undefined' || !Array.isArray(rawHangHoa)) return;
+      if (!rawHangHoa || !Array.isArray(rawHangHoa) || rawHangHoa.length === 0) {
+        if (window.RAW_HANG_HOA_THANH_GIANG && window.RAW_HANG_HOA_THANH_GIANG.length > 0) {
+          rawHangHoa = window.RAW_HANG_HOA_THANH_GIANG;
+        } else if (window.danhMucHangHoaFull && window.danhMucHangHoaFull.length > 0) {
+          rawHangHoa = window.danhMucHangHoaFull;
+        } else {
+          return;
+        }
+      }
+      if (!rawDonHangList || rawDonHangList.length === 0) {
+        if (window.RAW_DON_HANG_THANH_GIANG) rawDonHangList = window.RAW_DON_HANG_THANH_GIANG;
+      }
       const { startDate, endDate, fromToPeriod } = tinhKhoangThoiGianHangHoa();
 
       const filterCN = document.getElementById('bc-hh-filter-chinhanh')?.value || 'CURRENT';
@@ -21658,13 +21843,23 @@ function formatVND(amount) {
         const ma = String(h.maHang || h.ma_hang || '').trim().toUpperCase();
         if (!ma) return;
         let ton = 0;
-        if (targetCN !== 'ALL' && h.chi_nhanh_ton && typeof h.chi_nhanh_ton === 'object') {
-          ton = Number(h.chi_nhanh_ton[targetCN] || 0);
+        let gv = Number(h.giaVon || h.gia_von || h.giaNhap || h.gia_nhap || 0);
+        const gb = Number(h.giaBan || h.gia_ban || 0);
+        if (targetCN === 'CN01') {
+          ton = Number(h.tonKho_CN01 ?? h.chi_nhanh_ton?.CN01 ?? 0);
+          gv = Number(h.giaVon_CN01 ?? gv);
+        } else if (targetCN === 'CN02') {
+          ton = Number(h.tonKho_CN02 ?? h.chi_nhanh_ton?.CN02 ?? 0);
+          gv = Number(h.giaVon_CN02 ?? gv);
+        } else if (targetCN === 'CN03') {
+          ton = Number(h.tonKho_CN03 ?? h.chi_nhanh_ton?.CN03 ?? 0);
+          gv = Number(h.giaVon_CN03 ?? gv);
         } else {
           ton = Number(h.tonKho || h.ton_kho || 0);
         }
-        const gv = Number(h.giaVon || h.gia_von || h.giaNhap || h.gia_nhap || 0);
-        const gb = Number(h.giaBan || h.gia_ban || 0);
+        if (window.tonKho3ChiNhanh && window.tonKho3ChiNhanh[targetCN] && window.tonKho3ChiNhanh[targetCN][ma] !== undefined) {
+          ton = Number(window.tonKho3ChiNhanh[targetCN][ma] || 0);
+        }
 
         hangMap[ma] = {
           maHang: ma,
@@ -21689,12 +21884,14 @@ function formatVND(amount) {
         if (targetCN !== 'ALL' && typeof laCungChiNhanh === 'function') {
           if (!laCungChiNhanh(d.chiNhanh, targetCN)) return false;
         }
-        const dateStr = d.ngayBan || d.ngay_ban || d.ngayTao || '';
+        const dateStr = d.thoiGian || d.ngayTao || d.ngay_tao || d.ngayBan || d.ngay_ban || '';
         if (!dateStr) return true;
-        const dTime = new Date(dateStr).getTime();
-        if (isNaN(dTime)) return true;
-        if (startDate && dTime < startDate.getTime()) return false;
-        if (endDate && dTime > endDate.getTime()) return false;
+        const dObj = parseDateTimeGlobal(dateStr);
+        if (dObj) {
+          const dTime = dObj.getTime();
+          if (startDate && dTime < startDate.getTime()) return false;
+          if (endDate && dTime > endDate.getTime()) return false;
+        }
         return true;
       });
 
@@ -22204,7 +22401,16 @@ function formatVND(amount) {
     }
 
     function tinhToanVaRenderBaoCaoKhachHang() {
-      if (typeof rawKHList === 'undefined' || !Array.isArray(rawKHList)) return;
+      if (!rawKHList || !Array.isArray(rawKHList) || rawKHList.length === 0) {
+        if (window.RAW_KHACH_HANG_THANH_GIANG && window.RAW_KHACH_HANG_THANH_GIANG.length > 0) {
+          rawKHList = window.RAW_KHACH_HANG_THANH_GIANG;
+        } else {
+          return;
+        }
+      }
+      if (!rawDonHangList || rawDonHangList.length === 0) {
+        if (window.RAW_DON_HANG_THANH_GIANG) rawDonHangList = window.RAW_DON_HANG_THANH_GIANG;
+      }
       const { startDate, endDate, fromToPeriod } = tinhKhoangThoiGianKhachHang();
 
       const filterCN = document.getElementById('bc-kh-filter-chinhanh')?.value || 'CURRENT';
@@ -22250,21 +22456,23 @@ function formatVND(amount) {
         if (targetCN !== 'ALL' && typeof laCungChiNhanh === 'function') {
           if (!laCungChiNhanh(d.chiNhanh, targetCN)) return false;
         }
-        const dateStr = d.ngayBan || d.ngay_ban || d.ngayTao || '';
+        const dateStr = d.thoiGian || d.ngayTao || d.ngay_tao || d.ngayBan || d.ngay_ban || '';
         if (!dateStr) return true;
-        const dTime = new Date(dateStr).getTime();
-        if (isNaN(dTime)) return true;
-        if (startDate && dTime < startDate.getTime()) return false;
-        if (endDate && dTime > endDate.getTime()) return false;
+        const dObj = parseDateTimeGlobal(dateStr);
+        if (dObj) {
+          const dTime = dObj.getTime();
+          if (startDate && dTime < startDate.getTime()) return false;
+          if (endDate && dTime > endDate.getTime()) return false;
+        }
         return true;
       });
 
       donFiltered.forEach(d => {
-        const maD = String(d.maDonHang || d.ma_don_hang || '').toUpperCase();
+        const maD = String(d.maDon || d.ma_don || d.maDonHang || d.ma_don_hang || '').toUpperCase();
         const isTra = String(d.trangThai || d.trang_thai || '').includes('Trả') || maD.startsWith('TH');
-        let maKh = String(d.maKH || d.ma_kh || '').trim().toUpperCase();
-        const tenKh = String(d.tenKH || d.ten_kh || 'Khách lẻ');
-        const tt = Number(d.khachPhaiTra || d.khach_phai_tra || d.tongTien || d.tong_tien || 0);
+        let maKh = String(d.maKhachHang || d.ma_kh || d.maKH || '').trim().toUpperCase();
+        const tenKh = String(d.tenKhachHang || d.ten_kh || d.tenKH || 'Khách lẻ');
+        const tt = Number(d.khachCanTra ?? d.khachPhaiTra ?? d.khach_phai_tra ?? d.tongTien ?? d.tong_tien ?? 0);
 
         if (!maKh || maKh === 'KHACHLE' || maKh === 'KL') {
           maKh = tenKh ? ('KH_' + tenKh.toUpperCase().replace(/\s+/g, '_')) : 'KHACHLE';
@@ -22624,7 +22832,19 @@ function formatVND(amount) {
     }
 
     function tinhToanVaRenderBaoCaoNCC() {
-      if (typeof rawNCCList === 'undefined' || !Array.isArray(rawNCCList)) return;
+      if (!rawNCCList || !Array.isArray(rawNCCList) || rawNCCList.length === 0) {
+        if (window.RAW_NCC_THANH_GIANG && window.RAW_NCC_THANH_GIANG.length > 0) {
+          rawNCCList = window.RAW_NCC_THANH_GIANG;
+        } else {
+          return;
+        }
+      }
+      if (!rawNhapHangList || rawNhapHangList.length === 0) {
+        if (window.RAW_NHAP_HANG_THANH_GIANG) rawNhapHangList = window.RAW_NHAP_HANG_THANH_GIANG;
+      }
+      if (!rawTraHangNCCList || rawTraHangNCCList.length === 0) {
+        if (window.RAW_TRA_HANG_NCC_THANH_GIANG) rawTraHangNCCList = window.RAW_TRA_HANG_NCC_THANH_GIANG;
+      }
       const { startDate, endDate, fromToPeriod } = tinhKhoangThoiGianNCC();
 
       const filterCN = document.getElementById('bc-ncc-filter-chinhanh')?.value || 'CURRENT';
@@ -22666,12 +22886,14 @@ function formatVND(amount) {
         if (targetCN !== 'ALL' && typeof laCungChiNhanh === 'function') {
           if (!laCungChiNhanh(p.chiNhanh, targetCN)) return false;
         }
-        const dateStr = p.ngayNhap || p.ngayBan || p.ngay_ban || '';
+        const dateStr = p.thoiGian || p.ngayNhap || p.ngayTao || p.ngay_tao || p.ngayBan || p.ngay_ban || '';
         if (!dateStr) return true;
-        const dTime = new Date(dateStr).getTime();
-        if (isNaN(dTime)) return true;
-        if (startDate && dTime < startDate.getTime()) return false;
-        if (endDate && dTime > endDate.getTime()) return false;
+        const dObj = parseDateTimeGlobal(dateStr);
+        if (dObj) {
+          const dTime = dObj.getTime();
+          if (startDate && dTime < startDate.getTime()) return false;
+          if (endDate && dTime > endDate.getTime()) return false;
+        }
         return true;
       });
 
@@ -22684,9 +22906,9 @@ function formatVND(amount) {
         });
 
         nhapFiltered.forEach(p => {
-          let maNc = String(p.maNCC || p.ma_kh || '').trim().toUpperCase();
-          const tenNc = String(p.tenNCC || p.ten_kh || 'Nhà cung cấp');
-          const tt = Number(p.tongTien || p.tong_tien || 0);
+          let maNc = String(p.maNCC || p.ma_ncc || p.ma_kh || '').trim().toUpperCase();
+          const tenNc = String(p.tenNCC || p.ten_ncc || p.ten_kh || 'Nhà cung cấp');
+          const tt = Number(p.tongTien || p.tong_tien || p.canTraNcc || 0);
 
           if (!maNc) {
             maNc = tenNc ? ('NCC_' + tenNc.toUpperCase().replace(/\s+/g, '_')) : 'NCC_KHAC';
@@ -31883,7 +32105,27 @@ function loadSoQuy(filter) {
       return sp ? (Number(sp.giaVon || sp.giaVonBanDau) || 0) : 0;
     }
 
-    async function loadDanhSachChuyenKho() {
+    async let pageChuyenKho = 1;
+    let pageSizeChuyenKho = 10;
+    let lastFilteredChuyenKhoList = [];
+
+    function doiSoLuongHienThiChuyenKho(size) {
+      pageSizeChuyenKho = (size === 'ALL') ? 999999 : (parseInt(size, 10) || 10);
+      pageChuyenKho = 1;
+      locDanhSachChuyenKho();
+    }
+
+    function chuyenTrangChuyenKho(delta) {
+      pageChuyenKho += delta;
+      locDanhSachChuyenKho();
+    }
+
+    function datTrangChuyenKho(p) {
+      pageChuyenKho = p;
+      locDanhSachChuyenKho();
+    }
+
+    function loadDanhSachChuyenKho() {
       const tbody = document.getElementById('tbl-chuyenkho-body');
       if (tbody) {
         tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải dữ liệu phiếu chuyển hàng...</td></tr>`;
@@ -31892,23 +32134,27 @@ function loadSoQuy(filter) {
       // 1. Tải danh sách chi nhánh vào bộ lọc
       capNhatDropdownChiNhanhChuyenKho();
 
-      // 2. Tải từ localStorage trước
+      // 2. Nạp từ window.RAW_CHUYEN_KHO_THANH_GIANG
+      if (window.RAW_CHUYEN_KHO_THANH_GIANG && window.RAW_CHUYEN_KHO_THANH_GIANG.length > 0) {
+        rawChuyenKhoList = window.RAW_CHUYEN_KHO_THANH_GIANG;
+      } else if (window.danhSachChuyenKhoFull && window.danhSachChuyenKhoFull.length > 0) {
+        rawChuyenKhoList = window.danhSachChuyenKhoFull;
+      }
+
+      // 3. Tải bổ sung từ localStorage
       try {
         const localData = JSON.parse(localStorage.getItem('tt_pos_chuyen_kho_list') || '[]');
         if (Array.isArray(localData) && localData.length > 0) {
-          rawChuyenKhoList = localData;
+          const mapById = new Map();
+          (rawChuyenKhoList || []).forEach(p => mapById.set(p.maPhieu, p));
+          localData.forEach(p => mapById.set(p.maPhieu, p));
+          rawChuyenKhoList = Array.from(mapById.values());
         }
       } catch(e) {}
 
-      // 3. Tải từ Supabase bảng don_hang (hinh_thuc_tt = 'CHUYEN_KHO')
+      // 4. Tải từ Supabase nếu có
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-        try {
-          const { data, error } = await supabaseClient
-            .from('don_hang')
-            .select('*')
-            .eq('hinh_thuc_tt', 'CHUYEN_KHO')
-            .order('ngay_tao', { ascending: false });
-
+        supabaseClient.from('don_hang').select('*').eq('hinh_thuc_tt', 'CHUYEN_KHO').order('ngay_tao', { ascending: false }).then(({ data, error }) => {
           if (!error && data && data.length > 0) {
             const mapped = data.map(d => {
               const chiTiet = Array.isArray(d.chi_tiet) ? d.chi_tiet : (typeof d.chi_tiet === 'string' ? JSON.parse(d.chi_tiet || '[]') : []);
@@ -31921,6 +32167,7 @@ function loadSoQuy(filter) {
               return {
                 maPhieu: d.ma_don_hang,
                 ngayChuyen: d.ngay_tao,
+                ngayTao: d.ngay_tao,
                 cnXuat: cnXuat,
                 tenCnXuat: layTenChiNhanhDayDu(cnXuat),
                 cnNhan: cnNhan,
@@ -31931,32 +32178,28 @@ function loadSoQuy(filter) {
                 tongSoLuong: tongSL,
                 tongTien: tongTien,
                 tongGiaTri: tongTien,
-                trangThai: d.trang_thai || 'Hoàn thành',
+                trangThai: d.trang_thai || 'Đã nhận',
                 chiTietSanPham: chiTiet
               };
             });
 
-            // Hợp nhất dữ liệu
             const mapById = new Map();
+            (rawChuyenKhoList || []).forEach(p => mapById.set(p.maPhieu, p));
             mapped.forEach(p => mapById.set(p.maPhieu, p));
-            rawChuyenKhoList.forEach(p => { if (!mapById.has(p.maPhieu)) mapById.set(p.maPhieu, p); });
             rawChuyenKhoList = Array.from(mapById.values());
-            localStorage.setItem('tt_pos_chuyen_kho_list', JSON.stringify(rawChuyenKhoList));
+            locDanhSachChuyenKho();
           }
-        } catch(e) {
-          console.warn("Lỗi tải phiếu chuyển kho từ Supabase:", e);
-        }
+        }).catch(err => console.warn("Lỗi tải chuyển kho từ Supabase:", err));
       }
 
       locDanhSachChuyenKho();
     }
 
     function capNhatDropdownChiNhanhChuyenKho() {
-      const branches = (rawChiNhanhList && rawChiNhanhList.length > 0) ? rawChiNhanhList : [
+      const branches = [
         { ma: 'CN01', ten: 'Trụ sở chính Thanh Miện' },
-        { ma: 'CN02', ten: 'Chi nhánh Hải Dương' },
-        { ma: 'CN03', ten: 'Chi nhánh Hà Nội' },
-        { ma: 'CN04', ten: 'Chi nhánh TP.HCM' }
+        { ma: 'CN02', ten: 'Chi nhánh Thanh Giang' },
+        { ma: 'CN03', ten: 'Chi nhánh Bình Giang' }
       ];
 
       // Dropdown bộ lọc
@@ -32002,21 +32245,74 @@ function loadSoQuy(filter) {
       const tuNgayCK = document.getElementById('filter-chuyenkho-tungay')?.value || '';
       const denNgayCK = document.getElementById('filter-chuyenkho-denngay')?.value || '';
 
-      const filtered = (rawChuyenKhoList || []).filter(p => {
-        const mXuat = (fXuat === 'ALL') || (layMaChiNhanh(p.cnXuat) === fXuat);
-        const mNhan = (fNhan === 'ALL') || (layMaChiNhanh(p.cnNhan) === fNhan);
+      const list = (rawChuyenKhoList || []).filter(p => {
+        const mXuat = (fXuat === 'ALL') || (layMaChiNhanh(p.cnXuat || p.tuChiNhanh) === fXuat);
+        const mNhan = (fNhan === 'ALL') || (layMaChiNhanh(p.cnNhan || p.toiChiNhanh) === fNhan);
         const mKw = !kw || 
           String(p.maPhieu || '').toLowerCase().includes(kw) ||
-          String(p.nguoiLap || '').toLowerCase().includes(kw) ||
+          String(p.nguoiLap || p.nguoiTao || '').toLowerCase().includes(kw) ||
           String(p.ghiChu || '').toLowerCase().includes(kw) ||
-          String(p.tenCnXuat || '').toLowerCase().includes(kw) ||
-          String(p.tenCnNhan || '').toLowerCase().includes(kw);
+          String(p.tenCnXuat || p.tuChiNhanh || '').toLowerCase().includes(kw) ||
+          String(p.tenCnNhan || p.toiChiNhanh || '').toLowerCase().includes(kw);
         const dateVal = p.ngayChuyen || p.ngayTao || p.thoiGian || p.created_at;
         const matchDate = kiemTraNgayTrongKhoang(dateVal, tuNgayCK, denNgayCK);
         return mXuat && mNhan && mKw && matchDate;
       });
 
-      renderBangDanhSachChuyenKho(filtered);
+      lastFilteredChuyenKhoList = list;
+
+      // Cập nhật tổng số lượng phiếu
+      const countEl = document.getElementById('chuyenkho-total-count');
+      if (countEl) countEl.innerText = `Tổng: ${list.length.toLocaleString('vi-VN')} phiếu`;
+
+      // Phân trang
+      const totalPages = Math.ceil(list.length / pageSizeChuyenKho) || 1;
+      if (pageChuyenKho > totalPages) pageChuyenKho = totalPages;
+      if (pageChuyenKho < 1) pageChuyenKho = 1;
+
+      const start = (pageChuyenKho - 1) * pageSizeChuyenKho;
+      const end = start + pageSizeChuyenKho;
+      const pageList = list.slice(start, end);
+
+      renderBangDanhSachChuyenKho(pageList);
+      renderPhanTrangChuyenKho(totalPages, pageChuyenKho);
+    }
+
+    function renderPhanTrangChuyenKho(totalPages, curPage) {
+      const ctr = document.getElementById('chuyenkho-pagination-controls');
+      if (!ctr) return;
+      if (totalPages <= 1) {
+        ctr.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      html += `<button type="button" onclick="chuyenTrangChuyenKho(-1)" ${curPage <= 1 ? 'disabled class="px-2 py-1 bg-slate-100 text-slate-300 rounded cursor-not-allowed"' : 'class="px-2 py-1 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded transition"'}>&laquo; Trước</button>`;
+
+      let startP = Math.max(1, curPage - 2);
+      let endP = Math.min(totalPages, startP + 4);
+      if (endP - startP < 4) startP = Math.max(1, endP - 4);
+
+      if (startP > 1) {
+        html += `<button type="button" onclick="datTrangChuyenKho(1)" class="px-2.5 py-1 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded transition">1</button>`;
+        if (startP > 2) html += `<span class="px-1 text-slate-400">...</span>`;
+      }
+
+      for (let p = startP; p <= endP; p++) {
+        if (p === curPage) {
+          html += `<button type="button" class="px-2.5 py-1 bg-indigo-600 text-white font-bold rounded shadow-xs">${p}</button>`;
+        } else {
+          html += `<button type="button" onclick="datTrangChuyenKho(${p})" class="px-2.5 py-1 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded transition">${p}</button>`;
+        }
+      }
+
+      if (endP < totalPages) {
+        if (endP < totalPages - 1) html += `<span class="px-1 text-slate-400">...</span>`;
+        html += `<button type="button" onclick="datTrangChuyenKho(${totalPages})" class="px-2.5 py-1 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded transition">${totalPages}</button>`;
+      }
+
+      html += `<button type="button" onclick="chuyenTrangChuyenKho(1)" ${curPage >= totalPages ? 'disabled class="px-2 py-1 bg-slate-100 text-slate-300 rounded cursor-not-allowed"' : 'class="px-2 py-1 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded transition"'}>Sau &raquo;</button>`;
+      ctr.innerHTML = html;
     }
 
     function renderBangDanhSachChuyenKho(list) {
@@ -32030,18 +32326,27 @@ function loadSoQuy(filter) {
 
       tbody.innerHTML = list.map(p => {
         const tongTienNum = Number(p.tongTien || p.tongGiaTri) || 0;
+        const dateDisp = p.ngayChuyen || p.ngayTao || '-';
+        const statusText = p.trangThai || 'Đã nhận';
+        let statusBadge = `<span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700">${statusText}</span>`;
+        if (statusText === 'Đang chuyển') {
+          statusBadge = `<span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700">${statusText}</span>`;
+        } else if (statusText === 'Đã hủy') {
+          statusBadge = `<span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-700">${statusText}</span>`;
+        }
+
         return `
           <tr class="hover:bg-slate-50 transition border-b border-slate-100">
             <td class="p-3 font-mono font-bold text-indigo-700 cursor-pointer hover:underline" onclick="xemChiTietChuyenKho('${p.maPhieu}')">${p.maPhieu}</td>
-            <td class="p-3 text-slate-600">${p.ngayChuyen ? new Date(p.ngayChuyen).toLocaleString('vi-VN') : '-'}</td>
-            <td class="p-3 font-semibold text-amber-800">${p.tenCnXuat || p.cnXuat}</td>
-            <td class="p-3 font-semibold text-indigo-900">${p.tenCnNhan || p.cnNhan}</td>
+            <td class="p-3 text-slate-600 font-mono text-xs">${dateDisp}</td>
+            <td class="p-3 font-semibold text-amber-800">${p.tenCnXuat || p.tuChiNhanh || p.cnXuat}</td>
+            <td class="p-3 font-semibold text-indigo-900">${p.tenCnNhan || p.toiChiNhanh || p.cnNhan}</td>
             <td class="p-3 text-center font-bold text-slate-700">${p.tongSoMatHang || (p.chiTietSanPham ? p.chiTietSanPham.length : 0)}</td>
             <td class="p-3 text-right font-mono font-bold text-indigo-700">${(Number(p.tongSoLuong) || 0).toLocaleString()}</td>
             <td class="p-3 text-right font-mono font-bold text-amber-700">${tongTienNum.toLocaleString('vi-VN')} đ</td>
-            <td class="p-3 text-slate-700 font-medium">${p.nguoiLap || 'Quản trị viên'}</td>
+            <td class="p-3 text-slate-700 font-medium">${p.nguoiLap || p.nguoiTao || 'Quản trị viên'}</td>
             <td class="p-3 text-center">
-              <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700">Hoàn thành</span>
+              ${statusBadge}
             </td>
             <td class="p-3 text-center space-x-1 whitespace-nowrap">
               <button type="button" onclick="xemChiTietChuyenKho('${p.maPhieu}')" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition" title="Xem chi tiết & In phiếu">
