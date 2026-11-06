@@ -8,38 +8,80 @@ class OrderRepository {
   List<OrderModel>? _cachedOrders;
 
   Future<List<OrderModel>> fetchAllOrders() async {
-    // 1. Thử tải từ Supabase
+    if (_cachedOrders != null && _cachedOrders!.isNotEmpty) {
+      return _cachedOrders!;
+    }
+
+    final List<OrderModel> orders = [];
+
+    // 1. Thử tải từ Supabase (timeout 3 giây để tránh treo ứng dụng khi mạng chậm hoặc Supabase offline)
     try {
       final response = await SupabaseService.client
           .from('don_hang')
           .select('*')
-          .order('ngay_ban', ascending: false);
+          .order('ngay_ban', ascending: false)
+          .timeout(const Duration(seconds: 3));
 
-      final list = (response as List)
-          .map((item) => OrderModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-      if (list.isNotEmpty) {
-        _cachedOrders = list;
-        return list;
+      if (response is List && response.isNotEmpty) {
+        for (final item in response) {
+          if (item is Map) {
+            try {
+              orders.add(OrderModel.fromJson(Map<String, dynamic>.from(item)));
+            } catch (e) {
+              debugPrint("Lỗi parse đơn từ Supabase: $e");
+            }
+          }
+        }
       }
     } catch (e) {
       debugPrint("Lỗi tải don_hang từ Supabase: $e. Sẽ nạp dữ liệu offline.");
     }
 
-    if (_cachedOrders != null) return _cachedOrders!;
-
-    // 2. Fallback nạp từ assets/data/danh_sach_don_hang_full.json
-    try {
-      final jsonStr = await rootBundle.loadString('assets/data/danh_sach_don_hang_full.json');
-      final list = jsonDecode(jsonStr) as List;
-      _cachedOrders = list
-          .map((item) => OrderModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-      return _cachedOrders!;
-    } catch (e) {
-      debugPrint("Lỗi nạp offline danh_sach_don_hang_full.json: $e");
-      return [];
+    // 2. Nạp dữ liệu offline đơn bán hàng từ assets nếu chưa có đơn bán hàng
+    final hasSales = orders.any((o) => o.isPosSale);
+    if (!hasSales) {
+      try {
+        final jsonStr = await rootBundle.loadString('assets/data/danh_sach_don_hang_full.json');
+        final list = jsonDecode(jsonStr);
+        if (list is List) {
+          for (final item in list) {
+            if (item is Map) {
+              try {
+                orders.add(OrderModel.fromJson(Map<String, dynamic>.from(item)));
+              } catch (_) {}
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint("Lỗi nạp offline danh_sach_don_hang_full.json: $e");
+      }
     }
+
+    // 3. Nạp dữ liệu offline đơn nhập hàng NCC (assets/data/danh_sach_nhap_hang_full.json)
+    final hasImport = orders.any((o) => o.isImportOrder);
+    if (!hasImport) {
+      try {
+        final jsonStr = await rootBundle.loadString('assets/data/danh_sach_nhap_hang_full.json');
+        final list = jsonDecode(jsonStr);
+        if (list is List) {
+          for (final item in list) {
+            if (item is Map) {
+              try {
+                orders.add(OrderModel.fromJson(Map<String, dynamic>.from(item)));
+              } catch (_) {}
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint("Lỗi nạp offline danh_sach_nhap_hang_full.json: $e");
+      }
+    }
+
+    // Sắp xếp đơn mới nhất lên đầu
+    orders.sort((a, b) => b.ngayBan.compareTo(a.ngayBan));
+
+    _cachedOrders = orders;
+    return _cachedOrders!;
   }
 
   Future<List<OrderModel>> fetchPreOrders() async {

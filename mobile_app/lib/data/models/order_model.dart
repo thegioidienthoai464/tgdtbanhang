@@ -18,9 +18,30 @@ class OrderItemModel {
   }) : thanhTien = thanhTien ?? (soLuong * donGia);
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
-    int qty = (json['soLuong'] ?? json['so_luong'] ?? 1) as int;
-    double price = ((json['donGia'] ?? json['don_gia'] ?? json['giaNhap']) as num?)?.toDouble() ?? 0.0;
-    double total = ((json['thanhTien'] ?? json['thanh_tien']) as num?)?.toDouble() ?? (qty * price);
+    int qty = 1;
+    final rawQty = json['soLuong'] ?? json['so_luong'];
+    if (rawQty is num) {
+      qty = rawQty.toInt();
+    } else if (rawQty != null) {
+      qty = int.tryParse(rawQty.toString().split('.')[0]) ?? 1;
+    }
+
+    double price = 0.0;
+    final rawPrice = json['donGia'] ?? json['don_gia'] ?? json['giaNhap'];
+    if (rawPrice is num) {
+      price = rawPrice.toDouble();
+    } else if (rawPrice != null) {
+      price = double.tryParse(rawPrice.toString()) ?? 0.0;
+    }
+
+    double total = qty * price;
+    final rawTotal = json['thanhTien'] ?? json['thanh_tien'];
+    if (rawTotal is num) {
+      total = rawTotal.toDouble();
+    } else if (rawTotal != null) {
+      total = double.tryParse(rawTotal.toString()) ?? total;
+    }
+
     final rawCoImei = json['coQuanLyImei'] ?? json['co_quan_ly_imei'] ?? json['coQuanLyIMEI'];
     bool hasImei = true;
     if (rawCoImei != null) {
@@ -103,8 +124,8 @@ class OrderModel {
     this.nhanVien = 'Quản trị viên',
   }) : ngayBan = ngayBan ?? DateTime.now();
 
-  bool get isPreOrder => maDonHang.startsWith('DDH');
-  bool get isImportOrder => maDonHang.startsWith('PNH');
+  bool get isPreOrder => maDonHang.startsWith('DDH') || maDonHang.startsWith('DH');
+  bool get isImportOrder => maDonHang.startsWith('PNH') || maDonHang.startsWith('PN');
   bool get isPosSale => !isPreOrder && !isImportOrder;
   double get conNo => (khachPhaiTra - khachTra).clamp(0.0, 999999999999.0);
 
@@ -135,32 +156,78 @@ class OrderModel {
   }
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
-    final parsedDate = parseCustomDate(json['ngay_ban'] ?? json['ngayBan'] ?? json['thoiGian']);
+    final parsedDate = parseCustomDate(
+      json['ngay_ban'] ?? json['ngayBan'] ?? json['ngayNhap'] ?? json['ngay_nhap'] ?? json['thoiGian'],
+    );
 
     List<OrderItemModel> items = [];
-    final rawItems = json['chi_tiet_san_pham'] ?? json['chiTietSanPham'] ?? json['danhSachSanPham'];
+    final rawItems = json['chi_tiet_san_pham'] ?? json['chiTietSanPham'] ?? json['danhSachSanPham'] ?? json['sanPham'];
     if (rawItems != null && rawItems is List) {
-      items = rawItems
-          .map((i) => OrderItemModel.fromJson(i as Map<String, dynamic>))
-          .toList();
+      for (final i in rawItems) {
+        if (i is Map) {
+          try {
+            items.add(OrderItemModel.fromJson(Map<String, dynamic>.from(i)));
+          } catch (_) {}
+        }
+      }
     }
 
+    double getSafeDouble(dynamic val) {
+      if (val is num) return val.toDouble();
+      if (val != null) return double.tryParse(val.toString()) ?? 0.0;
+      return 0.0;
+    }
+
+    final total = getSafeDouble(json['tong_tien'] ?? json['tongTien']);
+    final discount = getSafeDouble(json['giam_gia'] ?? json['giamGia']);
+    final mustPay = getSafeDouble(json['khach_phai_tra'] ?? json['khachPhaiTra'] ?? (total - discount));
+    final paid = getSafeDouble(
+      json['khach_tra'] ?? json['khachTra'] ?? json['khachDaTra'] ?? json['daTra'] ?? json['da_tra'],
+    );
+
+    final maDon = json['ma_don_hang']?.toString() ??
+        json['maDonHang']?.toString() ??
+        json['ma_phieu']?.toString() ??
+        json['maPhieu']?.toString() ??
+        '';
+
+    final maDoiTac = json['ma_kh']?.toString() ??
+        json['maKH']?.toString() ??
+        json['ma_ncc']?.toString() ??
+        json['maNCC']?.toString() ??
+        'KHACHLE';
+
+    final tenDoiTac = json['ten_kh']?.toString() ??
+        json['tenKH']?.toString() ??
+        json['ten_ncc']?.toString() ??
+        json['tenNCC']?.toString() ??
+        (maDon.startsWith('PN') ? 'Nhà cung cấp' : 'Khách lẻ');
+
+    final phone = json['so_dien_thoai']?.toString() ??
+        json['soDienThoai']?.toString() ??
+        json['dienThoai']?.toString() ??
+        '';
+
+    final branch = json['chi_nhanh']?.toString() ??
+        json['chiNhanh']?.toString() ??
+        'CN02: Chi nhánh Thanh Giang';
+
     return OrderModel(
-      maDonHang: json['ma_don_hang']?.toString() ?? json['maDonHang']?.toString() ?? '',
+      maDonHang: maDon,
       ngayBan: parsedDate,
-      maKH: json['ma_kh']?.toString() ?? json['maKH']?.toString() ?? 'KHACHLE',
-      tenKH: json['ten_kh']?.toString() ?? json['tenKH']?.toString() ?? 'Khách lẻ',
-      soDienThoai: json['so_dien_thoai']?.toString() ?? json['soDienThoai']?.toString() ?? json['dienThoai']?.toString() ?? '',
-      chiNhanh: json['chi_nhanh']?.toString() ?? json['chiNhanh']?.toString() ?? 'CN02: Chi nhánh Thanh Giang',
-      tongTien: (json['tong_tien'] as num?)?.toDouble() ?? (json['tongTien'] as num?)?.toDouble() ?? 0.0,
-      giamGia: (json['giam_gia'] as num?)?.toDouble() ?? (json['giamGia'] as num?)?.toDouble() ?? 0.0,
-      khachPhaiTra: (json['khach_phai_tra'] as num?)?.toDouble() ?? (json['khachPhaiTra'] as num?)?.toDouble() ?? 0.0,
-      khachTra: (json['khach_tra'] as num?)?.toDouble() ?? (json['khachTra'] as num?)?.toDouble() ?? (json['khachDaTra'] as num?)?.toDouble() ?? 0.0,
+      maKH: maDoiTac,
+      tenKH: tenDoiTac,
+      soDienThoai: phone,
+      chiNhanh: branch,
+      tongTien: total,
+      giamGia: discount,
+      khachPhaiTra: mustPay,
+      khachTra: paid,
       hinhThucTT: json['hinh_thuc_tt']?.toString() ?? json['hinhThucTT']?.toString() ?? 'TIEN_MAT',
       nganHangNhan: json['ngan_hang_nhan']?.toString() ?? json['nganHangNhan']?.toString(),
       chiTietSanPham: items,
       trangThai: json['trang_thai']?.toString() ?? json['trangThai']?.toString() ?? 'Hoàn thành',
-      nhanVien: json['nhan_vien']?.toString() ?? json['nhanVien']?.toString() ?? json['nguoiBan']?.toString() ?? 'Quản trị viên',
+      nhanVien: json['nhan_vien']?.toString() ?? json['nhanVien']?.toString() ?? json['nguoiBan']?.toString() ?? json['nguoiNhap']?.toString() ?? 'Quản trị viên',
     );
   }
 

@@ -34,6 +34,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Dữ liệu tồn kho, giá vốn & IMEI 3 chi nhánh từ Excel gốc -->
   <script src="ton_kho_3_chinhanh.js"></script>
+  <!-- Dữ liệu thực tế 100% từ KiotViet Chi Nhánh Thanh Giang -->
+  <script src="du_lieu_thanh_giang.js"></script>
 
   <script>
     tailwind.config = {
@@ -6568,7 +6570,7 @@ function chuyenTabSoQuy(loaiQuy) {
 function loadDuLieuSoQuy(loaiQuy) {
   const qFilter = String(loaiQuy || currentLoaiQuy || "ALL").toUpperCase().trim();
   const locCN = document.getElementById('sq-loc-chinhanh')?.value || 'CURRENT';
-  const targetCN = (locCN === 'CURRENT') ? (currentChiNhanh || 'CN01') : locCN;
+  const targetCN = (locCN === 'CURRENT') ? (currentChiNhanh || 'CN02') : locCN;
 
   // Cập nhật text tiêu đề chi nhánh trên sổ quỹ
   const elHeaderCN = document.getElementById('sq-header-chinhanh');
@@ -6579,6 +6581,79 @@ function loadDuLieuSoQuy(loaiQuy) {
       const cnObj = (rawChiNhanhList || []).find(x => x.ma === targetCN);
       elHeaderCN.innerText = cnObj ? `${cnObj.ma}: ${cnObj.ten}` : targetCN;
     }
+  }
+
+  // 0. Ưu tiên nạp dữ liệu Sổ quỹ thực tế KiotViet Thanh Giang
+  if (typeof window.RAW_SO_QUY_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_SO_QUY_THANH_GIANG) && window.RAW_SO_QUY_THANH_GIANG.length > 0) {
+    let tongThu = 0;
+    let tongChi = 0;
+    let allRows = [];
+
+    window.RAW_SO_QUY_THANH_GIANG.forEach(item => {
+      if (targetCN !== 'ALL' && typeof laCungChiNhanh === 'function' && !laCungChiNhanh(item.chi_nhanh || item.chiNhanh, targetCN)) {
+        return;
+      }
+
+      let lp = String(item.loai_phieu || item.loaiPhieu || "THU").toUpperCase();
+      let pt = String(item.phuong_thuc || item.phuongThuc || item.loai_quy || item.loaiQuy || "Tiền mặt").trim();
+      let isTienMat = pt.toLowerCase().includes('mặt') || (item.loaiQuy === 'TIEN_MAT');
+      let lq = isTienMat ? "TIEN_MAT" : "TAI_KHOAN";
+
+      let pass = true;
+      if (qFilter === 'TIEN_MAT') pass = isTienMat;
+      else if (qFilter === 'TAI_KHOAN' || qFilter === 'NGAN_HANG') pass = !isTienMat;
+      else if (qFilter !== 'ALL') pass = (lq.includes(qFilter) || pt.includes(qFilter));
+
+      const filterBankVal = document.getElementById('filter-quy-nganhang')?.value;
+      if (pass && filterBankVal && (qFilter === 'TAI_KHOAN' || qFilter === 'NGAN_HANG')) {
+        const strCheck = `${pt} ${item.ghi_chu || item.ghiChu || ''}`.toUpperCase();
+        const bankParts = filterBankVal.toUpperCase().split('-').map(s => s.trim()).filter(Boolean);
+        if (!bankParts.some(p => strCheck.includes(p))) {
+          pass = false;
+        }
+      }
+
+      if (pass) {
+        let soTien = Number(item.so_tien || item.soTien) || 0;
+        let isHuy = (item.trang_thai === 'DaHuy' || item.trangThai === 'DaHuy' || item.trang_thai === 'Đã hủy');
+        if (!isHuy) {
+          if (lp === 'THU') tongThu += soTien;
+          else if (lp === 'CHI') tongChi += soTien;
+        }
+        let ngayStr = item.ngay_gd || item.ngayGD || item.thoiGian || item.ngayGiaoDich || '';
+        let ghiChuFull = item.ghi_chu || item.ghiChu || '';
+        let hangMuc = item.hangMuc || item.hang_muc || item.lyDoThuChi || '';
+
+        allRows.push({
+          chiNhanh: item.chi_nhanh || item.chiNhanh || "CN02: Chi nhánh Thanh Giang",
+          maPhieu: item.ma_phieu || item.maPhieu,
+          loaiPhieu: lp,
+          loaiQuy: lq,
+          quyNguon: pt,
+          ngayGiaoDich: ngayStr,
+          ngayGD: ngayStr,
+          soTien: soTien,
+          doiTuong: item.doi_tuong || item.doiTuong || item.nguoiNopNhan || "Khách hàng",
+          maDoiTuong: item.ma_doi_tuong || item.maDoiTuong || "",
+          maChungTu: item.ma_chung_tu || item.maChungTu || item.maPhieu || "",
+          trangThai: isHuy ? "DaHuy" : "DaThanhToan",
+          ghiChu: ghiChuFull,
+          lyDoThuChi: hangMuc || ghiChuFull
+        });
+      }
+    });
+
+    const res = {
+      dauKy: 0,
+      tongThu: tongThu,
+      tongChi: tongChi,
+      tonQuy: tongThu - tongChi,
+      danhSach: allRows
+    };
+    window.rawSoQuyData = res;
+    hienThiBangSoQuy(res);
+    console.log(`⚡ Đã nạp ${allRows.length} phiếu sổ quỹ thực tế của Thanh Giang từ KiotViet!`);
+    return;
   }
 
   if (supabaseClient) {
@@ -6728,6 +6803,22 @@ function formatVND(amount) {
 
     // Tải danh sách ngân hàng từ Supabase PostgreSQL (hoặc Google Sheets dự phòng)
     async function loadDanhSachNganHang() {
+      // 0. Ưu tiên nạp danh sách Ngân hàng thực tế KiotViet Thanh Giang
+      if (typeof window.RAW_NGAN_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NGAN_HANG_THANH_GIANG) && window.RAW_NGAN_HANG_THANH_GIANG.length > 0) {
+        rawNganHangList = window.RAW_NGAN_HANG_THANH_GIANG;
+        renderFilterNganHangTab52();
+        renderSelectNganHangPOS();
+        renderBangModalNganHang();
+        if (typeof napDanhSachNganHangVaoSelect === 'function') {
+          const bKH = document.getElementById('box-thuno-kh-nganhang');
+          if (bKH && !bKH.classList.contains('hidden')) napDanhSachNganHangVaoSelect('thuno-kh-nganhang');
+          const bNCC = document.getElementById('box-ttno-ncc-nganhang');
+          if (bNCC && !bNCC.classList.contains('hidden')) napDanhSachNganHangVaoSelect('ttno-ncc-nganhang');
+        }
+        console.log(`⚡ Đã nạp ${rawNganHangList.length} tài khoản ngân hàng thực tế từ KiotViet!`);
+        return;
+      }
+
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         try {
           const { data, error } = await supabaseClient.from('dm_nganhang').select('*').order('created_at', { ascending: false });
@@ -7952,7 +8043,7 @@ function formatVND(amount) {
       resetPosSearchFields();
     }
 
-    let currentChiNhanh = "CN01"; // Mặc định luôn là chi nhánh chính CN01
+    let currentChiNhanh = "CN02"; // Mặc định luôn là chi nhánh chính CN01
     let rawChiNhanhList = [
       { ma: "CN01", ten: "Trụ sở chính Thanh Miện" },
       { ma: "CN02", ten: "Chi nhánh Thanh Giang" },
@@ -8325,7 +8416,7 @@ function formatVND(amount) {
       const rawImeiMap = window.RAW_IMEI_3_CHI_NHANH || {};
 
       // Tự động dọn sạch cache tồn kho cũ khi hệ thống vừa nạp lại tồn kho mới
-      const RESET_INVENTORY_KEY = 'tt_pos_reset_inventory_v20261007_imported_all_v4';
+      const RESET_INVENTORY_KEY = 'tt_pos_reset_inventory_thanhgiang_v20261106_final';
       try {
         if (!localStorage.getItem(RESET_INVENTORY_KEY)) {
           localStorage.removeItem('tt_pos_tonkho_chinhanh');
@@ -9453,6 +9544,24 @@ function formatVND(amount) {
     // 1. NHÀ CUNG CẤP (3.1)
     function loadNCC() {
       console.log("Loading NCC list...");
+      // Ưu tiên nạp 100% Nhà cung cấp thực tế từ KiotViet
+      if (typeof window.RAW_DOI_TAC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG)) {
+        const listNCC = window.RAW_DOI_TAC_THANH_GIANG.filter(d => d.loaiDoiTac === 'NCC');
+        if (listNCC.length > 0) {
+          rawNCCList = listNCC.map(d => ({
+            maDoiTac: d.maDoiTac,
+            loaiDoiTac: 'NCC',
+            tenDoiTac: d.tenDoiTac,
+            soDienThoai: d.soDienThoai || '',
+            diaChi: d.diaChi || '',
+            congNo: Number(d.conNo) || 0,
+            trangThai: d.trangThai || 'HoatDong'
+          }));
+          locDanhSachNCC(false);
+          console.log(`⚡ Đã nạp ${rawNCCList.length} NCC thực tế từ KiotViet!`);
+          return;
+        }
+      }
       if (supabaseClient) {
         supabaseClient.from('dm_doitac').select('*').eq('loai_doi_tac', 'NCC').order('ma_doi_tac')
           .then(({ data, error }) => {
@@ -9544,6 +9653,30 @@ function formatVND(amount) {
       const tbody = document.getElementById('tbl-nhaphang-danhsach-body');
       if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải danh sách đơn nhập hàng...</td></tr>';
       
+      // 0. Ưu tiên nạp 100% dữ liệu Đơn nhập hàng thực tế KiotViet Thanh Giang
+      if (typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG) && window.RAW_NHAP_HANG_THANH_GIANG.length > 0) {
+        rawNhapHangList = window.RAW_NHAP_HANG_THANH_GIANG.map(d => ({
+          maPhieu: d.maPhieu,
+          ngayNhap: d.ngayNhap,
+          maNCC: d.maNCC || '',
+          tenNCC: d.tenNCC || '',
+          chiNhanh: d.chiNhanh || 'CN02: Chi nhánh Thanh Giang',
+          tongTien: Number(d.tongTien) || 0,
+          daTra: Number(d.daTra) || 0,
+          conNo: Number(d.conNo) || Math.max(0, (Number(d.tongTien) || 0) - (Number(d.daTra) || 0)),
+          trangThai: d.trangThai || 'Hoàn thành',
+          nhanVien: d.nhanVien || d.nguoiNhap || 'Quản trị viên',
+          nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên',
+          ghiChu: d.ghiChu || '',
+          chiTietSanPham: Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (Array.isArray(d.sanPham) ? d.sanPham : [])
+        }));
+        dongBoDonLuuTamVaoDanhSach();
+        dongBoImeiTuDonNhapHang();
+        locDanhSachNhapHangTable();
+        console.log(`⚡ Đã nạp ${rawNhapHangList.length} phiếu nhập hàng thực tế của Thanh Giang từ KiotViet!`);
+        return;
+      }
+
       // 1. Ưu tiên tải tức thì từ Supabase Cloud (hỗ trợ Netlify & standalone)
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         supabaseClient.from('don_hang')
@@ -12053,6 +12186,16 @@ function formatVND(amount) {
 
     async function loadHangHoa() {
       loadNhomHang();
+
+      // Ưu tiên nạp tức thì 100% dữ liệu thực tế Thanh Giang từ KiotViet
+      if (typeof window.RAW_HANG_HOA_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_HANG_HOA_THANH_GIANG) && window.RAW_HANG_HOA_THANH_GIANG.length > 0) {
+        rawHangHoa = window.RAW_HANG_HOA_THANH_GIANG;
+        khoiTaoTonKhoDaChiNhanh();
+        locDanhSachHangHoa(false);
+        hienThiSelectNhomHang();
+        console.log(`⚡ Đã nạp ${rawHangHoa.length} sản phẩm thực tế của Thanh Giang từ KiotViet!`);
+        return;
+      }
 
       // 1. Hiển thị tức thì từ Cache nếu có (< 10ms)
       try {
@@ -15113,6 +15256,14 @@ function formatVND(amount) {
 
     // 1. Tải danh sách lịch sử kiểm kho
     function loadKiemKho() {
+      // 0. Ưu tiên nạp danh sách Kiểm kho thực tế từ KiotViet Thanh Giang
+      if (typeof window.RAW_KIEM_KHO_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_KIEM_KHO_THANH_GIANG) && window.RAW_KIEM_KHO_THANH_GIANG.length > 0) {
+        rawKiemKhoList = window.RAW_KIEM_KHO_THANH_GIANG;
+        locDanhSachKiemKho();
+        console.log(`⚡ Đã nạp ${rawKiemKhoList.length} phiếu kiểm kho thực tế từ KiotViet!`);
+        return;
+      }
+
       google.script.run.withSuccessHandler(function(list) {
         rawKiemKhoList = list || [];
         locDanhSachKiemKho();
@@ -15795,6 +15946,14 @@ function formatVND(amount) {
     }
 
     function loadXuatHuy() {
+      // 0. Ưu tiên nạp danh sách Xuất hủy thực tế từ KiotViet Thanh Giang
+      if (typeof window.RAW_XUAT_HUY_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_XUAT_HUY_THANH_GIANG) && window.RAW_XUAT_HUY_THANH_GIANG.length > 0) {
+        rawXuatHuyList = window.RAW_XUAT_HUY_THANH_GIANG;
+        locDanhSachXuatHuy();
+        console.log(`⚡ Đã nạp ${rawXuatHuyList.length} phiếu xuất hủy thực tế từ KiotViet!`);
+        return;
+      }
+
       if (!rawHangHoa || !rawHangHoa.length) {
         if (typeof loadHangHoa === 'function') loadHangHoa();
       }
@@ -16566,6 +16725,23 @@ function formatVND(amount) {
     }
 
     function loadNCC() {
+      if (typeof window.RAW_DOI_TAC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG)) {
+        const listNCC = window.RAW_DOI_TAC_THANH_GIANG.filter(d => d.loaiDoiTac === 'NCC');
+        if (listNCC.length > 0) {
+          rawNCCList = listNCC.map(d => ({
+            maDoiTac: d.maDoiTac,
+            loaiDoiTac: 'NCC',
+            tenDoiTac: d.tenDoiTac,
+            soDienThoai: d.soDienThoai || '',
+            diaChi: d.diaChi || '',
+            congNo: Number(d.conNo) || 0,
+            trangThai: d.trangThai || 'HoatDong'
+          }));
+          locDanhSachNCC(false);
+          console.log(`⚡ Đã nạp ${rawNCCList.length} NCC thực tế từ KiotViet!`);
+          return;
+        }
+      }
       if (supabaseClient) {
         supabaseClient.from('dm_doitac').select('*').eq('loai_doi_tac', 'NCC').order('ma_doi_tac')
           .then(({ data, error }) => {
@@ -17928,25 +18104,24 @@ function formatVND(amount) {
     /* 5. Sổ quỹ */
     function loadSoQuy() {
       const quyLoc = (typeof currentQuyDangXem !== 'undefined') ? currentQuyDangXem : 'ALL';
-      
-      google.script.run.withSuccessHandler(function(res) {
-        if (!res) return;
-        
-        window.rawSoQuyData = res;
-
-        // Sửa lại đúng chính xác ID của 4 Thẻ KPI Quỹ trong HTML
-        const elDauKy = document.getElementById('sq-dau-ky');
-        const elTongThu = document.getElementById('sq-tong-thu');
-        const elTongChi = document.getElementById('sq-tong-chi');
-        const elTonQuy = document.getElementById('sq-ton-quy');
-
-        if (elDauKy) elDauKy.innerText = (res.dauKy || 0).toLocaleString() + ' đ';
-        if (elTongThu) elTongThu.innerText = (res.tongThu || 0).toLocaleString() + ' đ';
-        if (elTongChi) elTongChi.innerText = (res.tongChi || 0).toLocaleString() + ' đ';
-        if (elTonQuy) elTonQuy.innerText = (res.tonQuy || 0).toLocaleString() + ' đ';
-
-        locDuLieuSoQuy();
-      }).apiGetChiTietSoQuy(quyLoc);
+      if (typeof loadDuLieuSoQuy === 'function') {
+        return loadDuLieuSoQuy(quyLoc);
+      }
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(function(res) {
+          if (!res) return;
+          window.rawSoQuyData = res;
+          const elDauKy = document.getElementById('sq-dau-ky');
+          const elTongThu = document.getElementById('sq-tong-thu');
+          const elTongChi = document.getElementById('sq-tong-chi');
+          const elTonQuy = document.getElementById('sq-ton-quy');
+          if (elDauKy) elDauKy.innerText = (res.dauKy || 0).toLocaleString() + ' đ';
+          if (elTongThu) elTongThu.innerText = (res.tongThu || 0).toLocaleString() + ' đ';
+          if (elTongChi) elTongChi.innerText = (res.tongChi || 0).toLocaleString() + ' đ';
+          if (elTonQuy) elTonQuy.innerText = (res.tonQuy || 0).toLocaleString() + ' đ';
+          locDuLieuSoQuy();
+        }).apiGetChiTietSoQuy(quyLoc);
+      }
     }
 
     var selectedSoQuySet = new Set();
@@ -26005,6 +26180,12 @@ function formatVND(amount) {
     let selectedDonHangIds = [];
 
     function loadLichSuDonHang() {
+      if (typeof window.RAW_DON_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DON_HANG_THANH_GIANG) && window.RAW_DON_HANG_THANH_GIANG.length > 0) {
+        rawDonHangList = window.RAW_DON_HANG_THANH_GIANG;
+        locDanhSachDonHang(false);
+        console.log(`⚡ Đã nạp ${rawDonHangList.length} hóa đơn thực tế của Thanh Giang từ KiotViet!`);
+        return;
+      }
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         supabaseClient.from('don_hang').select('*').order('ngay_ban', { ascending: false })
           .then(({ data, error }) => {
@@ -28100,6 +28281,14 @@ function loadSoQuy(filter) {
       const tbody = document.getElementById('tbl-tranhap-danhsach-body');
       if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2 text-amber-600"></i>Đang tải danh sách đơn trả hàng NCC...</td></tr>';
 
+      // 0. Ưu tiên nạp danh sách Đơn trả hàng NCC thực tế từ KiotViet Thanh Giang
+      if (typeof window.RAW_TRA_HANG_NCC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_TRA_HANG_NCC_THANH_GIANG) && window.RAW_TRA_HANG_NCC_THANH_GIANG.length > 0) {
+        rawTraHangNCCList = window.RAW_TRA_HANG_NCC_THANH_GIANG;
+        locDanhSachTraHangNCCTable();
+        console.log(`⚡ Đã nạp ${rawTraHangNCCList.length} đơn trả hàng NCC thực tế từ KiotViet!`);
+        return;
+      }
+
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(function(res) {
@@ -29596,6 +29785,17 @@ function loadSoQuy(filter) {
     var dangNapToanBoKH = false;
 
     async function loadKH() {
+      // Ưu tiên nạp 100% Khách hàng thực tế từ KiotViet
+      if (typeof window.RAW_DOI_TAC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG)) {
+        const listKH = window.RAW_DOI_TAC_THANH_GIANG.filter(d => d.loaiDoiTac === 'KHACH_HANG');
+        if (listKH.length > 0) {
+          rawKHList = listKH;
+          locDanhSachKH(false);
+          console.log(`⚡ Đã nạp ${rawKHList.length} khách hàng thực tế từ KiotViet!`);
+          return;
+        }
+      }
+
       // 1. Nạp tức thì từ Cache (IndexedDB & LocalStorage) < 10ms
       try {
         if (typeof layKHTuCache === 'function') {
@@ -34785,7 +34985,43 @@ function loadSoQuy(filter) {
     // 2. TẢI DỮ LIỆU YÊU CẦU SỬA CHỮA
     window.taiDanhSachYeuCauSuaChua = async function() {
       console.log("Đang tải dữ liệu Yêu cầu sửa chữa...");
-      
+
+      // 0. Ưu tiên nạp 100% dữ liệu Yêu cầu sửa chữa thực tế KiotViet Thanh Giang
+      if (typeof window.RAW_YCSC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_YCSC_THANH_GIANG) && window.RAW_YCSC_THANH_GIANG.length > 0) {
+        window.rawYeuCauSuaChuaList = window.RAW_YCSC_THANH_GIANG.map(item => {
+          let tt = item.trang_thai || 'HoanThanh';
+          if (tt === 'Hoàn thành') tt = 'HoanThanh';
+          else if (tt === 'Đang xử lý') tt = 'DangSua';
+          else if (tt === 'Đã hủy') tt = 'DaHuy';
+          return {
+            ...item,
+            trang_thai: tt,
+            ten_kh: item.ten_kh || item.ten_khach_hang || 'Khách lẻ',
+            so_dien_thoai: item.so_dien_thoai || item.dien_thoai || '',
+            ngay_tiep_nhan: item.ngay_tiep_nhan || item.thoi_gian || '',
+            ngay_cap_nhat: item.ngay_cap_nhat || item.thoi_gian || '',
+            khach_can_tra: Number(item.khach_can_tra || item.chi_phi) || 0,
+            khach_da_tra: Number(item.khach_da_tra) || 0,
+            danh_sach_dich_vu: Array.isArray(item.danh_sach_dich_vu) ? item.danh_sach_dich_vu : (Array.isArray(item.dich_vu) ? item.dich_vu : []),
+            lich_su_thanh_toan: Array.isArray(item.lich_su_thanh_toan) ? item.lich_su_thanh_toan : (
+              (Number(item.khach_da_tra) > 0) ? [
+                {
+                  ma_phieu: 'TT_' + (item.ma_yeu_cau || ''),
+                  thoi_gian: item.thoi_gian || item.ngay_tiep_nhan || '',
+                  phuong_thuc: 'Tiền mặt',
+                  so_tien: Number(item.khach_da_tra) || 0,
+                  nguoi_thu: item.nguoi_nhan || 'Lưu Quang Hữu'
+                }
+              ] : []
+            )
+          };
+        });
+        localStorage.setItem(STORAGE_KEY_SUACHUA, JSON.stringify(window.rawYeuCauSuaChuaList));
+        renderTableDanhSachYeuCauSuaChua();
+        console.log(`⚡ Đã nạp ${window.rawYeuCauSuaChuaList.length} yêu cầu sửa chữa thực tế của Thanh Giang từ KiotViet!`);
+        return;
+      }
+
       // 2.1 Đọc từ LocalStorage trước để hiển thị tức thì
       try {
         const localData = localStorage.getItem(STORAGE_KEY_SUACHUA);

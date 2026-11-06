@@ -60,6 +60,10 @@ class BranchViewModel extends ChangeNotifier {
     for (final code in _selectedBranchCodes) {
       if (code == 'ALL') return true;
       if (upper.contains(code)) return true;
+      final matched = _branches.where((b) => b.maCN.toUpperCase() == code);
+      if (matched.isNotEmpty && upper.contains(matched.first.tenCN.toUpperCase())) {
+        return true;
+      }
     }
     return false;
   }

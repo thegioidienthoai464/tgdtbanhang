@@ -6,8 +6,8 @@ const { execSync } = require('child_process');
 const env = fs.readFileSync('.env', 'utf8');
 const token = env.match(/GITHUB_TOKEN=(.*)/)[1].trim();
 const repo = 'thegioidienthoai464/tgdtbanhang';
-const TARGET_VERSION = 'v1.2.3';
-const TARGET_BUILD = 24;
+const TARGET_VERSION = 'v1.2.4';
+const TARGET_BUILD = 25;
 
 function githubRequest(endpoint, method = 'GET', data = null, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -223,22 +223,15 @@ async function main() {
     name: `T&T POS ${TARGET_VERSION} (Build ${TARGET_BUILD})`,
     body: `## 🚀 Bản cập nhật T&T POS ${TARGET_VERSION} (Build ${TARGET_BUILD})
 
-### ✨ Tính năng mới & Cải tiến:
-1. **Thanh toán linh hoạt dạng Checkbox (Tiền mặt, Ngân hàng, Thẻ POS & Kết hợp tự do)**:
-   - Hỗ trợ 3 Checkbox tương tác độc lập: 💵 Tiền mặt, 🏦 Ngân hàng (Chuyển khoản), 💳 Quẹt thẻ POS.
-   - Cho phép chọn bất kỳ phương thức nào: 1 trong 3, kết hợp 2 trong 3, hoặc kết hợp cả 3 phương án cùng lúc.
-   - Bảng phân bổ số tiền thông minh khi kết hợp nhiều phương thức, có nút "Chia đều", tự động định dạng dấu chấm phân tách hàng nghìn.
-   - Tự động tách và hạch toán đúng sổ quỹ: Tiền mặt vào quỹ TIEN_MAT, Chuyển khoản vào quỹ TAI_KHOAN, Quẹt thẻ vào quỹ THE (đồng bộ chuẩn 100% Web ERP).
-   - Danh sách và chi tiết đơn hàng hiển thị trực quan thông tin quẹt thẻ POS hoặc hình thức kết hợp.
-2. **Tối ưu Quản lý IMEI (Ẩn IMEI cho hàng không quản lý IMEI)**:
-   - Tự động nhận diện các mặt hàng không quản lý theo IMEI (phụ kiện, ốp lưng, kính cường lực...).
-   - Ẩn hoàn toàn ô nhập IMEI khi bán hàng POS và sửa giỏ hàng, hiển thị huy hiệu "Không quản lý IMEI" trực quan.
-3. **Định dạng dấu chấm (.) phân tách hàng nghìn chuẩn tiếng Việt**:
-   - Tự động định dạng dấu chấm phân tách hàng nghìn khi nhập/sửa đơn giá bán, giá vốn nhập, số tiền thanh toán (tiền mặt, chuyển khoản, thẻ POS) và công nợ (ví dụ: 160.000, 343.600...).
-4. **Màn hình Quản lý đơn hàng (Bán hàng, Đặt hàng, Nhập kho) - Tối ưu diện tích hiển thị**:
-   - Loại bỏ thanh chọn chi nhánh chiếm diện tích ở thân trang, chuyển tên chi nhánh lên thanh tiêu đề AppBar thanh thoát.
-   - Thiết kế thẻ đơn hàng siêu thoáng, nhìn được nhiều đơn hơn gấp 2 lần.
-   - Bổ sung xem chi tiết đơn hàng đầy đủ & In bill LAN trực tiếp.`,
+### ✨ Khắc phục triệt để hiển thị Lịch sử Đơn bán hàng, Đặt hàng & Nhập kho:
+1. **Khắc phục lỗi hiển thị Đơn bán hàng (Bán hàng)**:
+   - Sửa lỗi giải mã số lượng (hỗ trợ số thực/thập phân như 1.0 từ hệ thống KiotViet), hiển thị trọn vẹn 8.030 hóa đơn bán hàng thực tế của Chi nhánh Thanh Giang.
+2. **Tích hợp 626 Đơn nhập hàng Nhà cung cấp (Nhập kho)**:
+   - Đã đồng bộ và hiển thị đầy đủ 626 đơn nhập kho NCC thực tế vào tab "Nhập kho", có biểu tượng vận chuyển, tên NCC, tổng tiền và tiền đã thanh toán.
+3. **Cơ chế tải dữ liệu siêu tốc & Timeout 3s**:
+   - Tránh tình trạng ứng dụng bị đơ hoặc chờ đợi lâu khi Supabase Cloud offline, tự động tải ngay dữ liệu offline có sẵn.
+4. **Bộ lọc chi nhánh thông minh**:
+   - Tự động nhận diện chuẩn xác chi nhánh theo cả mã (CN02) và tên gọi (Chi nhánh Thanh Giang).`,
     draft: false,
     prerelease: false
   };
