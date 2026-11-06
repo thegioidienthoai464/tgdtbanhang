@@ -12215,133 +12215,360 @@ function formatVND(amount) {
     // ====================================================================
     // ====================================================================
     // BẢNG MAP TÊN NHÓM HÀNG CHUẨN (HIỂN THỊ TÊN THAY VÌ MÃ NHÓM)
+        // ====================================================================
+    // BẢNG MAP & CẤU TRÚC 42 NHÓM HÀNG CHUẨN THEO ERP_HeThongBanHang (DM_NhomHang)
     // ====================================================================
-    const MAP_TEN_NHOM_CHUAN = {
-      'NH001': 'Đồng hồ',
-      'NH002': 'Điện thoại',
-      'NH003': 'Máy tính bảng / iPad',
-      'NH004': 'Laptop & Máy tính',
-      'NH009': 'Bao da & Ốp lưng',
-      'NH010': 'Cáp sạc & Củ sạc',
-      'NH011': 'Pin sạc dự phòng',
-      'NH012': 'Loa & Tai nghe Bluetooth',
-      'NH020': 'Dịch vụ sửa chữa',
-      'NH025': 'Linh kiện điện thoại',
-      'NH000000': 'Hàng hóa khác'
-    };
+    const DANH_SACH_NHOM_HANG_CHUAN = [
+  {
+    "MaNhom": "NH001",
+    "TenNhom": "Điện thoại",
+    "MaNhomCha": "",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH002",
+    "TenNhom": "iPhone",
+    "MaNhomCha": "NH001",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH003",
+    "TenNhom": "Samsung",
+    "MaNhomCha": "NH001",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH004",
+    "TenNhom": "Oppo",
+    "MaNhomCha": "NH001",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH005",
+    "TenNhom": "Xiaomi",
+    "MaNhomCha": "NH001",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH006",
+    "TenNhom": "Phụ kiện ĐT",
+    "MaNhomCha": "",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH007",
+    "TenNhom": "Linh kiện ĐT",
+    "MaNhomCha": "",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH008",
+    "TenNhom": "Bàn phím",
+    "MaNhomCha": "NH001",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH009",
+    "TenNhom": "Bao da",
+    "MaNhomCha": "NH006",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH010",
+    "TenNhom": "Cáp & Củ sạc",
+    "MaNhomCha": "NH006",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH011",
+    "TenNhom": "Cường lực",
+    "MaNhomCha": "NH006",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH012",
+    "TenNhom": "Loa - Tai nghe",
+    "MaNhomCha": "NH006",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH013",
+    "TenNhom": "Loa - Tai nghe BLT",
+    "MaNhomCha": "NH006",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH014",
+    "TenNhom": "Ốp lưng",
+    "MaNhomCha": "NH006",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH015",
+    "TenNhom": "PKĐT khác",
+    "MaNhomCha": "NH006",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH016",
+    "TenNhom": "Sạc DP",
+    "MaNhomCha": "NH006",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH017",
+    "TenNhom": "Tấm dán",
+    "MaNhomCha": "NH006",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH018",
+    "TenNhom": "Thẻ nhớ - USB",
+    "MaNhomCha": "NH006",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH019",
+    "TenNhom": "Cáp & Bo sạc",
+    "MaNhomCha": "NH007",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH020",
+    "TenNhom": "LKĐT Khác",
+    "MaNhomCha": "NH007",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH021",
+    "TenNhom": "Loa - Mic",
+    "MaNhomCha": "NH007",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH022",
+    "TenNhom": "Main - IC",
+    "MaNhomCha": "NH007",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH023",
+    "TenNhom": "Pin ĐT",
+    "MaNhomCha": "NH007",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH024",
+    "TenNhom": "Vỏ - Nắp lưng",
+    "MaNhomCha": "NH007",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH025",
+    "TenNhom": "Màn hình - Kính",
+    "MaNhomCha": "NH007",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH026",
+    "TenNhom": "Phụ Kiện MT",
+    "MaNhomCha": "",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH027",
+    "TenNhom": "Linh Kiện MT",
+    "MaNhomCha": "",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH028",
+    "TenNhom": "Cáp - Sạc Máy tính",
+    "MaNhomCha": "NH026",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH029",
+    "TenNhom": "Cặp - Balo Laptop",
+    "MaNhomCha": "NH026",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH030",
+    "TenNhom": "Chuột - Bàn phím",
+    "MaNhomCha": "NH026",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH031",
+    "TenNhom": "Loa - Tai nghe vi tính",
+    "MaNhomCha": "NH026",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH032",
+    "TenNhom": "Phụ kiện MT khác",
+    "MaNhomCha": "NH026",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH033",
+    "TenNhom": "Bo mạch chủ",
+    "MaNhomCha": "NH027",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH034",
+    "TenNhom": "CPU",
+    "MaNhomCha": "NH027",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH035",
+    "TenNhom": "LK MT khác",
+    "MaNhomCha": "NH027",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH036",
+    "TenNhom": "Màn hình",
+    "MaNhomCha": "NH027",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH037",
+    "TenNhom": "Nguồn MT",
+    "MaNhomCha": "NH027",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH038",
+    "TenNhom": "Ổ Cứng",
+    "MaNhomCha": "NH027",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH039",
+    "TenNhom": "Ram - Bộ nhớ trong",
+    "MaNhomCha": "NH027",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH040",
+    "TenNhom": "VGA - Cạc màn hình",
+    "MaNhomCha": "NH027",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH041",
+    "TenNhom": "Vỏ Case",
+    "MaNhomCha": "NH027",
+    "GhiChu": ""
+  },
+  {
+    "MaNhom": "NH042",
+    "TenNhom": "Hàng hóa khác",
+    "MaNhomCha": "",
+    "GhiChu": ""
+  }
+];
+
+    const MAP_TEN_NHOM_CHUAN = {};
+    const MAP_NHOM_CHA = {};
+    DANH_SACH_NHOM_HANG_CHUAN.forEach(n => {
+      MAP_TEN_NHOM_CHUAN[n.MaNhom] = n.TenNhom;
+      if (n.MaNhomCha) MAP_NHOM_CHA[n.MaNhom] = n.MaNhomCha;
+    });
 
     function layDanhSachNhomHangChuan() {
-      let list = [];
+      const mapNhom = new Map();
+      DANH_SACH_NHOM_HANG_CHUAN.forEach(n => {
+        mapNhom.set(n.MaNhom.toUpperCase(), { ...n });
+      });
+
+      let customList = [];
       if (typeof rawNhomHang !== 'undefined' && Array.isArray(rawNhomHang) && rawNhomHang.length > 0) {
-        list = [...rawNhomHang];
+        customList = rawNhomHang;
       } else {
         try {
           const cached = localStorage.getItem('TGDT_RAW_NHOM_HANG_CACHE');
           if (cached) {
             const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed) && parsed.length > 0) list = parsed;
+            if (Array.isArray(parsed) && parsed.length > 0) customList = parsed;
           }
         } catch(e) {}
       }
 
-      // Chuẩn hóa tên trường và làm sạch tên nhóm
-      let normalized = list.map(n => {
-        const ma = String(n.MaNhom || n.ma_nhom || n.maNhom || '').trim();
-        let ten = String(n.TenNhom || n.ten_nhom || n.tenNhom || '').trim();
-        // Nếu tên nhóm đang là "Nhóm NH..." hoặc trùng mã nhóm thì map sang tên tiếng Việt chuẩn
-        if (!ten || ten.toLowerCase() === ma.toLowerCase() || /^nhóm\s+nh\d+$/i.test(ten)) {
-          ten = MAP_TEN_NHOM_CHUAN[ma.toUpperCase()] || (ma ? `Nhóm ${ma}` : 'Hàng hóa khác');
-        }
-        return {
-          MaNhom: ma,
-          TenNhom: ten,
-          MaNhomCha: String(n.MaNhomCha || n.ma_nhom_cha || n.maNhomCha || '').trim(),
-          GhiChu: n.GhiChu || n.ghi_chu || ''
-        };
-      }).filter(n => n.MaNhom);
-
-      // TỰ ĐỘNG BẢO HIỂM: Quét toàn bộ rawHangHoa để phát hiện các mã nhóm thực tế trong kho
-      const existingMaSet = new Set(normalized.map(n => n.MaNhom.toUpperCase()));
-      (rawHangHoa || []).forEach(h => {
-        const m = String(h.maNhom || '').trim();
-        if (m && !existingMaSet.has(m.toUpperCase())) {
-          existingMaSet.add(m.toUpperCase());
-          const tenGoiY = MAP_TEN_NHOM_CHUAN[m.toUpperCase()] || `Nhóm ${m}`;
-          normalized.push({
-            MaNhom: m,
-            TenNhom: tenGoiY,
-            MaNhomCha: '',
-            GhiChu: 'Tự động trích xuất từ dữ liệu hàng hóa'
-          });
+      // Tích hợp thêm các nhóm mở rộng nếu người dùng tự thêm sau này
+      customList.forEach(n => {
+        const ma = String(n.MaNhom || n.ma_nhom || n.maNhom || '').trim().toUpperCase();
+        if (ma) {
+          if (!mapNhom.has(ma)) {
+            let ten = String(n.TenNhom || n.ten_nhom || n.tenNhom || '').trim();
+            if (!ten || ten.toUpperCase() === ma || /^nhóm\s+nh\d+$/i.test(ten)) {
+              ten = `Nhóm ${ma}`;
+            }
+            mapNhom.set(ma, {
+              MaNhom: ma,
+              TenNhom: ten,
+              MaNhomCha: String(n.MaNhomCha || n.ma_nhom_cha || n.maNhomCha || '').trim().toUpperCase(),
+              GhiChu: n.GhiChu || n.ghi_chu || ''
+            });
+          }
         }
       });
 
-      // Lưu lại cache để lần sau mở modal tức thì
+      const result = Array.from(mapNhom.values());
       try {
-        if (normalized.length > 0) {
-          localStorage.setItem('TGDT_RAW_NHOM_HANG_CACHE', JSON.stringify(normalized));
-        }
+        localStorage.setItem('TGDT_RAW_NHOM_HANG_CACHE', JSON.stringify(result));
       } catch(e) {}
 
       if (typeof rawNhomHang !== 'undefined') {
-        rawNhomHang = normalized;
+        rawNhomHang = result;
       }
-
-      return normalized;
+      return result;
     }
 
     // Hiển thị tên đầy đủ của nhóm hàng (gồm cả nhóm cha và nhóm con: "Điện thoại > iPhone")
     function layTenDayDuNhomHang(maNhomHoacTen) {
       if (!maNhomHoacTen) return '-';
-      const clean = String(maNhomHoacTen).trim();
-      if (!clean) return '-';
+      let clean = String(maNhomHoacTen).trim();
+      if (!clean || clean === '-') return '-';
 
-      // 1. Kiểm tra trực tiếp bảng map tên nhóm chuẩn
-      if (MAP_TEN_NHOM_CHUAN[clean.toUpperCase()]) {
-        return MAP_TEN_NHOM_CHUAN[clean.toUpperCase()];
+      // 1. Trích xuất mã nhóm NHxxx nếu có dạng "NH002", "Nhóm NH002", "Nhóm NH002 (NH002)"
+      const matchNH = clean.match(/\b(NH\d+)\b/i);
+      let maCode = matchNH ? matchNH[1].toUpperCase() : '';
+
+      // 2. Nếu không tìm thấy mã NH, kiểm tra xem có khớp tên nhóm trực tiếp không
+      if (!maCode) {
+        const found = DANH_SACH_NHOM_HANG_CHUAN.find(n => n.TenNhom.toLowerCase() === clean.toLowerCase());
+        if (found) maCode = found.MaNhom;
       }
 
-      // 2. Tìm trong danh mục nhóm hàng chuẩn hóa
-      const nhomList = layDanhSachNhomHangChuan();
-      const n = nhomList.find(x => 
-        String(x.MaNhom || '').toUpperCase() === clean.toUpperCase() ||
-        String(x.TenNhom || '').toLowerCase() === clean.toLowerCase()
-      );
-
-      if (n) {
-        let ten = n.TenNhom;
-        if (!ten || ten.toLowerCase() === n.MaNhom.toLowerCase() || /^nhóm\s+nh\d+$/i.test(ten)) {
-          ten = MAP_TEN_NHOM_CHUAN[n.MaNhom.toUpperCase()] || ten || n.MaNhom;
+      // 3. Nếu tìm thấy mã nhóm chuẩn trong 42 nhóm
+      if (maCode && MAP_TEN_NHOM_CHUAN[maCode]) {
+        const tenCon = MAP_TEN_NHOM_CHUAN[maCode];
+        const maCha = MAP_NHOM_CHA[maCode];
+        if (maCha && MAP_TEN_NHOM_CHUAN[maCha]) {
+          const tenCha = MAP_TEN_NHOM_CHUAN[maCha];
+          return `${tenCha} > ${tenCon}`;
         }
-        if (n.MaNhomCha && n.MaNhomCha !== n.MaNhom) {
-          const cha = nhomList.find(x => String(x.MaNhom || '').toUpperCase() === String(n.MaNhomCha || '').toUpperCase());
-          if (cha) {
-            let tenCha = cha.TenNhom;
-            if (MAP_TEN_NHOM_CHUAN[cha.MaNhom.toUpperCase()]) tenCha = MAP_TEN_NHOM_CHUAN[cha.MaNhom.toUpperCase()];
-            return `${tenCha} > ${ten}`;
-          }
-        }
-        return ten;
+        return tenCon;
       }
 
+      // 4. Nếu chuỗi đã có sẵn định dạng "Cha > Con"
       if (clean.includes('>')) return clean;
-
-      // Xóa tiền tố "Nhóm " nếu chỉ là mã nhóm
-      if (/^nhóm\s+nh\d+$/i.test(clean)) {
-        const maCode = clean.replace(/^nhóm\s+/i, '').trim().toUpperCase();
-        if (MAP_TEN_NHOM_CHUAN[maCode]) return MAP_TEN_NHOM_CHUAN[maCode];
-      }
 
       return clean;
     }
 
     function hienThiSelectNhomHang(list, selectedMaNhom = null) {
-      const nhomList = (list && list.length) ? list : layDanhSachNhomHangChuan();
+      const nhomList = (list && list.length >= 42) ? list : layDanhSachNhomHangChuan();
 
       // Đếm số sản phẩm thuộc từng nhóm
       const spCountMap = {};
       (rawHangHoa || []).forEach(h => {
-        const m = String(h.maNhom || '').trim();
+        const m = String(h.maNhom || '').trim().toUpperCase();
         if (m) spCountMap[m] = (spCountMap[m] || 0) + 1;
       });
 
@@ -12367,22 +12594,22 @@ function formatVND(amount) {
         const countLabelCha = countTongCha > 0 ? ` (${countTongCha} SP)` : '';
 
         filterHtml += `<option value="CHA_${cha.MaNhom}">📁 [Nhóm Cha] ${cha.TenNhom} (${cha.MaNhom})${countLabelCha}</option>`;
-        formHtml += `<option value="${cha.MaNhom}">📁 [Nhóm Cha] ${cha.TenNhom} (${cha.MaNhom})</option>`;
+        formHtml += `<option value="${cha.MaNhom}">📁 [Nhóm Cha] ${cha.TenNhom}</option>`;
 
         con.forEach(c => {
           const countCon = spCountMap[c.MaNhom] || 0;
           const countLabelCon = countCon > 0 ? ` (${countCon} SP)` : '';
           filterHtml += `<option value="${c.MaNhom}">&nbsp;&nbsp;&nbsp;&nbsp;└── 📂 ${c.TenNhom} (${c.MaNhom})${countLabelCon}</option>`;
-          formHtml += `<option value="${c.MaNhom}">&nbsp;&nbsp;&nbsp;&nbsp;└── 📂 ${c.TenNhom} (${c.MaNhom})</option>`;
+          formHtml += `<option value="${c.MaNhom}">&nbsp;&nbsp;&nbsp;&nbsp;└── 📂 ${c.TenNhom}</option>`;
         });
       });
 
-      // Nhóm mồ côi
+      // Nhóm mồ côi (nếu có nhóm con phát sinh mà không thuộc nhóm cha nào)
       nhomList.filter(n => n.MaNhomCha && !nhomCha.some(p => p.MaNhom === n.MaNhomCha)).forEach(orphan => {
         const countOrphan = spCountMap[orphan.MaNhom] || 0;
         const countLabel = countOrphan > 0 ? ` (${countOrphan} SP)` : '';
         filterHtml += `<option value="${orphan.MaNhom}">📁 ${orphan.TenNhom} (${orphan.MaNhom})${countLabel}</option>`;
-        formHtml += `<option value="${orphan.MaNhom}">📁 ${orphan.TenNhom} (${orphan.MaNhom})</option>`;
+        formHtml += `<option value="${orphan.MaNhom}">📁 ${orphan.TenNhom}</option>`;
       });
 
       // 1. Cập nhật thẻ select bộ lọc danh mục hàng hóa
@@ -12398,16 +12625,26 @@ function formatVND(amount) {
       if (elForm) {
         elForm.innerHTML = formHtml;
         if (selectedMaNhom) {
-          const cleanSel = String(selectedMaNhom).trim();
-          let optExists = Array.from(elForm.options).some(o => o.value === cleanSel);
+          const cleanSel = String(selectedMaNhom).trim().toUpperCase();
+          let optExists = Array.from(elForm.options).some(o => o.value.toUpperCase() === cleanSel);
           if (!optExists && cleanSel) {
             const optNew = document.createElement('option');
             optNew.value = cleanSel;
-            optNew.innerText = `📁 ${layTenDayDuNhomHang(cleanSel)} (${cleanSel})`;
+            optNew.innerText = `📁 ${layTenDayDuNhomHang(cleanSel)}`;
             elForm.appendChild(optNew);
           }
           elForm.value = cleanSel;
         }
+      }
+
+      // 3. Cập nhật thẻ select nhóm cha trong modal quản lý nhóm
+      const elCha = document.getElementById('input-nhom-cha');
+      if (elCha) {
+        let chaHtml = '<option value="">(Không chọn nhóm cha - Là nhóm chính)</option>';
+        nhomCha.forEach(cha => {
+          chaHtml += `<option value="${cha.MaNhom}">📁 ${cha.TenNhom} (${cha.MaNhom})</option>`;
+        });
+        elCha.innerHTML = chaHtml;
       }
     }
 
@@ -32425,12 +32662,11 @@ function loadSoQuy(filter) {
 
     // Tự động kích hoạt cấu hình ẩn/hiện cột ngay lập tức
     try { apDungCaiDatAnHienCot(); } catch (eCot) {}
-    // Làm mới cache nhóm hàng để hiển thị đúng tên nhóm chuẩn tiếng Việt
+    // Tự động làm mới cache nhóm hàng để đồng bộ 100% cấu trúc 42 nhóm theo DM_NhomHang
     try {
-      const oldNhomCache = localStorage.getItem('TGDT_RAW_NHOM_HANG_CACHE');
-      if (oldNhomCache && oldNhomCache.includes('Nhóm NH')) {
-        localStorage.removeItem('TGDT_RAW_NHOM_HANG_CACHE');
-      }
+      localStorage.setItem('TGDT_RAW_NHOM_HANG_CACHE', JSON.stringify(DANH_SACH_NHOM_HANG_CHUAN));
+      rawNhomHang = layDanhSachNhomHangChuan();
+      hienThiSelectNhomHang(rawNhomHang);
     } catch(eNhomCache) {}
 
     window.kiemTraSanPhamNgungKinhDoanh = kiemTraSanPhamNgungKinhDoanh;

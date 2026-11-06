@@ -395,23 +395,57 @@ function apiGetNhomHang() {
     if (!sheet) {
       sheet = ss.insertSheet("DM_NhomHang");
       sheet.appendRow(["MaNhom", "TenNhom", "MaNhomCha", "GhiChu"]);
-      return [];
     }
-    const rows = sheet.getDataRange().getValues();
-    if (rows.length <= 1) return [];
+    let rows = sheet.getDataRange().getValues();
+    const nhomChuanMap = [["NH001","Điện thoại","",""],["NH002","iPhone","NH001",""],["NH003","Samsung","NH001",""],["NH004","Oppo","NH001",""],["NH005","Xiaomi","NH001",""],["NH006","Phụ kiện ĐT","",""],["NH007","Linh kiện ĐT","",""],["NH008","Bàn phím","NH001",""],["NH009","Bao da","NH006",""],["NH010","Cáp & Củ sạc","NH006",""],["NH011","Cường lực","NH006",""],["NH012","Loa - Tai nghe","NH006",""],["NH013","Loa - Tai nghe BLT","NH006",""],["NH014","Ốp lưng","NH006",""],["NH015","PKĐT khác","NH006",""],["NH016","Sạc DP","NH006",""],["NH017","Tấm dán","NH006",""],["NH018","Thẻ nhớ - USB","NH006",""],["NH019","Cáp & Bo sạc","NH007",""],["NH020","LKĐT Khác","NH007",""],["NH021","Loa - Mic","NH007",""],["NH022","Main - IC","NH007",""],["NH023","Pin ĐT","NH007",""],["NH024","Vỏ - Nắp lưng","NH007",""],["NH025","Màn hình - Kính","NH007",""],["NH026","Phụ Kiện MT","",""],["NH027","Linh Kiện MT","",""],["NH028","Cáp - Sạc Máy tính","NH026",""],["NH029","Cặp - Balo Laptop","NH026",""],["NH030","Chuột - Bàn phím","NH026",""],["NH031","Loa - Tai nghe vi tính","NH026",""],["NH032","Phụ kiện MT khác","NH026",""],["NH033","Bo mạch chủ","NH027",""],["NH034","CPU","NH027",""],["NH035","LK MT khác","NH027",""],["NH036","Màn hình","NH027",""],["NH037","Nguồn MT","NH027",""],["NH038","Ổ Cứng","NH027",""],["NH039","Ram - Bộ nhớ trong","NH027",""],["NH040","VGA - Cạc màn hình","NH027",""],["NH041","Vỏ Case","NH027",""],["NH042","Hàng hóa khác","",""]];
+    
+    // Nếu sheet rỗng hoặc chưa đủ nhóm hàng, tự động khởi tạo danh sách 42 nhóm chuẩn
+    if (rows.length <= 1) {
+      nhomChuanMap.forEach(r => sheet.appendRow(r));
+      rows = sheet.getDataRange().getValues();
+    }
+
     const list = [];
+    const maSet = new Set();
     for (let i = 1; i < rows.length; i++) {
       const ma = String(rows[i][0] || '').trim();
-      const ten = String(rows[i][1] || '').trim();
+      let ten = String(rows[i][1] || '').trim();
+      let cha = String(rows[i][2] || '').trim();
+      let ghiChu = String(rows[i][3] || '').trim();
+      
+      // Nếu tên đang là placeholder "Nhóm NH..." hoặc rỗng thì chuẩn hóa theo danh mục chuẩn
+      if (!ten || ten.toLowerCase() === ma.toLowerCase() || /^nhóm\s+nh\d+$/i.test(ten)) {
+        const found = nhomChuanMap.find(item => item[0].toUpperCase() === ma.toUpperCase());
+        if (found) {
+          ten = found[1];
+          if (!cha) cha = found[2];
+        }
+      }
+      
       if (ma || ten) {
         list.push({
           MaNhom: ma,
           TenNhom: ten,
-          MaNhomCha: String(rows[i][2] || '').trim(),
-          GhiChu: String(rows[i][3] || '').trim()
+          MaNhomCha: cha,
+          GhiChu: ghiChu
         });
+        maSet.add(ma.toUpperCase());
       }
     }
+
+    // Đảm bảo không bị thiếu nhóm nào trong 42 nhóm chuẩn
+    nhomChuanMap.forEach(item => {
+      if (!maSet.has(item[0].toUpperCase())) {
+        list.push({
+          MaNhom: item[0],
+          TenNhom: item[1],
+          MaNhomCha: item[2],
+          GhiChu: item[3]
+        });
+        try { sheet.appendRow(item); } catch(e) {}
+      }
+    });
+
     return list;
   } catch (err) {
     Logger.log("Lỗi apiGetNhomHang: " + err.message);
