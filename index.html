@@ -6803,6 +6803,22 @@ function formatVND(amount) {
 
     // Tải danh sách ngân hàng từ Supabase PostgreSQL (hoặc Google Sheets dự phòng)
     async function loadDanhSachNganHang() {
+      // 0. Ưu tiên nạp danh sách Ngân hàng thực tế KiotViet Thanh Giang
+      if (typeof window.RAW_NGAN_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NGAN_HANG_THANH_GIANG) && window.RAW_NGAN_HANG_THANH_GIANG.length > 0) {
+        rawNganHangList = window.RAW_NGAN_HANG_THANH_GIANG;
+        renderFilterNganHangTab52();
+        renderSelectNganHangPOS();
+        renderBangModalNganHang();
+        if (typeof napDanhSachNganHangVaoSelect === 'function') {
+          const bKH = document.getElementById('box-thuno-kh-nganhang');
+          if (bKH && !bKH.classList.contains('hidden')) napDanhSachNganHangVaoSelect('thuno-kh-nganhang');
+          const bNCC = document.getElementById('box-ttno-ncc-nganhang');
+          if (bNCC && !bNCC.classList.contains('hidden')) napDanhSachNganHangVaoSelect('ttno-ncc-nganhang');
+        }
+        console.log(`⚡ Đã nạp ${rawNganHangList.length} tài khoản ngân hàng thực tế từ KiotViet!`);
+        return;
+      }
+
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         try {
           const { data, error } = await supabaseClient.from('dm_nganhang').select('*').order('created_at', { ascending: false });
@@ -15240,6 +15256,14 @@ function formatVND(amount) {
 
     // 1. Tải danh sách lịch sử kiểm kho
     function loadKiemKho() {
+      // 0. Ưu tiên nạp danh sách Kiểm kho thực tế từ KiotViet Thanh Giang
+      if (typeof window.RAW_KIEM_KHO_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_KIEM_KHO_THANH_GIANG) && window.RAW_KIEM_KHO_THANH_GIANG.length > 0) {
+        rawKiemKhoList = window.RAW_KIEM_KHO_THANH_GIANG;
+        locDanhSachKiemKho();
+        console.log(`⚡ Đã nạp ${rawKiemKhoList.length} phiếu kiểm kho thực tế từ KiotViet!`);
+        return;
+      }
+
       google.script.run.withSuccessHandler(function(list) {
         rawKiemKhoList = list || [];
         locDanhSachKiemKho();
@@ -15922,6 +15946,14 @@ function formatVND(amount) {
     }
 
     function loadXuatHuy() {
+      // 0. Ưu tiên nạp danh sách Xuất hủy thực tế từ KiotViet Thanh Giang
+      if (typeof window.RAW_XUAT_HUY_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_XUAT_HUY_THANH_GIANG) && window.RAW_XUAT_HUY_THANH_GIANG.length > 0) {
+        rawXuatHuyList = window.RAW_XUAT_HUY_THANH_GIANG;
+        locDanhSachXuatHuy();
+        console.log(`⚡ Đã nạp ${rawXuatHuyList.length} phiếu xuất hủy thực tế từ KiotViet!`);
+        return;
+      }
+
       if (!rawHangHoa || !rawHangHoa.length) {
         if (typeof loadHangHoa === 'function') loadHangHoa();
       }
@@ -28248,6 +28280,14 @@ function loadSoQuy(filter) {
     function taiDanhSachTraHangNCC() {
       const tbody = document.getElementById('tbl-tranhap-danhsach-body');
       if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2 text-amber-600"></i>Đang tải danh sách đơn trả hàng NCC...</td></tr>';
+
+      // 0. Ưu tiên nạp danh sách Đơn trả hàng NCC thực tế từ KiotViet Thanh Giang
+      if (typeof window.RAW_TRA_HANG_NCC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_TRA_HANG_NCC_THANH_GIANG) && window.RAW_TRA_HANG_NCC_THANH_GIANG.length > 0) {
+        rawTraHangNCCList = window.RAW_TRA_HANG_NCC_THANH_GIANG;
+        locDanhSachTraHangNCCTable();
+        console.log(`⚡ Đã nạp ${rawTraHangNCCList.length} đơn trả hàng NCC thực tế từ KiotViet!`);
+        return;
+      }
 
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
