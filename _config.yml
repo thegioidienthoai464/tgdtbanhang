@@ -1,0 +1,28 @@
+# Jekyll configuration for GitHub Pages
+exclude:
+  - mobile_app
+  - web_deploy
+  - danh_sach_so_quy_full.json
+  - danh_sach_don_hang_full.json
+  - danh_sach_khach_hang_full.json
+  - danh_sach_hang_hoa_full.json
+  - danh_sach_nhap_hang_full.json
+  - danh_sach_chuyen_kho_full.json
+  - danh_sach_ycsc_full.json
+  - danh_sach_kiem_kho_full.json
+  - danh_sach_tra_hang_ncc_full.json
+  - danh_sach_xuat_huy_full.json
+  - danh_sach_imei_full.json
+  - danh_sach_ngan_hang_full.json
+  - danh_sach_nha_cung_cap_full.json
+  - danh_sach_nguoi_dung_full.json
+  - ERP_HeThongBanHang.xlsx
+  - "*.xlsx"
+  - "*.apk"
+  - "*.zip"
+  - "*.ipa"
+  - scratch
+  - failed_job_id.txt
+  - failed_log.txt
+  - error_summary.txt
+  - raw_job_log.txt

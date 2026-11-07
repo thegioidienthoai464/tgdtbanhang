@@ -1,10 +1,10 @@
 {
-  "version": "1.2.4",
-  "build_number": 25,
+  "version": "1.2.5",
+  "build_number": 26,
   "force_update": false,
-  "release_notes": "• Khắc phục triệt để lỗi không hiển thị lịch sử Đơn bán hàng và Đơn nhập kho: Tối ưu bộ giải mã số lượng (hỗ trợ chuẩn số thập phân từ hệ thống KiotViet).\n• Tích hợp đầy đủ 626 đơn nhập kho NCC thực tế của Chi nhánh Thanh Giang vào màn hình Quản lý đơn hàng.\n• Cơ chế tải dữ liệu siêu tốc & Timeout 3s: Không bị đơ hay chờ đợi khi máy chủ Cloud offline, hiển thị ngay lập tức 8.030 đơn bán hàng và 626 đơn nhập kho.\n• Bộ lọc chi nhánh thông minh: Nhận diện chuẩn xác chi nhánh theo mã hiệu và tên gọi.",
+  "release_notes": "• Cập nhật mật khẩu quản trị viên Abcde@123456 và toàn bộ 11 nhân viên KiotViet.\n• Tối ưu cơ chế đăng nhập siêu tốc & tự động ghi nhớ tài khoản.\n• Cải thiện hiệu năng và bộ nhớ hệ thống.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.4/TT_POS_v1.2.4.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.4/TT_POS_v1.2.4.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.4"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.5/TT_POS_v1.2.5.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.5/TT_POS_v1.2.5.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.5"
 }

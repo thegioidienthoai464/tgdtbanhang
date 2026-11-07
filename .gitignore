@@ -17,3 +17,5 @@ failed_log.txt
 raw_job_log.txt
 scratch/
 node_modules/
+
+web_deploy/
