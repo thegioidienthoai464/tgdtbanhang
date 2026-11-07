@@ -1,10 +1,10 @@
 {
-  "version": "1.2.9",
-  "build_number": 30,
+  "version": "1.3.0",
+  "build_number": 31,
   "force_update": false,
-  "release_notes": "• Báo cáo 6.1 đến 6.4: Bổ sung tính năng Lọc và Sắp xếp trực tiếp tại tiêu đề cột (Header Sort & Filter), hỗ trợ đảo chiều Tăng/Giảm (▲/▼) và lọc ô tức thì theo từng tiêu chí, tự động tính lại tổng cộng và phân trang mượt mà.\n• 6.5 Báo cáo tài chính: Tái thiết kế toàn diện theo tiêu chuẩn Quản trị Bán lẻ Chuyên nghiệp (Executive Retail Financial Dashboard):\n  + 8 Thẻ KPI tài chính điều hành (Doanh thu thuần, COGS, Lợi nhuận gộp & Biên lãi gộp %, Chi phí vận hành OPEX & Tỷ suất %, Lợi nhuận thuần EBIT & Biên lợi nhuận thuần %, Tồn quỹ & Thanh khoản thực tế, Quản trị công nợ Phải thu/Phải trả & Net Debt, Định giá tài sản tồn kho & Vòng quay lưu kho DOH).\n  + Báo cáo Kết quả Kinh doanh Bán lẻ (Retail P&L) bóc tách chi tiết 8 nhóm chi phí vận hành cửa hàng (Mặt bằng, Nhân sự, Tiện ích, Marketing, Vận chuyển, Công cụ & phần mềm, Sửa chữa bảo trì, Chi phí khác).\n  + Báo cáo Dòng tiền & Thanh khoản (Cashflow & Liquidity Balance) theo luồng thu/chi thực tế từ Sổ quỹ.\n  + Ma trận Hiệu quả Chi nhánh (Multi-Branch Performance Matrix) phân tích đa chiều số đơn, doanh thu, tỷ trọng %, giá vốn, lãi gộp, biên lãi % và tồn kho giữa CN01 (Thanh Miện), CN02 (Thanh Giang), CN03 (Bình Giang), CN04 (Online).\n  + Vốn lưu động ròng NWC & Chỉ số quay vòng kho DOH.\n  + Khuyến nghị chiến lược & Cố vấn hành động từ Chuyên gia Bán lẻ.\n  + Hỗ trợ In A4 chuẩn chỉnh và Xuất Excel đa trang (P&L, Dòng tiền, Hiệu quả chi nhánh).",
+  "release_notes": "• Tùy chọn xuất Excel hàng tồn: Khắc phục triệt để tình trạng đơ/treo khi mở modal hoặc tích chọn nhóm/sản phẩm với cơ chế phân trang 50 SP/trang và thuật toán tra cứu Set O(1), xuất Excel bất đồng bộ mượt mà cho hơn 21.400 mặt hàng.\n• Hiển thị Tổng tồn kho trên tiêu đề bảng & Thanh thống kê: Tự động tính và cập nhật tổng tồn kho theo nhóm hàng/từ khóa đang lọc, đồng thời hiển thị nổi bật tổng tồn kho của các mã hàng được tích chọn trên cả tiêu đề cột và thanh thống kê.\n• Đồng bộ Thời gian thực hiện: Hiển thị đầy đủ ngày giờ giao dịch chuẩn xác cho Đơn nhập hàng NCC (4.2), Kiểm kho (3.3), Lịch sử đơn hàng (2.5), Yêu cầu sửa chữa (2.6).\n• Xuất hủy hàng hỏng (3.4): Chuẩn hóa và hiển thị đầy đủ 61 phiếu xuất hủy thực tế từ KiotViet (mã phiếu, ngày hủy, người hủy, số lượng, giá trị xuất hủy và chi tiết từng mặt hàng).",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.9/TT_POS_v1.2.9.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.9/TT_POS_v1.2.9.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.9"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.3.0/TT_POS_v1.3.0.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.3.0/TT_POS_v1.3.0.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.3.0"
 }

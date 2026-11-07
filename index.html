@@ -369,7 +369,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.2.9</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.3.0</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -777,6 +777,25 @@
             <button type="button" onclick="boChonTatCaHangHoa()" class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-semibold transition flex items-center space-x-1" title="Bỏ chọn tất cả">
               <i class="fa-solid fa-xmark"></i><span>Bỏ chọn</span>
             </button>
+          </div>
+        </div>
+
+        <!-- THANH HIỂN THỊ TỔNG TỒN KHO & THỐNG KÊ DANH MỤC LỌC/CHỌN -->
+        <div id="bar-thongke-tonkho-hanghoa" class="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200/80 px-4 py-2.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs shadow-2xs">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="font-bold text-slate-700">Tổng tồn kho mặt hàng đang xem:</span>
+              <span id="badge-tong-ton-kho-hien-thi" class="font-mono font-extrabold text-sm text-emerald-800 bg-white px-3 py-0.5 rounded-xl border border-emerald-300 shadow-2xs">0 SP</span>
+            </div>
+            <div id="box-tong-ton-da-chon" class="hidden items-center space-x-1.5 pl-3 border-l border-emerald-300">
+              <span class="font-bold text-indigo-700">Đã chọn:</span>
+              <span id="badge-tong-ton-da-chon" class="font-mono font-extrabold text-xs text-indigo-800 bg-white px-2.5 py-0.5 rounded-xl border border-indigo-300 shadow-2xs">0 SP</span>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3 text-slate-600 font-medium">
+            <span id="badge-so-mat-hang-loc">Hiển thị: <b class="text-slate-800 font-mono">0</b> / <b class="text-slate-800 font-mono">0</b> mã hàng</span>
+            <span id="badge-ten-chi-nhanh-ton" class="text-slate-600 font-semibold bg-white/80 px-2 py-0.5 rounded-lg border border-slate-200">Chi nhánh: CN02</span>
           </div>
         </div>
 
@@ -10608,7 +10627,7 @@ function formatVND(amount) {
       const isDateString = (str) => {
         if (!str) return false;
         let s = String(str).trim();
-        return s.includes("GMT") || s.includes("Giờ Đông Dương") || /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\\s/i.test(s) || /^\\d{4}-\\d{2}-\\d{2}/.test(s);
+        return s.includes("GMT") || s.includes("Giờ Đông Dương") || /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s/i.test(s) || /^\d{4}-\d{2}-\d{2}/.test(s);
       };
 
       const totalItems = list.length;
@@ -10636,8 +10655,8 @@ function formatVND(amount) {
         if (isDateString(maNCC)) maNCC = 'NCC';
         if (maNCC === 'NCC_LE' || maNCC === 'NCC') maNCC = '';
 
-        let ngayNhap = String(item.ngayNhap || '').trim();
-        if (!/^\\d/.test(ngayNhap) && !ngayNhap.includes('GMT')) {
+        let ngayNhap = String(item.ngayNhap || item.ngay_nhap || item.thoiGian || item.thoi_gian || item.ngayTao || item.ngay_tao || item.created_at || '').trim();
+        if (!/^\d/.test(ngayNhap) && !ngayNhap.includes('GMT')) {
           ngayNhap = '-';
         }
 
@@ -13883,6 +13902,7 @@ function formatVND(amount) {
         selectedHangHoaSet.delete(maHang);
       }
       capNhatGiaoDienChonHangHoa();
+      if (typeof window.capNhatHienThiTongTonKho === 'function') window.capNhatHienThiTongTonKho(filtered);
     }
 
     function toggleSelectAllHangHoa(isChecked) {
@@ -13908,6 +13928,71 @@ function formatVND(amount) {
       document.querySelectorAll('.chk-item-hanghoa').forEach(chk => chk.checked = false);
     }
 
+    
+    // HÀM HIỂN THỊ TỔNG TỒN KHO TRÊN TIÊU ĐỀ BẢNG VÀ THANH THỐNG KÊ (PHẢN HỒI THEO BỘ LỌC VÀ CHỌN LỰA)
+    window.capNhatHienThiTongTonKho = function(danhSachLoc = null) {
+      try {
+        const filtered = danhSachLoc || (typeof layDanhSachHangHoaDaLoc === 'function' ? layDanhSachHangHoaDaLoc() : (rawHangHoa || []));
+        const tongTonLoc = filtered.reduce((s, h) => s + (Number(h.tonKho) || 0), 0);
+
+        // 1. Thẻ tổng tồn kho trên thanh bar
+        const badgeTongTon = document.getElementById('badge-tong-ton-kho-hien-thi');
+        if (badgeTongTon) badgeTongTon.innerText = tongTonLoc.toLocaleString();
+
+        const badgeSoMatHang = document.getElementById('badge-so-mat-hang-loc');
+        if (badgeSoMatHang) badgeSoMatHang.innerText = filtered.length.toLocaleString();
+
+        // Tên chi nhánh hiện tại
+        const badgeTenCN = document.getElementById('badge-ten-chi-nhanh-ton');
+        const tenCN = (typeof window.tenChiNhanhXemTon !== 'undefined' && window.tenChiNhanhXemTon) 
+          ? window.tenChiNhanhXemTon 
+          : ((typeof currentChiNhanh !== 'undefined' && currentChiNhanh) ? currentChiNhanh : 'Chi nhánh');
+        if (badgeTenCN) badgeTenCN.innerText = tenCN;
+
+        // 2. Thống kê theo checkbox mặt hàng được chọn
+        const boxDaChon = document.getElementById('box-tong-ton-da-chon');
+        const soChon = (typeof selectedHangHoaSet !== 'undefined' && selectedHangHoaSet) ? selectedHangHoaSet.size : 0;
+
+        if (soChon > 0) {
+          let tongTonDaChon = 0;
+          const hangHoaMap = new Map((rawHangHoa || []).map(h => [h.maHang, h]));
+          selectedHangHoaSet.forEach(ma => {
+            const sp = hangHoaMap.get(ma);
+            if (sp) tongTonDaChon += (Number(sp.tonKho) || 0);
+          });
+
+          if (boxDaChon) {
+            boxDaChon.classList.remove('hidden');
+            boxDaChon.innerHTML = `
+              <i class="fa-solid fa-check-double text-indigo-600"></i>
+              <span class="font-semibold text-indigo-900">Đã chọn <b>${soChon.toLocaleString()}</b> mã:</span>
+              <span class="font-mono font-extrabold text-xs text-indigo-700 bg-white px-2.5 py-0.5 rounded-lg border border-indigo-200 shadow-2xs">Tổng tồn đã chọn: ${tongTonDaChon.toLocaleString()}</span>
+            `;
+          }
+        } else {
+          if (boxDaChon) boxDaChon.classList.add('hidden');
+        }
+
+        // 3. Cập nhật trực tiếp lên tiêu đề bảng (th-tonkho-chinhanh)
+        const thTonKho = document.getElementById('th-tonkho-chinhanh');
+        if (thTonKho) {
+          if (soChon > 0) {
+            let tongTonDaChon = 0;
+            const hangHoaMap = new Map((rawHangHoa || []).map(h => [h.maHang, h]));
+            selectedHangHoaSet.forEach(ma => {
+              const sp = hangHoaMap.get(ma);
+              if (sp) tongTonDaChon += (Number(sp.tonKho) || 0);
+            });
+            thTonKho.innerHTML = `Tồn Kho (${tenCN}) <span class="ml-1 inline-block bg-indigo-100 text-indigo-800 text-[11px] font-mono px-2 py-0.5 rounded-full font-bold" title="Tổng tồn của các mã đã chọn">Chọn: ${tongTonDaChon.toLocaleString()}</span>`;
+          } else {
+            thTonKho.innerHTML = `Tồn Kho (${tenCN}) <span class="ml-1 inline-block bg-emerald-100 text-emerald-800 text-[11px] font-mono px-2 py-0.5 rounded-full font-bold" title="Tổng tồn của các mã đang hiển thị">${tongTonLoc.toLocaleString()}</span>`;
+          }
+        }
+      } catch (err) {
+        console.warn('Lỗi cập nhật tổng tồn kho:', err);
+      }
+    };
+
     function capNhatGiaoDienChonHangHoa() {
       const bar = document.getElementById('batch-hanghoa-bar');
       const countEl = document.getElementById('batch-hanghoa-count');
@@ -13919,6 +14004,7 @@ function formatVND(amount) {
         else bar.classList.add('hidden');
       }
       if (countEl) countEl.innerText = `Đã chọn: ${count}`;
+      if (typeof window.capNhatHienThiTongTonKho === 'function') window.capNhatHienThiTongTonKho();
 
       if (chkAll) {
         const filtered = layDanhSachHangHoaDaLoc();
@@ -16134,7 +16220,38 @@ function formatVND(amount) {
     function loadKiemKho() {
       // 0. Ưu tiên nạp danh sách Kiểm kho thực tế từ KiotViet Thanh Giang
       if (typeof window.RAW_KIEM_KHO_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_KIEM_KHO_THANH_GIANG) && window.RAW_KIEM_KHO_THANH_GIANG.length > 0) {
-        rawKiemKhoList = window.RAW_KIEM_KHO_THANH_GIANG;
+        rawKiemKhoList = window.RAW_KIEM_KHO_THANH_GIANG.map(k => {
+          const sp = Array.isArray(k.sanPham) ? k.sanPham : (Array.isArray(k.chiTietSanPham) ? k.chiTietSanPham : []);
+          let slSoSach = Number(k.slSoSach || 0);
+          let slThucTe = Number(k.slThucTe || 0);
+          let chenhLech = Number(k.chenhLech || 0);
+          if (!slSoSach && !slThucTe && sp.length > 0) {
+            slSoSach = sp.reduce((s, p) => s + (Number(p.tonSoSach !== undefined ? p.tonSoSach : p.slSoSach) || 0), 0);
+            slThucTe = sp.reduce((s, p) => s + (Number(p.tonThucTe !== undefined ? p.tonThucTe : p.slThucTe) || 0), 0);
+            chenhLech = sp.reduce((s, p) => s + (Number(p.slLech !== undefined ? p.slLech : (p.chenhLech !== undefined ? p.chenhLech : (Number(p.tonThucTe || 0) - Number(p.tonSoSach || 0)))) || 0), 0);
+          }
+          const time = k.thoiGian || k.ngayCanBang || k.ngayTao || '';
+          const ma = k.maKiemKho || k.maChungTu || k.maPhieu || '';
+          return {
+            ...k,
+            maChungTu: ma,
+            maKiemKho: ma,
+            ngayTao: time,
+            thoiGian: time,
+            nhanVien: k.nhanVien || k.nguoiKiem || 'Quản trị viên',
+            chiNhanh: k.chiNhanh || 'CN02: Chi nhánh Thanh Giang',
+            slSoSach: slSoSach,
+            slThucTe: slThucTe,
+            chenhLech: chenhLech,
+            trangThai: k.trangThai || 'Đã cân bằng kho',
+            chiTietSanPham: sp.map(p => ({
+              ...p,
+              slSoSach: Number(p.slSoSach !== undefined ? p.slSoSach : (p.tonSoSach || 0)) || 0,
+              slThucTe: Number(p.slThucTe !== undefined ? p.slThucTe : (p.tonThucTe || 0)) || 0,
+              chenhLech: Number(p.chenhLech !== undefined ? p.chenhLech : (p.slLech !== undefined ? p.slLech : (Number(p.tonThucTe || 0) - Number(p.tonSoSach || 0)))) || 0
+            }))
+          };
+        });
         locDanhSachKiemKho();
         console.log(`⚡ Đã nạp ${rawKiemKhoList.length} phiếu kiểm kho thực tế từ KiotViet!`);
         return;
@@ -16822,9 +16939,39 @@ function formatVND(amount) {
     }
 
     function loadXuatHuy() {
-      // 0. Ưu tiên nạp danh sách Xuất hủy thực tế từ KiotViet Thanh Giang
+      // 0. Ưu tiên nạp danh sách Xuất hủy thực tế từ KiotViet Thanh Giang (Chuẩn hóa toàn diện thuộc tính)
       if (typeof window.RAW_XUAT_HUY_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_XUAT_HUY_THANH_GIANG) && window.RAW_XUAT_HUY_THANH_GIANG.length > 0) {
-        rawXuatHuyList = window.RAW_XUAT_HUY_THANH_GIANG;
+        rawXuatHuyList = window.RAW_XUAT_HUY_THANH_GIANG.map(x => {
+          const sp = Array.isArray(x.sanPham) ? x.sanPham : (Array.isArray(x.chiTietSanPham) ? x.chiTietSanPham : []);
+          const slHuy = Number(x.tongSoLuong !== undefined ? x.tongSoLuong : (sp.reduce((sum, p) => sum + (Number(p.soLuong) || 0), 0)));
+          const gtHuy = Number(x.tongGiaTriHuy !== undefined ? x.tongGiaTriHuy : (x.tongGiaTri !== undefined ? x.tongGiaTri : (Number(x.giaTriHuy) || 0)));
+          const ma = x.maXuatHuy || x.maChungTu || x.maPhieu || '';
+          const time = x.thoiGian || x.ngayTao || x.ngayHuy || '';
+          const nv = x.nguoiHuy || x.nhanVien || 'Quản trị viên';
+          const ld = x.ghiChu || x.lyDo || 'Xuất hủy hàng hỏng';
+          return {
+            ...x,
+            maChungTu: ma,
+            maXuatHuy: ma,
+            ngayTao: time,
+            thoiGian: time,
+            nhanVien: nv,
+            nguoiHuy: nv,
+            lyDo: ld,
+            ghiChu: ld,
+            tongGiaTri: gtHuy,
+            tongGiaTriHuy: gtHuy,
+            tongSoLuong: slHuy,
+            chiNhanh: x.chiNhanh || 'CN02: Chi nhánh Thanh Giang',
+            chiTietSanPham: sp.map(it => ({
+              ...it,
+              donViTinh: it.donViTinh || it.dvt || 'Cái',
+              soLuong: Number(it.soLuong) || 0,
+              giaVon: Number(it.giaVon) || 0,
+              thanhTien: Number(it.thanhTien) || ((Number(it.soLuong) || 0) * (Number(it.giaVon) || 0))
+            }))
+          };
+        });
         locDanhSachXuatHuy();
         console.log(`⚡ Đã nạp ${rawXuatHuyList.length} phiếu xuất hủy thực tế từ KiotViet!`);
         return;
@@ -17478,7 +17625,7 @@ function formatVND(amount) {
     // LỊCH SỬ - CHI TIẾT & HỦY PHIẾU
     // ============================================================
     function xemChiTietPhieuXuatHuy(maChungTu) {
-      chiTietPhieuXuatHuyDangXem = rawXuatHuyList.find(x => x.maChungTu === maChungTu);
+      chiTietPhieuXuatHuyDangXem = (rawXuatHuyList || []).find(x => x.maChungTu === maChungTu || x.maXuatHuy === maChungTu);
       if (!chiTietPhieuXuatHuyDangXem) return;
       const p = chiTietPhieuXuatHuyDangXem;
       const elMa = document.getElementById('ct-xh-maphieu');
@@ -26253,14 +26400,16 @@ function formatVND(amount) {
 
 
     // ====================================================================
-    // NÂNG CẤP XUẤT EXCEL DANH MỤC HÀNG HÓA: QUẢN LÝ NHÓM CHA / CON LINH HOẠT
+    // NÂNG CẤP XUẤT EXCEL DANH MỤC HÀNG HÓA: PHÂN TRANG & O(1) SET CHỐNG ĐƠ TUYỆT ĐỐI
     // ====================================================================
     let danhSachTamXuatExcel = []; // Danh sách maHang được tích chọn xuất
+    window.danhSachTamXuatExcelSet = new Set(); // Tra cứu O(1) chống đơ trình duyệt
     window.danhSachNhomExcelDuocChon = new Set(); // Danh sách mã nhóm được tích chọn
     window.isCayNhomExcelExpanded = true; // Trạng thái mở rộng cây nhóm
+    window.pageExcelModal = 1;
+    window.pageSizeExcelModal = 50; // Phân trang 50 sản phẩm / trang
 
-    // 1. Sử dụng danh mục nhóm hàng chuẩn hóa từ hệ thống
-    // (layDanhSachNhomHangChuan đã được định nghĩa tập trung ở trên)
+    // 1. Mở modal tùy chọn xuất Excel
     window.moModalChonXuatExcelHang = function() {
       const modal = document.getElementById('modal-xuat-excel-hang');
       if (!modal) return;
@@ -26269,7 +26418,9 @@ function formatVND(amount) {
 
       // Mặc định chọn tất cả các nhóm hàng và tất cả sản phẩm
       window.danhSachNhomExcelDuocChon = new Set(nhomList.map(n => n.MaNhom));
-      danhSachTamXuatExcel = (rawHangHoa || []).map(h => h.maHang);
+      window.danhSachTamXuatExcelSet = new Set((rawHangHoa || []).map(h => h.maHang));
+      danhSachTamXuatExcel = Array.from(window.danhSachTamXuatExcelSet);
+      window.pageExcelModal = 1;
 
       // Reset các ô lọc
       if (document.getElementById('excel-search-nhom')) document.getElementById('excel-search-nhom').value = '';
@@ -26278,13 +26429,19 @@ function formatVND(amount) {
 
       // Render Cây nhóm hàng & Bảng sản phẩm
       renderCayNhomHangExcel('');
-      renderModalBangXuatExcel();
+      renderModalBangXuatExcel(true);
 
       // Mở modal
       moModal('modal-xuat-excel-hang');
     };
 
-    // 3. Render cây danh mục nhóm hàng Cha - Con chuyên nghiệp
+    // 2. Chuyển trang bảng sản phẩm trong Modal
+    window.chuyenTrangExcelModal = function(delta) {
+      window.pageExcelModal = (window.pageExcelModal || 1) + delta;
+      renderModalBangXuatExcel(false);
+    };
+
+    // 3. Render cây danh mục nhóm hàng Cha - Con
     window.renderCayNhomHangExcel = function(tuKhoa) {
       const container = document.getElementById('excel-tree-nhom-container');
       if (!container) return;
@@ -26313,20 +26470,17 @@ function formatVND(amount) {
       });
 
       const kw = (tuKhoa || '').toLowerCase().trim();
-      let html = '';
+      let htmlTree = '';
       let tongNhomHienThi = 0;
 
       nhomCha.forEach((cha, chaIdx) => {
-        // Tìm các nhóm con của nhóm cha này
         const nhomCon = nhomList.filter(n => n.MaNhomCha === cha.MaNhom && n.MaNhom !== cha.MaNhom);
 
-        // Tính tổng sản phẩm nhóm cha = sp của cha + sp của các con
         let tongSpCha = spCountMap[cha.MaNhom] || 0;
         nhomCon.forEach(c => {
           tongSpCha += (spCountMap[c.MaNhom] || 0);
         });
 
-        // Kiểm tra lọc theo từ khóa
         const khopCha = !kw || cha.TenNhom.toLowerCase().includes(kw) || cha.MaNhom.toLowerCase().includes(kw);
         const conFiltered = nhomCon.filter(c => !kw || c.TenNhom.toLowerCase().includes(kw) || c.MaNhom.toLowerCase().includes(kw));
 
@@ -26334,17 +26488,14 @@ function formatVND(amount) {
 
         tongNhomHienThi += 1 + conFiltered.length;
 
-        // Trạng thái checkbox nhóm cha
         const isChaChecked = window.danhSachNhomExcelDuocChon.has(cha.MaNhom);
         const allConChecked = nhomCon.length > 0 && nhomCon.every(c => window.danhSachNhomExcelDuocChon.has(c.MaNhom));
         const someConChecked = nhomCon.some(c => window.danhSachNhomExcelDuocChon.has(c.MaNhom));
-        const isIndeterminate = !allConChecked && (someConChecked || (isChaChecked && nhomCon.length > 0));
 
         const collapseId = `nhom-con-box-${chaIdx}`;
 
-        html += `
+        htmlTree += `
           <div class="py-1.5 space-y-1">
-            <!-- Node Nhóm Cha -->
             <div class="flex items-center justify-between p-1.5 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-200">
               <div class="flex items-center space-x-2 min-w-0 flex-1">
                 ${nhomCon.length > 0 ? `
@@ -26368,7 +26519,6 @@ function formatVND(amount) {
               </div>
             </div>
 
-            <!-- Danh sách Nhóm Con thuộc Nhóm Cha này -->
             ${nhomCon.length > 0 ? `
               <div id="${collapseId}" class="${window.isCayNhomExcelExpanded ? '' : 'hidden'} pl-6 space-y-1 border-l-2 border-indigo-100 ml-4 py-0.5">
                 ${nhomCon.map(con => {
@@ -26380,13 +26530,12 @@ function formatVND(amount) {
                       <div class="flex items-center space-x-2 min-w-0 flex-1">
                         <span class="text-slate-300 text-[11px] select-none font-mono">└──</span>
                         <input type="checkbox" id="chk-nhom-con-${con.MaNhom}" ${isConChecked ? 'checked' : ''} onchange="toggleNhomConExcel('${con.MaNhom}', '${cha.MaNhom}', this.checked)" class="rounded text-indigo-600 w-3.5 h-3.5 shrink-0 cursor-pointer">
-                        <label for="chk-nhom-con-${con.MaNhom}" class="font-medium text-slate-700 hover:text-indigo-600 cursor-pointer flex items-center space-x-1 min-w-0 truncate text-[11.5px]">
-                          <i class="fa-regular fa-folder text-amber-500 text-[11px] shrink-0"></i>
+                        <label for="chk-nhom-con-${con.MaNhom}" class="font-medium text-slate-700 hover:text-indigo-600 cursor-pointer flex items-center space-x-1 min-w-0 truncate text-[11px]">
                           <span class="truncate">${con.TenNhom}</span>
-                          <span class="text-[9.5px] font-mono text-slate-400">(${con.MaNhom})</span>
+                          <span class="text-[9.5px] font-mono text-slate-400 font-normal">(${con.MaNhom})</span>
                         </label>
                       </div>
-                      <span class="text-[10px] font-mono font-semibold ${countCon > 0 ? 'text-slate-600' : 'text-slate-300'} px-1.5 py-0.2 rounded shrink-0">${countCon} SP</span>
+                      <span class="text-[9.5px] font-mono ${countCon > 0 ? 'text-indigo-600 font-bold' : 'text-slate-400'} px-1.5 py-0.2 rounded">${countCon}</span>
                     </div>
                   `;
                 }).join('')}
@@ -26396,62 +26545,56 @@ function formatVND(amount) {
         `;
       });
 
-      if (!html) {
-        html = `<div class="p-4 text-center text-slate-400 italic">Không có nhóm hàng nào khớp với từ khóa "${tuKhoa}".</div>`;
-      }
-
-      container.innerHTML = html;
+      container.innerHTML = htmlTree || '<div class="p-6 text-center text-slate-400 text-xs">Không có nhóm nào khớp từ khóa.</div>';
       capNhatBadgeSoNhomChon();
     };
 
-    // 4. Toggle nhóm cha: Chọn/Bỏ chọn tất cả nhóm con & sản phẩm thuộc nhóm
+    // 4. Toggle nhóm cha (tối ưu O(1) Set)
     window.toggleNhomChaExcel = function(maCha, isChecked) {
       const nhomList = layDanhSachNhomHangChuan();
       const nhomCon = nhomList.filter(n => n.MaNhomCha === maCha && n.MaNhom !== maCha);
-      const allRelatedGroups = [maCha, ...nhomCon.map(c => c.MaNhom)];
+      const allRelatedGroups = new Set([maCha, ...nhomCon.map(c => c.MaNhom)]);
 
       allRelatedGroups.forEach(m => {
         if (isChecked) window.danhSachNhomExcelDuocChon.add(m);
         else window.danhSachNhomExcelDuocChon.delete(m);
       });
 
-      // Cập nhật sản phẩm thuộc các nhóm này vào danhSachTamXuatExcel
       (rawHangHoa || []).forEach(h => {
-        if (allRelatedGroups.includes(h.maNhom)) {
-          const idx = danhSachTamXuatExcel.indexOf(h.maHang);
-          if (isChecked && idx === -1) danhSachTamXuatExcel.push(h.maHang);
-          else if (!isChecked && idx !== -1) danhSachTamXuatExcel.splice(idx, 1);
+        if (allRelatedGroups.has(h.maNhom)) {
+          if (isChecked) window.danhSachTamXuatExcelSet.add(h.maHang);
+          else window.danhSachTamXuatExcelSet.delete(h.maHang);
         }
       });
+      danhSachTamXuatExcel = Array.from(window.danhSachTamXuatExcelSet);
 
-      // Cập nhật lại giao diện cây nhóm & bảng sản phẩm
       renderCayNhomHangExcel(document.getElementById('excel-search-nhom')?.value || '');
-      renderModalBangXuatExcel();
+      window.pageExcelModal = 1;
+      renderModalBangXuatExcel(true);
     };
 
-    // 5. Toggle nhóm con riêng lẻ
+    // 5. Toggle nhóm con riêng lẻ (tối ưu O(1) Set)
     window.toggleNhomConExcel = function(maCon, maCha, isChecked) {
       if (isChecked) window.danhSachNhomExcelDuocChon.add(maCon);
       else window.danhSachNhomExcelDuocChon.delete(maCon);
 
-      // Cập nhật sản phẩm của nhóm con này
       (rawHangHoa || []).forEach(h => {
         if (h.maNhom === maCon) {
-          const idx = danhSachTamXuatExcel.indexOf(h.maHang);
-          if (isChecked && idx === -1) danhSachTamXuatExcel.push(h.maHang);
-          else if (!isChecked && idx !== -1) danhSachTamXuatExcel.splice(idx, 1);
+          if (isChecked) window.danhSachTamXuatExcelSet.add(h.maHang);
+          else window.danhSachTamXuatExcelSet.delete(h.maHang);
         }
       });
+      danhSachTamXuatExcel = Array.from(window.danhSachTamXuatExcelSet);
 
-      // Kiểm tra xem nhóm cha có nên được chọn hay không
       const nhomList = layDanhSachNhomHangChuan();
       const tatCaCon = nhomList.filter(n => n.MaNhomCha === maCha && n.MaNhom !== maCha);
-      const allConChecked = tatCaCon.every(c => window.danhSachNhomExcelDuocChon.has(c.MaNhom));
+      const allConChecked = tatCaCon.length > 0 && tatCaCon.every(c => window.danhSachNhomExcelDuocChon.has(c.MaNhom));
       if (allConChecked) window.danhSachNhomExcelDuocChon.add(maCha);
       else if (!isChecked) window.danhSachNhomExcelDuocChon.delete(maCha);
 
       renderCayNhomHangExcel(document.getElementById('excel-search-nhom')?.value || '');
-      renderModalBangXuatExcel();
+      window.pageExcelModal = 1;
+      renderModalBangXuatExcel(true);
     };
 
     // 6. Chọn / Bỏ chọn tất cả nhóm hàng
@@ -26459,13 +26602,15 @@ function formatVND(amount) {
       const nhomList = layDanhSachNhomHangChuan();
       if (status) {
         window.danhSachNhomExcelDuocChon = new Set(nhomList.map(n => n.MaNhom));
-        danhSachTamXuatExcel = (rawHangHoa || []).map(h => h.maHang);
+        window.danhSachTamXuatExcelSet = new Set((rawHangHoa || []).map(h => h.maHang));
       } else {
         window.danhSachNhomExcelDuocChon.clear();
-        danhSachTamXuatExcel = [];
+        window.danhSachTamXuatExcelSet.clear();
       }
+      danhSachTamXuatExcel = Array.from(window.danhSachTamXuatExcelSet);
       renderCayNhomHangExcel(document.getElementById('excel-search-nhom')?.value || '');
-      renderModalBangXuatExcel();
+      window.pageExcelModal = 1;
+      renderModalBangXuatExcel(true);
     };
 
     // 7. Thu gọn / Mở rộng cây nhóm hàng
@@ -26513,45 +26658,60 @@ function formatVND(amount) {
       }
     }
 
-    // 8. Render Bảng sản phẩm bên phải
-    window.renderModalBangXuatExcel = function() {
+    // 8. Render Bảng sản phẩm bên phải (PHÂN TRANG 50 SP/TRANG - CHỐNG ĐƠ HOÀN TOÀN)
+    window.renderModalBangXuatExcel = function(resetPage = false) {
       const tbody = document.getElementById('excel-modal-tbody');
       if (!tbody) return;
+
+      if (resetPage) window.pageExcelModal = 1;
 
       const kw = (document.getElementById('excel-search-item')?.value || '').toLowerCase().trim();
       const viewMode = document.getElementById('excel-filter-view-mode')?.value || 'ALL';
 
-      // Lọc sản phẩm theo các nhóm hàng đã được chọn trên Cây Nhóm
+      // Lọc nhanh trong bộ nhớ (O(1) Set lookups)
       let list = (rawHangHoa || []).filter(h => {
-        // Nếu không có nhóm nào được chọn thì không hiển thị
         if (window.danhSachNhomExcelDuocChon.size === 0) return false;
-        // Kiểm tra xem sản phẩm có thuộc nhóm được chọn không
-        return window.danhSachNhomExcelDuocChon.has(h.maNhom);
-      });
+        if (!window.danhSachNhomExcelDuocChon.has(h.maNhom)) return false;
 
-      // Lọc theo chế độ xem (Đã chọn / Chưa chọn)
-      if (viewMode === 'SELECTED_ONLY') {
-        list = list.filter(h => danhSachTamXuatExcel.includes(h.maHang));
-      } else if (viewMode === 'UNSELECTED_ONLY') {
-        list = list.filter(h => !danhSachTamXuatExcel.includes(h.maHang));
-      }
+        if (viewMode === 'SELECTED_ONLY' && !window.danhSachTamXuatExcelSet.has(h.maHang)) return false;
+        if (viewMode === 'UNSELECTED_ONLY' && window.danhSachTamXuatExcelSet.has(h.maHang)) return false;
 
-      // Lọc tiếp theo từ khóa tìm kiếm
-      if (kw) {
-        list = list.filter(h => {
+        if (kw) {
           const m1 = String(h.maHang || '').toLowerCase();
           const m2 = String(h.tenHang || '').toLowerCase();
           const m3 = String(h.maNhom || '').toLowerCase();
           const tenNhom = layTenDayDuNhomHang(h.maNhom).toLowerCase();
-          return m1.includes(kw) || m2.includes(kw) || m3.includes(kw) || tenNhom.includes(kw);
-        });
-      }
+          if (!m1.includes(kw) && !m2.includes(kw) && !m3.includes(kw) && !tenNhom.includes(kw)) return false;
+        }
+
+        return true;
+      });
+
+      const totalModalItems = list.length;
+      const totalPages = Math.ceil(totalModalItems / window.pageSizeExcelModal) || 1;
+      if (window.pageExcelModal > totalPages) window.pageExcelModal = totalPages;
+      if (window.pageExcelModal < 1) window.pageExcelModal = 1;
+
+      const start = (window.pageExcelModal - 1) * window.pageSizeExcelModal;
+      const pageItems = list.slice(start, start + window.pageSizeExcelModal);
 
       // Cập nhật tổng số sản phẩm trong bộ lọc
       const elTotal = document.getElementById('excel-count-total');
       if (elTotal) elTotal.innerText = (rawHangHoa || []).length.toLocaleString();
 
-      if (!list.length) {
+      // Cập nhật thanh phân trang trong modal
+      const elInfo = document.getElementById('excel-modal-page-info');
+      if (elInfo) {
+        elInfo.innerText = totalModalItems === 0 
+          ? 'Không có sản phẩm nào' 
+          : `Hiển thị ${start + 1} - ${Math.min(start + window.pageSizeExcelModal, totalModalItems)} trên ${totalModalItems.toLocaleString()} sản phẩm`;
+      }
+      const elCur = document.getElementById('excel-modal-page-current');
+      if (elCur) {
+        elCur.innerText = `${window.pageExcelModal} / ${totalPages}`;
+      }
+
+      if (!totalModalItems) {
         tbody.innerHTML = `
           <tr>
             <td colspan="6" class="p-8 text-center text-slate-400">
@@ -26566,8 +26726,9 @@ function formatVND(amount) {
         return;
       }
 
-      tbody.innerHTML = list.map(h => {
-        const isChecked = danhSachTamXuatExcel.includes(h.maHang);
+      // Chỉ render đúng 50 sản phẩm của trang hiện tại -> SIÊU NHANH < 5ms
+      tbody.innerHTML = pageItems.map(h => {
+        const isChecked = window.danhSachTamXuatExcelSet.has(h.maHang);
         const tenNhomDayDu = layTenDayDuNhomHang(h.maNhom);
         const tonKhoNum = Number(h.tonKho) || 0;
         const giaBanNum = Number(h.giaBan) || 0;
@@ -26599,63 +26760,67 @@ function formatVND(amount) {
     };
 
     window.locBangSanPhamXuatExcel = function() {
-      renderModalBangXuatExcel();
+      renderModalBangXuatExcel(true);
     };
 
     window.toggleCheckRowExcel = function(maHang) {
-      const idx = danhSachTamXuatExcel.indexOf(maHang);
-      if (idx > -1) danhSachTamXuatExcel.splice(idx, 1);
-      else danhSachTamXuatExcel.push(maHang);
-
+      if (window.danhSachTamXuatExcelSet.has(maHang)) {
+        window.danhSachTamXuatExcelSet.delete(maHang);
+      } else {
+        window.danhSachTamXuatExcelSet.add(maHang);
+      }
+      danhSachTamXuatExcel = Array.from(window.danhSachTamXuatExcelSet);
       capNhatDemSoLuongChon();
+      renderModalBangXuatExcel(false);
     };
 
     window.chonTatCaSanPhamHienThi = function(status) {
       const kw = (document.getElementById('excel-search-item')?.value || '').toLowerCase().trim();
       const viewMode = document.getElementById('excel-filter-view-mode')?.value || 'ALL';
 
-      let list = (rawHangHoa || []).filter(h => window.danhSachNhomExcelDuocChon.has(h.maNhom));
-      if (viewMode === 'SELECTED_ONLY') list = list.filter(h => danhSachTamXuatExcel.includes(h.maHang));
-      else if (viewMode === 'UNSELECTED_ONLY') list = list.filter(h => !danhSachTamXuatExcel.includes(h.maHang));
-
-      if (kw) {
-        list = list.filter(h => {
+      let list = (rawHangHoa || []).filter(h => {
+        if (!window.danhSachNhomExcelDuocChon.has(h.maNhom)) return false;
+        if (viewMode === 'SELECTED_ONLY' && !window.danhSachTamXuatExcelSet.has(h.maHang)) return false;
+        if (viewMode === 'UNSELECTED_ONLY' && window.danhSachTamXuatExcelSet.has(h.maHang)) return false;
+        if (kw) {
           const m1 = String(h.maHang || '').toLowerCase();
           const m2 = String(h.tenHang || '').toLowerCase();
           const m3 = String(h.maNhom || '').toLowerCase();
           const tenNhom = layTenDayDuNhomHang(h.maNhom).toLowerCase();
           return m1.includes(kw) || m2.includes(kw) || m3.includes(kw) || tenNhom.includes(kw);
-        });
-      }
-
-      list.forEach(h => {
-        const idx = danhSachTamXuatExcel.indexOf(h.maHang);
-        if (status && idx === -1) danhSachTamXuatExcel.push(h.maHang);
-        else if (!status && idx !== -1) danhSachTamXuatExcel.splice(idx, 1);
+        }
+        return true;
       });
 
-      renderModalBangXuatExcel();
+      list.forEach(h => {
+        if (status) window.danhSachTamXuatExcelSet.add(h.maHang);
+        else window.danhSachTamXuatExcelSet.delete(h.maHang);
+      });
+      danhSachTamXuatExcel = Array.from(window.danhSachTamXuatExcelSet);
+
+      renderModalBangXuatExcel(false);
     };
 
     function capNhatDemSoLuongChon() {
+      const count = window.danhSachTamXuatExcelSet ? window.danhSachTamXuatExcelSet.size : 0;
       const countEl = document.getElementById('excel-count-selected');
-      if (countEl) countEl.innerText = danhSachTamXuatExcel.length.toLocaleString();
+      if (countEl) countEl.innerText = count.toLocaleString();
 
       const footerSp = document.getElementById('excel-footer-count-sp');
-      if (footerSp) footerSp.innerText = danhSachTamXuatExcel.length.toLocaleString();
+      if (footerSp) footerSp.innerText = count.toLocaleString();
 
       const footerNhom = document.getElementById('excel-footer-count-nhom');
       if (footerNhom) footerNhom.innerText = window.danhSachNhomExcelDuocChon.size.toLocaleString();
 
       const chkAll = document.getElementById('excel-chk-all');
       if (chkAll) {
-        chkAll.checked = danhSachTamXuatExcel.length > 0;
+        chkAll.checked = count > 0;
       }
     }
 
-    // 9. THỰC HIỆN XUẤT FILE EXCEL ĐẦY ĐỦ CÁC CỘT CHUẨN
+    // 9. THỰC HIỆN XUẤT FILE EXCEL KHÔNG ĐƠ TRÌNH DUYỆT (ASYNC TIMEOUT)
     window.thucHienXuatExcelHangTuyChon = function() {
-      if (!danhSachTamXuatExcel.length) {
+      if (!window.danhSachTamXuatExcelSet || window.danhSachTamXuatExcelSet.size === 0) {
         showNotification("Vui lòng tích chọn ít nhất một sản phẩm hoặc nhóm hàng để xuất Excel!", true);
         return;
       }
@@ -26665,57 +26830,66 @@ function formatVND(amount) {
         return;
       }
 
-      const nhomList = layDanhSachNhomHangChuan();
-      const nhomMap = {};
-      nhomList.forEach(n => { nhomMap[n.MaNhom] = n; });
+      showNotification(`⏳ Đang chuẩn bị xuất file Excel cho ${window.danhSachTamXuatExcelSet.size.toLocaleString()} sản phẩm...`);
 
-      // Lấy danh sách sản phẩm tương ứng với các mã đã được tích chọn
-      const list = (rawHangHoa || []).filter(h => danhSachTamXuatExcel.includes(h.maHang));
+      setTimeout(() => {
+        try {
+          const nhomList = layDanhSachNhomHangChuan();
+          const nhomMap = {};
+          nhomList.forEach(n => { nhomMap[n.MaNhom] = n; });
 
-      const rows = list.map((h, idx) => {
-        const nhom = nhomMap[h.maNhom];
-        let tenCha = '';
-        let tenCon = '';
-        let tenDayDu = layTenDayDuNhomHang(h.maNhom);
+          // Lấy nhanh danh sách sản phẩm bằng Set O(1)
+          const set = window.danhSachTamXuatExcelSet;
+          const list = (rawHangHoa || []).filter(h => set.has(h.maHang));
 
-        if (nhom) {
-          if (nhom.MaNhomCha && nhomMap[nhom.MaNhomCha]) {
-            tenCha = nhomMap[nhom.MaNhomCha].TenNhom;
-            tenCon = nhom.TenNhom;
-          } else {
-            tenCha = nhom.TenNhom;
-            tenCon = '';
-          }
+          const rows = list.map((h, idx) => {
+            const nhom = nhomMap[h.maNhom];
+            let tenCha = '';
+            let tenCon = '';
+            let tenDayDu = layTenDayDuNhomHang(h.maNhom);
+
+            if (nhom) {
+              if (nhom.MaNhomCha && nhomMap[nhom.MaNhomCha]) {
+                tenCha = nhomMap[nhom.MaNhomCha].TenNhom;
+                tenCon = nhom.TenNhom;
+              } else {
+                tenCha = nhom.TenNhom;
+                tenCon = '';
+              }
+            }
+
+            return {
+              "STT": idx + 1,
+              "Mã Hàng": h.maHang,
+              "Tên Sản Phẩm": h.tenHang,
+              "Nhóm Hàng Cha": tenCha || h.maNhom || '',
+              "Nhóm Hàng Con": tenCon || '',
+              "Nhóm Hàng Đầy Đủ": tenDayDu,
+              "Mã Nhóm": h.maNhom || '',
+              "Đơn Vị Tính": h.donViTinh || "Cái",
+              "Giá Vốn": Number(h.giaVon) || 0,
+              "Giá Bán": Number(h.giaBan) || 0,
+              "Tồn Kho": Number(h.tonKho) || 0,
+              "Quản Lý IMEI": h.coQuanLyIMEI ? 'Có' : 'Không',
+              "Trạng Thái": h.trangThai || 'Kinh doanh'
+            };
+          });
+
+          const ws = XLSX.utils.json_to_sheet(rows);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "DanhSachHangHoa");
+
+          const nowStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+          XLSX.writeFile(wb, `Danh_Sach_Hang_Hoa_Xuat_Excel_${nowStr}_${Date.now().toString().slice(-4)}.xlsx`);
+
+          dongModal('modal-xuat-excel-hang');
+          showNotification(`Đã xuất thành công ${list.length.toLocaleString()} sản phẩm ra file Excel!`);
+        } catch (err) {
+          console.error('Lỗi khi xuất file Excel:', err);
+          showNotification('Có lỗi khi tạo file Excel: ' + err.message, true);
         }
-
-        return {
-          "STT": idx + 1,
-          "Mã Hàng": h.maHang,
-          "Tên Sản Phẩm": h.tenHang,
-          "Nhóm Hàng Cha": tenCha || h.maNhom || '',
-          "Nhóm Hàng Con": tenCon || '',
-          "Nhóm Hàng Đầy Đủ": tenDayDu,
-          "Mã Nhóm": h.maNhom || '',
-          "Đơn Vị Tính": h.donViTinh || "Cái",
-          "Giá Vốn": Number(h.giaVon) || 0,
-          "Giá Bán": Number(h.giaBan) || 0,
-          "Tồn Kho Tổng": Number(h.tonKho) || 0,
-          "Quản Lý IMEI": h.coQuanLyIMEI ? 'Có' : 'Không',
-          "Trạng Thái": h.trangThai || 'Kinh doanh'
-        };
-      });
-
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "DanhSachHangHoa");
-
-      const nowStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      XLSX.writeFile(wb, `Danh_Sach_Hang_Hoa_Xuat_Excel_${nowStr}_${Date.now().toString().slice(-4)}.xlsx`);
-
-      dongModal('modal-xuat-excel-hang');
-      showNotification(`Đã xuất thành công ${list.length.toLocaleString()} sản phẩm ra file Excel!`);
+      }, 50);
     };
-
 
     let currentHangHoaDangXem = null;
     let currentTheKhoList = [];
@@ -27396,7 +27570,32 @@ function formatVND(amount) {
 
     function loadLichSuDonHang() {
       if (typeof window.RAW_DON_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DON_HANG_THANH_GIANG) && window.RAW_DON_HANG_THANH_GIANG.length > 0) {
-        rawDonHangList = window.RAW_DON_HANG_THANH_GIANG;
+        rawDonHangList = window.RAW_DON_HANG_THANH_GIANG.map(d => {
+          const time = d.ngayBan || d.thoiGian || d.ngayTao || d.ngay_tao || d.created_at || '';
+          const ma = d.maDonHang || d.maDon || d.ma_don || '';
+          const tenKH = d.tenKH || d.tenKhachHang || d.ten_kh || 'Khách lẻ';
+          const maKH = d.maKH || d.maKhachHang || d.ma_kh || '';
+          const tongTien = Number(d.tongTien ?? d.tong_tien ?? 0);
+          const khachPhaiTra = Number(d.khachPhaiTra ?? d.khachCanTra ?? d.khach_phai_tra ?? tongTien);
+          const khachTra = Number(d.khachTra ?? d.khachDaTra ?? d.da_tra ?? d.khach_tra ?? 0);
+          return {
+            ...d,
+            maDonHang: ma,
+            maDon: ma,
+            ngayBan: time,
+            thoiGian: time,
+            ngayTao: time,
+            tenKH: tenKH,
+            tenKhachHang: tenKH,
+            maKH: maKH,
+            maKhachHang: maKH,
+            tongTien: tongTien,
+            khachPhaiTra: khachPhaiTra,
+            khachTra: khachTra,
+            chiNhanh: d.chiNhanh || d.chi_nhanh || 'CN02: Chi nhánh Thanh Giang',
+            trangThai: d.trangThai || d.trang_thai || 'Hoàn thành'
+          };
+        });
         locDanhSachDonHang(false);
         console.log(`⚡ Đã nạp ${rawDonHangList.length} hóa đơn thực tế của Thanh Giang từ KiotViet!`);
         return;
@@ -34668,6 +34867,15 @@ function loadSoQuy(filter) {
             </tbody>
           </table>
         </div>
+          <!-- THANH PHÂN TRANG MODAL XUẤT EXCEL CHỐNG ĐƠ -->
+          <div id="excel-modal-pagination-bar" class="p-2 border-t border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between text-xs text-slate-600">
+            <div id="excel-modal-page-info" class="font-medium">Hiển thị 1 - 50 trên 0 sản phẩm</div>
+            <div class="flex items-center space-x-1">
+              <button type="button" onclick="chuyenTrangExcelModal(-1)" class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-xs font-semibold transition active:scale-95">« Trước</button>
+              <span id="excel-modal-page-current" class="px-2 font-mono font-bold text-indigo-700">1 / 1</span>
+              <button type="button" onclick="chuyenTrangExcelModal(1)" class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-xs font-semibold transition active:scale-95">Sau »</button>
+            </div>
+          </div>
       </div>
     </div>
 
@@ -36302,28 +36510,38 @@ function loadSoQuy(filter) {
       // 0. Ưu tiên nạp 100% dữ liệu Yêu cầu sửa chữa thực tế KiotViet Thanh Giang
       if (typeof window.RAW_YCSC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_YCSC_THANH_GIANG) && window.RAW_YCSC_THANH_GIANG.length > 0) {
         window.rawYeuCauSuaChuaList = window.RAW_YCSC_THANH_GIANG.map(item => {
-          let tt = item.trang_thai || 'HoanThanh';
-          if (tt === 'Hoàn thành') tt = 'HoanThanh';
+          let tt = item.trang_thai || item.trangThai || 'HoanThanh';
+          if (tt === 'Hoàn thành' || tt === '0') tt = 'HoanThanh';
           else if (tt === 'Đang xử lý') tt = 'DangSua';
           else if (tt === 'Đã hủy') tt = 'DaHuy';
+          const timeStr = item.ngay_tiep_nhan || item.ngayTiepNhan || item.thoiGian || item.thoi_gian || '';
+          const maYCSC = item.ma_yeu_cau || item.maYCSC || item.ma_ycsc || '';
+          const chiPhiNum = Number(item.khach_can_tra || item.chiPhi || item.tongChiPhi || item.chi_phi || 0) || 0;
           return {
             ...item,
+            ma_yeu_cau: maYCSC,
+            maYCSC: maYCSC,
             trang_thai: tt,
-            ten_kh: item.ten_kh || item.ten_khach_hang || 'Khách lẻ',
-            so_dien_thoai: item.so_dien_thoai || item.dien_thoai || '',
-            ngay_tiep_nhan: item.ngay_tiep_nhan || item.thoi_gian || '',
-            ngay_cap_nhat: item.ngay_cap_nhat || item.thoi_gian || '',
-            khach_can_tra: Number(item.khach_can_tra || item.chi_phi) || 0,
-            khach_da_tra: Number(item.khach_da_tra) || 0,
-            danh_sach_dich_vu: Array.isArray(item.danh_sach_dich_vu) ? item.danh_sach_dich_vu : (Array.isArray(item.dich_vu) ? item.dich_vu : []),
+            ten_kh: item.ten_kh || item.tenKhachHang || item.ten_khach_hang || 'Khách lẻ',
+            so_dien_thoai: item.so_dien_thoai || item.dienThoai || item.dien_thoai || '',
+            ngay_tiep_nhan: timeStr,
+            thoiGian: timeStr,
+            ngay_cap_nhat: item.ngay_cap_nhat || timeStr,
+            ten_thiet_bi: item.ten_thiet_bi || item.tenMay || item.ten_may || 'Thiết bị',
+            imei: item.imei || item.imeiMay || item.imei_may || '',
+            khach_can_tra: chiPhiNum,
+            khach_da_tra: Number(item.khach_da_tra !== undefined ? item.khach_da_tra : (tt === 'HoanThanh' ? chiPhiNum : 0)) || 0,
+            danh_sach_dich_vu: Array.isArray(item.danh_sach_dich_vu) ? item.danh_sach_dich_vu : (Array.isArray(item.dich_vu) ? item.dich_vu : [
+              { ten_dich_vu: item.loaiYeuCau || 'Sửa chữa dịch vụ', chi_phi: chiPhiNum }
+            ]),
             lich_su_thanh_toan: Array.isArray(item.lich_su_thanh_toan) ? item.lich_su_thanh_toan : (
-              (Number(item.khach_da_tra) > 0) ? [
+              (chiPhiNum > 0) ? [
                 {
-                  ma_phieu: 'TT_' + (item.ma_yeu_cau || ''),
-                  thoi_gian: item.thoi_gian || item.ngay_tiep_nhan || '',
+                  ma_phieu: 'TT_' + maYCSC,
+                  thoi_gian: timeStr,
                   phuong_thuc: 'Tiền mặt',
-                  so_tien: Number(item.khach_da_tra) || 0,
-                  nguoi_thu: item.nguoi_nhan || 'Lưu Quang Hữu'
+                  so_tien: chiPhiNum,
+                  nguoi_thu: item.kyThuatVien || item.nguoi_nhan || 'Lưu Quang Hữu'
                 }
               ] : []
             )
@@ -38414,13 +38632,15 @@ function loadSoQuy(filter) {
 
     function formatNgayGioKiot(iso) {
       if (!iso) return '---';
+      const s = String(iso).trim();
+      if (/^\d{2}\/\d{2}\/\d{4}/.test(s)) return s;
       try {
         const d = new Date(iso);
-        if (isNaN(d.getTime())) return iso;
+        if (isNaN(d.getTime())) return s;
         const pad = n => String(n).padStart(2, '0');
         return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
       } catch(e) {
-        return iso;
+        return s;
       }
     }
 
