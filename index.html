@@ -33,9 +33,9 @@
   <!-- Supabase JS v2 CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Dữ liệu tồn kho, giá vốn & IMEI 3 chi nhánh từ Excel gốc -->
-  <script src="ton_kho_3_chinhanh.js?v=28"></script>
+  <script src="ton_kho_3_chinhanh.js?v=29"></script>
   <!-- Dữ liệu thực tế 100% từ KiotViet Chi Nhánh Thanh Giang -->
-  <script src="du_lieu_thanh_giang.js?v=28"></script>
+  <script src="du_lieu_thanh_giang.js?v=29"></script>
 
   <script>
     
@@ -2926,11 +2926,11 @@
             <div class="flex flex-wrap items-center gap-2.5">
               <!-- Kiểu hiển thị -->
               <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/90 shadow-2xs">
-                <button type="button" id="btn-bc-view-bieudo" onclick="datKieuHienThiBaoCao('bieudo')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs flex items-center space-x-1.5">
+                <button type="button" id="btn-bc-view-bieudo" onclick="datKieuHienThiBaoCao('bieudo')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center space-x-1.5">
                   <i class="fa-solid fa-chart-column text-xs"></i>
                   <span>Biểu đồ</span>
                 </button>
-                <button type="button" id="btn-bc-view-baocao" onclick="datKieuHienThiBaoCao('baocao')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center space-x-1.5">
+                <button type="button" id="btn-bc-view-baocao" onclick="datKieuHienThiBaoCao('baocao')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs flex items-center space-x-1.5">
                   <i class="fa-solid fa-table text-xs"></i>
                   <span>Báo cáo</span>
                 </button>
@@ -2970,7 +2970,7 @@
               <div class="flex items-center space-x-1 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 text-xs shadow-2xs">
                 <i class="fa-regular fa-calendar text-blue-600"></i>
                 <select id="bc-preset-select" onchange="thayDoiPresetThoiGianBaoCao(this.value)" class="bg-transparent border-0 font-bold text-slate-800 focus:ring-0 py-0.5 text-xs cursor-pointer">
-                  <option value="THIS_WEEK" selected>Tuần này</option>
+                  <option value="THIS_WEEK">Tuần này</option>
                   <option value="TODAY">Hôm nay</option>
                   <option value="YESTERDAY">Hôm qua</option>
                   <option value="LAST_WEEK">Tuần trước</option>
@@ -2978,7 +2978,7 @@
                   <option value="THIS_MONTH">Tháng này</option>
                   <option value="LAST_MONTH">Tháng trước</option>
                   <option value="30DAYS">30 ngày qua</option>
-                  <option value="THIS_YEAR">Năm nay</option>
+                  <option value="THIS_YEAR" selected>Năm nay</option>
                   <option value="CUSTOM">Tùy chỉnh...</option>
                 </select>
               </div>
@@ -3062,7 +3062,7 @@
           </div>
 
           <!-- CHẾ ĐỘ 1: BIỂU ĐỒ (Chart View) -->
-          <div id="bc-bh-panel-bieudo" class="space-y-4">
+          <div id="bc-bh-panel-bieudo" class="hidden space-y-4">
             <div class="relative w-full h-[400px] bg-slate-50/40 rounded-xl p-4 border border-slate-100 flex items-center justify-center">
               <canvas id="canvasBaoCaoBanHang" class="w-full h-full"></canvas>
             </div>
@@ -3089,7 +3089,7 @@
           </div>
 
           <!-- CHẾ ĐỘ 2: BÁO CÁO (Table View Chuẩn KiotViet - Ảnh 2) -->
-          <div id="bc-bh-panel-baocao" class="hidden space-y-3">
+          <div id="bc-bh-panel-baocao" class="space-y-3">
             <!-- Thanh công cụ nhỏ phía trên trang tài liệu (Tìm kiếm nhanh + Thống kê) -->
             <div class="flex flex-wrap items-center justify-between gap-3 px-1">
               <div class="relative w-72">
@@ -3177,11 +3177,11 @@
 
                 <!-- Kiểu hiển thị -->
                 <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/90 shadow-2xs">
-                  <button type="button" id="btn-bc-hh-view-bieudo" onclick="datKieuHienThiBaoCaoHangHoa('bieudo')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs flex items-center space-x-1.5">
+                  <button type="button" id="btn-bc-hh-view-bieudo" onclick="datKieuHienThiBaoCaoHangHoa('bieudo')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center space-x-1.5">
                     <i class="fa-solid fa-chart-column text-xs"></i>
                     <span>Biểu đồ</span>
                   </button>
-                  <button type="button" id="btn-bc-hh-view-baocao" onclick="datKieuHienThiBaoCaoHangHoa('baocao')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center space-x-1.5">
+                  <button type="button" id="btn-bc-hh-view-baocao" onclick="datKieuHienThiBaoCaoHangHoa('baocao')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs flex items-center space-x-1.5">
                     <i class="fa-solid fa-table text-xs"></i>
                     <span>Báo cáo</span>
                   </button>
@@ -3227,7 +3227,7 @@
                 <div class="flex items-center space-x-1 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 text-xs shadow-2xs">
                   <i class="fa-regular fa-calendar text-blue-600"></i>
                   <select id="bc-hh-preset-select" onchange="thayDoiPresetThoiGianHangHoa(this.value)" class="bg-transparent border-0 font-bold text-slate-800 focus:ring-0 py-0.5 text-xs cursor-pointer">
-                    <option value="THIS_WEEK" selected>Tuần này</option>
+                    <option value="THIS_WEEK">Tuần này</option>
                     <option value="TODAY">Hôm nay</option>
                     <option value="YESTERDAY">Hôm qua</option>
                     <option value="LAST_WEEK">Tuần trước</option>
@@ -3235,7 +3235,7 @@
                     <option value="THIS_MONTH">Tháng này</option>
                     <option value="LAST_MONTH">Tháng trước</option>
                     <option value="30DAYS">30 ngày qua</option>
-                    <option value="THIS_YEAR">Năm nay</option>
+                    <option value="THIS_YEAR" selected>Năm nay</option>
                     <option value="CUSTOM">Tùy chỉnh...</option>
                   </select>
                 </div>
@@ -3271,7 +3271,7 @@
           </div>
 
           <!-- CHẾ ĐỘ 1: BIỂU ĐỒ (Chuẩn Ảnh 1) -->
-          <div id="bc-hh-panel-bieudo" class="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-6">
+          <div id="bc-hh-panel-bieudo" class="hidden bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-6">
             <!-- Biểu đồ 1: Top 10 sản phẩm doanh thu cao nhất (đã trừ trả hàng) -->
             <div class="space-y-2">
               <h3 id="bc-hh-chart1-title" class="text-xs font-bold text-slate-700 tracking-tight">
@@ -3294,7 +3294,7 @@
           </div>
 
           <!-- CHẾ ĐỘ 2: BÁO CÁO (Trang A4 chuẩn KiotViet) -->
-          <div id="bc-hh-panel-baocao" class="hidden space-y-3">
+          <div id="bc-hh-panel-baocao" class="space-y-3">
             <div class="bg-slate-200/60 p-3 sm:p-6 rounded-2xl flex justify-center border border-slate-300/70 overflow-x-auto">
               <div id="bc-hh-sheet-card" class="bg-white shadow-xl rounded-md p-6 sm:p-9 w-full max-w-5xl border border-slate-300/90 text-slate-800 space-y-4 min-w-[700px]">
                 <div class="flex justify-between items-start text-[11px] text-slate-500 font-mono">
@@ -3349,11 +3349,11 @@
 
                 <!-- Kiểu hiển thị -->
                 <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/90 shadow-2xs">
-                  <button type="button" id="btn-bc-kh-view-bieudo" onclick="datKieuHienThiBaoCaoKhachHang('bieudo')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs flex items-center space-x-1.5">
+                  <button type="button" id="btn-bc-kh-view-bieudo" onclick="datKieuHienThiBaoCaoKhachHang('bieudo')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center space-x-1.5">
                     <i class="fa-solid fa-chart-column text-xs"></i>
                     <span>Biểu đồ</span>
                   </button>
-                  <button type="button" id="btn-bc-kh-view-baocao" onclick="datKieuHienThiBaoCaoKhachHang('baocao')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center space-x-1.5">
+                  <button type="button" id="btn-bc-kh-view-baocao" onclick="datKieuHienThiBaoCaoKhachHang('baocao')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs flex items-center space-x-1.5">
                     <i class="fa-solid fa-table text-xs"></i>
                     <span>Báo cáo</span>
                   </button>
@@ -3392,7 +3392,7 @@
                 <div class="flex items-center space-x-1 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 text-xs shadow-2xs">
                   <i class="fa-regular fa-calendar text-blue-600"></i>
                   <select id="bc-kh-preset-select" onchange="thayDoiPresetThoiGianKhachHang(this.value)" class="bg-transparent border-0 font-bold text-slate-800 focus:ring-0 py-0.5 text-xs cursor-pointer">
-                    <option value="THIS_WEEK" selected>Tuần này</option>
+                    <option value="THIS_WEEK">Tuần này</option>
                     <option value="TODAY">Hôm nay</option>
                     <option value="YESTERDAY">Hôm qua</option>
                     <option value="LAST_WEEK">Tuần trước</option>
@@ -3400,7 +3400,7 @@
                     <option value="THIS_MONTH">Tháng này</option>
                     <option value="LAST_MONTH">Tháng trước</option>
                     <option value="30DAYS">30 ngày qua</option>
-                    <option value="THIS_YEAR">Năm nay</option>
+                    <option value="THIS_YEAR" selected>Năm nay</option>
                     <option value="CUSTOM">Tùy chỉnh...</option>
                   </select>
                 </div>
@@ -3436,7 +3436,7 @@
           </div>
 
           <!-- CHẾ ĐỘ 1: BIỂU ĐỒ (Chuẩn Ảnh 2) -->
-          <div id="bc-kh-panel-bieudo" class="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
+          <div id="bc-kh-panel-bieudo" class="hidden bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
             <h3 id="bc-kh-chart-title" class="text-xs font-bold text-slate-700 tracking-tight">
               Top 10 khách hàng mua nhiều nhất (đã trừ trả hàng)
             </h3>
@@ -3446,7 +3446,7 @@
           </div>
 
           <!-- CHẾ ĐỘ 2: BÁO CÁO (Trang A4 chuẩn KiotViet) -->
-          <div id="bc-kh-panel-baocao" class="hidden space-y-3">
+          <div id="bc-kh-panel-baocao" class="space-y-3">
             <div class="bg-slate-200/60 p-3 sm:p-6 rounded-2xl flex justify-center border border-slate-300/70 overflow-x-auto">
               <div id="bc-kh-sheet-card" class="bg-white shadow-xl rounded-md p-6 sm:p-9 w-full max-w-5xl border border-slate-300/90 text-slate-800 space-y-4 min-w-[700px]">
                 <div class="flex justify-between items-start text-[11px] text-slate-500 font-mono">
@@ -3500,11 +3500,11 @@
 
                 <!-- Kiểu hiển thị -->
                 <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/90 shadow-2xs">
-                  <button type="button" id="btn-bc-ncc-view-bieudo" onclick="datKieuHienThiBaoCaoNCC('bieudo')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs flex items-center space-x-1.5">
+                  <button type="button" id="btn-bc-ncc-view-bieudo" onclick="datKieuHienThiBaoCaoNCC('bieudo')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center space-x-1.5">
                     <i class="fa-solid fa-chart-column text-xs"></i>
                     <span>Biểu đồ</span>
                   </button>
-                  <button type="button" id="btn-bc-ncc-view-baocao" onclick="datKieuHienThiBaoCaoNCC('baocao')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center space-x-1.5">
+                  <button type="button" id="btn-bc-ncc-view-baocao" onclick="datKieuHienThiBaoCaoNCC('baocao')" class="py-1 px-3.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs flex items-center space-x-1.5">
                     <i class="fa-solid fa-table text-xs"></i>
                     <span>Báo cáo</span>
                   </button>
@@ -3542,7 +3542,7 @@
                 <div class="flex items-center space-x-1 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 text-xs shadow-2xs">
                   <i class="fa-regular fa-calendar text-blue-600"></i>
                   <select id="bc-ncc-preset-select" onchange="thayDoiPresetThoiGianNCC(this.value)" class="bg-transparent border-0 font-bold text-slate-800 focus:ring-0 py-0.5 text-xs cursor-pointer">
-                    <option value="THIS_WEEK" selected>Tuần này</option>
+                    <option value="THIS_WEEK">Tuần này</option>
                     <option value="TODAY">Hôm nay</option>
                     <option value="YESTERDAY">Hôm qua</option>
                     <option value="LAST_WEEK">Tuần trước</option>
@@ -3550,7 +3550,7 @@
                     <option value="THIS_MONTH">Tháng này</option>
                     <option value="LAST_MONTH">Tháng trước</option>
                     <option value="30DAYS">30 ngày qua</option>
-                    <option value="THIS_YEAR">Năm nay</option>
+                    <option value="THIS_YEAR" selected>Năm nay</option>
                     <option value="CUSTOM">Tùy chỉnh...</option>
                   </select>
                 </div>
@@ -3586,7 +3586,7 @@
           </div>
 
           <!-- CHẾ ĐỘ 1: BIỂU ĐỒ (Chuẩn Ảnh 3) -->
-          <div id="bc-ncc-panel-bieudo" class="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
+          <div id="bc-ncc-panel-bieudo" class="hidden bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
             <h3 id="bc-ncc-chart-title" class="text-xs font-bold text-slate-700 tracking-tight">
               Top 10 nhà cung cấp nhập hàng nhiều nhất (đã trừ trả hàng)
             </h3>
@@ -3596,7 +3596,7 @@
           </div>
 
           <!-- CHẾ ĐỘ 2: BÁO CÁO (Trang A4 chuẩn KiotViet) -->
-          <div id="bc-ncc-panel-baocao" class="hidden space-y-3">
+          <div id="bc-ncc-panel-baocao" class="space-y-3">
             <div class="bg-slate-200/60 p-3 sm:p-6 rounded-2xl flex justify-center border border-slate-300/70 overflow-x-auto">
               <div id="bc-ncc-sheet-card" class="bg-white shadow-xl rounded-md p-6 sm:p-9 w-full max-w-5xl border border-slate-300/90 text-slate-800 space-y-4 min-w-[700px]">
                 <div class="flex justify-between items-start text-[11px] text-slate-500 font-mono">
@@ -9040,7 +9040,7 @@ function formatVND(amount) {
             <option value="${cn.ma}">🏢 ${cn.ma}: ${cn.ten}</option>
           `).join('')}
         `;
-        if ([...filterTraHang.options].some(o => o.value === curVal)) {
+        if ((filterTraHang.options ? [...filterTraHang.options] : []).some(o => o.value === curVal)) {
           filterTraHang.value = curVal;
         } else {
           filterTraHang.value = 'ALL';
@@ -20485,11 +20485,65 @@ function formatVND(amount) {
     let currentPhanMucBaoCao = 'banhang';
     let rawBaoCaoData = null;
 
+    function damBaoDuLieuGocBaoCao() {
+      if (!rawDonHangList || rawDonHangList.length === 0) {
+        if (window.RAW_DON_HANG_THANH_GIANG && window.RAW_DON_HANG_THANH_GIANG.length > 0) {
+          rawDonHangList = window.RAW_DON_HANG_THANH_GIANG;
+        } else if (window.danhSachDonHangFull && window.danhSachDonHangFull.length > 0) {
+          rawDonHangList = window.danhSachDonHangFull;
+        }
+      }
+      if (!rawHangHoa || rawHangHoa.length === 0) {
+        if (window.RAW_HANG_HOA_THANH_GIANG && window.RAW_HANG_HOA_THANH_GIANG.length > 0) {
+          rawHangHoa = window.RAW_HANG_HOA_THANH_GIANG;
+        } else if (window.danhMucHangHoaFull && window.danhMucHangHoaFull.length > 0) {
+          rawHangHoa = window.danhMucHangHoaFull;
+        }
+      }
+      if (!rawKHList || rawKHList.length === 0) {
+        if (window.RAW_DOI_TAC_THANH_GIANG && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG) && window.RAW_DOI_TAC_THANH_GIANG.length > 0) {
+          rawKHList = window.RAW_DOI_TAC_THANH_GIANG.filter(d => 
+            (d.loaiDoiTac === 'KH' || (!String(d.maDoiTac || '').toUpperCase().startsWith('NCC') && !String(d.nhomDoiTac || '').includes('Nhà cung cấp')))
+          );
+        } else if (window.RAW_KHACH_HANG_THANH_GIANG && window.RAW_KHACH_HANG_THANH_GIANG.length > 0) {
+          rawKHList = window.RAW_KHACH_HANG_THANH_GIANG;
+        }
+      }
+      if (!rawNCCList || rawNCCList.length === 0) {
+        if (window.RAW_DOI_TAC_THANH_GIANG && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG) && window.RAW_DOI_TAC_THANH_GIANG.length > 0) {
+          rawNCCList = window.RAW_DOI_TAC_THANH_GIANG.filter(d => 
+            (d.loaiDoiTac === 'NCC' || String(d.maDoiTac || '').toUpperCase().startsWith('NCC') || String(d.nhomDoiTac || '').includes('Nhà cung cấp'))
+          );
+        } else if (window.RAW_NCC_THANH_GIANG && window.RAW_NCC_THANH_GIANG.length > 0) {
+          rawNCCList = window.RAW_NCC_THANH_GIANG;
+        }
+      }
+      if (!window.rawSoQuyAllRecords || window.rawSoQuyAllRecords.length === 0) {
+        if (window.RAW_SO_QUY_THANH_GIANG && window.RAW_SO_QUY_THANH_GIANG.length > 0) {
+          window.rawSoQuyAllRecords = window.RAW_SO_QUY_THANH_GIANG;
+        }
+      }
+      if (!window.rawNhapHangList || window.rawNhapHangList.length === 0) {
+        if (window.RAW_NHAP_HANG_THANH_GIANG && window.RAW_NHAP_HANG_THANH_GIANG.length > 0) {
+          window.rawNhapHangList = window.RAW_NHAP_HANG_THANH_GIANG;
+        }
+      }
+      if (!window.rawTraHangNCCList || window.rawTraHangNCCList.length === 0) {
+        if (window.RAW_TRA_HANG_NCC_THANH_GIANG && window.RAW_TRA_HANG_NCC_THANH_GIANG.length > 0) {
+          window.rawTraHangNCCList = window.RAW_TRA_HANG_NCC_THANH_GIANG;
+        }
+      }
+    }
+    window.damBaoDuLieuGocBaoCao = damBaoDuLieuGocBaoCao;
+
     function chuyenPhanMucBaoCao(subBc) {
       if (!subBc) subBc = 'banhang';
       currentPhanMucBaoCao = subBc;
 
-      // Điều khiển hiển thị các view báo cáo
+      // 1. Luôn nạp tức thì dữ liệu gốc vào bộ nhớ
+      damBaoDuLieuGocBaoCao();
+
+      // 2. Điều khiển hiển thị các view báo cáo
       const allViews = ['banhang', 'hanghoa', 'khachhang', 'ncc', 'taichinh'];
       allViews.forEach(v => {
         const viewEl = document.getElementById('view-bc-' + v);
@@ -20507,34 +20561,33 @@ function formatVND(amount) {
         }
       });
 
-      // Ẩn / hiện thanh bộ lọc bán hàng khi chuyển phân hệ
+      // 3. Ẩn / hiện thanh bộ lọc bán hàng khi chuyển phân hệ
       const filterBar = document.getElementById('bc-bh-filter-bar');
       if (filterBar) {
         if (subBc === 'banhang') filterBar.classList.remove('hidden');
         else filterBar.classList.add('hidden');
       }
 
-      // Kích hoạt tính toán và render theo phân hệ chuyên biệt
-      if (subBc === 'banhang') {
-        if (!rawDonHangList || rawDonHangList.length === 0) loadBaoCao();
-        else if (typeof tinhToanVaRenderBaoCaoBanHang === 'function') tinhToanVaRenderBaoCaoBanHang();
-      } else if (subBc === 'hanghoa') {
-        if (!rawHangHoa || rawHangHoa.length === 0 || !rawDonHangList || rawDonHangList.length === 0) loadBaoCao();
-        else if (typeof tinhToanVaRenderBaoCaoHangHoa === 'function') tinhToanVaRenderBaoCaoHangHoa();
-      } else if (subBc === 'khachhang') {
-        if (!rawKHList || rawKHList.length === 0 || !rawDonHangList || rawDonHangList.length === 0) loadBaoCao();
-        else if (typeof tinhToanVaRenderBaoCaoKhachHang === 'function') tinhToanVaRenderBaoCaoKhachHang();
-      } else if (subBc === 'ncc') {
-        if (!rawNCCList || rawNCCList.length === 0) loadBaoCao();
-        else if (typeof tinhToanVaRenderBaoCaoNCC === 'function') tinhToanVaRenderBaoCaoNCC();
-      } else if (subBc === 'taichinh') {
-        if (typeof tinhToanVaRenderBaoCaoTaiChinh === 'function') tinhToanVaRenderBaoCaoTaiChinh();
-        else if (!rawBaoCaoData) loadBaoCao();
-        else renderBaoCaoDuLieu(rawBaoCaoData);
+      // 4. Kích hoạt tính toán và render trực tiếp không phụ thuộc Supabase
+      try {
+        if (subBc === 'banhang') {
+          if (typeof tinhToanVaRenderBaoCaoBanHang === 'function') tinhToanVaRenderBaoCaoBanHang();
+        } else if (subBc === 'hanghoa') {
+          if (typeof tinhToanVaRenderBaoCaoHangHoa === 'function') tinhToanVaRenderBaoCaoHangHoa();
+        } else if (subBc === 'khachhang') {
+          if (typeof tinhToanVaRenderBaoCaoKhachHang === 'function') tinhToanVaRenderBaoCaoKhachHang();
+        } else if (subBc === 'ncc') {
+          if (typeof tinhToanVaRenderBaoCaoNCC === 'function') tinhToanVaRenderBaoCaoNCC();
+        } else if (subBc === 'taichinh') {
+          if (typeof tinhToanVaRenderBaoCaoTaiChinh === 'function') tinhToanVaRenderBaoCaoTaiChinh();
+        }
+      } catch(err) {
+        console.error("Lỗi khi chuyển phân mục báo cáo " + subBc + ":", err);
       }
     }
 
     async function loadBaoCao() {
+      if (typeof damBaoDuLieuGocBaoCao === 'function') damBaoDuLieuGocBaoCao();
       const filterTime = document.getElementById('bc-filter-thoigian')?.value || 'ALL';
       const filterCN = document.getElementById('bc-filter-chinhanh')?.value || 'CURRENT';
       const targetCN = (filterCN === 'CURRENT') ? (currentChiNhanh || 'CN01') : filterCN;
@@ -21002,16 +21055,17 @@ function formatVND(amount) {
         if (elTCQuyNH) elTCQuyNH.innerText = (tc.tonQuyNganHang || 0).toLocaleString('vi-VN') + ' đ';
         const elTCTongTonQuy = document.getElementById('bc-tc-tongtonquy');
         if (elTCTongTonQuy) elTCTongTonQuy.innerText = (tc.tonQuyThucTe || 0).toLocaleString('vi-VN') + ' đ';
+        if (typeof tinhToanVaRenderBaoCaoTaiChinh === 'function') tinhToanVaRenderBaoCaoTaiChinh();
       }
     }
 
     /* =========================================================================
      * BÁO CÁO BÁN HÀNG CHUẨN KIOTVIET (BIỂU ĐỒ & BÁO CÁO CHI TIẾT)
      * ========================================================================= */
-    let currentKieuHienThiBaoCao = 'bieudo';
+    let currentKieuHienThiBaoCao = 'baocao';
     let currentMoiQuanTamBaoCao = 'LOI_NHUAN';
     let currentCheDoThoiGianBaoCao = 'PRESET';
-    let currentPresetThoiGianBaoCao = 'THIS_WEEK';
+    let currentPresetThoiGianBaoCao = 'THIS_YEAR';
     let chartBaoCaoBanHangInstance = null;
     let currentBaoCaoBanHangData = null;
 
@@ -21654,16 +21708,16 @@ function formatVND(amount) {
      * TIỆN ÍCH PHÂN TRANG DÙNG CHUNG CHO 4 PHÂN HỆ BÁO CÁO (TRÁNH NGHẼN DOM)
      * ========================================================================= */
     let pageBaoCaoBanHang = 1;
-    let pageSizeBaoCaoBanHang = 20;
+    let pageSizeBaoCaoBanHang = 10;
 
     let pageBaoCaoHangHoa = 1;
-    let pageSizeBaoCaoHangHoa = 20;
+    let pageSizeBaoCaoHangHoa = 10;
 
     let pageBaoCaoKhachHang = 1;
-    let pageSizeBaoCaoKhachHang = 20;
+    let pageSizeBaoCaoKhachHang = 10;
 
     let pageBaoCaoNCC = 1;
-    let pageSizeBaoCaoNCC = 20;
+    let pageSizeBaoCaoNCC = 10;
 
     let currentCheDoThoiGianTaiChinh = 'PRESET';
     let currentPresetThoiGianTaiChinh = 'THIS_YEAR';
@@ -22297,10 +22351,10 @@ function formatVND(amount) {
     /* =========================================================================
      * 6.2 BÁO CÁO HÀNG HÓA CHUẨN KIOTVIET (ẢNH 1)
      * ========================================================================= */
-    let currentKieuHienThiHangHoa = 'bieudo';
+    let currentKieuHienThiHangHoa = 'baocao';
     let currentMoiQuanTamHangHoa = 'BAN_HANG';
     let currentCheDoThoiGianHangHoa = 'PRESET';
-    let currentPresetThoiGianHangHoa = 'THIS_WEEK';
+    let currentPresetThoiGianHangHoa = 'THIS_YEAR';
     let chartTopDoanhThuHangHoaInstance = null;
     let chartTopSoLuongHangHoaInstance = null;
     let currentBaoCaoHangHoaData = null;
@@ -22917,10 +22971,10 @@ function formatVND(amount) {
     /* =========================================================================
      * 6.3 BÁO CÁO KHÁCH HÀNG CHUẨN KIOTVIET (ẢNH 2)
      * ========================================================================= */
-    let currentKieuHienThiKhachHang = 'bieudo';
+    let currentKieuHienThiKhachHang = 'baocao';
     let currentMoiQuanTamKhachHang = 'BAN_HANG';
     let currentCheDoThoiGianKhachHang = 'PRESET';
-    let currentPresetThoiGianKhachHang = 'THIS_WEEK';
+    let currentPresetThoiGianKhachHang = 'THIS_YEAR';
     let chartTopKhachHangInstance = null;
     let currentBaoCaoKhachHangData = null;
 
@@ -23299,10 +23353,10 @@ function formatVND(amount) {
     /* =========================================================================
      * 6.4 BÁO CÁO NHÀ CUNG CẤP CHUẨN KIOTVIET (ẢNH 3)
      * ========================================================================= */
-    let currentKieuHienThiNCC = 'bieudo';
+    let currentKieuHienThiNCC = 'baocao';
     let currentMoiQuanTamNCC = 'NHAP_HANG';
     let currentCheDoThoiGianNCC = 'PRESET';
-    let currentPresetThoiGianNCC = 'THIS_WEEK';
+    let currentPresetThoiGianNCC = 'THIS_YEAR';
     let chartTopNCCInstance = null;
     let currentBaoCaoNCCData = null;
 
@@ -24054,6 +24108,14 @@ function formatVND(amount) {
     window.tinhToanVaRenderBaoCaoHangHoa = tinhToanVaRenderBaoCaoHangHoa;
     window.tinhToanVaRenderBaoCaoKhachHang = tinhToanVaRenderBaoCaoKhachHang;
     window.tinhToanVaRenderBaoCaoNCC = tinhToanVaRenderBaoCaoNCC;
+    function renderChartBaoCaoKhachHang() {
+      const canvas = document.getElementById('canvasBaoCaoKhachHang');
+      if (!canvas || !window.Chart) return;
+    }
+    function renderChartBaoCaoNCC() {
+      const canvas = document.getElementById('canvasBaoCaoNCC');
+      if (!canvas || !window.Chart) return;
+    }
     window.renderChartBaoCaoBanHang = renderChartBaoCaoBanHang;
     window.renderChartBaoCaoHangHoa = renderChartBaoCaoHangHoa;
     window.renderChartBaoCaoKhachHang = renderChartBaoCaoKhachHang;
@@ -25474,6 +25536,7 @@ function formatVND(amount) {
     /* Khởi động ứng dụng */
     function khoiDongUngDung() {
       if (typeof initEnvironmentUI === 'function') initEnvironmentUI();
+      if (typeof damBaoDuLieuGocBaoCao === 'function') damBaoDuLieuGocBaoCao();
       const now = new Date();
       const dateEl = document.getElementById('current-date-badge');
       if (dateEl) dateEl.innerText = now.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' });
@@ -25579,7 +25642,8 @@ function formatVND(amount) {
       kiemTraVaKhoiTaoPhienLamViec();
     }
 
-    function toggleShowPassword() {
+    function toggleShowPassword(e) {
+      if (e && e.preventDefault) e.preventDefault();
       const passInput = document.getElementById('login-password');
       const eyeIcon = document.getElementById('login-eye-icon');
       if (!passInput) return;
@@ -25596,6 +25660,7 @@ function formatVND(amount) {
           eyeIcon.classList.add('fa-eye');
         }
       }
+      passInput.focus();
     }
     window.toggleShowPassword = toggleShowPassword;
 
@@ -35146,7 +35211,7 @@ function loadSoQuy(filter) {
           <div class="relative">
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-amber-500"><i class="fa-solid fa-lock"></i></span>
             <input type="password" id="login-password" onkeydown="if(event.key === 'Enter') xuLyDangNhap()" onkeypress="if(event.key === 'Enter') xuLyDangNhap()" class="w-full pl-10 pr-10 py-3 border border-slate-300 rounded-2xl bg-slate-50/50 focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 font-medium transition" placeholder="••••••••">
-            <button type="button" onclick="toggleShowPassword()" title="Hiện/Ẩn mật khẩu" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10 focus:outline-none">
+            <button type="button" id="btn-login-toggle-eye" onclick="toggleShowPassword(event)" title="Hiện/Ẩn mật khẩu" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10 focus:outline-none">
               <i id="login-eye-icon" class="fa-solid fa-eye pointer-events-none"></i>
             </button>
           </div>

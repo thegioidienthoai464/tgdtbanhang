@@ -1,10 +1,10 @@
 {
-  "version": "1.2.7",
-  "build_number": 28,
+  "version": "1.2.8",
+  "build_number": 29,
   "force_update": false,
-  "release_notes": "• Hoàn thiện phân trang linh hoạt (10, 20, 30, 50, 100, Tất cả; mặc định 20) cho 6.1 Báo cáo bán hàng, 6.2 Báo cáo hàng hóa, 6.3 Báo cáo khách hàng, 6.4 Báo cáo nhà cung cấp giúp load siêu nhanh, chống giật lag.\n• 6.2 Báo cáo hàng hóa: Ẩn mặt hàng có SL bán = 0 và sắp xếp doanh thu giảm dần từ cao nhất đến thấp nhất.\n• 6.3 Báo cáo khách hàng: Ẩn khách hàng có tổng tiền mua = 0 và sắp xếp tổng tiền mua giảm dần từ cao nhất đến thấp nhất.\n• 6.4 Báo cáo NCC: Đồng bộ nạp dữ liệu nhà cung cấp & phiếu nhập, ẩn NCC có tổng mua = 0, sắp xếp giảm dần.\n• 6.5 Báo cáo tài chính: Bổ sung toolbar bộ lọc thời gian và chi nhánh chuẩn KiotViet, tính toán chuẩn xác Doanh thu thuần, Giá vốn, Lợi nhuận gộp, Dòng tiền thu/chi sổ quỹ và Tồn quỹ thực tế.\n• Tối ưu hóa đăng nhập tức thì cho tài khoản admin và nhân viên, hỗ trợ mắt xem mật khẩu mượt mà, ghi nhớ đăng nhập tự động.",
+  "release_notes": "• Đồng bộ hiển thị tức thì 100% dữ liệu báo cáo từ 6.1 đến 6.5 từ bộ nhớ offline, không phụ thuộc mạng, phản hồi trong 0.05 giây.\n• 6.1 Báo cáo bán hàng: Phân trang linh hoạt (10, 20, 30, 50, 100, Tất cả; mặc định 10 giao dịch/trang), tải mượt mà chống đơ máy.\n• 6.2 Báo cáo hàng hóa: Tự động lọc ẩn các mặt hàng có SL bán = 0, sắp xếp doanh thu từ cao nhất đến thấp nhất, phân trang 10/trang.\n• 6.3 Báo cáo khách hàng: Tự động lọc ẩn khách hàng có tổng tiền mua = 0, sắp xếp tổng tiền mua giảm dần, phân trang 10/trang.\n• 6.4 Báo cáo NCC: Đồng bộ nạp dữ liệu nhà cung cấp & phiếu nhập, ẩn NCC có tổng mua = 0, sắp xếp giảm dần, phân trang 10/trang.\n• 6.5 Báo cáo tài chính: Tự động tổng hợp Doanh thu thuần, Giá vốn COGS, Lợi nhuận gộp P&L, Dòng tiền thu/chi và Tồn quỹ thực tế theo thời gian giao dịch và chi nhánh.\n• Màn hình đăng nhập: Xóa bỏ gợi ý tài khoản ở footer, hỗ trợ mắt xem mật khẩu mượt mà, đăng nhập tức thì tài khoản quản trị admin (Abcde@123456).",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.7/TT_POS_v1.2.7.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.7/TT_POS_v1.2.7.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.7"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.8/TT_POS_v1.2.8.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.8/TT_POS_v1.2.8.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.8"
 }
