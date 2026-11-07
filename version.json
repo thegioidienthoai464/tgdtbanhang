@@ -1,10 +1,10 @@
 {
-  "version": "1.2.5",
-  "build_number": 26,
+  "version": "1.2.6",
+  "build_number": 27,
   "force_update": false,
-  "release_notes": "• Cập nhật mật khẩu quản trị viên Abcde@123456 và toàn bộ 11 nhân viên KiotViet.\n• Tối ưu cơ chế đăng nhập siêu tốc & tự động ghi nhớ tài khoản.\n• Cải thiện hiệu năng và bộ nhớ hệ thống.",
+  "release_notes": "• Khắc phục hoàn toàn lỗi cú pháp script khiến nút Đăng nhập và nút mắt xem mật khẩu không phản hồi.\n• Bỏ hiển thị gợi ý thông tin đăng nhập admin ở màn hình đăng nhập theo yêu cầu.\n• Tối ưu hóa xác thực tức thì và tải giao diện mượt mà.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.5/TT_POS_v1.2.5.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.5/TT_POS_v1.2.5.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.5"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.6/TT_POS_v1.2.6.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.6/TT_POS_v1.2.6.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.6"
 }

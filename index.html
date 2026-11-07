@@ -33,9 +33,9 @@
   <!-- Supabase JS v2 CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Dữ liệu tồn kho, giá vốn & IMEI 3 chi nhánh từ Excel gốc -->
-  <script src="ton_kho_3_chinhanh.js?v=26"></script>
+  <script src="ton_kho_3_chinhanh.js?v=27"></script>
   <!-- Dữ liệu thực tế 100% từ KiotViet Chi Nhánh Thanh Giang -->
-  <script src="du_lieu_thanh_giang.js?v=26"></script>
+  <script src="du_lieu_thanh_giang.js?v=27"></script>
 
   <script>
     
@@ -32593,7 +32593,7 @@ function loadSoQuy(filter) {
       return sp ? (Number(sp.giaVon || sp.giaVonBanDau) || 0) : 0;
     }
 
-    async let pageChuyenKho = 1;
+    let pageChuyenKho = 1;
     let pageSizeChuyenKho = 10;
     let lastFilteredChuyenKhoList = [];
 
@@ -34729,9 +34729,7 @@ function loadSoQuy(filter) {
         </button>
       </div>
 
-      <div class="text-center pt-2 border-t border-slate-100">
-        <p class="text-[11px] text-slate-400">Tài khoản quản trị: <b class="text-slate-700 font-mono">admin</b> &nbsp;|&nbsp; Mật khẩu: <b class="text-slate-700 font-mono">Abcde@123456</b></p>
-      </div>
+
     </div>
   </div>
 
