@@ -1,10 +1,10 @@
 {
-  "version": "1.2.6",
-  "build_number": 27,
+  "version": "1.2.7",
+  "build_number": 28,
   "force_update": false,
-  "release_notes": "• Khắc phục hoàn toàn lỗi cú pháp script khiến nút Đăng nhập và nút mắt xem mật khẩu không phản hồi.\n• Bỏ hiển thị gợi ý thông tin đăng nhập admin ở màn hình đăng nhập theo yêu cầu.\n• Tối ưu hóa xác thực tức thì và tải giao diện mượt mà.",
+  "release_notes": "• Hoàn thiện phân trang linh hoạt (10, 20, 30, 50, 100, Tất cả; mặc định 20) cho 6.1 Báo cáo bán hàng, 6.2 Báo cáo hàng hóa, 6.3 Báo cáo khách hàng, 6.4 Báo cáo nhà cung cấp giúp load siêu nhanh, chống giật lag.\n• 6.2 Báo cáo hàng hóa: Ẩn mặt hàng có SL bán = 0 và sắp xếp doanh thu giảm dần từ cao nhất đến thấp nhất.\n• 6.3 Báo cáo khách hàng: Ẩn khách hàng có tổng tiền mua = 0 và sắp xếp tổng tiền mua giảm dần từ cao nhất đến thấp nhất.\n• 6.4 Báo cáo NCC: Đồng bộ nạp dữ liệu nhà cung cấp & phiếu nhập, ẩn NCC có tổng mua = 0, sắp xếp giảm dần.\n• 6.5 Báo cáo tài chính: Bổ sung toolbar bộ lọc thời gian và chi nhánh chuẩn KiotViet, tính toán chuẩn xác Doanh thu thuần, Giá vốn, Lợi nhuận gộp, Dòng tiền thu/chi sổ quỹ và Tồn quỹ thực tế.\n• Tối ưu hóa đăng nhập tức thì cho tài khoản admin và nhân viên, hỗ trợ mắt xem mật khẩu mượt mà, ghi nhớ đăng nhập tự động.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.6/TT_POS_v1.2.6.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.6/TT_POS_v1.2.6.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.6"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.7/TT_POS_v1.2.7.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.2.7/TT_POS_v1.2.7.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.2.7"
 }
