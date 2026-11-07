@@ -17,10 +17,7 @@ exclude:
   - danh_sach_nha_cung_cap_full.json
   - danh_sach_nguoi_dung_full.json
   - ERP_HeThongBanHang.xlsx
-  - "*.xlsx"
-  - "*.apk"
-  - "*.zip"
-  - "*.ipa"
+  - test.html
   - scratch
   - failed_job_id.txt
   - failed_log.txt
