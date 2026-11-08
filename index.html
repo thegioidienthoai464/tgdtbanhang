@@ -378,7 +378,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.7</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.8</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -7217,6 +7217,136 @@ function chuyenTabSoQuy(loaiQuy) {
   loadDuLieuSoQuy(currentLoaiQuy);
 }
 
+function luuDonHangBanLocal(orderObj) {
+  if (!orderObj) return;
+  const ma = String(orderObj.maDonHang || orderObj.maDon || orderObj.ma_don_hang || '').trim();
+  if (!ma) return;
+
+  // 1. Cập nhật rawDonHangList
+  if (Array.isArray(rawDonHangList)) {
+    const idx = rawDonHangList.findIndex(x => (x.maDonHang || x.maDon || x.ma_don_hang) === ma);
+    if (idx >= 0) rawDonHangList[idx] = { ...rawDonHangList[idx], ...orderObj };
+    else rawDonHangList.unshift(orderObj);
+  }
+
+  // 2. Cập nhật window.RAW_DON_HANG_THANH_GIANG
+  if (typeof window.RAW_DON_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DON_HANG_THANH_GIANG)) {
+    const rIdx = window.RAW_DON_HANG_THANH_GIANG.findIndex(x => (x.maDonHang || x.maDon || x.ma_don || x.ma_don_hang) === ma);
+    if (rIdx >= 0) window.RAW_DON_HANG_THANH_GIANG[rIdx] = { ...window.RAW_DON_HANG_THANH_GIANG[rIdx], ...orderObj };
+    else window.RAW_DON_HANG_THANH_GIANG.unshift(orderObj);
+  }
+
+  // 3. Cập nhật TT_POS_LOCAL_ORDERS trong localStorage
+  try {
+    let localOrders = JSON.parse(localStorage.getItem('TT_POS_LOCAL_ORDERS') || '[]');
+    if (!Array.isArray(localOrders)) localOrders = [];
+    const lIdx = localOrders.findIndex(x => (x.maDonHang || x.maDon || x.ma_don_hang) === ma);
+    if (lIdx >= 0) localOrders[lIdx] = { ...localOrders[lIdx], ...orderObj };
+    else localOrders.unshift(orderObj);
+    localStorage.setItem('TT_POS_LOCAL_ORDERS', JSON.stringify(localOrders.slice(0, 500)));
+  } catch(e) {
+    console.warn("Lỗi lưu TT_POS_LOCAL_ORDERS:", e);
+  }
+
+  // 4. Cập nhật tt_sandbox_don_hang
+  try {
+    let sbOrders = JSON.parse(localStorage.getItem('tt_sandbox_don_hang') || '[]');
+    if (!Array.isArray(sbOrders)) sbOrders = [];
+    const sIdx = sbOrders.findIndex(x => (x.maDonHang || x.maDon || x.ma_don_hang) === ma);
+    if (sIdx >= 0) sbOrders[sIdx] = { ...sbOrders[sIdx], ...orderObj };
+    else sbOrders.unshift(orderObj);
+    localStorage.setItem('tt_sandbox_don_hang', JSON.stringify(sbOrders.slice(0, 500)));
+  } catch(e) {}
+}
+
+function luuPhieuSoQuyLocal(phieuObj) {
+  if (!phieuObj) return;
+  const ma = String(phieuObj.maPhieu || phieuObj.ma_phieu || '').trim();
+  if (!ma) return;
+
+  const itemFormatted = {
+    chiNhanh: phieuObj.chiNhanh || phieuObj.chi_nhanh || "CN02: Chi nhánh Thanh Giang",
+    chi_nhanh: phieuObj.chiNhanh || phieuObj.chi_nhanh || "CN02: Chi nhánh Thanh Giang",
+    maPhieu: ma,
+    ma_phieu: ma,
+    loaiPhieu: String(phieuObj.loaiPhieu || phieuObj.loai_phieu || "THU").toUpperCase(),
+    loai_phieu: String(phieuObj.loaiPhieu || phieuObj.loai_phieu || "THU").toUpperCase(),
+    loaiQuy: phieuObj.loaiQuy || phieuObj.loai_quy || "TIEN_MAT",
+    loai_quy: phieuObj.loaiQuy || phieuObj.loai_quy || "TIEN_MAT",
+    quyNguon: phieuObj.quyNguon || phieuObj.phuongThuc || phieuObj.loaiQuy || "Tiền mặt",
+    ngayGiaoDich: phieuObj.ngayGiaoDich || phieuObj.ngayGD || phieuObj.ngay_gd || (typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(new Date()) : new Date().toLocaleString()),
+    ngayGD: phieuObj.ngayGD || phieuObj.ngayGiaoDich || phieuObj.ngay_gd || (typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(new Date()) : new Date().toLocaleString()),
+    ngay_gd: phieuObj.ngay_gd || phieuObj.ngayGD || phieuObj.ngayGiaoDich || (typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(new Date()) : new Date().toLocaleString()),
+    soTien: Number(phieuObj.soTien || phieuObj.so_tien) || 0,
+    so_tien: Number(phieuObj.soTien || phieuObj.so_tien) || 0,
+    doiTuong: phieuObj.doiTuong || phieuObj.doi_tuong || phieuObj.nguoiNopNhan || "Khách hàng",
+    doi_tuong: phieuObj.doi_tuong || phieuObj.doiTuong || phieuObj.nguoiNopNhan || "Khách hàng",
+    maDoiTuong: phieuObj.maDoiTuong || phieuObj.ma_doi_tuong || "",
+    ma_doi_tuong: phieuObj.ma_doi_tuong || phieuObj.maDoiTuong || "",
+    maChungTu: phieuObj.maChungTu || phieuObj.ma_chung_tu || ma,
+    ma_chung_tu: phieuObj.ma_chung_tu || phieuObj.maChungTu || ma,
+    trangThai: phieuObj.trangThai || phieuObj.trang_thai || "DaThanhToan",
+    trang_thai: phieuObj.trang_thai || phieuObj.trangThai || "DaThanhToan",
+    ghiChu: phieuObj.ghiChu || phieuObj.ghi_chu || "",
+    ghi_chu: phieuObj.ghi_chu || phieuObj.ghiChu || "",
+    hangMuc: phieuObj.hangMuc || phieuObj.hang_muc || phieuObj.lyDoThuChi || "Phiếu thu Tiền khách trả",
+    lyDoThuChi: phieuObj.lyDoThuChi || phieuObj.hangMuc || phieuObj.hang_muc || phieuObj.ghiChu || ""
+  };
+
+  // 1. Cập nhật rawSoQuyData.danhSach
+  if (window.rawSoQuyData && Array.isArray(window.rawSoQuyData.danhSach)) {
+    const idx = window.rawSoQuyData.danhSach.findIndex(x => (x.maPhieu || x.ma_phieu) === ma);
+    if (idx >= 0) window.rawSoQuyData.danhSach[idx] = { ...window.rawSoQuyData.danhSach[idx], ...itemFormatted };
+    else window.rawSoQuyData.danhSach.unshift(itemFormatted);
+  }
+
+  // 2. Cập nhật rawSoQuyAllRecords
+  if (Array.isArray(window.rawSoQuyAllRecords)) {
+    const aIdx = window.rawSoQuyAllRecords.findIndex(x => (x.ma_phieu || x.maPhieu) === ma);
+    if (aIdx >= 0) window.rawSoQuyAllRecords[aIdx] = { ...window.rawSoQuyAllRecords[aIdx], ...itemFormatted };
+    else window.rawSoQuyAllRecords.unshift(itemFormatted);
+  }
+
+  // 3. Cập nhật window.RAW_SO_QUY_THANH_GIANG trong RAM
+  if (typeof window.RAW_SO_QUY_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_SO_QUY_THANH_GIANG)) {
+    const rIdx = window.RAW_SO_QUY_THANH_GIANG.findIndex(x => (x.ma_phieu || x.maPhieu) === ma);
+    if (rIdx >= 0) window.RAW_SO_QUY_THANH_GIANG[rIdx] = { ...window.RAW_SO_QUY_THANH_GIANG[rIdx], ...itemFormatted };
+    else window.RAW_SO_QUY_THANH_GIANG.unshift(itemFormatted);
+  }
+
+  // 4. Lưu bền vững vào localStorage TT_POS_LOCAL_SO_QUY
+  try {
+    let localSQ = JSON.parse(localStorage.getItem('TT_POS_LOCAL_SO_QUY') || '[]');
+    if (!Array.isArray(localSQ)) localSQ = [];
+    const lIdx = localSQ.findIndex(x => (x.maPhieu || x.ma_phieu) === ma);
+    if (lIdx >= 0) localSQ[lIdx] = { ...localSQ[lIdx], ...itemFormatted };
+    else localSQ.unshift(itemFormatted);
+    localStorage.setItem('TT_POS_LOCAL_SO_QUY', JSON.stringify(localSQ.slice(0, 1000)));
+  } catch(e) {
+    console.warn("Lỗi lưu localStorage TT_POS_LOCAL_SO_QUY:", e);
+  }
+}
+
+function xoaPhieuSoQuyLocal(maArr) {
+  const mas = Array.isArray(maArr) ? maArr : [maArr];
+  if (window.rawSoQuyData && Array.isArray(window.rawSoQuyData.danhSach)) {
+    window.rawSoQuyData.danhSach = window.rawSoQuyData.danhSach.filter(x => !mas.includes(x.maPhieu || x.ma_phieu));
+  }
+  if (Array.isArray(window.rawSoQuyAllRecords)) {
+    window.rawSoQuyAllRecords = window.rawSoQuyAllRecords.filter(x => !mas.includes(x.ma_phieu || x.maPhieu));
+  }
+  if (typeof window.RAW_SO_QUY_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_SO_QUY_THANH_GIANG)) {
+    window.RAW_SO_QUY_THANH_GIANG = window.RAW_SO_QUY_THANH_GIANG.filter(x => !mas.includes(x.ma_phieu || x.maPhieu));
+  }
+  try {
+    let localSQ = JSON.parse(localStorage.getItem('TT_POS_LOCAL_SO_QUY') || '[]');
+    if (Array.isArray(localSQ)) {
+      localSQ = localSQ.filter(x => !mas.includes(x.maPhieu || x.ma_phieu));
+      localStorage.setItem('TT_POS_LOCAL_SO_QUY', JSON.stringify(localSQ));
+    }
+  } catch(e) {}
+}
+
 function loadDuLieuSoQuy(loaiQuy) {
   const qFilter = String(loaiQuy || currentLoaiQuy || "ALL").toUpperCase().trim();
   const locCN = document.getElementById('sq-loc-chinhanh')?.value || 'CURRENT';
@@ -7233,20 +7363,167 @@ function loadDuLieuSoQuy(loaiQuy) {
     }
   }
 
-  // 0. Ưu tiên nạp dữ liệu Sổ quỹ thực tế KiotViet Thanh Giang
+  // 0. Ưu tiên nạp và đồng bộ toàn diện dữ liệu Sổ Quỹ (KiotViet + Đơn hàng bán + Phiếu quỹ cục bộ)
   if (typeof window.RAW_SO_QUY_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_SO_QUY_THANH_GIANG) && window.RAW_SO_QUY_THANH_GIANG.length > 0) {
     let tongThu = 0;
     let tongChi = 0;
     let allRows = [];
 
-    window.RAW_SO_QUY_THANH_GIANG.forEach(item => {
+    // Tập hợp nguồn dữ liệu sổ quỹ: KiotViet + TT_POS_LOCAL_SO_QUY + rawSoQuyAllRecords
+    let sourceRecords = [...window.RAW_SO_QUY_THANH_GIANG];
+
+    try {
+      const localSQ = JSON.parse(localStorage.getItem('TT_POS_LOCAL_SO_QUY') || '[]');
+      if (Array.isArray(localSQ)) {
+        localSQ.forEach(item => {
+          const ma = String(item.maPhieu || item.ma_phieu || '').trim();
+          const exIdx = sourceRecords.findIndex(x => (x.ma_phieu || x.maPhieu) === ma);
+          if (exIdx >= 0) sourceRecords[exIdx] = { ...sourceRecords[exIdx], ...item };
+          else sourceRecords.unshift(item);
+        });
+      }
+    } catch(e) {}
+
+    if (Array.isArray(window.rawSoQuyAllRecords)) {
+      window.rawSoQuyAllRecords.forEach(item => {
+        const ma = String(item.ma_phieu || item.maPhieu || '').trim();
+        const exIdx = sourceRecords.findIndex(x => (x.ma_phieu || x.maPhieu) === ma);
+        if (exIdx >= 0) sourceRecords[exIdx] = { ...sourceRecords[exIdx], ...item };
+        else sourceRecords.unshift(item);
+      });
+    }
+
+    // TỰ ĐỘNG ĐỒNG BỘ CÁC ĐƠN HÀNG BÁN ĐÃ THU TIỀN VÀO SỔ QUỸ (Tra cứu O(1) bằng Set siêu tốc)
+    try {
+      const existingSQSet = new Set();
+      sourceRecords.forEach(sq => {
+        const p1 = String(sq.maChungTu || sq.ma_chung_tu || '').trim();
+        const p2 = String(sq.maPhieu || sq.ma_phieu || '').trim();
+        if (p1) {
+          existingSQSet.add(p1);
+          if (p1.startsWith('HD')) existingSQSet.add('TTHD' + p1.replace(/^HD/, ''));
+          if (p1.startsWith('TH')) existingSQSet.add('PCTH' + p1.replace(/^TH/, ''));
+        }
+        if (p2) {
+          existingSQSet.add(p2);
+          if (p2.startsWith('TTHD')) existingSQSet.add('HD' + p2.replace(/^TTHD/, ''));
+          if (p2.startsWith('PCTH')) existingSQSet.add('TH' + p2.replace(/^PCTH/, ''));
+        }
+      });
+
+      const allSalesOrders = [
+        ...(Array.isArray(rawDonHangList) ? rawDonHangList : []),
+        ...((typeof window.RAW_DON_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DON_HANG_THANH_GIANG)) ? window.RAW_DON_HANG_THANH_GIANG : []),
+        ...((typeof getSandboxCache === 'function') ? getSandboxCache('don_hang') : JSON.parse(localStorage.getItem('tt_sandbox_don_hang') || '[]')),
+        ...(JSON.parse(localStorage.getItem('TT_POS_LOCAL_ORDERS') || '[]'))
+      ];
+
+      const seenOrderCodes = new Set();
+      allSalesOrders.forEach(ord => {
+        const maHD = String(ord.maDonHang || ord.maDon || ord.ma_don_hang || '').trim();
+        if (!maHD || seenOrderCodes.has(maHD)) return;
+        seenOrderCodes.add(maHD);
+
+        const payAmount = Number(ord.khachTra ?? ord.khach_tra ?? (ord.trangThai === 'Hoàn thành' ? ord.tongTien : 0)) || 0;
+        if (payAmount <= 0) return;
+
+        const maTTHD = 'TTHD' + maHD.replace(/^HD/, '');
+        if (existingSQSet.has(maHD) || existingSQSet.has(maTTHD)) return;
+        existingSQSet.add(maHD);
+        existingSQSet.add(maTTHD);
+
+        const hinhThuc = String(ord.hinhThucTT || ord.hinh_thuc_tt || 'TIEN_MAT').toUpperCase();
+        const isCK = (hinhThuc === 'TAI_KHOAN' || hinhThuc === 'NGAN_HANG' || hinhThuc === 'THE');
+        const autoReceipt = {
+          chiNhanh: ord.chiNhanh || "CN02: Chi nhánh Thanh Giang",
+          chi_nhanh: ord.chiNhanh || "CN02: Chi nhánh Thanh Giang",
+          maPhieu: maTTHD,
+          ma_phieu: maTTHD,
+          maChungTu: maHD,
+          ma_chung_tu: maHD,
+          loaiChungTu: "HOA_DON",
+          loaiPhieu: "THU",
+          loai_phieu: "THU",
+          loaiQuy: isCK ? "TAI_KHOAN" : "TIEN_MAT",
+          loai_quy: isCK ? "TAI_KHOAN" : "TIEN_MAT",
+          quyNguon: isCK ? "Tài khoản ngân hàng" : "Tiền mặt",
+          ngayGiaoDich: ord.ngayBan || ord.thoiGian || ord.ngayTao || (typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(new Date()) : new Date().toLocaleString()),
+          ngayGD: ord.ngayBan || ord.thoiGian || ord.ngayTao || (typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(new Date()) : new Date().toLocaleString()),
+          ngay_gd: ord.ngayBan || ord.thoiGian || ord.ngayTao || (typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(new Date()) : new Date().toLocaleString()),
+          soTien: payAmount,
+          so_tien: payAmount,
+          doiTuong: ord.tenKH || ord.ten_kh || "Khách lẻ",
+          doi_tuong: ord.tenKH || ord.ten_kh || "Khách lẻ",
+          maDoiTuong: ord.maKH || ord.ma_kh || "KHACHLE",
+          ma_doi_tuong: ord.maKH || ord.ma_kh || "KHACHLE",
+          trangThai: "DaThanhToan",
+          trang_thai: "DaThanhToan",
+          hangMuc: "Phiếu thu Tiền khách trả",
+          hang_muc: "Phiếu thu Tiền khách trả",
+          lyDoThuChi: "Phiếu thu Tiền khách trả",
+          ghiChu: `Phiếu thu Tiền khách trả đơn hàng ${maHD} - KH: ${ord.tenKH || ord.ten_kh || 'Khách lẻ'}`
+        };
+        sourceRecords.unshift(autoReceipt);
+      });
+    } catch(e) {
+      console.warn("Lỗi auto-sync đơn hàng sang sổ quỹ:", e);
+    }
+
+    // TỰ ĐỘNG ĐỒNG BỘ PHIẾU CHI HOÀN TIỀN TỪ KHÁCH TRẢ HÀNG
+    try {
+      const allReturns = [
+        ...(Array.isArray(rawPhieuTraHangList) ? rawPhieuTraHangList : []),
+        ...(JSON.parse(localStorage.getItem('TT_POS_LOCAL_RETURNS') || '[]'))
+      ];
+      allReturns.forEach(ret => {
+        const maPT = String(ret.maPhieuTra || ret.ma_phieu_tra || '').trim();
+        const refund = Number(ret.tongTienHoan ?? ret.daTra) || 0;
+        if (!maPT || refund <= 0) return;
+
+        const maPCTH = 'PCTH' + maPT.replace(/^TH/, '');
+        if (existingSQSet.has(maPT) || existingSQSet.has(maPCTH)) return;
+        existingSQSet.add(maPT);
+        existingSQSet.add(maPCTH);
+
+        sourceRecords.unshift({
+          chiNhanh: ret.chiNhanh || "CN02: Chi nhánh Thanh Giang",
+          chi_nhanh: ret.chiNhanh || "CN02: Chi nhánh Thanh Giang",
+          maPhieu: maPCTH,
+          ma_phieu: maPCTH,
+          maChungTu: maPT,
+          ma_chung_tu: maPT,
+          loaiPhieu: "CHI",
+          loai_phieu: "CHI",
+          loaiQuy: (ret.hinhThucTT === 'TAI_KHOAN' || ret.hinhThucTT === 'NGAN_HANG') ? "TAI_KHOAN" : "TIEN_MAT",
+          loai_quy: (ret.hinhThucTT === 'TAI_KHOAN' || ret.hinhThucTT === 'NGAN_HANG') ? "TAI_KHOAN" : "TIEN_MAT",
+          quyNguon: (ret.hinhThucTT === 'TAI_KHOAN' || ret.hinhThucTT === 'NGAN_HANG') ? "Tài khoản ngân hàng" : "Tiền mặt",
+          ngayGiaoDich: ret.ngayTra || ret.thoiGian || (typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(new Date()) : new Date().toLocaleString()),
+          ngayGD: ret.ngayTra || ret.thoiGian || (typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(new Date()) : new Date().toLocaleString()),
+          ngay_gd: ret.ngayTra || ret.thoiGian || (typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(new Date()) : new Date().toLocaleString()),
+          soTien: refund,
+          so_tien: refund,
+          doiTuong: ret.tenKH || "Khách hàng",
+          doi_tuong: ret.tenKH || "Khách hàng",
+          maDoiTuong: ret.maKH || "",
+          ma_doi_tuong: ret.maKH || "",
+          trangThai: "DaThanhToan",
+          trang_thai: "DaThanhToan",
+          hangMuc: "Phiếu chi hoàn tiền trả hàng",
+          hang_muc: "Phiếu chi hoàn tiền trả hàng",
+          lyDoThuChi: "Phiếu chi hoàn tiền trả hàng",
+          ghiChu: `Hoàn tiền phiếu trả hàng ${maPT}`
+        });
+      });
+    } catch(e) {}
+
+    sourceRecords.forEach(item => {
       if (targetCN !== 'ALL' && typeof laCungChiNhanh === 'function' && !laCungChiNhanh(item.chi_nhanh || item.chiNhanh, targetCN)) {
         return;
       }
 
       let lp = String(item.loai_phieu || item.loaiPhieu || "THU").toUpperCase();
-      let pt = String(item.phuong_thuc || item.phuongThuc || item.loai_quy || item.loaiQuy || "Tiền mặt").trim();
-      let isTienMat = pt.toLowerCase().includes('mặt') || (item.loaiQuy === 'TIEN_MAT');
+      let pt = String(item.phuong_thuc || item.phuongThuc || item.quyNguon || item.loai_quy || item.loaiQuy || "Tiền mặt").trim();
+      let isTienMat = pt.toLowerCase().includes('mặt') || (item.loaiQuy === 'TIEN_MAT') || (item.loai_quy === 'TIEN_MAT');
       let lq = isTienMat ? "TIEN_MAT" : "TAI_KHOAN";
 
       let pass = true;
@@ -7293,6 +7570,13 @@ function loadDuLieuSoQuy(loaiQuy) {
       }
     });
 
+    // Sắp xếp theo thứ tự thời gian mới nhất lên đầu
+    allRows.sort((a, b) => {
+      const tA = (typeof parseNgayGioSort === 'function') ? parseNgayGioSort(a.ngayGD) : (new Date(a.ngayGD).getTime() || 0);
+      const tB = (typeof parseNgayGioSort === 'function') ? parseNgayGioSort(b.ngayGD) : (new Date(b.ngayGD).getTime() || 0);
+      return tB - tA;
+    });
+
     const res = {
       dauKy: 0,
       tongThu: tongThu,
@@ -7302,7 +7586,7 @@ function loadDuLieuSoQuy(loaiQuy) {
     };
     window.rawSoQuyData = res;
     hienThiBangSoQuy(res);
-    console.log(`⚡ Đã nạp ${allRows.length} phiếu sổ quỹ thực tế của Thanh Giang từ KiotViet!`);
+    console.log(`⚡ Đã nạp và đồng bộ ${allRows.length} phiếu sổ quỹ thực tế của Thanh Giang!`);
     return;
   }
 
@@ -8376,25 +8660,26 @@ function formatVND(amount) {
           });
         }
 
-        // Cập nhật Sổ Quỹ bộ nhớ client ngay tức khắc
-        window.rawSoQuyAllRecords = window.rawSoQuyAllRecords || [];
+        // Cập nhật Sổ Quỹ bộ nhớ client & lưu bền vững ngay tức khắc
         listPhieuThu.forEach(pt => {
-          window.rawSoQuyAllRecords.unshift({
-            chiNhanh: pt.chi_nhanh,
-            maPhieu: pt.ma_phieu,
-            loaiPhieu: pt.loai_phieu,
-            loaiQuy: pt.loai_quy,
-            quyNguon: pt.loai_quy,
-            ngayGiaoDich: ngayBanStr,
-            ngayGD: ngayBanStr,
-            soTien: pt.so_tien,
-            doiTuong: pt.doi_tuong,
-            maDoiTuong: pt.ma_doi_tuong,
-            maChungTu: pt.ma_chung_tu,
-            trangThai: pt.trang_thai,
-            ghiChu: pt.ghi_chu,
-            lyDoThuChi: pt.ghi_chu
-          });
+          if (typeof luuPhieuSoQuyLocal === 'function') {
+            luuPhieuSoQuyLocal({
+              chiNhanh: pt.chi_nhanh,
+              maPhieu: pt.ma_phieu,
+              loaiPhieu: pt.loai_phieu,
+              loaiQuy: pt.loai_quy,
+              quyNguon: pt.loai_quy,
+              ngayGiaoDich: ngayBanStr,
+              ngayGD: ngayBanStr,
+              soTien: pt.so_tien,
+              doiTuong: pt.doi_tuong,
+              maDoiTuong: pt.ma_doi_tuong,
+              maChungTu: pt.ma_chung_tu,
+              trangThai: pt.trang_thai,
+              ghiChu: pt.ghi_chu,
+              lyDoThuChi: pt.ghi_chu
+            });
+          }
         });
 
         // 4. LƯU ĐƠN HÀNG VÀO BỘ NHỚ VÀ LOCALSTORAGE TRƯỚC HẾT (OPTIMISTIC / LOCAL-FIRST)
@@ -17395,14 +17680,16 @@ function formatVND(amount) {
       else rawKiemKhoList.unshift(phieu);
 
       // 4. Gửi lưu lên Google Apps Script backend
-      google.script.run
-        .withSuccessHandler(function(res) {
-          console.log("Đã lưu phiếu kiểm kho backend:", res);
-        })
-        .withFailureHandler(function(err) {
-          console.error("Lỗi lưu phiếu kiểm kho backend:", err);
-        })
-        .apiLuuPhieuKiemKho(phieu);
+      if (typeof google !== 'undefined' && google?.script?.run && typeof google.script.run.apiLuuPhieuKiemKho === 'function') {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            console.log("Đã lưu phiếu kiểm kho backend:", res);
+          })
+          .withFailureHandler(function(err) {
+            console.error("Lỗi lưu phiếu kiểm kho backend:", err);
+          })
+          .apiLuuPhieuKiemKho(phieu);
+      }
 
       showNotification(laLuuTam ? "Đã lưu tạm phiếu kiểm kho thành công!" : "Đã hoàn tất kiểm kho và cân bằng tồn kho!");
       
@@ -19102,28 +19389,43 @@ function formatVND(amount) {
               }).eq('ma_doi_tac', payload.maNCC).then(() => {});
             }
 
-            // 3. Cập nhật dữ liệu Sổ Quỹ trong bộ nhớ đệm
+            // 3. Cập nhật dữ liệu Sổ Quỹ & lưu bền vững
+            const pcObjNCC = {
+              chiNhanh: payload.chiNhanh || "CN01: Trụ sở chính",
+              chi_nhanh: payload.chiNhanh || "CN01: Trụ sở chính",
+              maPhieu: maPhieuChi,
+              ma_phieu: maPhieuChi,
+              loaiPhieu: "CHI",
+              loai_phieu: "CHI",
+              loaiQuy: payload.loaiQuy || "TIEN_MAT",
+              loai_quy: payload.loaiQuy || "TIEN_MAT",
+              quyNguon: payload.loaiQuy === 'TAI_KHOAN' ? (payload.nganHang || 'Tài khoản ngân hàng') : 'Tiền mặt',
+              ngayGiaoDich: ngayGD_Str,
+              ngayGD: ngayGD_Str,
+              ngay_gd: ngayGD_Str,
+              ngay: ngayGD_ISO,
+              soTien: Number(payload.soTien) || 0,
+              so_tien: Number(payload.soTien) || 0,
+              doiTuong: tenNCC || "Nhà cung cấp",
+              doi_tuong: tenNCC || "Nhà cung cấp",
+              maDoiTuong: payload.maNCC,
+              ma_doi_tuong: payload.maNCC,
+              maChungTu: "TT_CONG_NO",
+              ma_chung_tu: "TT_CONG_NO",
+              trangThai: "DaThanhToan",
+              trang_thai: "DaThanhToan",
+              nhanVien: nguoiChi,
+              nguoiThuChi: nguoiChi,
+              taiKhoanNH: payload.nganHang || '',
+              ghiChu: payload.ghiChu,
+              ghi_chu: payload.ghiChu,
+              lyDoThuChi: payload.ghiChu,
+              hangMuc: "Chi trả tiền hàng cho NCC"
+            };
+            if (typeof luuPhieuSoQuyLocal === 'function') {
+              luuPhieuSoQuyLocal(pcObjNCC);
+            }
             if (window.rawSoQuyData && Array.isArray(window.rawSoQuyData.danhSach)) {
-              window.rawSoQuyData.danhSach.unshift({
-                chiNhanh: payload.chiNhanh || "CN01: Trụ sở chính",
-                maPhieu: maPhieuChi,
-                loaiPhieu: "CHI",
-                loaiQuy: payload.loaiQuy || "TIEN_MAT",
-                quyNguon: payload.loaiQuy || "TIEN_MAT",
-                ngayGiaoDich: ngayGD_Str,
-                ngayGD: ngayGD_Str,
-                ngay: ngayGD_ISO,
-                soTien: Number(payload.soTien) || 0,
-                doiTuong: "Nhà cung cấp",
-                maDoiTuong: payload.maNCC,
-                maChungTu: "TT_CONG_NO",
-                trangThai: "DaThanhToan",
-                nhanVien: nguoiChi,
-                nguoiThuChi: nguoiChi,
-                taiKhoanNH: payload.nganHang || '',
-                ghiChu: payload.ghiChu,
-                lyDoThuChi: payload.ghiChu
-              });
               window.rawSoQuyData.tongChi = (window.rawSoQuyData.tongChi || 0) + Number(payload.soTien);
               window.rawSoQuyData.tonQuy = (window.rawSoQuyData.tongThu || 0) - window.rawSoQuyData.tongChi;
               if (typeof hienThiBangSoQuy === 'function') {
@@ -20949,13 +21251,17 @@ function formatVND(amount) {
         if (!window.rawSoQuyData) window.rawSoQuyData = { danhSach: [] };
         if (!Array.isArray(window.rawSoQuyData.danhSach)) window.rawSoQuyData.danhSach = [];
 
-        if (isEditing) {
-          const idx = window.rawSoQuyData.danhSach.findIndex(x => x.maPhieu === maPhieu);
-          if (idx > -1) {
-            window.rawSoQuyData.danhSach[idx] = Object.assign(window.rawSoQuyData.danhSach[idx], payload);
-          }
+        if (typeof luuPhieuSoQuyLocal === 'function') {
+          luuPhieuSoQuyLocal(payload);
         } else {
-          window.rawSoQuyData.danhSach.unshift(payload);
+          if (isEditing) {
+            const idx = window.rawSoQuyData.danhSach.findIndex(x => x.maPhieu === maPhieu);
+            if (idx > -1) {
+              window.rawSoQuyData.danhSach[idx] = Object.assign(window.rawSoQuyData.danhSach[idx], payload);
+            }
+          } else {
+            window.rawSoQuyData.danhSach.unshift(payload);
+          }
         }
 
         // Cập nhật rawSoQuyAllRecords nếu có
@@ -21441,7 +21747,10 @@ function formatVND(amount) {
           }
         }
 
-        // 3. Cập nhật dữ liệu trong RAM
+        // 3. Cập nhật dữ liệu trong RAM & Storage
+        if (typeof xoaPhieuSoQuyLocal === 'function') {
+          xoaPhieuSoQuyLocal(listMa);
+        }
         if (window.rawSoQuyData && Array.isArray(window.rawSoQuyData.danhSach)) {
           window.rawSoQuyData.danhSach = window.rawSoQuyData.danhSach.filter(p => !listMa.includes(p.maPhieu));
         }
@@ -26210,8 +26519,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.0.8";
-    const APP_CLIENT_BUILD = 9;
+    const APP_CLIENT_VERSION = "1.4.8";
+    const APP_CLIENT_BUILD = 43;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
@@ -29170,10 +29479,33 @@ function formatVND(amount) {
       // 1. Cập nhật RAM (Client Memory)
       d.ngayBan = ngayBanFormatted;
       d.ngay_ban = ngayBanFormatted;
+      d.thoiGian = ngayBanFormatted;
       d.nhanVien = nguoiBanMoi;
       d.nhan_vien = nguoiBanMoi;
       d.nguoiBan = nguoiBanMoi;
       d.ghiChu = ghiChuMoi;
+
+      // 2. Lưu bền vững vào tất cả các tầng lưu trữ đơn hàng (tránh bị loadLichSuDonHang ghi đè)
+      if (typeof luuDonHangBanLocal === 'function') {
+        luuDonHangBanLocal(d);
+      }
+
+      // 3. Cập nhật đồng bộ phiếu thu tương ứng trong Sổ Quỹ
+      if (typeof luuPhieuSoQuyLocal === 'function') {
+        const targetSQList = [
+          ...(window.rawSoQuyData?.danhSach || []),
+          ...(window.rawSoQuyAllRecords || []),
+          ...((typeof window.RAW_SO_QUY_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_SO_QUY_THANH_GIANG)) ? window.RAW_SO_QUY_THANH_GIANG : [])
+        ];
+        targetSQList.forEach(sq => {
+          if ((sq.maChungTu === maDon || sq.ma_chung_tu === maDon) || (sq.maPhieu === ('TTHD' + maDon.replace(/^HD/, '')))) {
+            sq.ngayGD = ngayBanFormatted;
+            sq.ngay_gd = ngayBanFormatted;
+            sq.ngayGiaoDich = ngayBanFormatted;
+            luuPhieuSoQuyLocal(sq);
+          }
+        });
+      }
 
       // Cập nhật modal chi tiết nếu đang xem đơn này
       if (window.currentViewingDonHang && (window.currentViewingDonHang.maDonHang === maDon || window.currentViewingDonHang.ma_don_hang === maDon)) {
@@ -30442,6 +30774,30 @@ function loadSoQuy(filter) {
           } else if (typeof renderTableNCC === 'function') {
             renderTableNCC();
           }
+          // Lưu lập tức vào Cache cục bộ (IndexedDB & LocalStorage) để khi F5 luôn có 100%
+          try {
+            let localNCCs = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NCC') || '[]');
+            if (!Array.isArray(localNCCs)) localNCCs = [];
+            const exN = localNCCs.findIndex(n => (n.maDoiTac || n.maNCC) === ma);
+            if (exN >= 0) localNCCs[exN] = { ...localNCCs[exN], ...payload };
+            else localNCCs.unshift(payload);
+            localStorage.setItem('TT_POS_LOCAL_NCC', JSON.stringify(localNCCs.slice(0, 500)));
+          } catch(e) {}
+
+          if (typeof saveToSandboxCache === 'function') {
+            saveToSandboxCache('dm_doitac', {
+              ma_doi_tac: ma,
+              ten_doi_tac: ten,
+              loai_doi_tac: 'NCC',
+              so_dien_thoai: sdt,
+              dia_chi: dc,
+              gioi_tinh: gioiTinh,
+              ngay_sinh: ngaySinh || null,
+              cong_no: 0,
+              trang_thai: 'HoatDong'
+            });
+          }
+
           // Tự động điền NCC vào ô tìm kiếm nhập hàng
           const nhapNccSearch = document.getElementById('nhap-ncc-search');
           const nhapMaNCC = document.getElementById('nhap-mancc');
@@ -33609,28 +33965,44 @@ function loadSoQuy(filter) {
         if (elNo) elNo.innerText = newNo.toLocaleString('vi-VN') + ' đ';
       }
 
-      // Thêm phiếu thu vào sổ quỹ local
+      // Thêm phiếu thu vào sổ quỹ local & lưu bền vững
       const maPT = "PT" + Date.now().toString().slice(-6);
+      const ptObjThuNo = {
+        maPhieu: maPT,
+        ma_phieu: maPT,
+        ngayGD: ngayGD_Str,
+        ngayGiaoDich: ngayGD_Str,
+        ngay_gd: ngayGD_Str,
+        ngay: ngayGD_ISO,
+        loaiPhieu: "THU",
+        loai_phieu: "THU",
+        loaiQuy: hinhThuc,
+        loai_quy: hinhThuc,
+        quyNguon: hinhThuc === 'TAI_KHOAN' ? (nganHang || 'Tài khoản ngân hàng') : 'Tiền mặt',
+        soTien: soTien,
+        so_tien: soTien,
+        doiTuong: ten || "Khách hàng",
+        doi_tuong: ten || "Khách hàng",
+        maDoiTuong: ma,
+        ma_doi_tuong: ma,
+        maChungTu: "THU_NO_KH",
+        ma_chung_tu: "THU_NO_KH",
+        lyDoThuChi: fullGhiChu,
+        hangMuc: "Thu tiền nợ khách hàng",
+        ghiChu: fullGhiChu,
+        ghi_chu: fullGhiChu,
+        nhanVien: nguoiNhan,
+        nguoiThuChi: nguoiNhan,
+        chiNhanh: chiNhanh,
+        chi_nhanh: chiNhanh,
+        trangThai: "DaThanhToan",
+        trang_thai: "DaThanhToan",
+        taiKhoanNH: nganHang
+      };
+      if (typeof luuPhieuSoQuyLocal === 'function') {
+        luuPhieuSoQuyLocal(ptObjThuNo);
+      }
       if (typeof rawSoQuyData !== 'undefined' && Array.isArray(rawSoQuyData.danhSach)) {
-        rawSoQuyData.danhSach.unshift({
-          maPhieu: maPT,
-          ngayGD: ngayGD_Str,
-          ngayGiaoDich: ngayGD_Str,
-          ngay: ngayGD_ISO,
-          loaiPhieu: "THU",
-          loaiQuy: hinhThuc,
-          quyNguon: hinhThuc,
-          soTien: soTien,
-          doiTuong: "Khách hàng",
-          maDoiTuong: ma,
-          maChungTu: "THU_NO_KH",
-          lyDoThuChi: fullGhiChu,
-          ghiChu: fullGhiChu,
-          nhanVien: nguoiNhan,
-          nguoiThuChi: nguoiNhan,
-          chiNhanh: chiNhanh,
-          taiKhoanNH: nganHang
-        });
         rawSoQuyData.tongThu = (rawSoQuyData.tongThu || 0) + soTien;
         rawSoQuyData.tonQuy = (rawSoQuyData.tongThu || 0) - (rawSoQuyData.tongChi || 0);
         if (typeof hienThiBangSoQuy === 'function') {

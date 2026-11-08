@@ -1,10 +1,10 @@
 {
-  "version": "1.4.7",
-  "build_number": 42,
+  "version": "1.4.8",
+  "build_number": 43,
   "force_update": false,
-  "release_notes": "• Khắc phục triệt để lỗi không lưu được chỉnh sửa Đơn nhập hàng NCC (phiếu PN003232 và các đơn nhập hàng khác).\n• Tự động đồng bộ và lưu trữ cục bộ (TT_POS_LOCAL_NHAP_HANG) kết hợp bộ nhớ RAM giúp việc cập nhật/sửa đơn nhập không bị ghi đè khi tải lại danh sách.\n• Chuẩn hóa dữ liệu PN003232 chứa đầy đủ 8 mặt hàng (tổng tiền 595.000 đ) và cập nhật số lượng tồn kho chính xác cho 7 sản phẩm đi kèm tại chi nhánh Thanh Giang (CN02).\n• Tối ưu cơ chế trừ bù số lượng khi chỉnh sửa đơn nhập hàng (tránh tính đúp tồn kho).",
+  "release_notes": "• Tự động đồng bộ tất cả đơn hàng đã thanh toán vào Sổ quỹ tiền mặt và tài khoản (tra cứu O(1) bằng Set siêu tốc, không sót bất kỳ đơn bán nào).\n• Đã ghi nhận đầy đủ phiếu thu cho đơn HD21592894 (+40.000 đ) và HD15417028 (+9.550.000 đ) ngày 06/11/2026 trong Sổ Quỹ Tiền Mặt CN02.\n• Khắc phục triệt để lỗi sửa đơn hàng bị hoàn tác: Lưu bền vững đa tầng (RAM, TT_POS_LOCAL_ORDERS, tt_sandbox_don_hang) và tự động đồng bộ ngày giờ sang phiếu thu trong Sổ Quỹ.\n• Bổ sung lưu trữ cục bộ bền vững cho Sổ Quỹ (TT_POS_LOCAL_SO_QUY), phiếu thu nợ khách, phiếu chi trả nợ NCC, và lưu đối tác NCC.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.7/TT_POS_v1.4.7.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.7/TT_POS_v1.4.7.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.4.7"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.8/TT_POS_v1.4.8.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.8/TT_POS_v1.4.8.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.4.8"
 }
