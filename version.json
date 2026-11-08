@@ -1,10 +1,10 @@
 {
-  "version": "1.4.4",
-  "build_number": 39,
+  "version": "1.4.5",
+  "build_number": 40,
   "force_update": false,
-  "release_notes": "• Tích hợp tính năng 'Khôi phục tồn gốc KiotViet' trực tiếp tại Tab 3.1 giúp phục hồi 100% số lượng tồn kho và IMEI về nguyên bản ban đầu chỉ với 1 click.\n• Đồng bộ lưu bền vững tồn kho chi nhánh khi chỉnh sửa hàng hóa (Tab 3.1) và cân bằng kho (Tab 3.3), tự động phục hồi các IMEI bị đánh dấu bán nhầm khi dán lại danh sách IMEI.",
+  "release_notes": "• Chuẩn hóa đồng bộ 100% định dạng ngày giờ chuẩn Việt Nam (DD/MM/YYYY HH:mm:ss) trên toàn hệ thống (Đơn hàng POS, Sổ quỹ, Thẻ kho, Nhập hàng NCC).\n• Nâng cấp bộ lọc ngày thông minh tại tiêu đề cột Lịch sử đơn hàng (Tab 2.5): tự động so khớp linh hoạt cả dd/mm/yyyy, yyyy-mm-dd, dd/mm giúp tìm kiếm và hiển thị đầy đủ mọi hóa đơn không bao giờ bị ẩn sót.\n• Nâng cấp cơ chế phục hồi và đồng bộ đơn hàng Supabase Cloud, tự động hoàn thiện chi tiết sản phẩm cho các đơn ghi nhận từ Sổ Quỹ.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.4/TT_POS_v1.4.4.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.4/TT_POS_v1.4.4.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.4.4"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.5/TT_POS_v1.4.5.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.5/TT_POS_v1.4.5.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.4.5"
 }

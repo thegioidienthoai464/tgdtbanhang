@@ -44,6 +44,7 @@
     // ====================================================================
     function parseDateTimeGlobal(dateVal) {
       if (!dateVal) return null;
+      if (dateVal && typeof dateVal.getTime === 'function' && !isNaN(dateVal.getTime())) return dateVal;
       if (dateVal instanceof Date && !isNaN(dateVal.getTime())) return dateVal;
       if (typeof dateVal === 'number' && !isNaN(dateVal)) return new Date(dateVal);
       if (typeof dateVal === 'string') {
@@ -377,7 +378,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.4</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.5</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -6833,16 +6834,27 @@
     window.currentUser = null;
 
     /* ====================================================================
-     * TIỆN ÍCH CHUYỂN ĐỔI NGÀY GIỜ CHUẨN ĐỊA PHƯƠNG (VIỆT NAM / LOCAL TIME)
+     * TIỆN ÍCH CHUYỂN ĐỔI NGÀY GIỜ CHUẨN ĐỊA PHƯƠNG (VIỆT NAM / LOCAL TIME: DD/MM/YYYY HH:mm:ss)
      * ==================================================================== */
     function formatNgayGioLocal(raw) {
       if (!raw) return '';
-      const d = parseDateTimeGlobal(raw);
+      let d = null;
+      if (raw && typeof raw.getTime === 'function' && !isNaN(raw.getTime())) {
+        d = raw;
+      } else {
+        d = typeof parseDateTimeGlobal === 'function' ? parseDateTimeGlobal(raw) : null;
+      }
       if (d && !isNaN(d.getTime())) {
         const pad = n => String(n).padStart(2, '0');
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
       }
       const str = String(raw).trim();
+      const mIso = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T\s](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+      if (mIso) {
+        const pad = n => String(n).padStart(2, '0');
+        const timePart = mIso[4] ? ` ${pad(mIso[4])}:${pad(mIso[5]||0)}:${pad(mIso[6]||0)}` : '';
+        return `${pad(mIso[3])}/${pad(mIso[2])}/${mIso[1]}${timePart}`;
+      }
       return str.replace('T', ' ').slice(0, 19);
     }
 
@@ -8181,11 +8193,11 @@ function formatVND(amount) {
       if (posNgayBanVal) {
         try {
           const dObj = new Date(posNgayBanVal);
-          ngayBanISO = dObj.toISOString();
+          ngayBanISO = !isNaN(dObj.getTime()) ? dObj.toISOString() : new Date().toISOString();
         } catch(e) {
           ngayBanISO = new Date().toISOString();
         }
-        ngayBanStr = posNgayBanVal.replace('T', ' ') + (posNgayBanVal.length === 16 ? ':00' : '');
+        ngayBanStr = formatNgayGioLocal(posNgayBanVal);
       } else {
         ngayBanISO = new Date().toISOString();
         ngayBanStr = formatNgayGioLocal(new Date());
@@ -20318,7 +20330,7 @@ function formatVND(amount) {
             </td>
             <td class="px-2.5 py-2 font-mono font-bold text-blue-600 whitespace-nowrap">${p.maPhieu || ''}</td>
             <td class="px-2.5 py-2 whitespace-nowrap text-center">${chungTuBadge}</td>
-            <td class="px-2.5 py-2 text-slate-500 font-mono text-[11px] whitespace-nowrap">${p.ngayGD || ''}</td>
+            <td class="px-2.5 py-2 text-slate-500 font-mono text-[11px] whitespace-nowrap">${(typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(p.ngayGD) : p.ngayGD) || ''}</td>
             <td class="px-2.5 py-2 text-center whitespace-nowrap">
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isThu ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
                 ${isThu ? 'Thu tiền' : 'Chi tiền'}
@@ -28150,7 +28162,7 @@ function formatVND(amount) {
         return `
           <tr class="hover:bg-slate-50 border-b transition">
             <td class="p-2.5 text-center text-slate-400 font-mono">${idx + 1}</td>
-            <td class="p-2.5 font-mono text-slate-600">${tx.ngay || '-'}</td>
+            <td class="p-2.5 font-mono text-slate-600">${(typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(tx.ngay) : tx.ngay) || '-'}</td>
             <td class="p-2.5">
               <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${badgeClass} inline-flex items-center space-x-1">
                 <i class="fa-solid ${icon} text-[9px]"></i><span>${tx.tenLoaiGD || tx.loaiGD}</span>
@@ -28425,11 +28437,13 @@ function formatVND(amount) {
               tenKH = sq.doiTuong || sq.doi_tuong;
             }
             const tien = Number(sq.soTien || sq.so_tien || 0);
+            const sqDateRaw = sq.ngayGiaoDich || sq.ngayGD || sq.ngay_gd || new Date();
+            const sqDateFormatted = (typeof formatNgayGioLocal === 'function') ? formatNgayGioLocal(sqDateRaw) : String(sqDateRaw);
             mergedMap.set(maCT, {
               maDonHang: maCT,
               maDon: maCT,
-              ngayBan: sq.ngayGiaoDich || sq.ngayGD || sq.ngay_gd || (typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(new Date()) : ''),
-              thoiGian: sq.ngayGiaoDich || sq.ngayGD || sq.ngay_gd,
+              ngayBan: sqDateFormatted,
+              thoiGian: sqDateFormatted,
               maKH: sq.maDoiTuong || sq.ma_doi_tuong || 'KHACHLE',
               tenKH: tenKH,
               soDienThoai: '',
@@ -28487,9 +28501,12 @@ function formatVND(amount) {
               let hasNew = false;
               data.forEach(d => {
                 const ma = String(d.ma_don_hang || '').trim();
-                if (ma && !ma.startsWith('PNH') && !ma.startsWith('DDH') && !mergedMap.has(ma)) {
-                  mergedMap.set(ma, chuanHoaDonHangObj(d));
-                  hasNew = true;
+                if (ma && !ma.startsWith('PNH') && !ma.startsWith('DDH')) {
+                  const existing = mergedMap.get(ma);
+                  if (!existing || (!existing.chiTietSanPham?.length && (d.chi_tiet_san_pham || d.chiTietSanPham))) {
+                    mergedMap.set(ma, chuanHoaDonHangObj(d));
+                    hasNew = true;
+                  }
                 }
               });
               if (hasNew) {
@@ -28559,8 +28576,32 @@ function formatVND(amount) {
 
         if (fMa && !ma.toLowerCase().includes(fMa)) return false;
 
-        const ngayStr = String(d.ngayBan || d.thoiGian || d.ngayTao || d.created_at || '');
-        if (fNgay && !ngayStr.toLowerCase().includes(fNgay)) return false;
+        if (fNgay) {
+          const ngayRaw = String(d.ngayBan || d.thoiGian || d.ngayTao || d.created_at || '').trim();
+          const ngayVN = typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(ngayRaw) : ngayRaw;
+          let isMatchDate = ngayRaw.toLowerCase().includes(fNgay) || ngayVN.toLowerCase().includes(fNgay);
+          if (!isMatchDate) {
+            const dObj = typeof parseDateTimeGlobal === 'function' ? parseDateTimeGlobal(ngayRaw) : null;
+            if (dObj && !isNaN(dObj.getTime())) {
+              const pad = n => String(n).padStart(2, '0');
+              const day = dObj.getDate();
+              const month = dObj.getMonth() + 1;
+              const year = dObj.getFullYear();
+              const variants = [
+                `${pad(day)}/${pad(month)}/${year}`,
+                `${day}/${month}/${year}`,
+                `${pad(day)}/${pad(month)}`,
+                `${day}/${month}`,
+                `${year}-${pad(month)}-${pad(day)}`,
+                `${year}/${pad(month)}/${pad(day)}`
+              ];
+              if (variants.some(v => v.includes(fNgay) || fNgay.includes(v))) {
+                isMatchDate = true;
+              }
+            }
+          }
+          if (!isMatchDate) return false;
+        }
 
         if (fKH) {
           const khStr = (String(d.tenKH || '') + ' ' + String(d.maKH || '') + ' ' + String(d.soDienThoai || '')).toLowerCase();
@@ -29015,7 +29056,7 @@ function formatVND(amount) {
       let ngayBanFormatted = d.ngayBan || formatNgayGioLocal(new Date());
       let ngayBanISO = new Date().toISOString();
       if (valNgay) {
-        ngayBanFormatted = valNgay.replace('T', ' ') + (valNgay.length === 16 ? ':00' : '');
+        ngayBanFormatted = formatNgayGioLocal(valNgay);
         try {
           const dt = new Date(valNgay);
           if (!isNaN(dt.getTime())) ngayBanISO = dt.toISOString();
