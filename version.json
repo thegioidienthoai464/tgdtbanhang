@@ -1,10 +1,10 @@
 {
-  "version": "1.3.1",
-  "build_number": 32,
+  "version": "1.3.2",
+  "build_number": 33,
   "force_update": false,
-  "release_notes": "• Khắc phục triệt để lỗi không lấy được danh sách Nhà cung cấp (NCC):\n  + Nạp và chuẩn hóa toàn bộ 284 Nhà cung cấp thực tế từ file KiotViet (DanhSachNhaCungCap_KV06112026.xlsx).\n  + Sửa chữa lỗi lệch trường dữ liệu: ánh xạ chính xác Số điện thoại thực tế, Địa chỉ, Khu vực, Phường/Xã, Công nợ hiện tại và Tổng mua.\n  + Tối ưu hóa hàm loadNCC() ưu tiên nạp từ RAW_NCC_THANH_GIANG và RAW_DOI_TAC_THANH_GIANG chuẩn hóa.\n  + Đồng bộ dữ liệu NCC xuyên suốt hệ thống: Tab 4.1 Danh sách NCC, tìm kiếm NCC khi tạo/sửa Đơn nhập hàng (4.2), Trả hàng NCC (4.3), Lập phiếu chi Sổ quỹ và Báo cáo NCC (6.4).",
+  "release_notes": "• Tự động phục hồi & hiển thị ngay lập tức các đơn hàng vừa bán trên POS vào Tab 2.5 Lịch sử đơn hàng, lưu trữ an toàn trong LocalStorage (TT_POS_LOCAL_ORDERS), Sandbox và đồng bộ từ Sổ quỹ.\n• Tối ưu hóa toàn diện giao diện Lịch sử đơn hàng: loại bỏ thanh tìm kiếm & lọc rườm rà phía trên giúp mở rộng tối đa không gian màn hình.\n• Tích hợp tính năng sắp xếp 2 chiều (Tăng/Giảm dần) và lọc trực tiếp ngay trên từng tiêu đề cột (Mã đơn, Ngày bán, Khách hàng, Tổng tiền, Khách trả, Trạng thái) kèm nút xóa bộ lọc tức thì.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.3.1/TT_POS_v1.3.1.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.3.1/TT_POS_v1.3.1.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.3.1"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.3.2/TT_POS_v1.3.2.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.3.2/TT_POS_v1.3.2.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.3.2"
 }
