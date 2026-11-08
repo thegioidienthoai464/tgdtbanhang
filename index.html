@@ -377,7 +377,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.3</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.4</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -732,6 +732,9 @@
   <i class="fa-solid fa-file-export text-blue-600"></i><span>Xuất Excel...</span>
 </button>
             <button type="button" onclick="taiFileMauHangHoa()" class="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-medium border border-slate-200 transition">File mẫu</button>
+            <button type="button" onclick="khoiPhucTonKhoKiotVietMacDinh()" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold border border-rose-200 transition flex items-center space-x-1.5" title="Khôi phục toàn bộ tồn kho 3 chi nhánh về dữ liệu gốc KiotViet ban đầu (xóa bỏ các lần trừ kho test)">
+              <i class="fa-solid fa-rotate-left"></i><span>Khôi phục tồn gốc KiotViet</span>
+            </button>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <select id="filter-hanghoa-chinhanh" onchange="doiChiNhanhXemTonKho(this.value)" class="border border-amber-300 rounded-xl px-2.5 py-1 text-xs bg-amber-50 font-bold text-amber-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-amber-500" title="Chọn chi nhánh xem tồn kho">
@@ -8943,6 +8946,20 @@ function formatVND(amount) {
     }
     window.truImeiDaBan = truImeiDaBan;
 
+    function khoiPhucTonKhoKiotVietMacDinh() {
+      if (confirm("⚠️ CẢNH BÁO QUAN TRỌNG:\n\nThao tác này sẽ ĐẶT LẠI TOÀN BỘ TỒN KHO của 3 chi nhánh về đúng dữ liệu gốc từ KiotViet ban đầu.\nMọi điều chỉnh trừ kho và danh sách IMEI đã bán thử nghiệm trước đó sẽ được xóa bỏ để khôi phục nguyên trạng.\n\nBạn có chắc chắn muốn khôi phục không?")) {
+        try {
+          localStorage.removeItem('tt_pos_tonkho_chinhanh');
+          localStorage.removeItem('tt_pos_sold_imeis');
+          showNotification("Đang khôi phục toàn bộ tồn kho gốc KiotViet...", false);
+          setTimeout(() => location.reload(), 600);
+        } catch(e) {
+          alert("Lỗi khôi phục: " + e.message);
+        }
+      }
+    }
+    window.khoiPhucTonKhoKiotVietMacDinh = khoiPhucTonKhoKiotVietMacDinh;
+
     // 6. Điều chỉnh tăng/giảm tồn kho khi phát sinh giao dịch
     function dieuChinhTonKhoChiNhanh(maHang, maCN, delta) {
       const currentVal = layTonKhoSanPhamTaiChiNhanh(maHang, maCN);
@@ -14761,6 +14778,9 @@ function formatVND(amount) {
       if (!window.tonKhoChiNhanhMap) window.tonKhoChiNhanhMap = {};
       if (!window.tonKhoChiNhanhMap[ma]) window.tonKhoChiNhanhMap[ma] = { CN01: 0, CN02: 0, CN03: 0, CN04: 0 };
       window.tonKhoChiNhanhMap[ma][targetCN] = tKho;
+      if (typeof capNhatTonKhoSanPhamTaiChiNhanh === 'function') {
+        capNhatTonKhoSanPhamTaiChiNhanh(ma, targetCN, tKho);
+      }
 
       if (!window.giaVonChiNhanhMap) window.giaVonChiNhanhMap = {};
       if (!window.giaVonChiNhanhMap[ma]) window.giaVonChiNhanhMap[ma] = { CN01: gVon, CN02: gVon, CN03: gVon, CN04: gVon };
@@ -14777,6 +14797,15 @@ function formatVND(amount) {
         obj.tonIMEI = inputImeis.length;
         obj.tonKho = inputImeis.length;
         window.tonKhoChiNhanhMap[ma][targetCN] = inputImeis.length;
+        if (typeof capNhatTonKhoSanPhamTaiChiNhanh === 'function') {
+          capNhatTonKhoSanPhamTaiChiNhanh(ma, targetCN, inputImeis.length);
+        }
+        // Tự động khôi phục các IMEI này khỏi cache đã bán nếu người dùng nhập/sửa lại
+        try {
+          let soldCache = (typeof layDanhSachImeiDaBan === 'function') ? layDanhSachImeiDaBan() : [];
+          soldCache = soldCache.filter(im => !inputImeis.includes(String(im).trim()));
+          localStorage.setItem('tt_pos_sold_imeis', JSON.stringify(soldCache));
+        } catch(e) {}
 
         try {
           if (typeof supabaseClient !== 'undefined' && supabaseClient && inputImeis.length > 0) {
@@ -17245,11 +17274,15 @@ function formatVND(amount) {
 
       // 1. Cập nhật tồn kho trên bộ nhớ client nếu cân bằng
       if (canBang) {
+        const targetCNKiem = (typeof layMaChiNhanh === 'function') ? layMaChiNhanh(phieu.chiNhanh || currentChiNhanh || 'CN01') : 'CN01';
         danhSachKiemKhoItems.forEach(item => {
           const sp = rawHangHoa.find(h => h.maHang === item.maHang);
           if (sp) {
             sp.tonKho = item.slThucTe;
             if (sp.coQuanLyIMEI) sp.tonIMEI = item.slThucTe;
+          }
+          if (typeof capNhatTonKhoSanPhamTaiChiNhanh === 'function') {
+            capNhatTonKhoSanPhamTaiChiNhanh(item.maHang, targetCNKiem, item.slThucTe);
           }
         });
       }
