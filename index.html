@@ -369,7 +369,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.3.3</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.0</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -959,6 +959,9 @@
               </thead>
               <tbody id="tbl-kiemkho-body" class="divide-y divide-slate-100 font-medium"></tbody>
             </table>
+            <div id="pagination-kiemkho" class="p-3 border-t border-slate-100 bg-slate-50/60 flex flex-wrap items-center justify-between gap-3 text-xs"></div>
+          <table class="hidden">
+            </table>
           </div>
         </div>
 
@@ -1184,6 +1187,9 @@
                 </tr>
               </thead>
               <tbody id="tbl-xuathuy-body" class="divide-y divide-slate-100 font-medium"></tbody>
+            </table>
+            <div id="pagination-xuathuy" class="p-3 border-t border-slate-100 bg-slate-50/60 flex flex-wrap items-center justify-between gap-3 text-xs"></div>
+          <table class="hidden">
             </table>
           </div>
         </div>
@@ -9321,6 +9327,9 @@ function formatVND(amount) {
       if (typeof taiDanhSachTraHangNCC === 'function') taiDanhSachTraHangNCC();
       if (typeof loadDuLieuSoQuy === 'function') loadDuLieuSoQuy(currentLoaiQuy);
       if (typeof loadKiemKho === 'function') loadKiemKho();
+      if (typeof loadXuatHuy === 'function') loadXuatHuy();
+      if (typeof loadDanhSachPhieuTraHang === 'function') loadDanhSachPhieuTraHang();
+      if (typeof taiDanhSachYeuCauSuaChua === 'function') taiDanhSachYeuCauSuaChua();
     }
 
     function moModalQuanLyChiNhanh() {
@@ -10390,7 +10399,12 @@ function formatVND(amount) {
       arrow.classList.toggle('rotate-180');
     }
 
-  function switchTab(tabId) {
+  
+    // ALIASES BẢO ĐẢM TƯƠNG THÍCH CHUẨN TOÀN HỆ THỐNG
+    window.loadLichSuKiemKho = function() { if (typeof loadKiemKho === 'function') return loadKiemKho(); };
+    window.loadDanhSachXuatHuy = function() { if (typeof loadXuatHuy === 'function') return loadXuatHuy(); };
+
+    function switchTab(tabId) {
       // Tự động đóng Mobile Drawer khi chọn mục
       if (typeof dongSidebarMobile === 'function') dongSidebarMobile();
       
@@ -10528,9 +10542,9 @@ function formatVND(amount) {
           if (typeof loadHangHoa === 'function') loadHangHoa();
           if (typeof loadThietLapGia === 'function') loadThietLapGia();
         } else if (tabId === 'tab-kiemkho') {
-          if (typeof loadLichSuKiemKho === 'function') loadLichSuKiemKho();
+          if (typeof loadKiemKho === 'function') loadKiemKho(); else if (typeof loadLichSuKiemKho === 'function') loadLichSuKiemKho();
         } else if (tabId === 'tab-xuathuy') {
-          if (typeof loadDanhSachXuatHuy === 'function') loadDanhSachXuatHuy();
+          if (typeof loadXuatHuy === 'function') loadXuatHuy(); else if (typeof loadDanhSachXuatHuy === 'function') loadDanhSachXuatHuy();
         } else if (tabId === 'tab-chuyenkho') {
           if (typeof loadDanhSachChuyenKho === 'function') loadDanhSachChuyenKho();
         } else if (tabId === 'tab-ncc') {
@@ -16507,15 +16521,34 @@ function formatVND(amount) {
       }).apiGetDanhSachKiemKho();
     }
 
+    let pageKiemKho = 1;
+    let pageSizeKiemKho = 10;
+
+    function thayDoiPageSizeKiemKho(newSize) {
+      pageSizeKiemKho = Number(newSize) || 10;
+      pageKiemKho = 1;
+      locDanhSachKiemKho();
+    }
+
+    function chuyenTrangKiemKho(delta) {
+      pageKiemKho += delta;
+      locDanhSachKiemKho();
+    }
+
+    function datTrangKiemKho(p) {
+      pageKiemKho = p;
+      locDanhSachKiemKho();
+    }
+
     function locDanhSachKiemKho() {
       const kw = (document.getElementById('search-kiem-kho')?.value || '').toLowerCase().trim();
       const cnFilter = document.getElementById('filter-kiemkho-chinhanh')?.value || 'CURRENT';
-      const targetCN = cnFilter === 'CURRENT' ? layMaChiNhanh(currentChiNhanh) : cnFilter;
+      const targetCN = cnFilter === 'CURRENT' ? (typeof layMaChiNhanh === 'function' ? layMaChiNhanh(currentChiNhanh) : currentChiNhanh) : cnFilter;
       const tuNgayKK = document.getElementById('filter-kiemkho-tungay')?.value || '';
       const denNgayKK = document.getElementById('filter-kiemkho-denngay')?.value || '';
 
-      const list = rawKiemKhoList.filter(k => {
-        if (targetCN !== 'ALL') {
+      const list = (rawKiemKhoList || []).filter(k => {
+        if (targetCN !== 'ALL' && typeof laCungChiNhanh === 'function') {
           if (!laCungChiNhanh(k.chiNhanh, targetCN)) return false;
         }
         const matchKw = (k.maChungTu || '').toLowerCase().includes(kw) || 
@@ -16525,35 +16558,58 @@ function formatVND(amount) {
         const matchDate = kiemTraNgayTrongKhoang(dateVal, tuNgayKK, denNgayKK);
         return matchKw && matchDate;
       });
+
       const tbody = document.getElementById('tbl-kiemkho-body');
       if (!tbody) return;
       if (!list.length) { 
-        tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400">Không có phiếu kiểm kho nào</td></tr>'; 
+        tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400">Không có phiếu kiểm kho nào phù hợp bộ lọc</td></tr>'; 
+        renderPhanTrang('pagination-kiemkho', 1, 1, 0, 0, 0, 'chuyenTrangKiemKho', 'datTrangKiemKho');
         return; 
       }
-      tbody.innerHTML = list.map(k => `
-        <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
-          <td class="p-3 font-semibold text-blue-600 font-mono cursor-pointer hover:underline" onclick="xemChiTietPhieuKiemKho('${k.maChungTu}')">${k.maChungTu}</td>
-          <td class="p-3 text-slate-500 font-mono text-[11px]">${k.ngayTao}</td>
-          <td class="p-3 font-medium text-slate-700">${k.nhanVien || 'Quản trị viên'}</td>
-          <td class="p-3 text-right font-mono font-medium text-slate-700">${(Number(k.slSoSach) || 0).toLocaleString()}</td>
-          <td class="p-3 text-right font-bold text-blue-600 font-mono">${(Number(k.slThucTe) || 0).toLocaleString()}</td>
-          <td class="p-3 text-right font-bold font-mono ${k.chenhLech > 0 ? 'text-emerald-600' : (k.chenhLech < 0 ? 'text-rose-600' : 'text-slate-400')}">
-            ${k.chenhLech > 0 ? '+' : ''}${(Number(k.chenhLech) || 0).toLocaleString()}
-          </td>
-          <td class="p-3 text-center">
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${k.trangThai === 'Phiếu tạm' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
-              ${k.trangThai || 'Đã cân bằng'}
-            </span>
-          </td>
-          <td class="p-3 text-slate-500 italic max-w-xs truncate">${k.ghiChu || '-'}</td>
-          <td class="p-3 text-center">
-            <button type="button" onclick="xemChiTietPhieuKiemKho('${k.maChungTu}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-blue-600 rounded-lg text-xs font-semibold">
-              Chi tiết
-            </button>
-          </td>
-        </tr>
-      `).join('');
+
+      // PHÂN TRANG CHỐNG ĐƠ MÁY
+      const totalItems = list.length;
+      const totalPages = Math.ceil(totalItems / pageSizeKiemKho) || 1;
+      if (pageKiemKho > totalPages) pageKiemKho = totalPages;
+      if (pageKiemKho < 1) pageKiemKho = 1;
+
+      const start = (pageKiemKho - 1) * pageSizeKiemKho;
+      const pageItems = list.slice(start, start + pageSizeKiemKho);
+
+      tbody.innerHTML = pageItems.map(k => {
+        const chenhLech = Number(k.chenhLech || 0);
+        let chenhLechHtml = '<span class="text-slate-500 font-mono">0</span>';
+        if (chenhLech > 0) {
+          chenhLechHtml = `<span class="text-emerald-600 font-mono font-bold">+${chenhLech.toLocaleString()}</span>`;
+        } else if (chenhLech < 0) {
+          chenhLechHtml = `<span class="text-rose-600 font-mono font-bold">${chenhLech.toLocaleString()}</span>`;
+        }
+
+        let badgeTrangThai = `<span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-semibold">${escapeHtml(k.trangThai || 'Đã cân bằng')}</span>`;
+        if (k.trangThai === 'Phiếu tạm') {
+          badgeTrangThai = `<span class="px-2 py-0.5 rounded-full text-[10px] bg-amber-100 text-amber-800 font-semibold">Phiếu tạm</span>`;
+        } else if (k.trangThai === 'Đã hủy') {
+          badgeTrangThai = `<span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-500 font-semibold line-through">Đã hủy</span>`;
+        }
+
+        return `
+          <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
+            <td class="p-3 font-semibold text-blue-600 font-mono cursor-pointer hover:underline" onclick="xemChiTietPhieuKiemKho('${escapeHtml(k.maChungTu)}')">${escapeHtml(k.maChungTu)}</td>
+            <td class="p-3 text-slate-500 font-mono text-[11px]">${escapeHtml(k.ngayTao || k.thoiGian || '')}</td>
+            <td class="p-3 font-medium text-slate-700">${escapeHtml(k.nhanVien || 'Quản trị viên')}</td>
+            <td class="p-3 text-right font-mono font-medium text-slate-700">${(Number(k.slSoSach) || 0).toLocaleString()}</td>
+            <td class="p-3 text-right font-bold text-blue-600 font-mono">${(Number(k.slThucTe) || 0).toLocaleString()}</td>
+            <td class="p-3 text-right">${chenhLechHtml}</td>
+            <td class="p-3 text-center">${badgeTrangThai}</td>
+            <td class="p-3 text-slate-500 truncate max-w-xs" title="${escapeHtml(k.ghiChu || '')}">${escapeHtml(k.ghiChu || '-')}</td>
+            <td class="p-3 text-center">
+              <button type="button" onclick="xemChiTietPhieuKiemKho('${escapeHtml(k.maChungTu)}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold border transition" title="Xem chi tiết"><i class="fa-solid fa-eye"></i></button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      renderPhanTrang('pagination-kiemkho', pageKiemKho, totalPages, totalItems, start + 1, Math.min(start + pageSizeKiemKho, totalItems), 'chuyenTrangKiemKho', 'datTrangKiemKho');
     }
 
     // 2. Mở màn hình lập phiếu kiểm kho mới
@@ -17237,13 +17293,39 @@ function formatVND(amount) {
       }).apiGetDanhSachXuatHuy();
     }
 
+    let pageXuatHuy = 1;
+    let pageSizeXuatHuy = 10;
+
+    function thayDoiPageSizeXuatHuy(newSize) {
+      pageSizeXuatHuy = Number(newSize) || 10;
+      pageXuatHuy = 1;
+      locDanhSachXuatHuy();
+    }
+
+    function chuyenTrangXuatHuy(delta) {
+      pageXuatHuy += delta;
+      locDanhSachXuatHuy();
+    }
+
+    function datTrangXuatHuy(p) {
+      pageXuatHuy = p;
+      locDanhSachXuatHuy();
+    }
+
     function locDanhSachXuatHuy() {
       const kw = (document.getElementById('search-xuat-huy') || {}).value || '';
       const q = kw.toLowerCase().trim();
       const tuNgayXH = document.getElementById('filter-xuathuy-tungay')?.value || '';
       const denNgayXH = document.getElementById('filter-xuathuy-denngay')?.value || '';
 
+      const targetCN = (typeof currentChiNhanh !== 'undefined' && currentChiNhanh) 
+        ? (typeof layMaChiNhanh === 'function' ? layMaChiNhanh(currentChiNhanh) : currentChiNhanh)
+        : 'ALL';
+
       const filtered = (rawXuatHuyList || []).filter(x => {
+        if (targetCN && targetCN !== 'ALL' && typeof laCungChiNhanh === 'function') {
+          if (!laCungChiNhanh(x.chiNhanh, targetCN)) return false;
+        }
         const matchKw = !q ||
           (x.maChungTu||'').toLowerCase().includes(q) ||
           (x.nhanVien||'').toLowerCase().includes(q) ||
@@ -17252,16 +17334,28 @@ function formatVND(amount) {
         const matchDate = kiemTraNgayTrongKhoang(dateVal, tuNgayXH, denNgayXH);
         return matchKw && matchDate;
       });
+
       const tbody = document.getElementById('tbl-xuathuy-body');
       if (!tbody) return;
       if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">Không có phiếu xuất hủy nào</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-400">Không có phiếu xuất hủy nào phù hợp bộ lọc</td></tr>';
+        renderPhanTrang('pagination-xuathuy', 1, 1, 0, 0, 0, 'chuyenTrangXuatHuy', 'datTrangXuatHuy');
         return;
       }
-      tbody.innerHTML = filtered.map(x => {
+
+      // PHÂN TRANG CHỐNG ĐƠ MÁY
+      const totalItems = filtered.length;
+      const totalPages = Math.ceil(totalItems / pageSizeXuatHuy) || 1;
+      if (pageXuatHuy > totalPages) pageXuatHuy = totalPages;
+      if (pageXuatHuy < 1) pageXuatHuy = 1;
+
+      const start = (pageXuatHuy - 1) * pageSizeXuatHuy;
+      const pageItems = filtered.slice(start, start + pageSizeXuatHuy);
+
+      tbody.innerHTML = pageItems.map(x => {
         const isHuy = x.trangThai === 'Đã hủy';
         const isLuuTam = x.trangThai === 'Lưu tạm';
-        let badgeTT = `<span class="px-2 py-0.5 rounded-full text-[10px] bg-rose-100 text-rose-700 font-semibold">${x.trangThai||'Hoàn thành'}</span>`;
+        let badgeTT = `<span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-semibold">${escapeHtml(x.trangThai||'Hoàn thành')}</span>`;
         if (isHuy) {
           badgeTT = `<span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-500 font-semibold line-through">Đã hủy</span>`;
         } else if (isLuuTam) {
@@ -17272,23 +17366,22 @@ function formatVND(amount) {
         const gtHienThi = Number(x.tongGiaTri !== undefined ? x.tongGiaTri : (x.giaTriHuy || 0)) || 0;
 
         return `
-          <tr class="hover:bg-slate-50 border-b transition cursor-pointer ${isHuy ? 'opacity-60 bg-slate-50/40' : ''}" onclick="xemChiTietPhieuXuatHuy('${x.maChungTu}')">
-            <td class="p-3 font-semibold text-rose-600 font-mono">${x.maChungTu||''}</td>
-            <td class="p-3 text-slate-500 font-mono text-sm">${x.ngayTao||''}</td>
-            <td class="p-3 text-slate-700">${x.nhanVien||''}</td>
-            <td class="p-3 text-center font-bold text-rose-600">${slHienThi}</td>
-            <td class="p-3 text-right font-mono text-rose-700">${formatCurrency(gtHienThi)}</td>
-            <td class="p-3 text-slate-600 truncate max-w-[180px]" title="${x.lyDo||''}">${x.lyDo||''}</td>
+          <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
+            <td class="p-3 font-semibold text-rose-600 font-mono cursor-pointer hover:underline" onclick="xemChiTietPhieuXuatHuy('${escapeHtml(x.maChungTu)}')">${escapeHtml(x.maChungTu)}</td>
+            <td class="p-3 text-slate-500 font-mono text-[11px]">${escapeHtml(x.ngayTao || x.thoiGian || '')}</td>
+            <td class="p-3 font-medium text-slate-700">${escapeHtml(x.nhanVien || 'Quản trị viên')}</td>
+            <td class="p-3 text-right font-mono font-bold text-slate-800">${slHienThi.toLocaleString()}</td>
+            <td class="p-3 text-right font-mono font-bold text-rose-600">${gtHienThi.toLocaleString()} đ</td>
+            <td class="p-3 text-slate-600 truncate max-w-xs" title="${escapeHtml(x.lyDo || '')}">${escapeHtml(x.lyDo || 'Xuất hủy hàng hỏng')}</td>
             <td class="p-3 text-center">${badgeTT}</td>
             <td class="p-3 text-center">
-              <div class="inline-flex items-center gap-1.5" onclick="event.stopPropagation()">
-                <button onclick="xemChiTietPhieuXuatHuy('${x.maChungTu}')" class="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-200 hover:bg-blue-50 rounded transition font-medium">Chi tiết</button>
-                ${!isHuy ? `<button onclick="xacNhanHuyPhieuXuatHuy('${x.maChungTu}')" class="text-rose-600 hover:text-rose-800 text-xs px-2 py-1 border border-rose-200 hover:bg-rose-50 rounded transition font-medium" title="Hủy phiếu và hoàn trả hàng về kho">Hủy</button>` : ''}
-              </div>
+              <button type="button" onclick="xemChiTietPhieuXuatHuy('${escapeHtml(x.maChungTu)}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold border transition" title="Xem chi tiết"><i class="fa-solid fa-eye"></i></button>
             </td>
           </tr>
         `;
       }).join('');
+
+      renderPhanTrang('pagination-xuathuy', pageXuatHuy, totalPages, totalItems, start + 1, Math.min(start + pageSizeXuatHuy, totalItems), 'chuyenTrangXuatHuy', 'datTrangXuatHuy');
     }
 
     // ============================================================
@@ -31565,19 +31658,38 @@ function loadSoQuy(filter) {
       }
     }
 
+    let pageDatHang = 1;
+    let pageSizeDatHang = 10;
+
+    function thayDoiPageSizeDatHang(newSize) {
+      pageSizeDatHang = Number(newSize) || 10;
+      pageDatHang = 1;
+      renderTableDanhSachDonDatHang();
+    }
+
+    function chuyenTrangDatHang(delta) {
+      pageDatHang += delta;
+      renderTableDanhSachDonDatHang();
+    }
+
+    function datTrangDatHang(p) {
+      pageDatHang = p;
+      renderTableDanhSachDonDatHang();
+    }
+
     function renderTableDanhSachDonDatHang() {
       const tbody = document.getElementById('tbl-dathang-danhsach-body');
       if (!tbody) return;
       const statusFilter = document.getElementById('filter-dathang-trangthai')?.value || 'ALL';
       const kw = (document.getElementById('search-danhsach-dathang')?.value || '').toLowerCase().trim();
       const cnFilter = document.getElementById('filter-dathang-chinhanh')?.value || 'CURRENT';
-      const targetCN = cnFilter === 'CURRENT' ? layMaChiNhanh(currentChiNhanh) : cnFilter;
+      const targetCN = cnFilter === 'CURRENT' ? (typeof layMaChiNhanh === 'function' ? layMaChiNhanh(currentChiNhanh) : currentChiNhanh) : cnFilter;
 
       const tuNgay = document.getElementById('filter-dathang-tungay')?.value || '';
       const denNgay = document.getElementById('filter-dathang-denngay')?.value || '';
 
       const filtered = (rawDonDatHangList || []).filter(d => {
-        if (targetCN !== 'ALL') {
+        if (targetCN !== 'ALL' && typeof laCungChiNhanh === 'function') {
           if (!laCungChiNhanh(d.chiNhanh, targetCN)) return false;
         }
         const maDonStr = d.maDonDat || d.maDon || '';
@@ -31593,61 +31705,54 @@ function loadSoQuy(filter) {
 
       if (!filtered.length) {
         tbody.innerHTML = '<tr><td colspan="10" class="p-8 text-center text-slate-400">Không có đơn đặt hàng nào phù hợp bộ lọc</td></tr>';
+        renderPhanTrang('pagination-dathang', 1, 1, 0, 0, 0, 'chuyenTrangDatHang', 'datTrangDatHang');
         return;
       }
 
-      tbody.innerHTML = filtered.map(d => {
+      // PHÂN TRANG CHỐNG ĐƠ MÁY
+      const totalItems = filtered.length;
+      const totalPages = Math.ceil(totalItems / pageSizeDatHang) || 1;
+      if (pageDatHang > totalPages) pageDatHang = totalPages;
+      if (pageDatHang < 1) pageDatHang = 1;
+
+      const start = (pageDatHang - 1) * pageSizeDatHang;
+      const pageItems = filtered.slice(start, start + pageSizeDatHang);
+
+      tbody.innerHTML = pageItems.map(d => {
         const maDon = d.maDonDat || d.maDon || '';
         const ngay = d.ngayDat || '';
         const ten = d.tenKH || 'Khách lẻ';
         const sdt = d.soDienThoai || d.sdt || '-';
         const tongTien = Number(d.tongTien) || 0;
         const tienCoc = Number(d.tienCoc) || 0;
+        const conLai = Math.max(0, tongTien - tienCoc);
         const tt = d.trangThai || 'Chờ xử lý';
 
-        let badgeColor = 'bg-amber-100 text-amber-700';
-        if (tt === 'Hoàn thành') badgeColor = 'bg-emerald-100 text-emerald-700';
-        else if (tt === 'Đã hủy') badgeColor = 'bg-rose-100 text-rose-700';
-        else if (tt === 'Đang giao') badgeColor = 'bg-blue-100 text-blue-700';
+        let badgeClass = 'bg-amber-100 text-amber-800 border border-amber-200';
+        if (tt === 'Hoàn thành' || tt === 'Đã giao hàng') badgeClass = 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+        else if (tt === 'Đã hủy') badgeClass = 'bg-slate-100 text-slate-500 border border-slate-200 line-through';
 
-        // Tóm tắt danh sách sản phẩm khách đặt
-        const items = Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (Array.isArray(d.chiTiet) ? d.chiTiet : []);
-        let itemsHtml = '';
-        if (items.length > 0) {
-          itemsHtml = items.map(it => {
-            const itTen = it.tenHang || it.ten_hang || 'Sản phẩm';
-            const itSL = Number(it.soLuong) || 1;
-            return '<span class="inline-block bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] text-slate-700 mr-1 mb-1 font-medium">' +
-                   itTen + ' <b class="text-blue-600 font-mono">(x' + itSL + ')</b></span>';
-          }).join('');
-        } else {
-          itemsHtml = '<span class="text-slate-400 italic">Chưa có SP</span>';
-        }
+        const spCount = Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham.length : (Array.isArray(d.chiTiet) ? d.chiTiet.length : 0);
 
-        const canAction = tt === 'Chờ xử lý';
-
-        return '<tr class="hover:bg-slate-50 text-xs border-b font-medium">' +
-          '<td class="p-3 text-center"><input type="checkbox" value="' + maDon + '" class="chk-dathang-item rounded text-blue-600"></td>' +
-          '<td class="p-3 font-mono font-bold text-blue-700 cursor-pointer hover:underline" onclick="xemChiTietDonDatHang(\'' + maDon + '\')">' + maDon + '</td>' +
-          '<td class="p-3 text-slate-500 whitespace-nowrap">' + ngay + '</td>' +
-          '<td class="p-3 font-bold text-slate-800">' + ten + '</td>' +
-          '<td class="p-3 font-mono text-slate-600">' + sdt + '</td>' +
-          '<td class="p-3 max-w-xs">' + itemsHtml + '</td>' +
-          '<td class="p-3 text-right font-mono font-bold text-slate-800">' + tongTien.toLocaleString('vi-VN') + ' đ</td>' +
-          '<td class="p-3 text-right font-mono font-bold text-emerald-600">' + tienCoc.toLocaleString('vi-VN') + ' đ</td>' +
-          '<td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ' + badgeColor + '">' + tt + '</span></td>' +
-          '<td class="p-3 text-center whitespace-nowrap space-x-1">' +
-            '<button type="button" onclick="xemChiTietDonDatHang(\'' + maDon + '\')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold border transition" title="Xem chi tiết"><i class="fa-solid fa-eye text-blue-600"></i></button>' +
-            (canAction ? '<button type="button" onclick="suaDonDatHang(\'' + maDon + '\')" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-[11px] font-semibold border border-amber-200 transition" title="Sửa đơn đặt"><i class="fa-solid fa-pen"></i></button>' : '') +
-            (canAction ? '<button type="button" onclick="huyDonDatHang(\'' + maDon + '\')" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-[11px] font-semibold border border-rose-200 transition" title="Hủy đơn đặt"><i class="fa-solid fa-ban"></i></button>' : '') +
-            (canAction ? '<button type="button" onclick="chuyenDonDatHangCuTheSangPOS(\'' + maDon + '\')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold shadow-xs transition" title="Bán hàng sang POS"><i class="fa-solid fa-cart-arrow-down mr-1"></i>Bán hàng</button>' : '') +
-          '</td>' +
-          '</tr>';
+        return `
+          <tr class="hover:bg-slate-50 border-b border-slate-100 transition text-xs">
+            <td class="p-3 font-mono font-bold text-blue-600 cursor-pointer hover:underline" onclick="xemChiTietDonDatHang('${escapeHtml(maDon)}')">${escapeHtml(maDon)}</td>
+            <td class="p-3 text-slate-500 font-mono text-[11px]">${escapeHtml(ngay)}</td>
+            <td class="p-3 font-semibold text-slate-800">${escapeHtml(ten)}</td>
+            <td class="p-3 font-mono text-slate-600">${escapeHtml(sdt)}</td>
+            <td class="p-3 text-center font-mono font-bold text-slate-700">${spCount} SP</td>
+            <td class="p-3 text-right font-mono font-bold text-slate-900">${tongTien.toLocaleString()} đ</td>
+            <td class="p-3 text-right font-mono font-bold text-emerald-600">${tienCoc.toLocaleString()} đ</td>
+            <td class="p-3 text-right font-mono font-bold text-rose-600">${conLai.toLocaleString()} đ</td>
+            <td class="p-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${badgeClass}">${escapeHtml(tt)}</span></td>
+            <td class="p-3 text-center space-x-1">
+              <button type="button" onclick="xemChiTietDonDatHang('${escapeHtml(maDon)}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold border transition" title="Xem chi tiết"><i class="fa-solid fa-eye"></i></button>
+            </td>
+          </tr>
+        `;
       }).join('');
-    }
 
-    function locDanhSachDonDatHangTable() {
-      renderTableDanhSachDonDatHang();
+      renderPhanTrang('pagination-dathang', pageDatHang, totalPages, totalItems, start + 1, Math.min(start + pageSizeDatHang, totalItems), 'chuyenTrangDatHang', 'datTrangDatHang');
     }
 
     function chonTatCaDonDatHang(checked) {
@@ -37451,6 +37556,25 @@ function loadSoQuy(filter) {
     };
 
     // 3. RENDER BẢNG DANH SÁCH & KPI THEO CHUẨN KIOTVIET
+    let pageSuaChua = 1;
+    let pageSizeSuaChua = 10;
+
+    function thayDoiPageSizeSuaChua(newSize) {
+      pageSizeSuaChua = Number(newSize) || 10;
+      pageSuaChua = 1;
+      if (typeof window.renderTableDanhSachYeuCauSuaChua === 'function') window.renderTableDanhSachYeuCauSuaChua();
+    }
+
+    function chuyenTrangSuaChua(delta) {
+      pageSuaChua += delta;
+      if (typeof window.renderTableDanhSachYeuCauSuaChua === 'function') window.renderTableDanhSachYeuCauSuaChua();
+    }
+
+    function datTrangSuaChua(p) {
+      pageSuaChua = p;
+      if (typeof window.renderTableDanhSachYeuCauSuaChua === 'function') window.renderTableDanhSachYeuCauSuaChua();
+    }
+
     window.renderTableDanhSachYeuCauSuaChua = function() {
       const tbody = document.getElementById('tbl-suachua-danhsach-body');
       if (!tbody) return;
@@ -37517,19 +37641,29 @@ function loadSoQuy(filter) {
       setEl('sc-tong-datra', formatVNDKiot(tongDaTra));
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">Không tìm thấy yêu cầu sửa chữa nào phù hợp với bộ lọc.</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400">Không tìm thấy yêu cầu sửa chữa nào phù hợp với bộ lọc.</td></tr>';
+        renderPhanTrang('pagination-suachua', 1, 1, 0, 0, 0, 'chuyenTrangSuaChua', 'datTrangSuaChua');
         return;
       }
 
-      let html = '';
-      list.forEach((item, idx) => {
+      // PHÂN TRANG CHỐNG ĐƠ MÁY
+      const totalItems = list.length;
+      const totalPages = Math.ceil(totalItems / pageSizeSuaChua) || 1;
+      if (pageSuaChua > totalPages) pageSuaChua = totalPages;
+      if (pageSuaChua < 1) pageSuaChua = 1;
+
+      const start = (pageSuaChua - 1) * pageSizeSuaChua;
+      const pageItems = list.slice(start, start + pageSizeSuaChua);
+
+      let htmlRows = '';
+      pageItems.forEach((item, idx) => {
         const isExpanded = window.currentViewingMaYCSC === item.ma_yeu_cau;
         const thoiGianStr = formatNgayGioKiot(item.ngay_tiep_nhan);
         const canTraStr = formatVNDKiot(item.khach_can_tra || 0);
         const daTraStr = formatVNDKiot(item.khach_da_tra || 0);
         const badgeTT = taoBadgeTrangThaiKiot(item.trang_thai);
 
-        html += `
+        htmlRows += `
           <tr class="hover:bg-blue-50/40 transition cursor-pointer ${isExpanded ? 'bg-blue-50/60 font-semibold border-l-4 border-l-blue-600' : ''}" onclick="toggleChiTietYeuCauSuaChua('${item.ma_yeu_cau}', event)">
             <td class="p-3 text-center" onclick="event.stopPropagation()">
               <input type="checkbox" class="chk-item-suachua rounded text-blue-600 w-3.5 h-3.5" data-mayeucau="${item.ma_yeu_cau}">
@@ -37576,13 +37710,13 @@ function loadSoQuy(filter) {
           </tr>
         `;
 
-        // Render dòng mở rộng chi tiết nếu dòng đang được chọn (Chuẩn KiotViet)
         if (isExpanded) {
-          html += renderRowChiTietKiotViet(item);
+          htmlRows += renderRowChiTietKiotViet(item);
         }
       });
 
-      tbody.innerHTML = html;
+      tbody.innerHTML = htmlRows;
+      renderPhanTrang('pagination-suachua', pageSuaChua, totalPages, totalItems, start + 1, Math.min(start + pageSizeSuaChua, totalItems), 'chuyenTrangSuaChua', 'datTrangSuaChua');
     };
 
     // 4. RENDER GIAO DIỆN CHI TIẾT MỞ RỘNG (EXPAND DETAIL CHUẨN 100% KIOTVIET TRONG ẢNH)

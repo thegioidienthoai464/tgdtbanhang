@@ -1,10 +1,10 @@
 {
-  "version": "1.3.3",
-  "build_number": 34,
+  "version": "1.4.0",
+  "build_number": 35,
   "force_update": false,
-  "release_notes": "• Khắc phục triệt để tình trạng đơ giật máy tại Tab 2.3 Khách trả hàng nhờ tích hợp phân trang mượt mà (10, 20, 30, 50, 100 dòng/trang) cho cả danh sách phiếu đã trả và danh sách hóa đơn gốc.\\n• Bổ sung hoàn chỉnh giao diện Danh sách phiếu đã trả hàng (View 1 mặc định) hiển thị đầy đủ 247 phiếu trả từ KiotViet kèm chi tiết sản phẩm hoàn, lý do trả, nhân viên nhận, nút xem chi tiết và xuất Excel.\\n• Thiết kế 2 chế độ linh hoạt: View 1 (Danh sách phiếu đã trả) và View 2 (Tiếp nhận trả hàng từ hóa đơn với bộ lọc 7 tiêu chí) giúp thao tác nhanh chóng và chuyên nghiệp.",
+  "release_notes": "• Chuẩn hóa toàn diện kiến trúc logic và giao diện bán lẻ chuyên nghiệp theo tiêu chuẩn các hệ thống hàng đầu (KiotViet, Sapo, Odoo).\n• Khắc phục triệt để lỗi không tải dữ liệu tại Tab 3.3 Lịch sử kiểm kho và Tab 3.4 Xuất hủy hàng hỏng.\n• Bổ sung đồng bộ bộ phân trang chuẩn hóa chống đơ máy (10, 20, 30, 50, 100 bản ghi/trang) cho toàn bộ các tab nghiệp vụ: Xuất hủy hàng hỏng, Lịch sử kiểm kho, Đơn đặt hàng, Yêu cầu sửa chữa.\n• Đồng bộ hóa Ngữ cảnh Chi nhánh Toàn cục (Global Branch Context) - tự động làm mới tức thì dữ liệu của tất cả các module khi chuyển đổi chi nhánh làm việc tại Header.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.3.3/TT_POS_v1.3.3.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.3.3/TT_POS_v1.3.3.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.3.3"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.0/TT_POS_v1.4.0.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.0/TT_POS_v1.4.0.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.4.0"
 }
