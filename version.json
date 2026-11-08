@@ -1,10 +1,10 @@
 {
-  "version": "1.4.0",
-  "build_number": 35,
+  "version": "1.4.1",
+  "build_number": 36,
   "force_update": false,
-  "release_notes": "• Chuẩn hóa toàn diện kiến trúc logic và giao diện bán lẻ chuyên nghiệp theo tiêu chuẩn các hệ thống hàng đầu (KiotViet, Sapo, Odoo).\n• Khắc phục triệt để lỗi không tải dữ liệu tại Tab 3.3 Lịch sử kiểm kho và Tab 3.4 Xuất hủy hàng hỏng.\n• Bổ sung đồng bộ bộ phân trang chuẩn hóa chống đơ máy (10, 20, 30, 50, 100 bản ghi/trang) cho toàn bộ các tab nghiệp vụ: Xuất hủy hàng hỏng, Lịch sử kiểm kho, Đơn đặt hàng, Yêu cầu sửa chữa.\n• Đồng bộ hóa Ngữ cảnh Chi nhánh Toàn cục (Global Branch Context) - tự động làm mới tức thì dữ liệu của tất cả các module khi chuyển đổi chi nhánh làm việc tại Header.",
+  "release_notes": "• Tự động hạch toán chi phí hao hụt hàng hóa (Xuất hủy hàng hỏng & Thất thoát kiểm kho thiếu) vào 6.5 Báo cáo tài chính (P&L) theo đúng giá vốn hàng hóa, bảo đảm tính toán chính xác Lợi nhuận thuần kinh doanh (EBIT).\n• Chuẩn hóa luồng trừ kho linh kiện sửa chữa (Tab 2.6): Kỹ thuật viên chọn linh kiện khi tiếp nhận và kiểm tra máy (không trừ kho sớm), chỉ tự động trừ tồn kho theo đúng chi nhánh khi bàn giao máy cho khách và xuất hóa đơn thu tiền.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.0/TT_POS_v1.4.0.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.0/TT_POS_v1.4.0.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.4.0"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.1/TT_POS_v1.4.1.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.1/TT_POS_v1.4.1.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.4.1"
 }

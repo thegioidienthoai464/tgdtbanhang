@@ -369,7 +369,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.0</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.1</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -3928,7 +3928,7 @@
                 <span id="bc-tc-ebit-margin" class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 text-[10px] font-bold font-mono">0%</span>
               </div>
               <h4 id="bc-tc-ebit" class="text-lg font-black text-purple-800 font-mono mt-1">0 đ</h4>
-              <p class="text-[10px] text-purple-700 font-medium mt-0.5">Lãi thực tế sau trừ mọi chi phí</p>
+              <p id="bc-tc-ebit-sub" class="text-[10px] text-purple-700 font-medium mt-0.5">Lãi thực tế sau trừ chi phí & hao hụt kho</p>
             </div>
 
             <!-- 6. Quỹ tiền khả dụng -->
@@ -4039,10 +4039,24 @@
                   <b id="bc-pl-opex-total" class="font-mono text-rose-700">0 đ</b>
                 </div>
 
-                <!-- Phần V: Lợi nhuận kinh doanh thuần -->
+                <!-- Phần V: Chi phí hao hụt hàng hóa (Xuất hủy hàng hỏng & Thất thoát kiểm kho) -->
+                <div class="text-[11px] font-bold text-slate-500 uppercase pt-2 flex items-center justify-between">
+                  <span>V. Chi phí hao hụt hàng hóa (Hỏng & Thiếu kiểm kho)</span>
+                  <span class="text-[10px] font-mono text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200 font-semibold">Tự động hạch toán</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] bg-rose-50/50 p-2 rounded-xl border border-rose-100">
+                  <div class="flex justify-between py-0.5 px-1.5"><span class="text-slate-600">Hao hụt xuất hủy hàng hỏng:</span><b id="bc-pl-haohut-xuathuy" class="font-mono text-rose-700">0 đ</b></div>
+                  <div class="flex justify-between py-0.5 px-1.5"><span class="text-slate-600">Thất thoát kiểm kê kho thiếu:</span><b id="bc-pl-haohut-kiemkho" class="font-mono text-rose-700">0 đ</b></div>
+                </div>
+                <div class="flex justify-between py-1.5 px-2 bg-rose-100/70 border border-rose-200 rounded-lg font-bold text-rose-900 mt-1">
+                  <span>TỔNG CHI PHÍ HAO HỤT THIỆT HẠI (V):</span>
+                  <b id="bc-pl-haohut-total" class="font-mono text-rose-700">0 đ</b>
+                </div>
+
+                <!-- Phần VI: Lợi nhuận kinh doanh thuần (EBIT = III - IV - V) -->
                 <div class="flex justify-between py-2.5 px-3 bg-gradient-to-r from-purple-900 to-indigo-900 text-white rounded-2xl shadow-md my-2">
                   <div>
-                    <span class="block text-xs font-bold uppercase tracking-wider text-purple-200">V. LỢI NHUẬN THUẦN KINH DOANH (EBIT):</span>
+                    <span class="block text-xs font-bold uppercase tracking-wider text-purple-200">VI. LỢI NHUẬN THUẦN KINH DOANH (EBIT = III - IV - V):</span>
                     <span class="text-[10px] text-purple-200" id="bc-pl-net-margin-text">Biên lãi thuần: 0%</span>
                   </div>
                   <b id="bc-pl-net-profit" class="font-mono text-emerald-300 text-lg self-center font-black">0 đ</b>
@@ -24242,9 +24256,80 @@ function formatVND(amount) {
         }
       });
 
+      // =====================================================================
+      // 1. TỰ ĐỘNG HẠCH TOÁN CHI PHÍ HAO HỤT (XUẤT HỦY HÀNG HỎNG & KIỂM KHO THIẾU)
+      // =====================================================================
+      let chiPhiXuatHuy = 0;
+      let soPhieuXuatHuy = 0;
+      const dsXuatHuy = (typeof rawXuatHuyList !== 'undefined' && Array.isArray(rawXuatHuyList) && rawXuatHuyList.length > 0)
+        ? rawXuatHuyList
+        : (window.RAW_XUAT_HUY_THANH_GIANG || []);
+
+      dsXuatHuy.forEach(xh => {
+        if (xh.trangThai === 'Đã hủy') return;
+        const cnRaw = String(xh.chiNhanh || '');
+        if (targetCN !== 'ALL' && typeof laCungChiNhanh === 'function') {
+          if (!laCungChiNhanh(cnRaw, targetCN)) return;
+        }
+        const dateStr = xh.ngayTao || xh.ngayHuy || xh.thoiGian || xh.created_at || '';
+        const dObj = parseDateTimeGlobal(dateStr);
+        if (dObj) {
+          const t = dObj.getTime();
+          if (startDate && t < startDate.getTime()) return;
+          if (endDate && t > endDate.getTime()) return;
+        }
+        const gtHuy = Number(xh.tongGiaTriHuy !== undefined ? xh.tongGiaTriHuy : (xh.tongGiaTri !== undefined ? xh.tongGiaTri : (xh.giaTriHuy || 0))) || 0;
+        chiPhiXuatHuy += gtHuy;
+        soPhieuXuatHuy++;
+      });
+
+      let chiPhiKiemKhoThieu = 0;
+      let soPhieuKiemKhoThieu = 0;
+      const dsKiemKho = (typeof rawKiemKhoList !== 'undefined' && Array.isArray(rawKiemKhoList) && rawKiemKhoList.length > 0)
+        ? rawKiemKhoList
+        : (window.RAW_KIEM_KHO_THANH_GIANG || []);
+
+      dsKiemKho.forEach(kk => {
+        if (kk.trangThai === 'Đã hủy' || kk.trangThai === 'Phiếu tạm') return;
+        const cnRaw = String(kk.chiNhanh || '');
+        if (targetCN !== 'ALL' && typeof laCungChiNhanh === 'function') {
+          if (!laCungChiNhanh(cnRaw, targetCN)) return;
+        }
+        const dateStr = kk.ngayTao || kk.ngayKiem || kk.thoiGian || kk.created_at || '';
+        const dObj = parseDateTimeGlobal(dateStr);
+        if (dObj) {
+          const t = dObj.getTime();
+          if (startDate && t < startDate.getTime()) return;
+          if (endDate && t > endDate.getTime()) return;
+        }
+
+        let gtThieuCuaPhieu = 0;
+        const spList = Array.isArray(kk.sanPham) ? kk.sanPham : (Array.isArray(kk.chiTietSanPham) ? kk.chiTietSanPham : []);
+        if (spList.length > 0) {
+          spList.forEach(sp => {
+            const cl = Number(sp.chenhLech !== undefined ? sp.chenhLech : (Number(sp.slThucTe || 0) - Number(sp.slSoSach || 0)));
+            if (cl < 0) {
+              const maSp = String(sp.maHang || sp.ma_hang || '').trim().toUpperCase();
+              const gv = Number(sp.giaVon || sp.gia_von || hangHoaGiaVonMap[maSp] || 0);
+              gtThieuCuaPhieu += Math.abs(cl) * gv;
+            }
+          });
+        } else if (Number(kk.chenhLech || 0) < 0) {
+          gtThieuCuaPhieu = Math.abs(Number(kk.chenhLech)) * 50000;
+        }
+        if (gtThieuCuaPhieu > 0) {
+          chiPhiKiemKhoThieu += gtThieuCuaPhieu;
+          soPhieuKiemKhoThieu++;
+        }
+      });
+
+      const tongChiPhiHaoHut = chiPhiXuatHuy + chiPhiKiemKhoThieu;
+
       const totalOpex = Object.values(opexBreakdown).reduce((a, b) => a + b, 0);
-      const ebit = loiNhuanGop - totalOpex;
+      // LỢI NHUẬN THUẦN THỰC TẾ = LÃI GỘP - CHI PHÍ VẬN HÀNH - CHI PHÍ HAO HỤT KHO
+      const ebit = loiNhuanGop - totalOpex - tongChiPhiHaoHut;
       const opexRate = (doanhThuThuan > 0) ? Math.round((totalOpex / doanhThuThuan) * 100) : 0;
+      const haohutRate = (doanhThuThuan > 0) ? Math.round((tongChiPhiHaoHut / doanhThuThuan) * 100) : 0;
       const ebitMargin = (doanhThuThuan > 0) ? Math.round((ebit / doanhThuThuan) * 100) : 0;
 
       const dongTienRong = tongThuQuy - tongChiQuy;
@@ -24313,8 +24398,15 @@ function formatVND(amount) {
       setTxt('bc-pl-opex-khac', opexBreakdown.khac.toLocaleString('vi-VN') + ' đ');
       setTxt('bc-pl-opex-total', totalOpex.toLocaleString('vi-VN') + ' đ');
 
+      setTxt('bc-pl-haohut-xuathuy', chiPhiXuatHuy.toLocaleString('vi-VN') + ' đ');
+      setTxt('bc-pl-haohut-kiemkho', chiPhiKiemKhoThieu.toLocaleString('vi-VN') + ' đ');
+      setTxt('bc-pl-haohut-total', tongChiPhiHaoHut.toLocaleString('vi-VN') + ' đ');
       setTxt('bc-pl-net-profit', ebit.toLocaleString('vi-VN') + ' đ');
-      setTxt('bc-pl-net-margin-text', `Biên lãi thuần đạt ${ebitMargin}% doanh thu thuần`);
+      setTxt('bc-pl-net-margin-text', `Biên lãi thuần đạt ${ebitMargin}% doanh thu thuần (Đã trừ hao hụt kho: -${tongChiPhiHaoHut.toLocaleString('vi-VN')} đ)`);
+      const elEbitSub = document.getElementById('bc-tc-ebit-sub');
+      if (elEbitSub) {
+        elEbitSub.innerText = 'Hao hụt kho: -' + tongChiPhiHaoHut.toLocaleString('vi-VN') + ' đ | OPEX: -' + totalOpex.toLocaleString('vi-VN') + ' đ';
+      }
 
       setTxt('bc-cf-thu-pos', thuPos.toLocaleString('vi-VN') + ' đ');
       setTxt('bc-cf-thu-congno', thuCongNo.toLocaleString('vi-VN') + ' đ');
@@ -38761,28 +38853,51 @@ function loadSoQuy(filter) {
       const optTruKho = document.getElementById('sc-xhd-opt-trukho')?.checked;
       const optGhiSoQuy = document.getElementById('sc-xhd-opt-ghisoquy')?.checked;
 
-      // 1. TỰ ĐỘNG TRỪ TỒN KHO LINH KIỆN TRONG DANH MỤC dm_hanghoa
-      if (optTruKho && typeof rawHangHoaList !== 'undefined' && Array.isArray(rawHangHoaList)) {
+      // 1. TỰ ĐỘNG TRỪ TỒN KHO LINH KIỆN TRONG DANH MỤC HÀNG HÓA KHI BÀN GIAO MÁY & THU TIỀN
+      const hangHoaDs = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa))
+        ? rawHangHoa
+        : (typeof rawHangHoaList !== 'undefined' && Array.isArray(rawHangHoaList) ? rawHangHoaList : []);
+
+      if (optTruKho && hangHoaDs.length > 0) {
+        const cnCode = (typeof layMaChiNhanh === 'function') ? layMaChiNhanh(chiNhanh) : 'CN01';
+        let daTruLinhKienCount = 0;
+
         for (const lk of selectedItems) {
           if (lk.loai !== 'TIEN_CONG' && lk.ma_hang) {
-            const spKho = rawHangHoaList.find(h => (h.maHang || h.ma_hang) === lk.ma_hang);
+            const spKho = hangHoaDs.find(h => String(h.maHang || h.ma_hang || '').trim().toUpperCase() === String(lk.ma_hang).trim().toUpperCase());
             if (spKho) {
               const slTru = Number(lk.so_luong) || 1;
               const tonMoi = Math.max(0, (Number(spKho.tonKho ?? spKho.ton_kho ?? 0)) - slTru);
               spKho.tonKho = tonMoi;
               spKho.ton_kho = tonMoi;
 
-              // Update Supabase dm_hanghoa
+              // Trừ tồn kho cụ thể theo chi nhánh làm việc
+              if (cnCode === 'CN01' && spKho.tonKho_CN01 !== undefined) {
+                spKho.tonKho_CN01 = Math.max(0, (Number(spKho.tonKho_CN01) || 0) - slTru);
+              } else if (cnCode === 'CN02' && spKho.tonKho_CN02 !== undefined) {
+                spKho.tonKho_CN02 = Math.max(0, (Number(spKho.tonKho_CN02) || 0) - slTru);
+              } else if (cnCode === 'CN03' && spKho.tonKho_CN03 !== undefined) {
+                spKho.tonKho_CN03 = Math.max(0, (Number(spKho.tonKho_CN03) || 0) - slTru);
+              }
+
+              daTruLinhKienCount++;
+
+              // Update Supabase dm_hanghoa nếu có kết nối
               if (typeof supabaseClient !== 'undefined' && supabaseClient) {
                 try {
                   await supabaseClient.from('dm_hanghoa').update({ ton_kho: tonMoi }).eq('ma_hang', lk.ma_hang);
                 } catch(e) {
-                  console.warn("Lỗi trừ tồn kho linh kiện:", e);
+                  console.warn("Lỗi trừ tồn kho linh kiện trên cloud:", e);
                 }
               }
             }
           }
         }
+
+        // Tự động làm mới danh mục hàng hóa để tồn kho hiển thị tức thì
+        if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
+        if (typeof capNhatTonKhoTheoChiNhanhHienTai === 'function') capNhatTonKhoTheoChiNhanhHienTai();
+        console.log(`⚡ Đã tự động trừ kho cho ${daTruLinhKienCount} linh kiện sửa chữa tại chi nhánh ${cnCode}!`);
       }
 
       // 2. TỰ ĐỘNG GHI SỔ QUỸ (Phiếu Thu) CHO KHOẢN TIỀN KHÁCH THANH TOÁN LẦN NÀY
