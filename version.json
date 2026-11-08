@@ -1,10 +1,10 @@
 {
-  "version": "1.3.0",
-  "build_number": 31,
+  "version": "1.3.1",
+  "build_number": 32,
   "force_update": false,
-  "release_notes": "• Tùy chọn xuất Excel hàng tồn: Khắc phục triệt để tình trạng đơ/treo khi mở modal hoặc tích chọn nhóm/sản phẩm với cơ chế phân trang 50 SP/trang và thuật toán tra cứu Set O(1), xuất Excel bất đồng bộ mượt mà cho hơn 21.400 mặt hàng.\n• Hiển thị Tổng tồn kho trên tiêu đề bảng & Thanh thống kê: Tự động tính và cập nhật tổng tồn kho theo nhóm hàng/từ khóa đang lọc, đồng thời hiển thị nổi bật tổng tồn kho của các mã hàng được tích chọn trên cả tiêu đề cột và thanh thống kê.\n• Đồng bộ Thời gian thực hiện: Hiển thị đầy đủ ngày giờ giao dịch chuẩn xác cho Đơn nhập hàng NCC (4.2), Kiểm kho (3.3), Lịch sử đơn hàng (2.5), Yêu cầu sửa chữa (2.6).\n• Xuất hủy hàng hỏng (3.4): Chuẩn hóa và hiển thị đầy đủ 61 phiếu xuất hủy thực tế từ KiotViet (mã phiếu, ngày hủy, người hủy, số lượng, giá trị xuất hủy và chi tiết từng mặt hàng).",
+  "release_notes": "• Khắc phục triệt để lỗi không lấy được danh sách Nhà cung cấp (NCC):\n  + Nạp và chuẩn hóa toàn bộ 284 Nhà cung cấp thực tế từ file KiotViet (DanhSachNhaCungCap_KV06112026.xlsx).\n  + Sửa chữa lỗi lệch trường dữ liệu: ánh xạ chính xác Số điện thoại thực tế, Địa chỉ, Khu vực, Phường/Xã, Công nợ hiện tại và Tổng mua.\n  + Tối ưu hóa hàm loadNCC() ưu tiên nạp từ RAW_NCC_THANH_GIANG và RAW_DOI_TAC_THANH_GIANG chuẩn hóa.\n  + Đồng bộ dữ liệu NCC xuyên suốt hệ thống: Tab 4.1 Danh sách NCC, tìm kiếm NCC khi tạo/sửa Đơn nhập hàng (4.2), Trả hàng NCC (4.3), Lập phiếu chi Sổ quỹ và Báo cáo NCC (6.4).",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.3.0/TT_POS_v1.3.0.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.3.0/TT_POS_v1.3.0.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.3.0"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.3.1/TT_POS_v1.3.1.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.3.1/TT_POS_v1.3.1.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.3.1"
 }

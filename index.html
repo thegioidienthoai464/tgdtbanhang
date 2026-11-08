@@ -35,7 +35,7 @@
   <!-- Dữ liệu tồn kho, giá vốn & IMEI 3 chi nhánh từ Excel gốc -->
   <script src="ton_kho_3_chinhanh.js?v=29"></script>
   <!-- Dữ liệu thực tế 100% từ KiotViet Chi Nhánh Thanh Giang -->
-  <script src="du_lieu_thanh_giang.js?v=29"></script>
+  <script src="du_lieu_thanh_giang.js?v=32"></script>
 
   <script>
     
@@ -369,7 +369,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.3.0</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.3.1</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -10400,21 +10400,73 @@ function formatVND(amount) {
     // 1. NHÀ CUNG CẤP (3.1)
     function loadNCC() {
       console.log("Loading NCC list...");
-      // Ưu tiên nạp 100% Nhà cung cấp thực tế từ KiotViet
-      if (typeof window.RAW_DOI_TAC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG)) {
-        const listNCC = window.RAW_DOI_TAC_THANH_GIANG.filter(d => d.loaiDoiTac === 'NCC');
-        if (listNCC.length > 0) {
-          rawNCCList = listNCC.map(d => ({
-            maDoiTac: d.maDoiTac,
+      // 0. Ưu tiên nạp 100% Nhà cung cấp thực tế từ RAW_NCC_THANH_GIANG
+      if (typeof window.RAW_NCC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NCC_THANH_GIANG) && window.RAW_NCC_THANH_GIANG.length > 0) {
+        rawNCCList = window.RAW_NCC_THANH_GIANG.map(d => {
+          let sdt = d.soDienThoai || d.dienThoai || '';
+          let dc = d.diaChi || d.dia_chi || '';
+          if (!sdt && /^(0\d{8,10})$/.test(String(dc).trim())) {
+            sdt = String(dc).trim();
+            dc = '';
+          }
+          const congNo = Number(d.congNo !== undefined ? d.congNo : (d.conNo || 0)) || 0;
+          return {
+            ...d,
+            maDoiTac: d.maDoiTac || d.ma_ncc || d.maNCC || '',
+            maNCC: d.maDoiTac || d.ma_ncc || d.maNCC || '',
             loaiDoiTac: 'NCC',
-            tenDoiTac: d.tenDoiTac,
-            soDienThoai: d.soDienThoai || '',
-            diaChi: d.diaChi || '',
-            congNo: Number(d.conNo) || 0,
-            trangThai: d.trangThai || 'HoatDong'
-          }));
+            tenDoiTac: d.tenDoiTac || d.ten_ncc || d.tenNCC || '',
+            tenNCC: d.tenDoiTac || d.ten_ncc || d.tenNCC || '',
+            soDienThoai: sdt,
+            dienThoai: sdt,
+            diaChi: dc,
+            congNo: congNo,
+            conNo: congNo,
+            tongMua: Number(d.tongMua || 0) || 0,
+            trangThai: d.trangThai || 'HoatDong',
+            nhomDoiTac: 'Nhà cung cấp'
+          };
+        });
+        locDanhSachNCC(false);
+        console.log(`⚡ Đã nạp ${rawNCCList.length} NCC thực tế từ RAW_NCC_THANH_GIANG!`);
+        return;
+      }
+      // 1. Nạp từ RAW_DOI_TAC_THANH_GIANG (chuẩn hóa thuộc tính)
+      if (typeof window.RAW_DOI_TAC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG) && window.RAW_DOI_TAC_THANH_GIANG.length > 0) {
+        const listNCC = window.RAW_DOI_TAC_THANH_GIANG.filter(d => 
+          d.loaiDoiTac === 'NCC' || 
+          (d.nhomDoiTac || '').includes('Nhà cung cấp') || 
+          (d.nhom_doi_tac || '').includes('Nhà cung cấp') || 
+          String(d.maDoiTac || d.ma_ncc || '').toUpperCase().startsWith('NCC')
+        );
+        if (listNCC.length > 0) {
+          rawNCCList = listNCC.map(d => {
+            let sdt = d.soDienThoai || d.dienThoai || '';
+            let dc = d.diaChi || d.dia_chi || '';
+            if (!sdt && /^(0\d{8,10})$/.test(String(dc).trim())) {
+              sdt = String(dc).trim();
+              dc = '';
+            }
+            const congNo = Number(d.congNo !== undefined ? d.congNo : (d.conNo || 0)) || 0;
+            return {
+              ...d,
+              maDoiTac: d.maDoiTac || d.ma_ncc || d.maNCC || '',
+              maNCC: d.maDoiTac || d.ma_ncc || d.maNCC || '',
+              loaiDoiTac: 'NCC',
+              tenDoiTac: d.tenDoiTac || d.ten_ncc || d.tenNCC || '',
+              tenNCC: d.tenDoiTac || d.ten_ncc || d.tenNCC || '',
+              soDienThoai: sdt,
+              dienThoai: sdt,
+              diaChi: dc,
+              congNo: congNo,
+              conNo: congNo,
+              tongMua: Number(d.tongMua || 0) || 0,
+              trangThai: d.trangThai || 'HoatDong',
+              nhomDoiTac: 'Nhà cung cấp'
+            };
+          });
           locDanhSachNCC(false);
-          console.log(`⚡ Đã nạp ${rawNCCList.length} NCC thực tế từ KiotViet!`);
+          console.log(`⚡ Đã nạp ${rawNCCList.length} NCC thực tế từ RAW_DOI_TAC_THANH_GIANG!`);
           return;
         }
       }
@@ -10427,8 +10479,10 @@ function formatVND(amount) {
                 loaiDoiTac: 'NCC',
                 tenDoiTac: d.ten_doi_tac,
                 soDienThoai: d.so_dien_thoai || '',
+                dienThoai: d.so_dien_thoai || '',
                 diaChi: d.dia_chi || '',
                 congNo: Number(d.cong_no) || 0,
+                conNo: Number(d.cong_no) || 0,
                 trangThai: d.trang_thai || 'HoatDong'
               }));
               locDanhSachNCC(false);
@@ -17748,20 +17802,74 @@ function formatVND(amount) {
     }
 
     function loadNCC() {
-      if (typeof window.RAW_DOI_TAC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG)) {
-        const listNCC = window.RAW_DOI_TAC_THANH_GIANG.filter(d => d.loaiDoiTac === 'NCC');
-        if (listNCC.length > 0) {
-          rawNCCList = listNCC.map(d => ({
-            maDoiTac: d.maDoiTac,
+      console.log("Loading NCC list...");
+      // 0. Ưu tiên nạp 100% Nhà cung cấp thực tế từ RAW_NCC_THANH_GIANG
+      if (typeof window.RAW_NCC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NCC_THANH_GIANG) && window.RAW_NCC_THANH_GIANG.length > 0) {
+        rawNCCList = window.RAW_NCC_THANH_GIANG.map(d => {
+          let sdt = d.soDienThoai || d.dienThoai || '';
+          let dc = d.diaChi || d.dia_chi || '';
+          if (!sdt && /^(0\d{8,10})$/.test(String(dc).trim())) {
+            sdt = String(dc).trim();
+            dc = '';
+          }
+          const congNo = Number(d.congNo !== undefined ? d.congNo : (d.conNo || 0)) || 0;
+          return {
+            ...d,
+            maDoiTac: d.maDoiTac || d.ma_ncc || d.maNCC || '',
+            maNCC: d.maDoiTac || d.ma_ncc || d.maNCC || '',
             loaiDoiTac: 'NCC',
-            tenDoiTac: d.tenDoiTac,
-            soDienThoai: d.soDienThoai || '',
-            diaChi: d.diaChi || '',
-            congNo: Number(d.conNo) || 0,
-            trangThai: d.trangThai || 'HoatDong'
-          }));
+            tenDoiTac: d.tenDoiTac || d.ten_ncc || d.tenNCC || '',
+            tenNCC: d.tenDoiTac || d.ten_ncc || d.tenNCC || '',
+            soDienThoai: sdt,
+            dienThoai: sdt,
+            diaChi: dc,
+            congNo: congNo,
+            conNo: congNo,
+            tongMua: Number(d.tongMua || 0) || 0,
+            trangThai: d.trangThai || 'HoatDong',
+            nhomDoiTac: 'Nhà cung cấp'
+          };
+        });
+        locDanhSachNCC(false);
+        console.log(`⚡ Đã nạp ${rawNCCList.length} NCC thực tế từ RAW_NCC_THANH_GIANG!`);
+        return;
+      }
+      // 1. Nạp từ RAW_DOI_TAC_THANH_GIANG (chuẩn hóa thuộc tính)
+      if (typeof window.RAW_DOI_TAC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG) && window.RAW_DOI_TAC_THANH_GIANG.length > 0) {
+        const listNCC = window.RAW_DOI_TAC_THANH_GIANG.filter(d => 
+          d.loaiDoiTac === 'NCC' || 
+          (d.nhomDoiTac || '').includes('Nhà cung cấp') || 
+          (d.nhom_doi_tac || '').includes('Nhà cung cấp') || 
+          String(d.maDoiTac || d.ma_ncc || '').toUpperCase().startsWith('NCC')
+        );
+        if (listNCC.length > 0) {
+          rawNCCList = listNCC.map(d => {
+            let sdt = d.soDienThoai || d.dienThoai || '';
+            let dc = d.diaChi || d.dia_chi || '';
+            if (!sdt && /^(0\d{8,10})$/.test(String(dc).trim())) {
+              sdt = String(dc).trim();
+              dc = '';
+            }
+            const congNo = Number(d.congNo !== undefined ? d.congNo : (d.conNo || 0)) || 0;
+            return {
+              ...d,
+              maDoiTac: d.maDoiTac || d.ma_ncc || d.maNCC || '',
+              maNCC: d.maDoiTac || d.ma_ncc || d.maNCC || '',
+              loaiDoiTac: 'NCC',
+              tenDoiTac: d.tenDoiTac || d.ten_ncc || d.tenNCC || '',
+              tenNCC: d.tenDoiTac || d.ten_ncc || d.tenNCC || '',
+              soDienThoai: sdt,
+              dienThoai: sdt,
+              diaChi: dc,
+              congNo: congNo,
+              conNo: congNo,
+              tongMua: Number(d.tongMua || 0) || 0,
+              trangThai: d.trangThai || 'HoatDong',
+              nhomDoiTac: 'Nhà cung cấp'
+            };
+          });
           locDanhSachNCC(false);
-          console.log(`⚡ Đã nạp ${rawNCCList.length} NCC thực tế từ KiotViet!`);
+          console.log(`⚡ Đã nạp ${rawNCCList.length} NCC thực tế từ RAW_DOI_TAC_THANH_GIANG!`);
           return;
         }
       }
@@ -17774,8 +17882,10 @@ function formatVND(amount) {
                 loaiDoiTac: 'NCC',
                 tenDoiTac: d.ten_doi_tac,
                 soDienThoai: d.so_dien_thoai || '',
+                dienThoai: d.so_dien_thoai || '',
                 diaChi: d.dia_chi || '',
                 congNo: Number(d.cong_no) || 0,
+                conNo: Number(d.cong_no) || 0,
                 trangThai: d.trang_thai || 'HoatDong'
               }));
               locDanhSachNCC(false);
@@ -20903,12 +21013,12 @@ function formatVND(amount) {
         }
       }
       if (!rawNCCList || rawNCCList.length === 0) {
-        if (window.RAW_DOI_TAC_THANH_GIANG && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG) && window.RAW_DOI_TAC_THANH_GIANG.length > 0) {
+        if (window.RAW_NCC_THANH_GIANG && Array.isArray(window.RAW_NCC_THANH_GIANG) && window.RAW_NCC_THANH_GIANG.length > 0) {
+          rawNCCList = window.RAW_NCC_THANH_GIANG;
+        } else if (window.RAW_DOI_TAC_THANH_GIANG && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG) && window.RAW_DOI_TAC_THANH_GIANG.length > 0) {
           rawNCCList = window.RAW_DOI_TAC_THANH_GIANG.filter(d => 
             (d.loaiDoiTac === 'NCC' || String(d.maDoiTac || '').toUpperCase().startsWith('NCC') || String(d.nhomDoiTac || '').includes('Nhà cung cấp'))
           );
-        } else if (window.RAW_NCC_THANH_GIANG && window.RAW_NCC_THANH_GIANG.length > 0) {
-          rawNCCList = window.RAW_NCC_THANH_GIANG;
         }
       }
       if (!window.rawSoQuyAllRecords || window.rawSoQuyAllRecords.length === 0) {
@@ -23302,7 +23412,9 @@ function formatVND(amount) {
 
     function tinhToanVaRenderBaoCaoNCC() {
       if (!rawNCCList || !Array.isArray(rawNCCList) || rawNCCList.length === 0) {
-        if (window.RAW_DOI_TAC_THANH_GIANG && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG)) {
+        if (window.RAW_NCC_THANH_GIANG && Array.isArray(window.RAW_NCC_THANH_GIANG) && window.RAW_NCC_THANH_GIANG.length > 0) {
+          rawNCCList = window.RAW_NCC_THANH_GIANG;
+        } else if (window.RAW_DOI_TAC_THANH_GIANG && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG)) {
           rawNCCList = window.RAW_DOI_TAC_THANH_GIANG.filter(d => 
             (d.loaiDoiTac === 'NCC' || String(d.maDoiTac || '').toUpperCase().startsWith('NCC') || String(d.nhomDoiTac || '').toUpperCase().includes('NHÀ CUNG CẤP'))
           );
