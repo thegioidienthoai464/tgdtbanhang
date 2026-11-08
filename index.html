@@ -45,9 +45,11 @@
     function parseDateTimeGlobal(dateVal) {
       if (!dateVal) return null;
       if (dateVal instanceof Date && !isNaN(dateVal.getTime())) return dateVal;
+      if (typeof dateVal === 'number' && !isNaN(dateVal)) return new Date(dateVal);
       if (typeof dateVal === 'string') {
         const s = dateVal.trim();
-        const mVn = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+        // 1. Khớp định dạng ngày giờ chuẩn Việt Nam (KiotViet): dd/mm/yyyy [hh:mm[:ss]] hoặc dd-mm-yyyy
+        const mVn = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
         if (mVn) {
           return new Date(
             Number(mVn[3]),
@@ -58,6 +60,27 @@
             Number(mVn[6] || 0)
           );
         }
+        // 2. Khớp định dạng chuẩn ISO: yyyy-mm-dd [hh:mm[:ss]]
+        const mIso = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T\s](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+        if (mIso) {
+          let y = Number(mIso[1]);
+          let m = Number(mIso[2]);
+          let d = Number(mIso[3]);
+          let hh = Number(mIso[4] || 0);
+          let mm = Number(mIso[5] || 0);
+          let ss = Number(mIso[6] || 0);
+          let dt = new Date(y, m - 1, d, hh, mm, ss);
+          // Tự động phục hồi lỗi đảo ngày/tháng (Self-healing):
+          // Nếu chuỗi yyyy-mm-dd trước đó bị parse nhầm ngày thành tháng khiến ngày rơi vào tương lai (> hiện tại + 1 ngày)
+          // và cả m, d đều <= 12, đảo lại m và d để trả về đúng ngày giao dịch thực tế trong quá khứ
+          if (dt.getTime() > Date.now() + 86400000 && m <= 12 && d <= 12) {
+            let swapped = new Date(y, d - 1, m, hh, mm, ss);
+            if (swapped.getTime() <= Date.now() + 86400000) {
+              return swapped;
+            }
+          }
+          return dt;
+        }
         const d = new Date(s);
         if (!isNaN(d.getTime())) return d;
       }
@@ -67,25 +90,10 @@
 
     function chuanHoaNgayISO(dateVal) {
       if (!dateVal) return '';
-      if (dateVal instanceof Date && !isNaN(dateVal.getTime())) {
+      const d = parseDateTimeGlobal(dateVal);
+      if (d && !isNaN(d.getTime())) {
         const pad = n => String(n).padStart(2, '0');
-        return `${dateVal.getFullYear()}-${pad(dateVal.getMonth()+1)}-${pad(dateVal.getDate())}`;
-      }
-      if (typeof dateVal === 'string') {
-        const s = dateVal.trim();
-        const mIso = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-        if (mIso) {
-          return `${mIso[1]}-${String(mIso[2]).padStart(2, '0')}-${String(mIso[3]).padStart(2, '0')}`;
-        }
-        const mVn = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
-        if (mVn) {
-          return `${mVn[3]}-${String(mVn[2]).padStart(2, '0')}-${String(mVn[1]).padStart(2, '0')}`;
-        }
-        const d = new Date(s);
-        if (!isNaN(d.getTime())) {
-          const pad = n => String(n).padStart(2, '0');
-          return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-        }
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
       }
       return '';
     }
@@ -369,7 +377,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.1</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.2</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -6826,17 +6834,12 @@
      * ==================================================================== */
     function formatNgayGioLocal(raw) {
       if (!raw) return '';
-      const str = String(raw).trim();
-      // Nếu là chuỗi đã ở dạng 'YYYY-MM-DD HH:mm:ss' hoặc 'YYYY-MM-DD HH:mm' thuần không có Z, T hay timezone offset
-      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(str)) {
-        return str.length === 16 ? str + ':00' : str;
-      }
-      // Parse ISO string (từ Supabase TIMESTAMPTZ chứa UTC Z/+00:00) sang đúng giờ địa phương của trình duyệt
-      const d = new Date(str);
-      if (!isNaN(d.getTime())) {
+      const d = parseDateTimeGlobal(raw);
+      if (d && !isNaN(d.getTime())) {
         const pad = n => String(n).padStart(2, '0');
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
       }
+      const str = String(raw).trim();
       return str.replace('T', ' ').slice(0, 19);
     }
 
@@ -6846,17 +6849,13 @@
         const pad = n => String(n).padStart(2, '0');
         return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
       }
-      const str = String(raw).trim();
-      // Nếu là chuỗi dạng 'YYYY-MM-DD HH:mm(:ss)?' hoặc 'YYYY-MM-DDTHH:mm(:ss)?' thuần không có Z/+
-      if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(str) && !str.includes('Z') && !str.includes('+')) {
-        return str.replace(' ', 'T').slice(0, 16);
-      }
-      const d = new Date(str);
-      if (!isNaN(d.getTime())) {
+      const d = parseDateTimeGlobal(raw);
+      if (d && !isNaN(d.getTime())) {
         const pad = n => String(n).padStart(2, '0');
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
       }
-      return '';
+      const str = String(raw).trim();
+      return str.replace(' ', 'T').slice(0, 16);
     }
 
     window.formatNgayGioLocal = formatNgayGioLocal;
@@ -28068,24 +28067,18 @@ function formatVND(amount) {
     function parseNgayGioSort(dateStr) {
       if (!dateStr) return 0;
       if (typeof dateStr === 'number') return dateStr;
-      const s = String(dateStr).trim();
-      const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
-      if (m) {
-        const day = parseInt(m[1], 10);
-        const month = parseInt(m[2], 10) - 1;
-        const year = parseInt(m[3], 10);
-        const hour = parseInt(m[4] || '0', 10);
-        const min = parseInt(m[5] || '0', 10);
-        const sec = parseInt(m[6] || '0', 10);
-        return new Date(year, month, day, hour, min, sec).getTime();
-      }
-      const t = Date.parse(s);
-      return isNaN(t) ? 0 : t;
+      const d = parseDateTimeGlobal(dateStr);
+      return d ? d.getTime() : 0;
     }
 
     function chuanHoaDonHangObj(d) {
       const ma = String(d.maDonHang || d.maDon || d.ma_don || d.ma_don_hang || '').trim();
-      const time = d.ngayBan || d.ngay_ban || d.thoiGian || d.ngayTao || d.ngay_tao || d.created_at || '';
+      let rawTime = d.thoiGian || d.ngayTao || d.ngay_tao || d.ngayBan || d.ngay_ban || d.created_at || '';
+      // Nếu thoiGian hoặc ngayTao là dạng chuẩn VN dd/mm/yyyy thì ưu tiên hàng đầu để tránh chuỗi bị đảo trước đó
+      if (!String(rawTime).includes('/') && (String(d.thoiGian).includes('/') || String(d.ngayTao).includes('/'))) {
+        rawTime = d.thoiGian || d.ngayTao;
+      }
+      const ngayBanFormatted = typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(rawTime) : String(rawTime);
       const tenKH = d.tenKH || d.tenKhachHang || d.ten_kh || 'Khách lẻ';
       const maKH = d.maKH || d.maKhachHang || d.ma_kh || 'KHACHLE';
       const tongTien = Number(d.tongTien ?? d.tong_tien ?? 0);
@@ -28106,9 +28099,9 @@ function formatVND(amount) {
         ...d,
         maDonHang: ma,
         maDon: ma,
-        ngayBan: typeof formatNgayGioLocal === 'function' ? formatNgayGioLocal(time) : String(time),
-        thoiGian: time,
-        ngayTao: time,
+        ngayBan: ngayBanFormatted,
+        thoiGian: ngayBanFormatted,
+        ngayTao: ngayBanFormatted,
         tenKH: tenKH,
         tenKhachHang: tenKH,
         maKH: maKH,
@@ -28207,6 +28200,31 @@ function formatVND(amount) {
     }
 
     function loadLichSuDonHang() {
+      // 0. Tự động kiểm tra và làm sạch cache TT_POS_LOCAL_ORDERS nếu từng lưu ngày trong tương lai
+      try {
+        let localRaw = JSON.parse(localStorage.getItem('TT_POS_LOCAL_ORDERS') || '[]');
+        if (Array.isArray(localRaw) && localRaw.length > 0) {
+          let hasChange = false;
+          let cleaned = [];
+          localRaw.forEach(item => {
+            const healed = chuanHoaDonHangObj(item);
+            const t = parseNgayGioSort(healed.ngayBan);
+            // Bỏ qua đơn nếu ngày vẫn bất thường vượt quá hiện tại + 1 ngày
+            if (t > Date.now() + 86400000) {
+              hasChange = true;
+              return;
+            }
+            if (healed.ngayBan !== item.ngayBan) hasChange = true;
+            cleaned.push(healed);
+          });
+          if (hasChange) {
+            localStorage.setItem('TT_POS_LOCAL_ORDERS', JSON.stringify(cleaned));
+          }
+        }
+      } catch(e) {
+        console.warn("Lỗi kiểm tra TT_POS_LOCAL_ORDERS:", e);
+      }
+
       const mergedMap = new Map();
 
       // 1. Phục hồi từ TT_POS_LOCAL_ORDERS (các đơn vừa bán trên POS)
@@ -28300,7 +28318,11 @@ function formatVND(amount) {
       // Tự động lưu cache các đơn mới vào TT_POS_LOCAL_ORDERS
       try {
         const localSaved = JSON.parse(localStorage.getItem('TT_POS_LOCAL_ORDERS') || '[]');
-        const newItems = rawDonHangList.filter(d => String(d.maDonHang).startsWith('HD') && (Date.now() - (parseNgayGioSort(d.ngayBan) || 0) < 30 * 86400 * 1000));
+        const newItems = rawDonHangList.filter(d => {
+          const t = parseNgayGioSort(d.ngayBan || d.thoiGian);
+          const diff = Date.now() - t;
+          return String(d.maDonHang).startsWith('HD') && diff >= 0 && diff < 30 * 86400 * 1000;
+        });
         if (newItems.length > 0) {
           const mapLocal = new Map();
           [...newItems, ...localSaved].forEach(it => {
@@ -33564,27 +33586,11 @@ function loadSoQuy(filter) {
       if (!dateVal) return false;
 
       let ymd = '';
-      if (typeof dateVal === 'string') {
-        const mIso = dateVal.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-        if (mIso) {
-          ymd = `${mIso[1]}-${String(mIso[2]).padStart(2, '0')}-${String(mIso[3]).padStart(2, '0')}`;
-        } else {
-          const mVn = dateVal.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
-          if (mVn) {
-            ymd = `${mVn[3]}-${String(mVn[2]).padStart(2, '0')}-${String(mVn[1]).padStart(2, '0')}`;
-          } else {
-            const d = new Date(dateVal);
-            if (!isNaN(d.getTime())) {
-              const pad = n => String(n).padStart(2, '0');
-              ymd = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-            }
-          }
-        }
-      } else if (dateVal instanceof Date && !isNaN(dateVal.getTime())) {
+      const d = parseDateTimeGlobal(dateVal);
+      if (d && !isNaN(d.getTime())) {
         const pad = n => String(n).padStart(2, '0');
-        ymd = `${dateVal.getFullYear()}-${pad(dateVal.getMonth()+1)}-${pad(dateVal.getDate())}`;
+        ymd = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
       }
-
       if (!ymd) return true;
 
       if (tuNgayStr && ymd < tuNgayStr) return false;
