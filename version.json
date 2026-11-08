@@ -1,10 +1,10 @@
 {
-  "version": "1.4.2",
-  "build_number": 37,
+  "version": "1.4.3",
+  "build_number": 38,
   "force_update": false,
-  "release_notes": "• Khắc phục triệt để lỗi đảo ngày/tháng đối với các đơn hàng KiotViet (nguyên nhân do hàm parse chuẩn quốc tế nhầm định dạng Việt Nam dd/mm/yyyy thành mm/dd/yyyy khiến các đơn có ngày <= 12 bị đẩy sang tháng 11, 12 trong tương lai).\n• Bổ sung cơ chế tự phục hồi (Self-healing) tự động làm sạch và sửa chữa các đơn bị lưu sai trong bộ nhớ đệm (localStorage), sắp xếp thứ tự đơn hàng theo đúng trình tự thời gian giao dịch thực tế.",
+  "release_notes": "• Cập nhật tức thì (Optimistic / Local-First) đơn hàng vừa bán lên đầu danh sách Tab 2.5 Lịch sử đơn hàng mà không bị trễ hay mất do lỗi mạng/Supabase.\n• Khắc phục triệt để lỗi quản lý IMEI: Trừ tức thì IMEI đã bán khỏi bộ nhớ ram, thẻ kho, danh mục 3.1 và dropdown POS; lưu cache loại trừ vĩnh viễn (tt_pos_sold_imeis) tránh tái xuất hiện sau khi reload trang.\n• Tự động chọn và trừ các IMEI khả dụng khi bán sản phẩm có quản lý IMEI mà thu ngân không mở modal chọn thủ công.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.2/TT_POS_v1.4.2.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.2/TT_POS_v1.4.2.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.4.2"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.3/TT_POS_v1.4.3.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.3/TT_POS_v1.4.3.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.4.3"
 }

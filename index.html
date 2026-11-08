@@ -377,7 +377,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.2</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.3</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -8196,8 +8196,11 @@ function formatVND(amount) {
       // Chênh lệch tiền (tiền thiếu hoặc thừa tính vào công nợ)
       const chenhLech = finalPrice - pay; // > 0: nợ thêm, < 0: trả dư
 
-      const orderPayload = {
+      const orderPayloadRaw = {
         maDonHang: maDon,
+        maDon: maDon,
+        thoiGian: ngayBanStr,
+        ngayTao: ngayBanStr,
         ngayBan: ngayBanStr,
         maKH: maKH,
         tenKH: tenKH,
@@ -8223,86 +8226,73 @@ function formatVND(amount) {
         nguoiGiaoDich: nguoiGiaoDich
       };
 
+      const orderPayload = (typeof chuanHoaDonHangObj === 'function') 
+        ? chuanHoaDonHangObj(orderPayloadRaw) 
+        : orderPayloadRaw;
+
       try {
-        // 1. TRỪ TỒN KHO: Cả theo chi nhánh, bộ nhớ và Supabase
         const targetCNOrder = (typeof layMaChiNhanh === 'function') ? layMaChiNhanh(chiNhanhHienTai) : 'CN01';
+        const allSoldImeis = [];
+
+        // 1. TRỪ TỒN KHO & IMEI CỤC BỘ NGAY LẬP TỨC
         posCart.forEach(item => {
-          if (typeof dieuChinhTonKhoChiNhanh === 'function') {
-            dieuChinhTonKhoChiNhanh(item.maHang, targetCNOrder, -item.soLuong);
-          }
           const cleanMa = String(item.maHang || '').trim().toUpperCase();
           const sp = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) 
             ? rawHangHoa.find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa) 
             : null;
-          if (sp) {
-            sp.tonKho = Math.max(0, (Number(sp.tonKho) || 0) - (Number(item.soLuong) || 1));
-            // Cập nhật tồn kho trên Supabase ngay lập tức
-            if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-              try {
-                supabaseClient.from('dm_hanghoa').update({ ton_kho: sp.tonKho }).eq('ma_hang', sp.maHang).then(() => {}, e => console.error("Lỗi cập nhật tồn kho Supabase:", e));
-              } catch(e) {
-                console.error("Lỗi cập nhật tồn kho Supabase:", e);
+
+          const isItemIMEI = Boolean(
+            item.hasIMEI ||
+            (sp && sp.coQuanLyIMEI) ||
+            (item.imeiStr && item.imeiStr.trim().length > 0) ||
+            (window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa] && Object.values(window.imeiListByProductAndBranch[cleanMa]).some(arr => arr && arr.length > 0)) ||
+            (sp && Array.isArray(sp.danhSachIMEI) && sp.danhSachIMEI.length > 0)
+          );
+
+          let itemSoldImeis = [];
+          if (item.imeiStr) {
+            itemSoldImeis = String(item.imeiStr).split(/[\n,;\r\t]+/).map(s => s.trim()).filter(Boolean);
+          }
+
+          if (isItemIMEI) {
+            if (sp) sp.coQuanLyIMEI = true;
+            const slCan = Math.max(1, Number(item.soLuong) || 1);
+            if (itemSoldImeis.length < slCan) {
+              const curBranchImeis = (window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa] && window.imeiListByProductAndBranch[cleanMa][targetCNOrder]) 
+                ? window.imeiListByProductAndBranch[cleanMa][targetCNOrder] 
+                : (sp && Array.isArray(sp.danhSachIMEI) ? sp.danhSachIMEI : []);
+              
+              for (let im of curBranchImeis) {
+                const cleanIm = String(im).trim();
+                if (cleanIm && !itemSoldImeis.includes(cleanIm) && !allSoldImeis.includes(cleanIm)) {
+                  itemSoldImeis.push(cleanIm);
+                  if (itemSoldImeis.length >= slCan) break;
+                }
               }
+            }
+            if (itemSoldImeis.length > 0) {
+              item.imeiStr = itemSoldImeis.join(', ');
+              itemSoldImeis.forEach(im => allSoldImeis.push(im));
+            }
+            if (typeof truImeiDaBan === 'function') {
+              truImeiDaBan(cleanMa, targetCNOrder, itemSoldImeis);
+            }
+          } else {
+            if (typeof dieuChinhTonKhoChiNhanh === 'function') {
+              dieuChinhTonKhoChiNhanh(cleanMa, targetCNOrder, -item.soLuong);
+            }
+            if (sp) {
+              sp.tonKho = Math.max(0, (Number(sp.tonKho) || 0) - (Number(item.soLuong) || 1));
             }
           }
         });
-        if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
 
-        // 2. Cập nhật IMEI đã bán trong Supabase kho_imei
-        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-          const soldImeis = [];
-          posCart.forEach(it => {
-            if (it.imeiStr) {
-              String(it.imeiStr).split(/[\n,;\r\t]+/).map(s => s.trim()).filter(Boolean).forEach(im => soldImeis.push(im));
-            }
-          });
-          if (soldImeis.length > 0) {
-            try {
-              supabaseClient.from('kho_imei').update({ trang_thai: 'DaBan', ngay_xuat: ngayBanStr }).in('imei', soldImeis).then(() => {}, e => console.warn(e));
-            } catch(e) {
-              console.warn(e);
-            }
-          }
-        }
-
-        // 3. Cập nhật công nợ nếu khách nợ hoặc trả dư
+        // 2. CẬP NHẬT CÔNG NỢ KHÁCH HÀNG NẾU NỢ HOẶC TRẢ DƯ
         if (kh && chenhLech !== 0) {
           kh.congNo = (Number(kh.congNo) || 0) + chenhLech;
-          if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-            try {
-              supabaseClient.from('dm_doitac').update({ cong_no: kh.congNo }).eq('ma_doi_tac', kh.maDoiTac).then(() => {}, e => console.warn("Lỗi update công nợ:", e));
-            } catch(e) {
-              console.warn("Lỗi update công nợ:", e);
-            }
-          }
         }
 
-        // 4. Lưu đơn hàng vào Supabase
-        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-          try {
-            await supabaseClient.from('don_hang').upsert([{
-              ma_don_hang: String(orderPayload.maDonHang).slice(0, 50),
-              ngay_ban: ngayBanISO,
-              ma_kh: String(orderPayload.maKH || 'KHACHLE').slice(0, 50),
-              ten_kh: String(orderPayload.tenKH || 'Khách lẻ').slice(0, 255),
-              so_dien_thoai: String(orderPayload.soDienThoai || '').slice(0, 50),
-              chi_nhanh: String(orderPayload.chiNhanh || '').slice(0, 100),
-              tong_tien: Number(orderPayload.tongTien) || 0,
-              giam_gia: Number(orderPayload.giamGia) || 0,
-              khach_phai_tra: Number(orderPayload.khachPhaiTra) || 0,
-              khach_tra: Number(orderPayload.khachTra) || 0,
-              hinh_thuc_tt: String(orderPayload.hinhThucTT || 'TIEN_MAT').slice(0, 50),
-              ngan_hang_nhan: String(orderPayload.nganHangNhan || '').slice(0, 255),
-              chi_tiet_san_pham: orderPayload.chiTietSanPham || [],
-              trang_thai: "Hoàn thành",
-              nhan_vien: String(orderPayload.nhanVien || '').slice(0, 100)
-            }]);
-          } catch(e) {
-            console.error("Lỗi sync đơn Supabase:", e);
-          }
-        }
-
-        // 5. GHI NHẬN SỔ QUỸ (Phiếu Thu) cho khoản tiền khách thanh toán
+        // 3. TẠO CÁC PHIẾU THU SỔ QUỸ (Phiếu Thu)
         const listPhieuThu = [];
         if (hinhThucTTVal === 'HON_HOP') {
           if (tienMatHonHop > 0) {
@@ -8371,15 +8361,6 @@ function formatVND(amount) {
           });
         }
 
-        // Lưu phiếu thu vào Supabase / Sandbox
-        if (listPhieuThu.length > 0 && typeof supabaseClient !== 'undefined' && supabaseClient) {
-          try {
-            await supabaseClient.from('so_quy').upsert(listPhieuThu);
-          } catch(e) {
-            console.error("Lỗi sync so_quy:", e);
-          }
-        }
-
         // Cập nhật Sổ Quỹ bộ nhớ client ngay tức khắc
         window.rawSoQuyAllRecords = window.rawSoQuyAllRecords || [];
         listPhieuThu.forEach(pt => {
@@ -8400,20 +8381,27 @@ function formatVND(amount) {
             lyDoThuChi: pt.ghi_chu
           });
         });
-        if (typeof loadDuLieuSoQuy === 'function') {
-          const currentQuy = typeof currentLoaiQuy !== 'undefined' ? currentLoaiQuy : (typeof currentQuyDangXem !== 'undefined' ? currentQuyDangXem : 'ALL');
-          loadDuLieuSoQuy(currentQuy);
+
+        // 4. LƯU ĐƠN HÀNG VÀO BỘ NHỚ VÀ LOCALSTORAGE TRƯỚC HẾT (OPTIMISTIC / LOCAL-FIRST)
+        if (typeof rawDonHangList !== 'undefined' && Array.isArray(rawDonHangList)) {
+          rawDonHangList = rawDonHangList.filter(d => (d.maDonHang || d.maDon) !== orderPayload.maDonHang);
+          rawDonHangList.unshift(orderPayload);
+          window.rawDonHangList = rawDonHangList;
+        }
+        if (typeof window.RAW_DON_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DON_HANG_THANH_GIANG)) {
+          window.RAW_DON_HANG_THANH_GIANG = window.RAW_DON_HANG_THANH_GIANG.filter(d => (d.maDonHang || d.maDon) !== orderPayload.maDonHang);
+          window.RAW_DON_HANG_THANH_GIANG.unshift(orderPayload);
         }
 
-        // 4b. Lưu đơn hàng vào TT_POS_LOCAL_ORDERS và Sandbox cache
         try {
           const localOrders = JSON.parse(localStorage.getItem('TT_POS_LOCAL_ORDERS') || '[]');
           const cleanLocal = localOrders.filter(o => (o.maDonHang || o.maDon) !== orderPayload.maDonHang);
           cleanLocal.unshift(orderPayload);
-          localStorage.setItem('TT_POS_LOCAL_ORDERS', JSON.stringify(cleanLocal.slice(0, 1000)));
+          localStorage.setItem('TT_POS_LOCAL_ORDERS', JSON.stringify(cleanLocal.slice(0, 300)));
         } catch(e) {
           console.warn("Lỗi lưu localStorage TT_POS_LOCAL_ORDERS:", e);
         }
+
         if (typeof saveToSandboxCache === 'function') {
           saveToSandboxCache('don_hang', [{
             ma_don_hang: orderPayload.maDonHang,
@@ -8434,22 +8422,76 @@ function formatVND(amount) {
           }]);
         }
 
-        // Thêm đơn hàng vào lịch sử client
-        if (typeof rawDonHangList !== 'undefined' && Array.isArray(rawDonHangList)) {
-          if (!rawDonHangList.some(d => (d.maDonHang || d.maDon) === orderPayload.maDonHang)) {
-            rawDonHangList.unshift(orderPayload);
-          }
-        }
-        if (typeof window.RAW_DON_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DON_HANG_THANH_GIANG)) {
-          if (!window.RAW_DON_HANG_THANH_GIANG.some(d => (d.maDonHang || d.maDon) === orderPayload.maDonHang)) {
-            window.RAW_DON_HANG_THANH_GIANG.unshift(orderPayload);
-          }
-        }
-        if (typeof locDanhSachDonHang === 'function') {
-          locDanhSachDonHang(false);
+        // 5. CẬP NHẬT GIAO DIỆN TỨC THỜI (LỊCH SỬ ĐƠN HÀNG, DANH MỤC HÀNG HÓA, SỔ QUỸ)
+        if (typeof pageDonHang !== 'undefined') pageDonHang = 1;
+        if (typeof locDanhSachDonHang === 'function') locDanhSachDonHang(false);
+        if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
+        if (typeof loadDuLieuSoQuy === 'function') {
+          const currentQuy = typeof currentLoaiQuy !== 'undefined' ? currentLoaiQuy : (typeof currentQuyDangXem !== 'undefined' ? currentQuyDangXem : 'ALL');
+          loadDuLieuSoQuy(currentQuy);
         }
 
-        // Cập nhật Đơn Đặt Hàng nếu có liên kết
+        // 6. ĐỒNG BỘ NỀN KHÔNG CHẶN GIAO DIỆN (ASYNC BACKGROUND SYNC)
+        (async () => {
+          if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+            try {
+              // Cập nhật tồn kho hàng hóa trên Supabase
+              posCart.forEach(item => {
+                const cleanMa = String(item.maHang || '').trim().toUpperCase();
+                const sp = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) 
+                  ? rawHangHoa.find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa) 
+                  : null;
+                if (sp) {
+                  try {
+                    supabaseClient.from('dm_hanghoa').update({ ton_kho: sp.tonKho }).eq('ma_hang', sp.maHang).then(() => {}, e => {});
+                  } catch(e) {}
+                }
+              });
+
+              // Cập nhật trạng thái IMEI đã bán trên Supabase
+              if (allSoldImeis.length > 0) {
+                try {
+                  supabaseClient.from('kho_imei').update({ trang_thai: 'DaBan', ngay_xuat: ngayBanStr }).in('imei', allSoldImeis).then(() => {}, e => {});
+                } catch(e) {}
+              }
+
+              // Cập nhật công nợ đối tác trên Supabase
+              if (kh && chenhLech !== 0) {
+                try {
+                  supabaseClient.from('dm_doitac').update({ cong_no: kh.congNo }).eq('ma_doi_tac', kh.maDoiTac).then(() => {}, e => {});
+                } catch(e) {}
+              }
+
+              // Lưu đơn hàng vào Supabase
+              await supabaseClient.from('don_hang').upsert([{
+                ma_don_hang: String(orderPayload.maDonHang).slice(0, 50),
+                ngay_ban: ngayBanISO,
+                ma_kh: String(orderPayload.maKH || 'KHACHLE').slice(0, 50),
+                ten_kh: String(orderPayload.tenKH || 'Khách lẻ').slice(0, 255),
+                so_dien_thoai: String(orderPayload.soDienThoai || '').slice(0, 50),
+                chi_nhanh: String(orderPayload.chiNhanh || '').slice(0, 100),
+                tong_tien: Number(orderPayload.tongTien) || 0,
+                giam_gia: Number(orderPayload.giamGia) || 0,
+                khach_phai_tra: Number(orderPayload.khachPhaiTra) || 0,
+                khach_tra: Number(orderPayload.khachTra) || 0,
+                hinh_thuc_tt: String(orderPayload.hinhThucTT || 'TIEN_MAT').slice(0, 50),
+                ngan_hang_nhan: String(orderPayload.nganHangNhan || '').slice(0, 255),
+                chi_tiet_san_pham: orderPayload.chiTietSanPham || [],
+                trang_thai: "Hoàn thành",
+                nhan_vien: String(orderPayload.nhanVien || '').slice(0, 100)
+              }]);
+
+              // Lưu phiếu thu sổ quỹ vào Supabase
+              if (listPhieuThu.length > 0) {
+                await supabaseClient.from('so_quy').upsert(listPhieuThu);
+              }
+            } catch(eNet) {
+              console.warn("Lỗi sync background Supabase:", eNet);
+            }
+          }
+        })();
+
+// Cập nhật Đơn Đặt Hàng nếu có liên kết
         if (typeof donDatHangDangXuLy !== 'undefined' && donDatHangDangXuLy) {
           if (typeof supabaseClient !== 'undefined' && supabaseClient) {
             try {
@@ -8838,6 +8880,69 @@ function formatVND(amount) {
       }
     }
 
+    // 5b. Quản lý danh sách IMEI đã bán và trừ triệt để khỏi bộ nhớ / cache
+    function layDanhSachImeiDaBan() {
+      try {
+        return JSON.parse(localStorage.getItem('tt_pos_sold_imeis') || '[]');
+      } catch(e) {
+        return [];
+      }
+    }
+    window.layDanhSachImeiDaBan = layDanhSachImeiDaBan;
+
+    function truImeiDaBan(maHang, targetCN, soldImeis) {
+      const cleanMa = String(maHang || '').trim().toUpperCase();
+      const cn = (typeof layMaChiNhanh === 'function') ? layMaChiNhanh(targetCN || currentChiNhanh || 'CN01') : 'CN01';
+      const imeisToPrune = Array.isArray(soldImeis) ? soldImeis.map(s => String(s).trim()).filter(Boolean) : [];
+      if (!cleanMa || !imeisToPrune.length) return;
+
+      // 1. Lưu vào cache localStorage các IMEI đã bán
+      try {
+        let soldCache = layDanhSachImeiDaBan();
+        imeisToPrune.forEach(im => {
+          if (!soldCache.includes(im)) soldCache.push(im);
+        });
+        localStorage.setItem('tt_pos_sold_imeis', JSON.stringify(soldCache));
+      } catch(e) {}
+
+      // 2. Loại bỏ khỏi imeiListByProductAndBranch trên tất cả các chi nhánh
+      if (window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa]) {
+        ['CN01', 'CN02', 'CN03', 'CN04'].forEach(c => {
+          if (Array.isArray(window.imeiListByProductAndBranch[cleanMa][c])) {
+            window.imeiListByProductAndBranch[cleanMa][c] = window.imeiListByProductAndBranch[cleanMa][c].filter(im => !imeisToPrune.includes(String(im).trim()));
+          }
+        });
+      }
+
+      // 3. Loại bỏ khỏi RAW_IMEI_3_CHI_NHANH nếu có
+      if (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanMa]) {
+        ['CN01', 'CN02', 'CN03', 'CN04'].forEach(c => {
+          if (Array.isArray(window.RAW_IMEI_3_CHI_NHANH[cleanMa][c])) {
+            window.RAW_IMEI_3_CHI_NHANH[cleanMa][c] = window.RAW_IMEI_3_CHI_NHANH[cleanMa][c].filter(im => !imeisToPrune.includes(String(im).trim()));
+          }
+        });
+      }
+
+      // 4. Loại bỏ khỏi sp trong rawHangHoa
+      const sp = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) 
+        ? rawHangHoa.find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa) 
+        : null;
+      if (sp) {
+        if (Array.isArray(sp.danhSachIMEI)) {
+          sp.danhSachIMEI = sp.danhSachIMEI.filter(im => !imeisToPrune.includes(String(im).trim()));
+        }
+        const curRemaining = (window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa] && window.imeiListByProductAndBranch[cleanMa][cn]) 
+          ? window.imeiListByProductAndBranch[cleanMa][cn].length 
+          : (Array.isArray(sp.danhSachIMEI) ? sp.danhSachIMEI.length : 0);
+        sp.tonIMEI = curRemaining;
+        sp.tonKho = curRemaining;
+        if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) {
+          window.tonKhoChiNhanhMap[cleanMa][cn] = curRemaining;
+        }
+      }
+    }
+    window.truImeiDaBan = truImeiDaBan;
+
     // 6. Điều chỉnh tăng/giảm tồn kho khi phát sinh giao dịch
     function dieuChinhTonKhoChiNhanh(maHang, maCN, delta) {
       const currentVal = layTonKhoSanPhamTaiChiNhanh(maHang, maCN);
@@ -8885,21 +8990,26 @@ function formatVND(amount) {
             }
           }
 
-          // 👉 ĐỒNG BỘ DANH SÁCH IMEI CHÍNH XÁC THEO CHI NHÁNH ĐANG CHỌN
+          // 👉 ĐỒNG BỘ DANH SÁCH IMEI CHÍNH XÁC THEO CHI NHÁNH ĐANG CHỌN (LỌC BỎ IMEI ĐÃ BÁN)
+          const soldCacheCapNhat = (typeof layDanhSachImeiDaBan === 'function') ? layDanhSachImeiDaBan() : [];
+          const isSoldImeiCapNhat = (im) => soldCacheCapNhat.includes(String(im).trim());
+
           if (!window.imeiListByProductAndBranch) window.imeiListByProductAndBranch = {};
           if (!window.imeiListByProductAndBranch[cleanMa]) {
             window.imeiListByProductAndBranch[cleanMa] = { CN01: [], CN02: [], CN03: [], CN04: [] };
           }
           if (Array.isArray(sp.danhSachIMEI) && sp.danhSachIMEI.length > 0) {
+            sp.danhSachIMEI = sp.danhSachIMEI.filter(im => !isSoldImeiCapNhat(im));
             sp.coQuanLyIMEI = true;
             sp.danhSachIMEI.forEach(im => {
-              if (!window.imeiListByProductAndBranch[cleanMa][targetCN].includes(im)) {
+              if (!isSoldImeiCapNhat(im) && !window.imeiListByProductAndBranch[cleanMa][targetCN].includes(im)) {
                 window.imeiListByProductAndBranch[cleanMa][targetCN].push(im);
               }
             });
           }
 
-          const imeiListCN = window.imeiListByProductAndBranch[cleanMa][targetCN] || [];
+          let imeiListCN = (window.imeiListByProductAndBranch[cleanMa][targetCN] || []).filter(im => !isSoldImeiCapNhat(im));
+          window.imeiListByProductAndBranch[cleanMa][targetCN] = imeiListCN;
           if (imeiListCN.length > 0) {
             sp.coQuanLyIMEI = true;
             sp.danhSachIMEI = imeiListCN;
@@ -9135,15 +9245,18 @@ function formatVND(amount) {
         }
       });
 
-      // Nạp tồn kho và IMEI ban đầu từ rawImeiMap
+      // Nạp tồn kho và IMEI ban đầu từ rawImeiMap (lọc bỏ các IMEI đã bán trong cache)
+      const soldCacheInit = (typeof layDanhSachImeiDaBan === 'function') ? layDanhSachImeiDaBan() : [];
+      const isSoldInit = (im) => soldCacheInit.includes(String(im).trim());
+
       if (rawImeiMap && typeof rawImeiMap === 'object') {
         Object.keys(rawImeiMap).forEach(m => {
           const itemImeis = rawImeiMap[m] || {};
           if (!window.imeiListByProductAndBranch[m]) {
             window.imeiListByProductAndBranch[m] = {
-              CN01: Array.isArray(itemImeis.CN01) ? [...itemImeis.CN01] : [],
-              CN02: Array.isArray(itemImeis.CN02) ? [...itemImeis.CN02] : [],
-              CN03: Array.isArray(itemImeis.CN03) ? [...itemImeis.CN03] : [],
+              CN01: (Array.isArray(itemImeis.CN01) ? itemImeis.CN01 : []).filter(im => !isSoldInit(im)),
+              CN02: (Array.isArray(itemImeis.CN02) ? itemImeis.CN02 : []).filter(im => !isSoldInit(im)),
+              CN03: (Array.isArray(itemImeis.CN03) ? itemImeis.CN03 : []).filter(im => !isSoldInit(im)),
               CN04: []
             };
           }
@@ -9158,12 +9271,13 @@ function formatVND(amount) {
       rawHangHoa.forEach(h => {
         const ma = String(h.maHang || '').trim().toUpperCase();
         if (Array.isArray(h.danhSachIMEI) && h.danhSachIMEI.length > 0) {
+          h.danhSachIMEI = h.danhSachIMEI.filter(im => !isSoldInit(im));
           if (!window.imeiListByProductAndBranch[ma]) {
             window.imeiListByProductAndBranch[ma] = { CN01: [], CN02: [], CN03: [], CN04: [] };
           }
           const curCN = layMaChiNhanh(currentChiNhanh || 'CN01');
           h.danhSachIMEI.forEach(im => {
-            if (!window.imeiListByProductAndBranch[ma][curCN].includes(im)) {
+            if (!isSoldInit(im) && !window.imeiListByProductAndBranch[ma][curCN].includes(im)) {
               window.imeiListByProductAndBranch[ma][curCN].push(im);
             }
           });
@@ -14546,7 +14660,8 @@ function formatVND(amount) {
       
       const targetCN = layMaChiNhanh(currentChiNhanh || 'CN01');
       const cleanMa = String(h.maHang || '').trim().toUpperCase();
-      const curImeis = (window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa] && window.imeiListByProductAndBranch[cleanMa][targetCN]) || h.danhSachIMEI || [];
+      const soldCacheSua = (typeof layDanhSachImeiDaBan === 'function') ? layDanhSachImeiDaBan() : [];
+      const curImeis = ((window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa] && window.imeiListByProductAndBranch[cleanMa][targetCN]) || h.danhSachIMEI || []).filter(im => !soldCacheSua.includes(String(im).trim()));
       const txtImei = document.getElementById('form-danhsach-imei');
       if (txtImei) {
         txtImei.value = curImeis.join('\n');
@@ -19378,11 +19493,13 @@ function formatVND(amount) {
     moModal('modal-chon-imei-pos');
 
     function hienThiDanhSach(imeiArr) {
-      if (!imeiArr || imeiArr.length === 0) {
+      const soldCacheModal = (typeof layDanhSachImeiDaBan === 'function') ? layDanhSachImeiDaBan() : [];
+      const validImeis = (imeiArr || []).filter(im => !soldCacheModal.includes(String(im).trim()));
+      if (!validImeis || validImeis.length === 0) {
         listContainer.innerHTML = `<p class="text-rose-500 font-semibold text-center py-4">Chi nhánh hiện tại [${targetCN}] chưa có mã IMEI khả dụng cho sản phẩm này!</p>`;
         return;
       }
-      listContainer.innerHTML = imeiArr.map(imei => {
+      listContainer.innerHTML = validImeis.map(imei => {
         const isChecked = selectedImeis.includes(imei);
         return `
           <label class="flex items-center space-x-2.5 p-2.5 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50 transition shadow-sm">
@@ -27423,9 +27540,10 @@ function formatVND(amount) {
       
       // Đồng bộ thông tin IMEI từ bộ nhớ đệm
       const allBranchImeisMap = (window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa]) || {};
-      const branchImeis = (allBranchImeisMap[targetCN] && allBranchImeisMap[targetCN].length > 0)
+      const soldCacheXem = (typeof layDanhSachImeiDaBan === 'function') ? layDanhSachImeiDaBan() : [];
+      const branchImeis = ((allBranchImeisMap[targetCN] && allBranchImeisMap[targetCN].length > 0)
         ? allBranchImeisMap[targetCN]
-        : (h.danhSachIMEI || []);
+        : (h.danhSachIMEI || [])).filter(im => !soldCacheXem.includes(String(im).trim()));
       const totalAllImeis = Object.values(allBranchImeisMap).flat();
       const isQuanLyIMEI = Boolean(h.coQuanLyIMEI || totalAllImeis.length > 0 || branchImeis.length > 0);
       if (isQuanLyIMEI) {
@@ -28315,24 +28433,15 @@ function formatVND(amount) {
       rawDonHangList = Array.from(mergedMap.values());
       window.rawDonHangList = rawDonHangList;
 
-      // Tự động lưu cache các đơn mới vào TT_POS_LOCAL_ORDERS
+      // Đồng bộ giữ các đơn hàng POS cục bộ
       try {
         const localSaved = JSON.parse(localStorage.getItem('TT_POS_LOCAL_ORDERS') || '[]');
-        const newItems = rawDonHangList.filter(d => {
-          const t = parseNgayGioSort(d.ngayBan || d.thoiGian);
-          const diff = Date.now() - t;
-          return String(d.maDonHang).startsWith('HD') && diff >= 0 && diff < 30 * 86400 * 1000;
-        });
-        if (newItems.length > 0) {
-          const mapLocal = new Map();
-          [...newItems, ...localSaved].forEach(it => {
-            const k = String(it.maDonHang || it.maDon);
-            if (k && !mapLocal.has(k)) mapLocal.set(k, it);
-          });
-          localStorage.setItem('TT_POS_LOCAL_ORDERS', JSON.stringify(Array.from(mapLocal.values()).slice(0, 500)));
+        if (localSaved.length > 0) {
+          localStorage.setItem('TT_POS_LOCAL_ORDERS', JSON.stringify(localSaved.slice(0, 300)));
         }
       } catch(e) {}
 
+      pageDonHang = 1;
       capNhatSortIconsDonHang();
       locDanhSachDonHang(false);
       console.log(`⚡ Đã tải ${rawDonHangList.length} đơn hàng (bao gồm đơn vừa bán và lịch sử)!`);
