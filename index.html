@@ -378,7 +378,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.6</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.7</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -10930,6 +10930,66 @@ function formatVND(amount) {
       }
     }
 
+    function luuPhieuNhapLocal(phieuObj) {
+      if (!phieuObj || !phieuObj.maPhieu) return;
+      const ma = phieuObj.maPhieu;
+
+      // 1. Cập nhật rawNhapHangList
+      if (!Array.isArray(rawNhapHangList)) rawNhapHangList = [];
+      const idx = rawNhapHangList.findIndex(d => (d.maPhieu || d.ma_don_hang) === ma);
+      if (idx >= 0) {
+        rawNhapHangList[idx] = { ...rawNhapHangList[idx], ...phieuObj };
+      } else {
+        rawNhapHangList.unshift(phieuObj);
+      }
+
+      // 2. Cập nhật window.RAW_NHAP_HANG_THANH_GIANG trong RAM
+      if (typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG)) {
+        const rIdx = window.RAW_NHAP_HANG_THANH_GIANG.findIndex(d => (d.maPhieu || d.ma_don_hang) === ma);
+        const itemFormatted = {
+          ...phieuObj,
+          sanPham: phieuObj.chiTietSanPham || phieuObj.sanPham || []
+        };
+        if (rIdx >= 0) {
+          window.RAW_NHAP_HANG_THANH_GIANG[rIdx] = { ...window.RAW_NHAP_HANG_THANH_GIANG[rIdx], ...itemFormatted };
+        } else {
+          window.RAW_NHAP_HANG_THANH_GIANG.unshift(itemFormatted);
+        }
+      }
+
+      // 3. Cập nhật localStorage TT_POS_LOCAL_NHAP_HANG để không bị mất khi tải lại trang
+      try {
+        let localList = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NHAP_HANG') || '[]');
+        if (!Array.isArray(localList)) localList = [];
+        const lIdx = localList.findIndex(d => (d.maPhieu || d.ma_don_hang) === ma);
+        if (lIdx >= 0) {
+          localList[lIdx] = { ...localList[lIdx], ...phieuObj };
+        } else {
+          localList.unshift(phieuObj);
+        }
+        localStorage.setItem('TT_POS_LOCAL_NHAP_HANG', JSON.stringify(localList));
+      } catch(e) {
+        console.warn("Lỗi lưu localStorage TT_POS_LOCAL_NHAP_HANG:", e);
+      }
+    }
+
+    function dongBoDonNhapLocalVaoDanhSach() {
+      try {
+        const localNhap = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NHAP_HANG') || '[]');
+        if (Array.isArray(localNhap) && localNhap.length > 0) {
+          if (!Array.isArray(rawNhapHangList)) rawNhapHangList = [];
+          localNhap.forEach(ln => {
+            const idx = rawNhapHangList.findIndex(d => (d.maPhieu || d.ma_don_hang) === ln.maPhieu);
+            if (idx >= 0) {
+              rawNhapHangList[idx] = { ...rawNhapHangList[idx], ...ln };
+            } else {
+              rawNhapHangList.unshift(ln);
+            }
+          });
+        }
+      } catch(e) {}
+    }
+
     function taiDanhSachNhapHang() {
       const tbody = document.getElementById('tbl-nhaphang-danhsach-body');
       if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải danh sách đơn nhập hàng...</td></tr>';
@@ -10951,6 +11011,7 @@ function formatVND(amount) {
           ghiChu: d.ghiChu || '',
           chiTietSanPham: Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (Array.isArray(d.sanPham) ? d.sanPham : [])
         }));
+        dongBoDonNhapLocalVaoDanhSach();
         dongBoDonLuuTamVaoDanhSach();
         dongBoImeiTuDonNhapHang();
         locDanhSachNhapHangTable();
@@ -10986,6 +11047,7 @@ function formatVND(amount) {
                 ghiChu: '',
                 chiTietSanPham: Array.isArray(d.chi_tiet_san_pham) ? d.chi_tiet_san_pham : []
               }));
+              dongBoDonNhapLocalVaoDanhSach();
               dongBoDonLuuTamVaoDanhSach();
               dongBoImeiTuDonNhapHang();
               locDanhSachNhapHangTable();
@@ -11007,10 +11069,12 @@ function formatVND(amount) {
               nhanVien: d.nhanVien || d.nguoiNhap || 'Quản trị viên',
               nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên'
             }));
+            dongBoDonNhapLocalVaoDanhSach();
             dongBoDonLuuTamVaoDanhSach();
             dongBoImeiTuDonNhapHang();
             locDanhSachNhapHangTable();
           } else {
+            dongBoDonNhapLocalVaoDanhSach();
             dongBoDonLuuTamVaoDanhSach();
             dongBoImeiTuDonNhapHang();
             locDanhSachNhapHangTable();
@@ -11388,7 +11452,10 @@ function formatVND(amount) {
     function thucHienHuyDonNhap(maPhieu) {
       showNotification("Đang tiến hành hủy đơn " + maPhieu + "...", false);
       const don = (rawNhapHangList || []).find(d => d.maPhieu === maPhieu);
-      if (don) don.trangThai = 'Đã hủy';
+      if (don) {
+        don.trangThai = 'Đã hủy';
+        if (typeof luuPhieuNhapLocal === 'function') luuPhieuNhapLocal(don);
+      }
       locDanhSachNhapHangTable();
 
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
@@ -11610,6 +11677,7 @@ function formatVND(amount) {
           don.conNo = Math.max(0, (Number(don.tongTien) || 0) - don.daTra);
           don.trangThai = (don.conNo <= 0) ? 'Hoàn thành' : 'Một phần';
         }
+        if (typeof luuPhieuNhapLocal === 'function') luuPhieuNhapLocal(don);
       }
 
       // Cập nhật modal chi tiết đơn nhập nếu đang mở đơn này
@@ -30683,6 +30751,15 @@ function loadSoQuy(filter) {
       // Cập nhật tồn kho local & đa chi nhánh an toàn
       try {
         const targetCNNhap = layMaChiNhanh(payload.chiNhanh);
+        if (isEditing) {
+          const oldPhieu = (rawNhapHangList || []).find(d => (d.maPhieu || d.ma_don_hang) === maPhieu);
+          if (oldPhieu && Array.isArray(oldPhieu.chiTietSanPham)) {
+            const oldCN = layMaChiNhanh(oldPhieu.chiNhanh || payload.chiNhanh);
+            oldPhieu.chiTietSanPham.forEach(oldItem => {
+              dieuChinhTonKhoChiNhanh(oldItem.maHang, oldCN, -Number(oldItem.soLuong || 0));
+            });
+          }
+        }
         cartCopy.forEach(item => {
           const cleanMa = String(item.maHang || '').trim().toUpperCase();
           // Tính giá vốn bình quân gia quyền các lần nhập nếu tính năng BẬT
@@ -30817,15 +30894,20 @@ function loadSoQuy(filter) {
         conNo: payload.conNo,
         trangThai: payload.trangThai,
         ghiChu: payload.ghiChu,
-        chiTietSanPham: payload.chiTietSanPham
+        chiTietSanPham: payload.chiTietSanPham,
+        sanPham: payload.chiTietSanPham
       };
-      if (!Array.isArray(rawNhapHangList)) rawNhapHangList = [];
-      if (isEditing) {
-        const exIdx = rawNhapHangList.findIndex(d => d.maPhieu === maPhieu);
-        if (exIdx >= 0) rawNhapHangList[exIdx] = newPhieuObj;
-        else rawNhapHangList.unshift(newPhieuObj);
+      if (typeof luuPhieuNhapLocal === 'function') {
+        luuPhieuNhapLocal(newPhieuObj);
       } else {
-        rawNhapHangList.unshift(newPhieuObj);
+        if (!Array.isArray(rawNhapHangList)) rawNhapHangList = [];
+        if (isEditing) {
+          const exIdx = rawNhapHangList.findIndex(d => d.maPhieu === maPhieu);
+          if (exIdx >= 0) rawNhapHangList[exIdx] = newPhieuObj;
+          else rawNhapHangList.unshift(newPhieuObj);
+        } else {
+          rawNhapHangList.unshift(newPhieuObj);
+        }
       }
       dongBoImeiTuDonNhapHang();
       locDanhSachNhapHangTable();

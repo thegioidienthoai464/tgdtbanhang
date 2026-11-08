@@ -1,10 +1,10 @@
 {
-  "version": "1.4.6",
-  "build_number": 41,
+  "version": "1.4.7",
+  "build_number": 42,
   "force_update": false,
-  "release_notes": "• Đồng bộ Thẻ kho khớp 100% KiotViet: hiển thị đầy đủ chi tiết từng giao dịch Nhập hàng, Bán hàng POS, Khách trả hàng và số dư lũy kế cuối kỳ (Backward Running Balance).\n• Khắc phục triệt để lỗi Thẻ kho tự ý ghi đè làm sai lệch tồn kho (như SP535207 từ 2 thành 23).\n• Tự động chọn chi nhánh hiện tại khi xem Thẻ kho, sửa lỗi hiển thị lẫn lộn chứng từ giữa các chi nhánh.\n• Sắp xếp dòng thời gian chuẩn xác tuyệt đối theo định dạng ngày giờ Việt Nam.\n• Tích hợp bổ sung phiếu nhập mới PN003232 và chuẩn hóa tồn kho chi nhánh Thanh Giang.",
+  "release_notes": "• Khắc phục triệt để lỗi không lưu được chỉnh sửa Đơn nhập hàng NCC (phiếu PN003232 và các đơn nhập hàng khác).\n• Tự động đồng bộ và lưu trữ cục bộ (TT_POS_LOCAL_NHAP_HANG) kết hợp bộ nhớ RAM giúp việc cập nhật/sửa đơn nhập không bị ghi đè khi tải lại danh sách.\n• Chuẩn hóa dữ liệu PN003232 chứa đầy đủ 8 mặt hàng (tổng tiền 595.000 đ) và cập nhật số lượng tồn kho chính xác cho 7 sản phẩm đi kèm tại chi nhánh Thanh Giang (CN02).\n• Tối ưu cơ chế trừ bù số lượng khi chỉnh sửa đơn nhập hàng (tránh tính đúp tồn kho).",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.6/TT_POS_v1.4.6.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.6/TT_POS_v1.4.6.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.4.6"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.7/TT_POS_v1.4.7.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.7/TT_POS_v1.4.7.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.4.7"
 }
