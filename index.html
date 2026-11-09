@@ -378,7 +378,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.5.1</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.5.2</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -2162,6 +2162,22 @@
       <!-- TAB 4.2: POS BÁN LẺ -->
       <!-- TAB 4.2: POS BÁN LẺ -->
       <section id="tab-banhang" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Thanh Multi-Tab Quản lý nhiều hóa đơn bán hàng & Tiếp nhận sửa chữa -->
+        <div class="lg:col-span-3 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-2">
+          <div id="pos-tabs-list" class="flex items-center space-x-1.5 overflow-x-auto py-0.5 scrollbar-thin">
+            <!-- Dynamic POS tabs -->
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <button type="button" onclick="themTabHoaDonPOS()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition flex items-center space-x-1.5 shadow-xs" title="Tạo thêm hóa đơn mới để phục vụ đồng thời nhiều khách">
+              <i class="fa-solid fa-plus text-[11px]"></i>
+              <span>Thêm hóa đơn</span>
+            </button>
+            <button type="button" onclick="moModalTiepNhanSuaChua()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs shadow-xs flex items-center space-x-1.5 transition" title="Tiếp nhận thiết bị sửa chữa hoặc bảo hành">
+              <i class="fa-solid fa-wrench text-[11px]"></i>
+              <span>Nhận sửa chữa</span>
+            </button>
+          </div>
+        </div>
         <div class="lg:col-span-2 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
           <!-- Autocomplete Search Sản phẩm -->
           <div class="relative">
@@ -8722,14 +8738,20 @@ function formatVND(amount) {
           }]);
         }
 
-        // 5. CẬP NHẬT GIAO DIỆN TỨC THỜI (LỊCH SỬ ĐƠN HÀNG, DANH MỤC HÀNG HÓA, SỔ QUỸ)
+        // 5. ĐÁNH DẤU CẬP NHẬT GIAO DIỆN & TẢI NỀN (KHÔNG CHẶN PHẢN HỒI NÚT THANH TOÁN)
+        window.donHangNeedRefresh = true;
+        window.hangHoaNeedRefresh = true;
+        window.soQuyNeedRefresh = true;
         if (typeof pageDonHang !== 'undefined') pageDonHang = 1;
-        if (typeof locDanhSachDonHang === 'function') locDanhSachDonHang(false);
-        if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
-        if (typeof loadDuLieuSoQuy === 'function') {
-          const currentQuy = typeof currentLoaiQuy !== 'undefined' ? currentLoaiQuy : (typeof currentQuyDangXem !== 'undefined' ? currentQuyDangXem : 'ALL');
-          loadDuLieuSoQuy(currentQuy);
-        }
+        setTimeout(() => {
+          try {
+            if (typeof locDanhSachDonHang === 'function') locDanhSachDonHang(false);
+            if (typeof loadDuLieuSoQuy === 'function') {
+              const currentQuy = typeof currentLoaiQuy !== 'undefined' ? currentLoaiQuy : (typeof currentQuyDangXem !== 'undefined' ? currentQuyDangXem : 'ALL');
+              loadDuLieuSoQuy(currentQuy);
+            }
+          } catch(eAsyncUI) {}
+        }, 150);
 
         // 6. ĐỒNG BỘ NỀN KHÔNG CHẶN GIAO DIỆN (ASYNC BACKGROUND SYNC)
         (async () => {
@@ -8863,13 +8885,20 @@ function formatVND(amount) {
         }
         showNotification(thongBao, false);
 
-        // Tự động mở cửa sổ In Hóa Đơn Bán Hàng cho thu ngân
-        try {
-          if (typeof inHoaDonBanHang === 'function') {
-            inHoaDonBanHang(orderPayload);
+        // Tự động mở cửa sổ In Hóa Đơn Bán Hàng cho thu ngân nếu cài đặt BẬT
+        if (typeof layCaiDatInHoaDonPOS === 'function' && layCaiDatInHoaDonPOS()) {
+          try {
+            if (typeof inHoaDonBanHang === 'function') {
+              inHoaDonBanHang(orderPayload);
+            }
+          } catch(ePrint) {
+            console.warn("Lỗi in hóa đơn:", ePrint);
           }
-        } catch(ePrint) {
-          console.warn("Lỗi in hóa đơn:", ePrint);
+        }
+
+        // Tự động xử lý multi-tab POS: hoàn tất tab hiện tại và tự động lấy ngày giờ hiện tại cho hóa đơn mới
+        if (typeof xuLySauThanhToanPosTab === 'function') {
+          xuLySauThanhToanPosTab();
         }
 
       } catch (errPOS) {
@@ -11091,68 +11120,80 @@ function formatVND(amount) {
         }
       }
 
-      // Hook data loading for specific tabs
-      try {
-        if (tabId === 'tab-tongquan') {
-          if (typeof loadDashboard === 'function') loadDashboard();
-        } else if (tabId === 'tab-hanghoa') {
-          if (typeof loadHangHoa === 'function') loadHangHoa();
-        } else if (tabId === 'tab-thietlapgia') {
-          if (typeof loadHangHoa === 'function') loadHangHoa();
-          if (typeof loadThietLapGia === 'function') loadThietLapGia();
-        } else if (tabId === 'tab-kiemkho') {
-          if (typeof loadKiemKho === 'function') loadKiemKho(); else if (typeof loadLichSuKiemKho === 'function') loadLichSuKiemKho();
-        } else if (tabId === 'tab-xuathuy') {
-          if (typeof loadXuatHuy === 'function') loadXuatHuy(); else if (typeof loadDanhSachXuatHuy === 'function') loadDanhSachXuatHuy();
-        } else if (tabId === 'tab-chuyenkho') {
-          if (typeof loadDanhSachChuyenKho === 'function') loadDanhSachChuyenKho();
-        } else if (tabId === 'tab-ncc') {
-          if (typeof loadNCC === 'function') loadNCC();
-          else if (typeof locDanhSachNCC === 'function') locDanhSachNCC(true);
-        } else if (tabId === 'tab-nhaphang') {
-          if (typeof chuyenViewNhapHang === 'function') chuyenViewNhapHang('danhsach');
-        } else if (tabId === 'tab-tranhap') {
-          if (typeof chuyenViewTraHangNCC === 'function') chuyenViewTraHangNCC('danhsach');
-        } else if (tabId === 'tab-suachua') {
-          if (typeof taiDanhSachYeuCauSuaChua === 'function') taiDanhSachYeuCauSuaChua();
-        } else if (tabId === 'tab-dathang') {
-          if (typeof taiDanhSachDonDatHang === 'function') taiDanhSachDonDatHang();
-        } else if (tabId === 'tab-banhang' || tabId === 'tab-pos') {
-          if (typeof resetPosSearchFields === 'function') resetPosSearchFields();
-          if (typeof initPOSView === 'function') initPOSView();
-          if (typeof khoiTaoThongTinPOS === 'function') khoiTaoThongTinPOS();
-        } else if (tabId === 'tab-trahang') {
-          if (typeof initTraHangView === 'function') initTraHangView();
-        } else if (tabId === 'tab-khachhang') {
-          if (typeof loadKH === 'function') loadKH();
-          else if (typeof locDanhSachKH === 'function') locDanhSachKH(true);
-        } else if (tabId === 'tab-lichsudonhang') {
-          if (typeof loadLichSuDonHang === 'function') loadLichSuDonHang();
-        } else if (tabId === 'tab-soquy-tienmat') {
-          if (typeof chuyenTabSoQuy === 'function') chuyenTabSoQuy('TIEN_MAT');
-        } else if (tabId === 'tab-soquy-taikhoan') {
-          if (typeof chuyenTabSoQuy === 'function') chuyenTabSoQuy('TAI_KHOAN');
-        } else if (tabId === 'tab-soquy') {
-          if (typeof chuyenTabSoQuy === 'function') chuyenTabSoQuy('ALL');
-        } else if (tabId === 'tab-baocao-chung' || tabId === 'tab-bc-banhang') {
-          if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('banhang');
-        } else if (tabId === 'tab-bc-hanghoa') {
-          if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('hanghoa');
-        } else if (tabId === 'tab-bc-khachhang') {
-          if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('khachhang');
-        } else if (tabId === 'tab-bc-ncc') {
-          if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('ncc');
-        } else if (tabId === 'tab-bc-taichinh') {
-          if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('taichinh');
-        } else if (tabId === 'tab-nguoidung') {
-          if (typeof loadNguoiDung === 'function') loadNguoiDung();
-          else if (typeof loadDanhSachNguoiDung === 'function') loadDanhSachNguoiDung();
-        } else if (tabId === 'tab-phanquyen') {
-          if (typeof loadMaTranPhanQuyen === 'function') loadMaTranPhanQuyen();
-        }
-      } catch(err) {
-        console.error("Lỗi khi chuyển tab " + tabId + ":", err);
-      }
+      // TỐI ƯU HÓA CHUYỂN TAB SIÊU TỐC (< 16ms): Tách tải ngầm không khóa luồng giao diện
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          try {
+            if (tabId === 'tab-tongquan') {
+              if (typeof loadDashboard === 'function') loadDashboard();
+            } else if (tabId === 'tab-hanghoa') {
+              if (!window.hangHoaLoadedOnce || window.hangHoaNeedRefresh) {
+                window.hangHoaLoadedOnce = true;
+                window.hangHoaNeedRefresh = false;
+                if (typeof loadHangHoa === 'function') loadHangHoa();
+              }
+            } else if (tabId === 'tab-thietlapgia') {
+              if (!window.hangHoaLoadedOnce) { window.hangHoaLoadedOnce = true; if (typeof loadHangHoa === 'function') loadHangHoa(); }
+              if (typeof loadThietLapGia === 'function') loadThietLapGia();
+            } else if (tabId === 'tab-kiemkho') {
+              if (typeof loadKiemKho === 'function') loadKiemKho(); else if (typeof loadLichSuKiemKho === 'function') loadLichSuKiemKho();
+            } else if (tabId === 'tab-xuathuy') {
+              if (typeof loadXuatHuy === 'function') loadXuatHuy(); else if (typeof loadDanhSachXuatHuy === 'function') loadDanhSachXuatHuy();
+            } else if (tabId === 'tab-chuyenkho') {
+              if (typeof loadDanhSachChuyenKho === 'function') loadDanhSachChuyenKho();
+            } else if (tabId === 'tab-ncc') {
+              if (typeof loadNCC === 'function') loadNCC();
+              else if (typeof locDanhSachNCC === 'function') locDanhSachNCC(true);
+            } else if (tabId === 'tab-nhaphang') {
+              if (typeof chuyenViewNhapHang === 'function') chuyenViewNhapHang('danhsach');
+            } else if (tabId === 'tab-tranhap') {
+              if (typeof chuyenViewTraHangNCC === 'function') chuyenViewTraHangNCC('danhsach');
+            } else if (tabId === 'tab-suachua') {
+              if (typeof taiDanhSachYeuCauSuaChua === 'function') taiDanhSachYeuCauSuaChua();
+            } else if (tabId === 'tab-dathang') {
+              if (typeof taiDanhSachDonDatHang === 'function') taiDanhSachDonDatHang();
+            } else if (tabId === 'tab-banhang' || tabId === 'tab-pos') {
+              if (typeof resetPosSearchFields === 'function') resetPosSearchFields();
+              if (typeof initPOSView === 'function') initPOSView();
+              if (typeof khoiTaoThongTinPOS === 'function') khoiTaoThongTinPOS();
+            } else if (tabId === 'tab-trahang') {
+              if (typeof initTraHangView === 'function') initTraHangView();
+            } else if (tabId === 'tab-khachhang') {
+              if (typeof loadKH === 'function') loadKH();
+              else if (typeof locDanhSachKH === 'function') locDanhSachKH(true);
+            } else if (tabId === 'tab-lichsudonhang') {
+              if (!window.lichSuDonHangLoadedOnce || window.donHangNeedRefresh) {
+                window.lichSuDonHangLoadedOnce = true;
+                window.donHangNeedRefresh = false;
+                if (typeof loadLichSuDonHang === 'function') loadLichSuDonHang();
+              }
+            } else if (tabId === 'tab-soquy-tienmat') {
+              if (typeof chuyenTabSoQuy === 'function') chuyenTabSoQuy('TIEN_MAT');
+            } else if (tabId === 'tab-soquy-taikhoan') {
+              if (typeof chuyenTabSoQuy === 'function') chuyenTabSoQuy('TAI_KHOAN');
+            } else if (tabId === 'tab-soquy') {
+              if (typeof chuyenTabSoQuy === 'function') chuyenTabSoQuy('ALL');
+            } else if (tabId === 'tab-baocao-chung' || tabId === 'tab-bc-banhang') {
+              if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('banhang');
+            } else if (tabId === 'tab-bc-hanghoa') {
+              if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('hanghoa');
+            } else if (tabId === 'tab-bc-khachhang') {
+              if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('khachhang');
+            } else if (tabId === 'tab-bc-ncc') {
+              if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('ncc');
+            } else if (tabId === 'tab-bc-taichinh') {
+              if (typeof chuyenPhanMucBaoCao === 'function') chuyenPhanMucBaoCao('taichinh');
+            } else if (tabId === 'tab-nguoidung') {
+              if (typeof loadNguoiDung === 'function') loadNguoiDung();
+              else if (typeof loadDanhSachNguoiDung === 'function') loadDanhSachNguoiDung();
+            } else if (tabId === 'tab-phanquyen') {
+              if (typeof loadMaTranPhanQuyen === 'function') loadMaTranPhanQuyen();
+            }
+          } catch(err) {
+            console.error("Lỗi khi chuyển tab " + tabId + ":", err);
+          }
+        }, 0);
+      });
     }
 
     
@@ -26648,7 +26689,7 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.5.1";
+    const APP_CLIENT_VERSION = "1.5.2";
     const APP_CLIENT_BUILD = 45;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
@@ -28421,32 +28462,111 @@ function formatVND(amount) {
         });
       }
 
-      // E. Kiểm kho
-      if (Array.isArray(rawKiemKhoList)) {
-        rawKiemKhoList.forEach((kk, i) => {
-          const items = Array.isArray(kk.chiTietSanPham) ? kk.chiTietSanPham : [];
-          items.forEach(it => {
-            if (String(it.maHang || it.ma_hang || '').trim().toUpperCase() === targetMa) {
-              const diff = Number(it.chenhLech) || (Number(it.slThucTe || 0) - Number(it.slSoSach || 0));
-              const maPKK = kk.maChungTu || ('PKK' + i);
-              if (!txMap.has(maPKK)) {
-                txMap.set(maPKK, {
-                  ngay: String(kk.ngayTao || ''),
-                  maChungTu: maPKK,
-                  loaiGD: 'KiemKho',
-                  tenLoaiGD: 'Kiểm kho / Cân bằng',
-                  doiTac: kk.nhanVien || 'Admin',
-                  chiNhanh: kk.chiNhanh || 'CN01',
-                  soLuongThayDoi: diff,
-                  donGia: 0,
-                  thanhTien: 0,
-                  ghiChu: `Sổ: ${it.slSoSach || 0} → Thực tế: ${it.slThucTe || 0}`
-                });
-              }
+      // E. Kiểm kho (chuẩn hóa đọc cả chiTietSanPham và sanPham, slLech / chenhLech)
+      const allKiemKhoSources = [
+        ...(Array.isArray(rawKiemKhoList) ? rawKiemKhoList : []),
+        ...((typeof window.RAW_KIEM_KHO_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_KIEM_KHO_THANH_GIANG)) ? window.RAW_KIEM_KHO_THANH_GIANG : [])
+      ];
+      const processedKKMap = new Set();
+      allKiemKhoSources.forEach((kk, i) => {
+        if (!kk || kk.trangThai === 'Đã hủy' || kk.trang_thai === 'Đã hủy') return;
+        const maPKK = String(kk.maChungTu || kk.maKiemKho || kk.maPhieu || ('PKK' + i)).trim();
+        if (processedKKMap.has(maPKK)) return;
+        processedKKMap.add(maPKK);
+
+        const items = (Array.isArray(kk.chiTietSanPham) && kk.chiTietSanPham.length > 0)
+          ? kk.chiTietSanPham
+          : (Array.isArray(kk.sanPham) ? kk.sanPham : (Array.isArray(kk.chiTiet) ? kk.chiTiet : []));
+
+        items.forEach(it => {
+          if (String(it.maHang || it.ma_hang || '').trim().toUpperCase() === targetMa) {
+            const slThuc = Number(it.slThucTe ?? it.tonThucTe ?? 0);
+            const slSo = Number(it.slSoSach ?? it.tonSoSach ?? 0);
+            const diff = (it.chenhLech !== undefined && it.chenhLech !== null) 
+              ? Number(it.chenhLech) 
+              : ((it.slLech !== undefined && it.slLech !== null) ? Number(it.slLech) : (slThuc - slSo));
+
+            if (!txMap.has(maPKK)) {
+              txMap.set(maPKK, {
+                ngay: String(kk.ngayTao || kk.thoiGian || kk.ngayCanBang || ''),
+                maChungTu: maPKK,
+                loaiGD: 'KiemKho',
+                tenLoaiGD: 'Kiểm kho / Cân bằng',
+                doiTac: kk.nhanVien || kk.nguoiTao || 'Quản trị viên',
+                chiNhanh: kk.chiNhanh || 'CN01',
+                soLuongThayDoi: diff,
+                slThucTe: slThuc,
+                slSoSach: slSo,
+                donGia: 0,
+                thanhTien: 0,
+                ghiChu: `Sổ: ${slSo} → Thực tế: ${slThuc}`
+              });
             }
-          });
+          }
         });
-      }
+      });
+
+      // F. Chuyển kho (Ghi nhận Xuất chuyển kho (-) và Nhận chuyển kho (+) cho cả 2 chi nhánh)
+      const allChuyenKhoSources = [
+        ...(Array.isArray(rawChuyenKhoList) ? rawChuyenKhoList : []),
+        ...((typeof window.RAW_CHUYEN_KHO_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_CHUYEN_KHO_THANH_GIANG)) ? window.RAW_CHUYEN_KHO_THANH_GIANG : []),
+        ...((typeof window.danhSachChuyenKhoFull !== 'undefined' && Array.isArray(window.danhSachChuyenKhoFull)) ? window.danhSachChuyenKhoFull : [])
+      ];
+      const processedCKMap = new Set();
+      allChuyenKhoSources.forEach((ck, i) => {
+        if (!ck || ck.trangThai === 'Đã hủy' || ck.trang_thai === 'Đã hủy') return;
+        const maCK = String(ck.maPhieu || ck.maChungTu || ('TRF' + i)).trim();
+        if (processedCKMap.has(maCK)) return;
+        processedCKMap.add(maCK);
+
+        const items = (Array.isArray(ck.chiTietSanPham) && ck.chiTietSanPham.length > 0)
+          ? ck.chiTietSanPham
+          : (Array.isArray(ck.chiTiet) ? ck.chiTiet : (Array.isArray(ck.sanPham) ? ck.sanPham : []));
+
+        const ngayCK = String(ck.ngayChuyen || ck.ngayTao || ck.ngay_chuyen || '');
+        const tuCN = ck.tuChiNhanh || ck.tenCnXuat || ck.cnXuat || 'CN01';
+        const toiCN = ck.toiChiNhanh || ck.tenCnNhan || ck.cnNhan || 'CN02';
+        const nguoiLap = ck.nguoiLap || ck.nguoiTao || 'Quản trị viên';
+
+        items.forEach(it => {
+          if (String(it.maHang || it.ma_hang || '').trim().toUpperCase() === targetMa) {
+            const sl = Number(it.soLuong) || 0;
+            // Ghi nhận Xuất chuyển kho cho chi nhánh chuyển
+            const keyXuat = maCK + '_XUAT';
+            if (!txMap.has(keyXuat)) {
+              txMap.set(keyXuat, {
+                ngay: ngayCK,
+                maChungTu: maCK,
+                loaiGD: 'ChuyenKho',
+                tenLoaiGD: 'Xuất chuyển kho',
+                doiTac: nguoiLap,
+                chiNhanh: tuCN,
+                soLuongThayDoi: -sl,
+                donGia: Number(it.donGia || it.giaVon || 0),
+                thanhTien: (Number(it.donGia || it.giaVon || 0)) * sl,
+                ghiChu: `Chuyển tới ${toiCN}`
+              });
+            }
+
+            // Ghi nhận Nhận chuyển kho cho chi nhánh nhận
+            const keyNhan = maCK + '_NHAN';
+            if (!txMap.has(keyNhan)) {
+              txMap.set(keyNhan, {
+                ngay: String(ck.ngayNhan || ngayCK),
+                maChungTu: maCK,
+                loaiGD: 'ChuyenKho',
+                tenLoaiGD: 'Nhận chuyển kho',
+                doiTac: nguoiLap,
+                chiNhanh: toiCN,
+                soLuongThayDoi: sl,
+                donGia: Number(it.donGia || it.giaVon || 0),
+                thanhTien: (Number(it.donGia || it.giaVon || 0)) * sl,
+                ghiChu: `Nhận từ ${tuCN}`
+              });
+            }
+          }
+        });
+      });
 
       // Hiển thị ngay tức thì từ bộ nhớ cache
       xuLyVaHienThiTheKho(Array.from(txMap.values()), targetMa);
@@ -28670,6 +28790,10 @@ function formatVND(amount) {
           badgeClass = 'bg-rose-100 text-rose-800';
           slColor = 'text-rose-600 font-bold';
           icon = 'fa-trash-can';
+        } else if (tx.loaiGD === 'ChuyenKho') {
+          badgeClass = Number(tx.soLuongThayDoi) >= 0 ? 'bg-cyan-100 text-cyan-800' : 'bg-orange-100 text-orange-800';
+          slColor = Number(tx.soLuongThayDoi) >= 0 ? 'text-cyan-600 font-bold' : 'text-orange-600 font-bold';
+          icon = Number(tx.soLuongThayDoi) >= 0 ? 'fa-arrow-right-to-bracket' : 'fa-truck-fast';
         } else if (tx.loaiGD === 'KiemKho') {
           badgeClass = 'bg-indigo-100 text-indigo-800';
           slColor = Number(tx.soLuongThayDoi) >= 0 ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold';
@@ -34463,12 +34587,253 @@ function loadSoQuy(filter) {
     window.xoaBoLocNgay = xoaBoLocNgay;
 
 
+        function layCaiDatInHoaDonPOS() {
+      const v = localStorage.getItem('tt_pos_setting_in_hoadon_pos');
+      return v === null ? true : (v === 'true');
+    }
+    window.layCaiDatInHoaDonPOS = layCaiDatInHoaDonPOS;
+
+    // =========================================================================
+    // HỆ THỐNG POS 2.1 MULTI-TAB: QUẢN LÝ NHIỀU HÓA ĐƠN & TIẾP NHẬN SỬA CHỮA ĐỒNG THỜI
+    // =========================================================================
+    window.posTabCounter = 1;
+    window.posSessions = [
+      {
+        id: 1,
+        title: "Hóa đơn 1",
+        cart: [],
+        khSearch: "",
+        maKH: "KHACHLE",
+        giamGia: "0",
+        khachTra: "0",
+        hinhThuc: "TIEN_MAT",
+        nganHang: "",
+        thePos: "",
+        loaiTT: "FULL",
+        tienMatHonHop: "0",
+        chuyenKhoanHonHop: "0",
+        theHonHop: "0",
+        ngayBan: "",
+        nguoiBan: ""
+      }
+    ];
+    window.activePosSessionId = 1;
+
+    function layThoiGianHienTaiChoInput() {
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      return now.getFullYear() + "-" + pad(now.getMonth()+1) + "-" + pad(now.getDate()) + "T" + pad(now.getHours()) + ":" + pad(now.getMinutes());
+    }
+    window.layThoiGianHienTaiChoInput = layThoiGianHienTaiChoInput;
+
+    function renderPosTabs() {
+      const container = document.getElementById('pos-tabs-list');
+      if (!container) return;
+      if (!window.posSessions || !window.posSessions.length) {
+        window.posSessions = [{
+          id: 1,
+          title: "Hóa đơn 1",
+          cart: [],
+          khSearch: "",
+          maKH: "KHACHLE",
+          giamGia: "0",
+          khachTra: "0",
+          hinhThuc: "TIEN_MAT",
+          nganHang: "",
+          thePos: "",
+          loaiTT: "FULL",
+          tienMatHonHop: "0",
+          chuyenKhoanHonHop: "0",
+          theHonHop: "0",
+          ngayBan: layThoiGianHienTaiChoInput(),
+          nguoiBan: ""
+        }];
+        window.activePosSessionId = 1;
+      }
+
+      container.innerHTML = window.posSessions.map(s => {
+        const isActive = (s.id === window.activePosSessionId);
+        const slItem = Array.isArray(s.cart) ? s.cart.reduce((sum, it) => sum + (Number(it.soLuong) || 1), 0) : 0;
+        const activeCls = isActive 
+          ? 'bg-blue-600 text-white font-bold shadow-xs' 
+          : 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium';
+        const badgeCls = isActive ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700';
+
+        return `
+          <div onclick="chuyenTabHoaDonPOS(${s.id})" class="cursor-pointer px-3 py-1.5 rounded-xl text-xs flex items-center space-x-1.5 transition select-none ${activeCls}">
+            <i class="fa-solid fa-receipt text-[11px] ${isActive ? 'text-amber-300' : 'text-blue-500'}"></i>
+            <span>${s.title}</span>
+            ${slItem > 0 ? `<span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${badgeCls}">${slItem}</span>` : ''}
+            ${window.posSessions.length > 1 ? `
+              <button type="button" onclick="dongTabHoaDonPOS(${s.id}, event)" class="ml-1 text-slate-400 hover:text-rose-500 transition p-0.5 rounded-full" title="Đóng hóa đơn này">
+                <i class="fa-solid fa-xmark text-[11px]"></i>
+              </button>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+    window.renderPosTabs = renderPosTabs;
+
+    function luuTrangThaiPosSessionHienTai() {
+      const cur = (window.posSessions || []).find(s => s.id === window.activePosSessionId);
+      if (!cur) return;
+
+      cur.cart = Array.isArray(posCart) ? JSON.parse(JSON.stringify(posCart)) : [];
+      cur.khSearch = document.getElementById('pos-kh-search')?.value || '';
+      cur.maKH = document.getElementById('pos-makh')?.value || 'KHACHLE';
+      cur.giamGia = document.getElementById('pos-giamgia')?.value || '0';
+      cur.khachTra = document.getElementById('pos-khachtra')?.value || '0';
+      cur.hinhThuc = document.getElementById('pos-hinhthuc')?.value || 'TIEN_MAT';
+      cur.nganHang = document.getElementById('pos-nganhang-nhan')?.value || '';
+      cur.thePos = document.getElementById('pos-the-nganhang-nhan')?.value || '';
+      cur.loaiTT = document.getElementById('pos-loai-thanhtoan')?.value || 'FULL';
+      cur.tienMatHonHop = document.getElementById('pos-tienmat-val')?.value || '0';
+      cur.chuyenKhoanHonHop = document.getElementById('pos-chuyenkhoan-val')?.value || '0';
+      cur.theHonHop = document.getElementById('pos-the-val')?.value || '0';
+      cur.ngayBan = document.getElementById('pos-ngayban')?.value || layThoiGianHienTaiChoInput();
+      cur.nguoiBan = document.getElementById('pos-nguoiban')?.value || '';
+    }
+    window.luuTrangThaiPosSessionHienTai = luuTrangThaiPosSessionHienTai;
+
+    function napTrangThaiPosSession(sessionId) {
+      const target = (window.posSessions || []).find(s => s.id === sessionId);
+      if (!target) return;
+      window.activePosSessionId = sessionId;
+
+      posCart = Array.isArray(target.cart) ? target.cart : [];
+
+      const inpSearch = document.getElementById('pos-kh-search');
+      if (inpSearch) inpSearch.value = target.khSearch || '';
+      const inpMaKH = document.getElementById('pos-makh');
+      if (inpMaKH) inpMaKH.value = target.maKH || 'KHACHLE';
+
+      const inpGiamGia = document.getElementById('pos-giamgia');
+      if (inpGiamGia) inpGiamGia.value = target.giamGia || '0';
+      const inpKhachTra = document.getElementById('pos-khachtra');
+      if (inpKhachTra) inpKhachTra.value = target.khachTra || '0';
+
+      const selHinhThuc = document.getElementById('pos-hinhthuc');
+      if (selHinhThuc) {
+        selHinhThuc.value = target.hinhThuc || 'TIEN_MAT';
+        if (typeof onChangeHinhThucTT === 'function') onChangeHinhThucTT(selHinhThuc.value);
+      }
+      const selBank = document.getElementById('pos-nganhang-nhan');
+      if (selBank && target.nganHang) selBank.value = target.nganHang;
+      const selThe = document.getElementById('pos-the-nganhang-nhan');
+      if (selThe && target.thePos) selThe.value = target.thePos;
+
+      const selLoaiTT = document.getElementById('pos-loai-thanhtoan');
+      if (selLoaiTT) selLoaiTT.value = target.loaiTT || 'FULL';
+
+      const inpTM = document.getElementById('pos-tienmat-val');
+      if (inpTM) inpTM.value = target.tienMatHonHop || '0';
+      const inpCK = document.getElementById('pos-chuyenkhoan-val');
+      if (inpCK) inpCK.value = target.chuyenKhoanHonHop || '0';
+      const inpThe = document.getElementById('pos-the-val');
+      if (inpThe) inpThe.value = target.theHonHop || '0';
+
+      const inpNgay = document.getElementById('pos-ngayban');
+      if (inpNgay) {
+        inpNgay.value = target.ngayBan || layThoiGianHienTaiChoInput();
+      }
+
+      const selNguoi = document.getElementById('pos-nguoiban');
+      if (selNguoi && target.nguoiBan) selNguoi.value = target.nguoiBan;
+
+      if (typeof renderPOSCart === 'function') renderPOSCart();
+      if (typeof tinhTienPOS === 'function') tinhTienPOS();
+      renderPosTabs();
+    }
+    window.napTrangThaiPosSession = napTrangThaiPosSession;
+
+    function chuyenTabHoaDonPOS(sessionId) {
+      if (sessionId === window.activePosSessionId) return;
+      luuTrangThaiPosSessionHienTai();
+      napTrangThaiPosSession(sessionId);
+    }
+    window.chuyenTabHoaDonPOS = chuyenTabHoaDonPOS;
+
+    function themTabHoaDonPOS() {
+      luuTrangThaiPosSessionHienTai();
+      window.posTabCounter = (window.posTabCounter || 1) + 1;
+      const newSession = {
+        id: window.posTabCounter,
+        title: "Hóa đơn " + window.posTabCounter,
+        cart: [],
+        khSearch: "",
+        maKH: "KHACHLE",
+        giamGia: "0",
+        khachTra: "0",
+        hinhThuc: "TIEN_MAT",
+        nganHang: "",
+        thePos: "",
+        loaiTT: "FULL",
+        tienMatHonHop: "0",
+        chuyenKhoanHonHop: "0",
+        theHonHop: "0",
+        ngayBan: layThoiGianHienTaiChoInput(),
+        nguoiBan: ""
+      };
+      window.posSessions.push(newSession);
+      napTrangThaiPosSession(newSession.id);
+      document.getElementById('pos-search')?.focus();
+      showNotification(`Đã mở thêm [${newSession.title}] sẵn sàng bán hàng!`, false);
+    }
+    window.themTabHoaDonPOS = themTabHoaDonPOS;
+
+    function dongTabHoaDonPOS(sessionId, event) {
+      if (event) event.stopPropagation();
+      if (!window.posSessions || window.posSessions.length <= 1) {
+        return showNotification("Cần duy trì ít nhất 1 tab hóa đơn thu ngân!", true);
+      }
+      const target = window.posSessions.find(s => s.id === sessionId);
+      if (!target) return;
+
+      const slHang = (target.id === window.activePosSessionId) ? posCart.length : (target.cart || []).length;
+      const thucHienDong = () => {
+        window.posSessions = window.posSessions.filter(s => s.id !== sessionId);
+        if (window.activePosSessionId === sessionId) {
+          const nextSession = window.posSessions[window.posSessions.length - 1];
+          napTrangThaiPosSession(nextSession.id);
+        } else {
+          renderPosTabs();
+        }
+      };
+
+      if (slHang > 0) {
+        showConfirm("Đóng hóa đơn", `[${target.title}] đang có ${slHang} sản phẩm trong giỏ. Bạn có chắc chắn muốn đóng tab này không?`, thucHienDong);
+      } else {
+        thucHienDong();
+      }
+    }
+    window.dongTabHoaDonPOS = dongTabHoaDonPOS;
+
+    function xuLySauThanhToanPosTab() {
+      // Nếu có nhiều tab hóa đơn, tự động đóng tab vừa thanh toán và chuyển sang tab tiếp theo
+      if (window.posSessions && window.posSessions.length > 1) {
+        const curId = window.activePosSessionId;
+        window.posSessions = window.posSessions.filter(s => s.id !== curId);
+        const nextSession = window.posSessions[window.posSessions.length - 1];
+        nextSession.ngayBan = layThoiGianHienTaiChoInput();
+        napTrangThaiPosSession(nextSession.id);
+      } else {
+        // Nếu chỉ có 1 tab duy nhất, làm mới tab và tự động cập nhật ngày giờ bán hàng bằng thời gian thực tế
+        if (window.posSessions && window.posSessions[0]) {
+          window.posSessions[0].cart = [];
+          window.posSessions[0].ngayBan = layThoiGianHienTaiChoInput();
+        }
+        const inpNgay = document.getElementById('pos-ngayban');
+        if (inpNgay) inpNgay.value = layThoiGianHienTaiChoInput();
+        renderPosTabs();
+      }
+    }
+    window.xuLySauThanhToanPosTab = xuLySauThanhToanPosTab;
+
     function khoiTaoThongTinPOS() {
       const ngayBanInp = document.getElementById('pos-ngayban');
       if (ngayBanInp && !ngayBanInp.value) {
-        const now = new Date();
-        const pad = n => String(n).padStart(2, '0');
-        ngayBanInp.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        ngayBanInp.value = layThoiGianHienTaiChoInput();
       }
       const nguoiBanSel = document.getElementById('pos-nguoiban');
       if (nguoiBanSel) {
@@ -34481,6 +34846,7 @@ function loadSoQuy(filter) {
       if (typeof onCheckboxHinhThucTTChange === 'function') {
         onCheckboxHinhThucTTChange();
       }
+      renderPosTabs();
     }
 
     /* ====================================================================
@@ -34745,6 +35111,9 @@ function loadSoQuy(filter) {
       const chkIn = document.getElementById('setting-in-phieu-chuyenkho');
       if (chkIn) chkIn.checked = layCaiDatInPhieuChuyenKho();
 
+      const chkInHD = document.getElementById('setting-in-hoadon-pos');
+      if (chkInHD) chkInHD.checked = layCaiDatInHoaDonPOS();
+
       // Nạp danh sách cột của mục đang chọn
       const selectMuc = document.getElementById('setting-cot-chon-muc');
       const curMuc = selectMuc ? selectMuc.value : 'hanghoa';
@@ -34757,10 +35126,12 @@ function loadSoQuy(filter) {
       const chkGV = document.getElementById('setting-giavon-binhquan');
       const chkChan = document.getElementById('setting-chan-ban-ngungkd');
       const chkIn = document.getElementById('setting-in-phieu-chuyenkho');
+      const chkInHD = document.getElementById('setting-in-hoadon-pos');
 
       if (chkGV) localStorage.setItem('tt_pos_setting_tinh_gia_von_tb', chkGV.checked ? 'true' : 'false');
       if (chkChan) localStorage.setItem('tt_pos_setting_chan_ban_ngungkd', chkChan.checked ? 'true' : 'false');
       if (chkIn) localStorage.setItem('tt_pos_setting_in_phieu_chuyenkho', chkIn.checked ? 'true' : 'false');
+      if (chkInHD) localStorage.setItem('tt_pos_setting_in_hoadon_pos', chkInHD.checked ? 'true' : 'false');
 
       apDungCaiDatAnHienCot();
       dongModal('modal-cai-dat-he-thong');
@@ -36425,11 +36796,44 @@ function loadSoQuy(filter) {
         </html>
       `;
 
-      const pWin = window.open('', '_blank', 'width=800,height=700');
-      if (pWin) {
-        pWin.document.open();
-        pWin.document.write(printHtml);
-        pWin.document.close();
+      try {
+        let printFrame = document.getElementById('pos-print-hidden-frame');
+        if (!printFrame) {
+          printFrame = document.createElement('iframe');
+          printFrame.id = 'pos-print-hidden-frame';
+          printFrame.style.position = 'fixed';
+          printFrame.style.right = '0';
+          printFrame.style.bottom = '0';
+          printFrame.style.width = '0';
+          printFrame.style.height = '0';
+          printFrame.style.border = '0';
+          printFrame.style.zIndex = '-9999';
+          document.body.appendChild(printFrame);
+        }
+        const frameDoc = printFrame.contentWindow.document;
+        frameDoc.open();
+        frameDoc.write(printHtml);
+        frameDoc.close();
+        setTimeout(() => {
+          try {
+            printFrame.contentWindow.focus();
+            printFrame.contentWindow.print();
+          } catch(ePrintFrame) {
+            const pWin = window.open('', '_blank', 'width=800,height=700');
+            if (pWin) {
+              pWin.document.open();
+              pWin.document.write(printHtml);
+              pWin.document.close();
+            }
+          }
+        }, 150);
+      } catch(eIframe) {
+        const pWin = window.open('', '_blank', 'width=800,height=700');
+        if (pWin) {
+          pWin.document.open();
+          pWin.document.write(printHtml);
+          pWin.document.close();
+        }
       }
     }
 
@@ -36529,6 +36933,7 @@ function loadSoQuy(filter) {
             <option value="KhachTra">🔄 Khách trả hàng (+)</option>
             <option value="TraNCC">↩️ Trả hàng NCC (-)</option>
             <option value="XuatHuy">🗑️ Xuất hủy hàng lỗi (-)</option>
+            <option value="ChuyenKho">🚚 Chuyển kho (Xuất/Nhận)</option>
             <option value="KiemKho">⚖️ Kiểm kho / Cân bằng</option>
           </select>
           <input type="text" id="tk-search-kw" oninput="locTheKhoTable()" placeholder="Tìm mã phiếu, đối tác, ghi chú..." class="border border-slate-300 rounded-xl px-3 py-1 text-xs w-56 bg-white">
@@ -36925,6 +37330,28 @@ function loadSoQuy(filter) {
               <input type="checkbox" id="setting-in-phieu-chuyenkho" checked class="sr-only peer">
               <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
             </label>
+          </div>
+        </div>
+
+        <!-- Mục 4: Tự động hiện cửa sổ in hóa đơn sau khi thanh toán POS -->
+        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold shadow-xs">
+                <i class="fa-solid fa-receipt"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-800 text-xs">Tự động hiện cửa sổ in hóa đơn sau khi thanh toán</h4>
+                <p class="text-[11px] text-slate-500">Tự động mở hộp thoại in hóa đơn ngay sau khi thu ngân bấm thanh toán thành công</p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="setting-in-hoadon-pos" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+            </label>
+          </div>
+          <div class="p-2 bg-emerald-50/70 rounded-xl text-[11px] text-emerald-900 border border-emerald-100 leading-relaxed">
+            <p class="text-[10px] text-slate-600"><b>Khi BẬT:</b> Sau khi thanh toán, phần mềm tự động bật hộp thoại in hóa đơn.<br><b>Khi TẮT:</b> Thanh toán siêu tốc không bật cửa sổ in (thu ngân có thể in lại bất kỳ lúc nào tại Lịch sử đơn hàng).</p>
           </div>
         </div>
 
