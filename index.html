@@ -9095,6 +9095,17 @@ function formatVND(amount) {
       { ma: "CN03", ten: "Chi nhánh Bình Giang" },
       { ma: "CN04", ten: "Bán Online" }
     ];
+    // Tự động khôi phục danh sách chi nhánh đã tùy chỉnh từ bộ nhớ cục bộ
+    try {
+      const savedBranches = localStorage.getItem('tt_pos_danhsach_chinhanh');
+      if (savedBranches) {
+        const parsed = JSON.parse(savedBranches);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          rawChiNhanhList = parsed;
+        }
+      }
+    } catch(eBranchesInit) {}
+
 
     /* ====================================================================
      * HỆ THỐNG QUẢN LÝ TỒN KHO & GIAO DỊCH ĐA CHI NHÁNH CHUYÊN NGHIỆP
@@ -9826,6 +9837,18 @@ function formatVND(amount) {
 
     // Tự động tải danh sách chi nhánh từ cơ sở dữ liệu Supabase / Google Sheets ngay khi mở phần mềm
     async function taiDanhSachChiNhanhBanDau(giuChiNhanhHienTai = false) {
+      // 1. Luôn ưu tiên nạp từ localStorage để phản hồi tức thì
+      try {
+        const savedBranches = localStorage.getItem('tt_pos_danhsach_chinhanh');
+        if (savedBranches) {
+          const parsed = JSON.parse(savedBranches);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            rawChiNhanhList = parsed;
+          }
+        }
+      } catch (eStorage) {}
+
+      // 2. Đồng bộ từ Supabase nếu có kết nối
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         try {
           const { data, error } = await supabaseClient
@@ -9838,38 +9861,31 @@ function formatVND(amount) {
               ma: item.ma_cn,
               ten: item.ten_cn
             }));
-            
-            if (!giuChiNhanhHienTai || !rawChiNhanhList.some(x => x.ma === currentChiNhanh)) {
-              const hasMain = rawChiNhanhList.some(x => x.ma === 'CN01');
-              currentChiNhanh = hasMain ? 'CN01' : rawChiNhanhList[0].ma;
-            }
-            localStorage.setItem('tt_pos_current_chinhanh', currentChiNhanh);
-            sessionStorage.setItem('tt_pos_current_chinhanh', currentChiNhanh);
-            capNhatDropdownChiNhanhToanHeThong();
-            console.log("🏢 Đã tải danh sách chi nhánh từ cơ sở dữ liệu Supabase:", rawChiNhanhList);
-            return;
+            localStorage.setItem('tt_pos_danhsach_chinhanh', JSON.stringify(rawChiNhanhList));
           }
         } catch (err) {
           console.warn("Lỗi đọc danh sách chi nhánh từ Supabase:", err);
         }
       }
 
+      // 3. Đồng bộ từ Google Sheets nếu có
       if (typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run.apiGetDanhSachChiNhanh === 'function') {
         google.script.run.withSuccessHandler(function(list) {
           if (list && list.length > 0) {
             rawChiNhanhList = list;
-            if (!giuChiNhanhHienTai || !rawChiNhanhList.some(x => x.ma === currentChiNhanh)) {
-              const hasMain = rawChiNhanhList.some(x => x.ma === 'CN01');
-              currentChiNhanh = hasMain ? 'CN01' : rawChiNhanhList[0].ma;
-            }
-            localStorage.setItem('tt_pos_current_chinhanh', currentChiNhanh);
-            sessionStorage.setItem('tt_pos_current_chinhanh', currentChiNhanh);
+            localStorage.setItem('tt_pos_danhsach_chinhanh', JSON.stringify(rawChiNhanhList));
             capNhatDropdownChiNhanhToanHeThong();
           }
         }).apiGetDanhSachChiNhanh();
-      } else {
-        capNhatDropdownChiNhanhToanHeThong();
       }
+
+      if (!giuChiNhanhHienTai || !rawChiNhanhList.some(x => x.ma === currentChiNhanh)) {
+        const hasMain = rawChiNhanhList.some(x => x.ma === 'CN01');
+        currentChiNhanh = hasMain ? 'CN01' : (rawChiNhanhList[0] ? rawChiNhanhList[0].ma : 'CN01');
+      }
+      localStorage.setItem('tt_pos_current_chinhanh', currentChiNhanh);
+      sessionStorage.setItem('tt_pos_current_chinhanh', currentChiNhanh);
+      capNhatDropdownChiNhanhToanHeThong();
     }
 
     if (document.readyState === 'loading') {
@@ -9919,33 +9935,128 @@ function formatVND(amount) {
       if (typeof taiDanhSachYeuCauSuaChua === 'function') taiDanhSachYeuCauSuaChua();
     }
 
+    function renderDanhSachChiNhanhModal(editingMaCN = null) {
+      const container = document.getElementById('ds-chinhanh-modal-container');
+      if (!container) return;
+
+      container.innerHTML = rawChiNhanhList.map(cn => {
+        if (editingMaCN === cn.ma) {
+          return `
+            <div id="row-cn-${cn.ma}" class="p-2.5 bg-amber-50/70 border border-amber-300 rounded-2xl flex items-center justify-between gap-2 shadow-xs">
+              <div class="flex items-center space-x-2 flex-1">
+                <span class="px-2.5 py-1 bg-amber-200 text-amber-900 font-mono font-bold text-xs rounded-xl shrink-0">${cn.ma}</span>
+                <input type="text" id="input-edit-tencn-${cn.ma}" value="${(typeof escapeHtml === 'function' ? escapeHtml(cn.ten) : cn.ten)}" class="w-full border border-amber-400 focus:border-amber-600 focus:ring-2 focus:ring-amber-200 rounded-xl px-2.5 py-1 text-sm bg-white font-medium text-slate-800" onkeydown="if(event.key==='Enter') xacNhanSuaChiNhanh('${cn.ma}'); if(event.key==='Escape') renderDanhSachChiNhanhModal();">
+              </div>
+              <div class="flex items-center space-x-1.5 shrink-0">
+                <button type="button" onclick="xacNhanSuaChiNhanh('${cn.ma}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-xs" title="Lưu tên chi nhánh">
+                  <i class="fa-solid fa-check text-[11px]"></i>
+                  <span>Lưu</span>
+                </button>
+                <button type="button" onclick="renderDanhSachChiNhanhModal()" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl text-xs font-medium transition" title="Hủy bỏ">
+                  <i class="fa-solid fa-xmark text-[11px]"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div id="row-cn-${cn.ma}" class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-2xl hover:border-slate-300 transition">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 bg-amber-100 text-amber-800 font-mono font-bold text-xs rounded-xl">${cn.ma}</span>
+              <span class="font-medium text-slate-800 text-sm">${(typeof escapeHtml === 'function' ? escapeHtml(cn.ten) : cn.ten)}</span>
+            </div>
+            <div class="flex items-center space-x-1.5">
+              <button type="button" onclick="batDauSuaChiNhanh('${cn.ma}')" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center space-x-1" title="Chỉnh sửa tên chi nhánh">
+                <i class="fa-solid fa-pen text-[10px]"></i>
+                <span>Sửa</span>
+              </button>
+              ${rawChiNhanhList.length > 1 ? `<button type="button" onclick="xoaChiNhanh('${cn.ma}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-semibold transition flex items-center space-x-1" title="Xóa chi nhánh này">
+                <i class="fa-solid fa-trash text-[10px]"></i>
+                <span>Xóa</span>
+              </button>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (editingMaCN) {
+        setTimeout(() => {
+          const inp = document.getElementById(`input-edit-tencn-${editingMaCN}`);
+          if (inp) {
+            inp.focus();
+            inp.select();
+          }
+        }, 50);
+      }
+    }
+    window.renderDanhSachChiNhanhModal = renderDanhSachChiNhanhModal;
+
+    function batDauSuaChiNhanh(maCN) {
+      renderDanhSachChiNhanhModal(maCN);
+    }
+    window.batDauSuaChiNhanh = batDauSuaChiNhanh;
+
+    function suaChiNhanh(maCN) {
+      batDauSuaChiNhanh(maCN);
+    }
+    window.suaChiNhanh = suaChiNhanh;
+
+    async function xacNhanSuaChiNhanh(maCN) {
+      const inp = document.getElementById(`input-edit-tencn-${maCN}`);
+      if (!inp) return;
+      const tenTrim = inp.value.trim();
+      if (!tenTrim) {
+        return showNotification("Tên chi nhánh không được để trống!", true);
+      }
+
+      const cn = rawChiNhanhList.find(x => x.ma === maCN);
+      if (!cn) return;
+
+      cn.ten = tenTrim;
+
+      // 1. Lưu ngay vào localStorage
+      localStorage.setItem('tt_pos_danhsach_chinhanh', JSON.stringify(rawChiNhanhList));
+
+      // 2. Cập nhật giao diện toàn hệ thống ngay lập tức
+      capNhatDropdownChiNhanhToanHeThong();
+      renderDanhSachChiNhanhModal();
+
+      showNotification(`Đã cập nhật tên chi nhánh [${maCN}] thành "${tenTrim}" thành công!`, false);
+
+      // 3. Đồng bộ Supabase nếu có
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+          const { error } = await supabaseClient.from('dm_chinhanh').upsert([{ ma_cn: maCN, ten_cn: tenTrim }]);
+          if (error) console.warn("Lỗi lưu Supabase dm_chinhanh:", error);
+        } catch (e) {
+          console.warn("Lỗi Supabase:", e);
+        }
+      }
+
+      // 4. Đồng bộ Google Sheets nếu có
+      if (typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run.apiLuuChiNhanh === 'function') {
+        google.script.run.apiLuuChiNhanh({ ma: maCN, ten: tenTrim });
+      }
+    }
+    window.xacNhanSuaChiNhanh = xacNhanSuaChiNhanh;
+
     function moModalQuanLyChiNhanh() {
       if (typeof hasPermission === 'function' && !hasPermission('QL_CHINHANH')) {
         showNotification("Bạn không có quyền truy cập Quản lý chi nhánh!", true);
         return;
       }
-      const container = document.getElementById('ds-chinhanh-modal-container');
-      if (!container) return;
-      
-      container.innerHTML = rawChiNhanhList.map(cn => `
-        <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-2xl">
-          <div class="flex items-center space-x-3">
-            <span class="px-2.5 py-1 bg-amber-100 text-amber-800 font-mono font-bold text-xs rounded-xl">${cn.ma}</span>
-            <span class="font-medium text-slate-800 text-sm">${cn.ten}</span>
-          </div>
-          <div class="flex items-center space-x-1.5">
-            <button type="button" onclick="suaChiNhanh('${cn.ma}')" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition">Sửa</button>
-            ${rawChiNhanhList.length > 1 ? `<button type="button" onclick="xoaChiNhanh('${cn.ma}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-semibold transition">Xóa</button>` : ''}
-          </div>
-        </div>
-      `).join('');
-      
-      document.getElementById('modal-quanly-chinhanh').classList.remove('hidden');
+      renderDanhSachChiNhanhModal();
+      const modal = document.getElementById('modal-quanly-chinhanh');
+      if (modal) modal.classList.remove('hidden');
     }
+    window.moModalQuanLyChiNhanh = moModalQuanLyChiNhanh;
 
     function dongModalQuanLyChiNhanh() {
-      document.getElementById('modal-quanly-chinhanh').classList.add('hidden');
+      const modal = document.getElementById('modal-quanly-chinhanh');
+      if (modal) modal.classList.add('hidden');
     }
+    window.dongModalQuanLyChiNhanh = dongModalQuanLyChiNhanh;
 
     function moModalHuongDanIos() {
       const m = document.getElementById('modal-huongdan-ios');
@@ -9953,11 +10064,33 @@ function formatVND(amount) {
     }
 
     async function themChiNhanhMoi() {
-      const ma = document.getElementById('input-them-macn').value.trim().toUpperCase();
-      const ten = document.getElementById('input-them-tencn').value.trim();
+      const inpMa = document.getElementById('input-them-macn');
+      const inpTen = document.getElementById('input-them-tencn');
+      if (!inpMa || !inpTen) return;
+
+      const ma = inpMa.value.trim().toUpperCase();
+      const ten = inpTen.value.trim();
       if (!ma || !ten) return showNotification("Vui lòng nhập đầy đủ Mã và Tên chi nhánh!", true);
 
-      // Lưu vào Supabase
+      // Kiểm tra trùng mã
+      const existed = rawChiNhanhList.find(x => x.ma === ma);
+      if (existed) {
+        return showNotification(`Mã chi nhánh [${ma}] đã tồn tại ("${existed.ten}")! Vui lòng chọn mã khác.`, true);
+      }
+
+      // 1. Thêm vào danh sách và lưu ngay vào localStorage
+      rawChiNhanhList.push({ ma, ten });
+      localStorage.setItem('tt_pos_danhsach_chinhanh', JSON.stringify(rawChiNhanhList));
+
+      // 2. Cập nhật giao diện toàn hệ thống
+      inpMa.value = "";
+      inpTen.value = "";
+      capNhatDropdownChiNhanhToanHeThong();
+      renderDanhSachChiNhanhModal();
+
+      showNotification(`Đã thêm chi nhánh mới [${ma}: ${ten}] thành công!`);
+
+      // 3. Đồng bộ Supabase nếu có
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         try {
           const { error } = await supabaseClient.from('dm_chinhanh').upsert([{ ma_cn: ma, ten_cn: ten }]);
@@ -9967,49 +10100,33 @@ function formatVND(amount) {
         }
       }
 
-      // Lưu vào Google Sheets nếu có
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
+      // 4. Đồng bộ Google Sheets nếu có
+      if (typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run.apiLuuChiNhanh === 'function') {
         google.script.run.apiLuuChiNhanh({ ma: ma, ten: ten });
       }
-
-      document.getElementById('input-them-macn').value = "";
-      document.getElementById('input-them-tencn').value = "";
-      showNotification("Đã thêm chi nhánh mới [" + ma + ": " + ten + "] thành công!");
-
-      await taiDanhSachChiNhanhBanDau();
-      moModalQuanLyChiNhanh();
     }
-
-    async function suaChiNhanh(maCN) {
-      const cn = rawChiNhanhList.find(x => x.ma === maCN);
-      if (!cn) return;
-      const tenMoi = prompt("Nhập tên mới cho chi nhánh [" + maCN + "]:", cn.ten);
-      if (tenMoi !== null && tenMoi.trim() !== "") {
-        const tenTrim = tenMoi.trim();
-        // Cập nhật Supabase
-        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-          try {
-            const { error } = await supabaseClient.from('dm_chinhanh').update({ ten_cn: tenTrim }).eq('ma_cn', maCN);
-            if (error) console.warn("Lỗi cập nhật Supabase:", error);
-          } catch (e) {
-            console.warn("Lỗi:", e);
-          }
-        }
-        // Cập nhật Google Sheets nếu có
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
-          google.script.run.apiLuuChiNhanh({ ma: maCN, ten: tenTrim });
-        }
-
-        showNotification("Đã cập nhật tên chi nhánh thành công!");
-        await taiDanhSachChiNhanhBanDau();
-        moModalQuanLyChiNhanh();
-      }
-    }
+    window.themChiNhanhMoi = themChiNhanhMoi;
 
     async function xoaChiNhanh(maCN) {
       if (rawChiNhanhList.length <= 1) return showNotification("Hệ thống phải duy trì ít nhất 1 chi nhánh hoạt động!", true);
-      if (confirm("Bạn có chắc chắn muốn xóa chi nhánh [" + maCN + "] khỏi hệ thống không?")) {
-        // Xóa trong Supabase
+      
+      const cn = rawChiNhanhList.find(x => x.ma === maCN);
+      const tenCN = cn ? cn.ten : maCN;
+
+      const thucHienXoa = async () => {
+        rawChiNhanhList = rawChiNhanhList.filter(x => x.ma !== maCN);
+        localStorage.setItem('tt_pos_danhsach_chinhanh', JSON.stringify(rawChiNhanhList));
+
+        if (currentChiNhanh === maCN) {
+          currentChiNhanh = rawChiNhanhList[0]?.ma || "CN01";
+          localStorage.setItem('tt_pos_current_chinhanh', currentChiNhanh);
+        }
+
+        capNhatDropdownChiNhanhToanHeThong();
+        renderDanhSachChiNhanhModal();
+        showNotification(`Đã xóa chi nhánh [${maCN}: ${tenCN}] khỏi hệ thống thành công!`);
+
+        // Xóa trong Supabase nếu có
         if (typeof supabaseClient !== 'undefined' && supabaseClient) {
           try {
             const { error } = await supabaseClient.from('dm_chinhanh').delete().eq('ma_cn', maCN);
@@ -10019,19 +10136,18 @@ function formatVND(amount) {
           }
         }
         // Xóa trong Google Sheets nếu có
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
+        if (typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run.apiXoaChiNhanh === 'function') {
           google.script.run.apiXoaChiNhanh(maCN);
         }
+      };
 
-        showNotification("Đã xóa chi nhánh thành công!");
-        if (currentChiNhanh === maCN) {
-          currentChiNhanh = rawChiNhanhList.find(x => x.ma !== maCN)?.ma || "CN01";
-          localStorage.setItem('tt_pos_current_chinhanh', currentChiNhanh);
-        }
-        await taiDanhSachChiNhanhBanDau();
-        moModalQuanLyChiNhanh();
+      if (typeof showConfirm === 'function') {
+        showConfirm("Xác nhận xóa chi nhánh", `Bạn có chắc chắn muốn xóa chi nhánh [${maCN}: ${tenCN}] khỏi hệ thống không?`, thucHienXoa);
+      } else if (confirm(`Bạn có chắc chắn muốn xóa chi nhánh [${maCN}: ${tenCN}] khỏi hệ thống không?`)) {
+        thucHienXoa();
       }
     }
+    window.xoaChiNhanh = xoaChiNhanh;
 
     function capNhatDropdownChiNhanhToanHeThong() {
       // 1. Xác định danh sách chi nhánh người dùng đang đăng nhập có quyền truy cập
