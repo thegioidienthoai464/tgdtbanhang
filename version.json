@@ -1,23 +1,20 @@
 {
   "version": "1.5.2",
-  "build_number": 49,
+  "build_number": 50,
   "force_update": false,
-  "release_notes": "• Khắc phục hoàn toàn lỗi không sửa được tên chi nhánh: hỗ trợ chỉnh sửa trực tiếp (Inline Edit) tại chỗ, lưu ngay lập tức vào bộ nhớ và đồng bộ tức thời trên toàn hệ thống.\n• Khắc phục lỗi không bấm được hiện mật khẩu và đăng nhập.\n• Thẻ kho bổ sung đầy đủ lịch sử Chuyển kho và đồng bộ Kiểm kho chính xác 100%.\n• Bán hàng POS 2.1 Multi-Tab và in hóa đơn mượt mà qua iframe.",
+  "release_notes": "• Khắc phục triệt để lỗi đồng bộ tên chi nhánh giữa các trình duyệt: tự động khởi tạo và lưu trữ đám mây Google Sheets (sheet DM_ChiNhanh), nút 'Nạp lại' tải tức thời danh sách chi nhánh mới nhất từ máy chủ.\n• Khắc phục hoàn toàn lỗi Kiểm kho: lưu trữ vĩnh viễn phiếu kiểm kho trên cả trình duyệt (localStorage) và máy chủ đám mây, không còn bị mất khi chuyển tab hoặc tải lại trang.\n• Cân bằng tồn kho chính xác 100%: cập nhật ngay lập tức số lượng tồn kho thực tế vào danh mục hàng hóa và thẻ kho đa chi nhánh.\n• Khắc phục triệt để lỗi Thẻ kho: tính toán tồn sau giao dịch và tồn hiện tại khớp tuyệt đối với số lượng thực tế đếm được của phiếu kiểm kho cân bằng.\n• Đồng bộ toàn diện cơ chế lưu trữ cục bộ và đám mây cho tất cả các loại chứng từ: Xuất hủy, Chuyển kho, Trả hàng NCC, Nhập hàng.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
   "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.1/TT_POS_v1.5.1.apk",
   "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.1/TT_POS_v1.5.1.ipa",
   "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.1",
-  "build": 49,
+  "build": 50,
   "releaseDate": "2026-11-09",
   "features": [
-    "Chỉnh sửa tên chi nhánh trực tiếp (Inline Edit) và đồng bộ tức thời toàn hệ thống",
-    "Khắc phục triệt để lỗi không hiện mật khẩu và không đăng nhập được phần mềm",
-    "Thẻ kho bổ sung đầy đủ lịch sử Chuyển kho (Xuất/Nhận 2 chi nhánh) và đồng bộ Kiểm kho chính xác 100%",
-    "Tùy chọn Bật/Tắt tự động hiện cửa sổ in hóa đơn sau khi thanh toán trong Cài đặt hệ thống",
-    "In hóa đơn POS trực tiếp qua iframe ẩn mượt mà, không bị trình duyệt chặn popup",
-    "Tối ưu phản hồi nút Thanh toán POS siêu tốc (< 15ms) không bị khựng",
-    "Tối ưu chuyển tab hệ thống tức thì (< 16ms), tách tải ngầm dữ liệu lớn",
-    "Cửa sổ Bán hàng POS 2.1 Multi-Tab: hỗ trợ tạo nhiều hóa đơn và tiếp nhận sửa chữa song song cùng lúc",
-    "Tự động đồng bộ ngày giờ bán hàng theo thời gian thực tế cho từng hóa đơn mới"
+    "Đồng bộ tên chi nhánh đám mây xuyên suốt đa trình duyệt và thiết bị qua Google Sheets DM_ChiNhanh",
+    "Nút Nạp lại trong Quản lý chi nhánh kéo danh sách mới nhất từ đám mây tức thời",
+    "Lưu trữ vĩnh viễn phiếu Kiểm kho (localStorage + Google Sheets), không bị ghi đè hay mất khi chuyển tab / F5",
+    "Cân bằng tồn kho tự động chuẩn xác 100% cho từng chi nhánh ngay sau khi hoàn tất kiểm kho",
+    "Thẻ kho hiển thị Tồn sau GD và Tồn hiện tại khớp tuyệt đối với số lượng thực tế kiểm kho",
+    "Bảo toàn dữ liệu người dùng tạo mới cho toàn bộ các phân hệ: Xuất hủy, Chuyển kho, Trả hàng NCC, Nhập hàng"
   ]
 }

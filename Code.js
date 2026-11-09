@@ -1,6 +1,24 @@
+function getAppSpreadsheet() {
+  var ss = null;
+  try {
+    ss = getAppSpreadsheet();
+    if (ss) return ss;
+  } catch(e) {}
+  try {
+    ss = SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
+    if (ss) return ss;
+  } catch(e) {
+    Logger.log("getAppSpreadsheet error: " + e.message);
+  }
+  return null;
+}
+
 function doGet(e) {
+  if (e && e.parameter && e.parameter.action === "getDanhSachChiNhanh") {
+    return ContentService.createTextOutput(JSON.stringify(apiGetDanhSachChiNhanh(), null, 2)).setMimeType(ContentService.MimeType.JSON);
+  }
   if (e && e.parameter && e.parameter.action === 'debugNhapHang') {
-    const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
+    const ss = getAppSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
     const sheet = getSheetNhapHang(ss);
     const rows = sheet ? sheet.getDataRange().getValues() : [];
     return ContentService.createTextOutput(JSON.stringify({
@@ -9,12 +27,12 @@ function doGet(e) {
     }, null, 2)).setMimeType(ContentService.MimeType.JSON);
   }
   if (e && e.parameter && e.parameter.action === 'resetDuLieuGiaoDichVaTonKho') {
-    const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
+    const ss = getAppSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
     const result = thucHienResetGiaoDichVaTonKhoSheets(ss);
     return ContentService.createTextOutput(JSON.stringify(result, null, 2)).setMimeType(ContentService.MimeType.JSON);
   }
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     if (ss) {
       try {
         ss.addEditor("thegioidienthoai464@gmail.com");
@@ -41,7 +59,7 @@ function include(filename) {
 function thucHienResetGiaoDichVaTonKhoSheets(ss) {
   if (!ss) {
     try {
-      ss = SpreadsheetApp.getActiveSpreadsheet();
+      ss = getAppSpreadsheet();
     } catch(e) {}
   }
   if (!ss) {
@@ -106,7 +124,7 @@ function thucHienResetGiaoDichVaTonKhoSheets(ss) {
 }
 // Đọc danh sách đối tác (Khách hàng hoặc Nhà cung cấp) từ Google Sheets
 function apiGetDanhSachDoiTac(loai) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAppSpreadsheet();
   if (typeof dongBoTienCocDonDatHang === 'function') {
     dongBoTienCocDonDatHang(ss);
   }
@@ -152,7 +170,7 @@ function apiGetDanhSachDoiTac(loai) {
 
 // Ghi danh sách hàng hóa nhập từ Excel lên Google Sheets
 function apiLuuDanhSachHangHoa(list) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAppSpreadsheet();
   const sheetDM = ss.getSheetByName("DM_HangHoa");
   const sheetIMEI = ss.getSheetByName("Kho_IMEI");
   
@@ -286,7 +304,7 @@ function apiXoaHangHoa(maHangList) {
     if (!maHangList || !Array.isArray(maHangList) || !maHangList.length) {
       return { success: false, error: "Danh sách mã hàng rỗng!" };
     }
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     const sheetDM = ss.getSheetByName("DM_HangHoa");
     if (!sheetDM) return { success: false, error: "Không tìm thấy sheet DM_HangHoa!" };
 
@@ -345,7 +363,7 @@ function apiChuyenNhomHangHoa(maHangList, maNhomMoi) {
     if (!maHangList || !Array.isArray(maHangList) || !maHangList.length) {
       return { success: false, error: "Danh sách mã hàng rỗng!" };
     }
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     const sheetDM = ss.getSheetByName("DM_HangHoa");
     if (!sheetDM) return { success: false, error: "Không tìm thấy sheet DM_HangHoa!" };
 
@@ -390,7 +408,7 @@ function apiChuyenNhomHangHoa(maHangList, maNhomMoi) {
 // Đọc danh mục nhóm hàng từ Google Sheets
 function apiGetNhomHang() {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     let sheet = ss.getSheetByName("DM_NhomHang");
     if (!sheet) {
       sheet = ss.insertSheet("DM_NhomHang");
@@ -457,7 +475,7 @@ function apiGetNhomHang() {
 function apiLuuNhomHang(data) {
   try {
     if (!data) return { success: false, error: "Dữ liệu rỗng!" };
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     let sheet = ss.getSheetByName("DM_NhomHang");
     if (!sheet) {
       sheet = ss.insertSheet("DM_NhomHang");
@@ -512,7 +530,7 @@ function apiLuuNhomHang(data) {
 // Xóa nhóm hàng khỏi Google Sheets
 function apiXoaNhomHang(maNhom) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     let sheet = ss.getSheetByName("DM_NhomHang");
     if (!sheet) return { success: false, error: "Không tìm thấy sheet DM_NhomHang!" };
     const rows = sheet.getDataRange().getValues();
@@ -532,7 +550,7 @@ function apiXoaNhomHang(maNhom) {
 
 // Đọc danh sách phiếu kiểm kho từ Google Sheets
 function apiGetDanhSachKiemKho() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAppSpreadsheet();
   let sheet = ss.getSheetByName("KiemKho");
   if (!sheet) return [];
   const rows = sheet.getDataRange().getValues();
@@ -580,7 +598,7 @@ function apiGetDanhSachKiemKho() {
 
 // Lưu phiếu kiểm kho và cân bằng tồn kho hàng hóa
 function apiLuuPhieuKiemKho(phieu) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAppSpreadsheet();
   let sheet = ss.getSheetByName("KiemKho");
   if (!sheet) {
     sheet = ss.insertSheet("KiemKho");
@@ -656,7 +674,7 @@ function apiLuuPhieuKiemKho(phieu) {
 
 // Đọc danh sách phiếu xuất hủy từ Google Sheets
 function apiGetDanhSachXuatHuy() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAppSpreadsheet();
   let sheet = ss.getSheetByName("XuatHuy");
   if (!sheet) return [];
   const rows = sheet.getDataRange().getValues();
@@ -745,7 +763,7 @@ function apiGetDanhSachXuatHuy() {
 function apiHuyPhieuXuatHuy(maChungTu) {
   try {
     if (!maChungTu) return { success: false, error: "Mã chứng từ không hợp lệ!" };
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     let sheet = ss.getSheetByName("XuatHuy");
     if (!sheet) return { success: false, error: "Không tìm thấy sheet XuatHuy!" };
 
@@ -922,7 +940,7 @@ function apiLuuPhieuXuatHuy(phieu) {
       try { phieu = JSON.parse(phieu); } catch(e) {}
     }
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     let sheet = ss.getSheetByName("XuatHuy");
     const standardHeaders = ["MaPhieu", "NgayTao", "ChiNhanh", "NhanVien", "TongSoLuong", "TongGiaTri", "LyDoHuy", "TrangThai", "ChiTietSanPham"];
     if (!sheet) {
@@ -1095,7 +1113,7 @@ function apiLuuPhieuXuatHuy(phieu) {
 function apiGetTheKhoHangHoa(maHang, chiNhanh) {
   try {
     if (!maHang) return { success: false, error: "Mã hàng không hợp lệ!" };
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     const targetMa = String(maHang).trim().toUpperCase();
     let history = [];
 
@@ -1375,7 +1393,7 @@ function apiGetTheKhoHangHoa(maHang, chiNhanh) {
 
 function apiLuuDoiTac(data) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     let sheet = ss.getSheetByName("DM_DoiTac");
     if (!sheet) {
       sheet = ss.insertSheet("DM_DoiTac");
@@ -1447,7 +1465,7 @@ function apiCapNhatTrangThaiDoiTac(maList, trangThaiMoi, loaiDoiTac) {
     if (!Array.isArray(maList) || !maList.length) {
       return { success: false, error: "Danh sách mã đối tác trống!" };
     }
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     const sheet = ss.getSheetByName("DM_DoiTac");
     if (!sheet) return { success: false, error: "Không tìm thấy sheet DM_DoiTac" };
 
@@ -1502,7 +1520,7 @@ function apiThanhToanCongNoNCC(payload) {
     if (!maNCC) return { success: false, error: "Mã nhà cung cấp không hợp lệ!" };
     if (soTien <= 0) return { success: false, error: "Số tiền thanh toán phải lớn hơn 0!" };
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     const sheetDT = ss.getSheetByName("DM_DoiTac");
     if (!sheetDT) return { success: false, error: "Không tìm thấy sheet DM_DoiTac" };
 
@@ -1619,7 +1637,7 @@ function apiGetLichSuGiaoDichNCC(maNCC) {
     const targetMa = String(maNCC || "").trim().toUpperCase();
     if (!targetMa) return { success: false, error: "Thiếu mã nhà cung cấp" };
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     let lichSuNhap = [];
     let lichSuTra = [];
     let lichSuThanhToan = [];
@@ -1839,24 +1857,35 @@ function apiGetDanhSachChiNhanh() {
     { ma: "CN04", ten: "Bán Online" }
   ];
 
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DM_ChiNhanh");
+  const ss = getAppSpreadsheet();
+  if (!ss) return defaultBranches;
+
+  let sheet = ss.getSheetByName("DM_ChiNhanh");
   if (!sheet) {
     try {
-      const ss = SpreadsheetApp.getActiveSpreadsheet();
-      const newSheet = ss.insertSheet("DM_ChiNhanh");
-      newSheet.appendRow(["MaChiNhanh", "TenChiNhanh"]);
-      defaultBranches.forEach(b => newSheet.appendRow([b.ma, b.ten]));
-    } catch(e) {}
+      sheet = ss.insertSheet("DM_ChiNhanh");
+      sheet.appendRow(["MaChiNhanh", "TenChiNhanh"]);
+      defaultBranches.forEach(b => sheet.appendRow([b.ma, b.ten]));
+    } catch(e) {
+      Logger.log("insertSheet DM_ChiNhanh error: " + e.message);
+    }
     return defaultBranches;
   }
   
   const rows = sheet.getDataRange().getValues();
+  if (rows.length <= 1) {
+    try {
+      defaultBranches.forEach(b => sheet.appendRow([b.ma, b.ten]));
+    } catch(e) {}
+    return defaultBranches;
+  }
+
   let result = [];
   for (let i = 1; i < rows.length; i++) {
     if (rows[i][0]) {
       result.push({
         ma: String(rows[i][0]).trim().toUpperCase(),
-        ten: String(rows[i][1]).trim()
+        ten: String(rows[i][1] || rows[i][0]).trim()
       });
     }
   }
@@ -1865,11 +1894,30 @@ function apiGetDanhSachChiNhanh() {
 
 // 2. Lưu thông tin chi nhánh (Thêm mới hoặc Cập nhật sửa tên)
 function apiLuuChiNhanh(data) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DM_ChiNhanh");
-  if (!sheet) return { success: false, error: "Không tìm thấy sheet DM_ChiNhanh" };
+  const ss = getAppSpreadsheet();
+  if (!ss) return { success: false, error: "Không thể kết nối Google Spreadsheet" };
+
+  let sheet = ss.getSheetByName("DM_ChiNhanh");
+  if (!sheet) {
+    try {
+      sheet = ss.insertSheet("DM_ChiNhanh");
+      sheet.appendRow(["MaChiNhanh", "TenChiNhanh"]);
+      const defaultBranches = [
+        { ma: "CN01", ten: "Trụ sở chính Thanh Miện" },
+        { ma: "CN02", ten: "Chi nhánh Thanh Giang" },
+        { ma: "CN03", ten: "Chi nhánh Bình Giang" },
+        { ma: "CN04", ten: "Bán Online" }
+      ];
+      defaultBranches.forEach(b => sheet.appendRow([b.ma, b.ten]));
+    } catch(e) {
+      return { success: false, error: "Lỗi tạo sheet DM_ChiNhanh: " + e.message };
+    }
+  }
+
   const rows = sheet.getDataRange().getValues();
   const trimMa = String(data.ma || "").trim().toUpperCase();
   const trimTen = String(data.ten || "").trim();
+  if (!trimMa || !trimTen) return { success: false, error: "Mã và Tên chi nhánh không được để trống" };
   
   let foundRow = -1;
   for (let i = 1; i < rows.length; i++) {
@@ -1880,18 +1928,19 @@ function apiLuuChiNhanh(data) {
   }
 
   if (foundRow > -1) {
-    // Cập nhật tên chi nhánh nếu đã tồn tại mã
     sheet.getRange(foundRow, 2).setValue(trimTen);
   } else {
-    // Thêm mới chi nhánh
     sheet.appendRow([trimMa, trimTen]);
   }
-  return { success: true };
+  return { success: true, list: apiGetDanhSachChiNhanh() };
 }
 
 // 3. Xóa chi nhánh khỏi Google Sheets
 function apiXoaChiNhanh(maCN) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DM_ChiNhanh");
+  const ss = getAppSpreadsheet();
+  if (!ss) return { success: false, error: "Không thể kết nối Google Spreadsheet" };
+
+  let sheet = ss.getSheetByName("DM_ChiNhanh");
   if (!sheet) return { success: false, error: "Không tìm thấy sheet DM_ChiNhanh" };
   const rows = sheet.getDataRange().getValues();
   
@@ -1902,14 +1951,14 @@ function apiXoaChiNhanh(maCN) {
   for (let i = 1; i < rows.length; i++) {
     if (String(rows[i][0]).trim().toUpperCase() === String(maCN).trim().toUpperCase()) {
       sheet.deleteRow(i + 1);
-      return { success: true };
+      return { success: true, list: apiGetDanhSachChiNhanh() };
     }
   }
   return { success: false, error: "Không tìm thấy mã chi nhánh để xóa" };
 }
 
 function apiLuuDanhSachHangHoaVoiCheDo(list, importMode) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAppSpreadsheet();
   const sheetDM = ss.getSheetByName("DM_HangHoa");
   const sheetIMEI = ss.getSheetByName("Kho_IMEI");
   
@@ -2046,7 +2095,7 @@ function apiLuuDanhSachHangHoaVoiCheDo(list, importMode) {
 
 function apiGetIMEITonKho(maHang, chiNhanh) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
+    const ss = getAppSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
     let sheet = ss.getSheetByName("Kho_IMEI");
     if (!sheet) {
       sheet = ss.insertSheet("Kho_IMEI");
@@ -2144,7 +2193,7 @@ function apiGetIMEITonKho(maHang, chiNhanh) {
 // Lấy số liệu KPI và Dashboard theo chi nhánh
 function getDashboardData(period, chiNhanh) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     const sheetDH = ss.getSheetByName("Don_Hang");
     const cleanCN = chiNhanh ? String(chiNhanh).trim().toUpperCase() : "";
 
@@ -2230,7 +2279,7 @@ function getDashboardData(period, chiNhanh) {
 
 // Đọc danh sách hàng hóa - Khớp chính xác vị trí cột thực tế trên Google Sheets
 function apiGetDanhSachHangHoa() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAppSpreadsheet();
   
   // 1. Đọc trước sheet Kho_IMEI để lập bản đồ IMEI tồn kho
   let imeiMap = {};
@@ -2462,7 +2511,7 @@ function patchSupabaseServer(table, filterQuery, payload) {
 
 // Lưu đơn hàng POS lên Google Sheets và cập nhật trạng thái IMEI
 function apiLuuDonHangPOS(order) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAppSpreadsheet();
   let sheet = ss.getSheetByName("DonHang");
   if (!sheet) {
     sheet = ss.insertSheet("DonHang");
@@ -2637,7 +2686,7 @@ function apiLuuDonHangPOS(order) {
 // Cập nhật thông tin ngày giờ & người bán của hóa đơn đã bán
 function apiCapNhatThongTinDonHang(payload) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     if (!ss) return { success: false, error: "Không tìm thấy Spreadsheet" };
     const maDonHang = String(payload.maDonHang || '').trim();
     if (!maDonHang) return { success: false, error: "Thiếu mã đơn hàng" };
@@ -2726,7 +2775,7 @@ function apiCapNhatThongTinDonHang(payload) {
 // Lấy danh sách toàn bộ đơn hàng đã bán từ Google Sheets (hỗ trợ cả sheet DonHang và GiaoDich_DonHang)
 function apiGetDanhSachDonHang() {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     if (!ss) return [];
 
     const timeZone = ss.getSpreadsheetTimeZone() || "GMT+7";
@@ -2943,7 +2992,7 @@ function apiGetDanhSachDonHang() {
 // Xóa một hoặc nhiều đơn hàng theo danh sách mã
 function apiXoaDonHang(maDonList) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     let sheetDon = ss.getSheetByName("DonHang");
     let sheetHang = ss.getSheetByName("HangHoa") || ss.getSheetByName("DM_HangHoa");
     
@@ -3008,7 +3057,7 @@ function apiXoaDonHang(maDonList) {
 // Lưu phiếu khách trả hàng: Hồi tồn kho, cập nhật IMEI, ghi phiếu chi sổ quỹ, ghi nhận phiếu trả
 function apiLuuPhieuTraHangKhach(payload) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     if (!ss) return { success: false, error: "Không tìm thấy Spreadsheet đang hoạt động!" };
     
     if (!payload || !payload.maDonHangGoc || !payload.danhSachTra || !payload.danhSachTra.length) {
@@ -3332,7 +3381,7 @@ function apiLuuPhieuTraHangKhach(payload) {
 // ==================== QUẢN LÝ TÀI KHOẢN NGÂN HÀNG ====================
 
 function apiGetDanhSachNganHang() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAppSpreadsheet();
   let sheet = ss.getSheetByName("DM_NganHang");
   if (!sheet) {
     sheet = ss.insertSheet("DM_NganHang");
@@ -3359,7 +3408,7 @@ function apiGetDanhSachNganHang() {
 }
 
 function apiLuuNganHang(acc) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAppSpreadsheet();
   let sheet = ss.getSheetByName("DM_NganHang");
   if (!sheet) {
     sheet = ss.insertSheet("DM_NganHang");
@@ -3385,7 +3434,7 @@ function apiLuuNganHang(acc) {
 }
 
 function apiXoaNganHang(maList) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAppSpreadsheet();
   let sheet = ss.getSheetByName("DM_NganHang");
   if (!sheet) return { success: false };
   const rows = sheet.getDataRange().getValues();
@@ -3406,7 +3455,7 @@ function apiXoaNganHang(maList) {
  */
 function apiGetChiTietSoQuy(loaiQuy) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     if (typeof dongBoTienCocDonDatHang === 'function') {
       dongBoTienCocDonDatHang(ss);
     }
@@ -3610,7 +3659,7 @@ function apiTaoPhieuSoQuy(payload) {
 }
 
 function apiLuuPhieuSoQuy(data) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAppSpreadsheet();
   let sheet = ss.getSheetByName("SoQuy");
   if (!sheet) {
     sheet = ss.insertSheet("SoQuy");
@@ -3690,7 +3739,7 @@ function deduplicateRecords(arr, keyName) {
 // Trích xuất toàn bộ dữ liệu từ Google Sheets để đồng bộ trực tiếp lên Supabase từ trình duyệt (hoàn toàn không cần quyền UrlFetchApp)
 function apiGetDuLieuDongBoSupabase() {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     if (!ss) return { success: false, error: "Không tìm thấy Spreadsheet!" };
 
     // 0. Chi Nhánh
@@ -3876,7 +3925,7 @@ function apiDongBoDuLieuSangSupabase(supabaseUrl, supabaseKey) {
     }
 
     let stats = { chiNhanh: 0, nhomHang: 0, hangHoa: 0, imei: 0, doiTac: 0, donHang: 0, soQuy: 0, nganHang: 0 };
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
 
     // 0. Đồng bộ Chi Nhánh
     const listCN = apiGetDanhSachChiNhanh();
@@ -4039,7 +4088,7 @@ function apiDongBoDuLieuSangSupabase(supabaseUrl, supabaseKey) {
 // ====================================================================
 function apiGetBaoCaoTongHop(filter) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     const now = new Date();
     const filterTime = String(filter || "ALL").toUpperCase();
 
@@ -4283,7 +4332,7 @@ function apiGetBaoCaoTongHop(filter) {
  */
 function dongBoTienCocDonDatHang(ss) {
   try {
-    if (!ss) ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) ss = getAppSpreadsheet();
     let sheetDonDat = ss.getSheetByName("DonDatHang");
     if (!sheetDonDat) return;
 
@@ -4477,7 +4526,7 @@ function dongBoTienCocDonDatHang(ss) {
 // 1. Lấy lịch sử giao dịch toàn diện của Khách Hàng (Hóa đơn mua hàng, Đơn đặt cọc, Trả hàng, Thu nợ/Thanh toán)
 function apiGetLichSuGiaoDichKH(maKH, tenKH, sdt) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     if (typeof dongBoTienCocDonDatHang === 'function') {
       dongBoTienCocDonDatHang(ss);
     }
@@ -4767,7 +4816,7 @@ function apiThanhToanCongNoKH(payload) {
     if (!maKH) return { success: false, error: "Mã khách hàng không hợp lệ!" };
     if (soTien <= 0) return { success: false, error: "Số tiền thu phải lớn hơn 0!" };
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     const sheetDT = ss.getSheetByName("DM_DoiTac");
     if (!sheetDT) return { success: false, error: "Không tìm thấy sheet DM_DoiTac" };
 
@@ -5146,7 +5195,7 @@ function parseAndNormalizeDonNhapRow(r, mapDoiTac) {
 
 function apiGetDanhSachNhapHang() {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
+    const ss = getAppSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
     let sheet = getSheetNhapHang(ss);
     if (!sheet) return { success: true, data: [] };
 
@@ -5209,7 +5258,7 @@ function apiGetDanhSachNhapHang() {
 
 function apiLuuPhieuNhapHang(payload) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
+    const ss = getAppSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
     let sheet = getSheetNhapHang(ss);
 
     const maPhieu = payload.maPhieu || ("PNH" + Date.now().toString().slice(-6));
@@ -5432,7 +5481,7 @@ function apiHuyDonNhapHang(payload) {
     const lyDo = (typeof payload === 'object' && payload.lyDo) ? payload.lyDo : "Hủy đơn nhập theo yêu cầu người dùng";
     if (!maPhieu) return { success: false, error: "Thiếu mã phiếu nhập hàng!" };
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
+    const ss = getAppSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
     let sheet = getSheetNhapHang(ss);
     if (!sheet) return { success: false, error: "Không tìm thấy sheet NhapHang!" };
 
@@ -5585,7 +5634,7 @@ function apiCapNhatDonNhapHang(payload) {
     const maPhieu = payload.maPhieu;
     if (!maPhieu) return { success: false, error: "Thiếu mã phiếu nhập hàng!" };
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
+    const ss = getAppSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
     let sheet = getSheetNhapHang(ss);
     if (!sheet) return { success: false, error: "Không tìm thấy sheet NhapHang!" };
 
@@ -5758,7 +5807,7 @@ function apiCapNhatDonNhapHang(payload) {
 // 4. Quản lý Đơn Trả Hàng Nhà Cung Cấp (3.3)
 function apiGetDanhSachTraHangNCC() {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     let sheet = ss.getSheetByName("TraHangNCC") || ss.getSheetByName("GiaoDich_TraNCC");
     if (!sheet) return { success: true, data: [] };
 
@@ -5815,7 +5864,7 @@ function apiGetDanhSachTraHangNCC() {
 
 function apiLuuPhieuTraHangNCC(payload) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     let sheet = ss.getSheetByName("TraHangNCC");
     if (!sheet) {
       sheet = ss.insertSheet("TraHangNCC");
@@ -5933,7 +5982,7 @@ function apiLuuPhieuTraHangNCC(payload) {
 // 5. Quản lý Đơn Đặt Hàng (4.1)
 function apiGetDanhSachDonDatHang() {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     if (typeof dongBoTienCocDonDatHang === 'function') {
       dongBoTienCocDonDatHang(ss);
     }
@@ -5998,7 +6047,7 @@ function apiGetDanhSachDonDatHang() {
 
 function apiLuuDonDatHang(payload) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     let sheet = ss.getSheetByName("DonDatHang");
     if (!sheet) {
       sheet = ss.insertSheet("DonDatHang");
@@ -6065,7 +6114,7 @@ function apiLuuDonDatHang(payload) {
 
 function apiCapNhatTrangThaiDonDatHang(maDonDat, trangThaiMoi) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAppSpreadsheet();
     let sheet = ss.getSheetByName("DonDatHang");
     if (!sheet) return { success: false, error: "Không tìm thấy sheet DonDatHang" };
 
@@ -6123,7 +6172,7 @@ function apiCapNhatTrangThaiDonDatHang(maDonDat, trangThaiMoi) {
 function apiCapNhatTonKhoHangHoa(maHang, tonMoi) {
   try {
     if (!maHang) return { success: false, error: "Thiếu mã hàng" };
-    const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
+    const ss = getAppSpreadsheet() || SpreadsheetApp.openById("1MZyIP9j7AQbUOgeGPmbA9EsWyhc0C1vXG9t1FWw_uFU");
     const sheetHang = ss.getSheetByName("DM_HangHoa");
     if (!sheetHang) return { success: false, error: "Không tìm thấy sheet DM_HangHoa" };
     const rows = sheetHang.getDataRange().getValues();
