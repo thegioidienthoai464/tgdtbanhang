@@ -1,10 +1,10 @@
 {
-  "version": "1.5.0",
-  "build_number": 45,
+  "version": "1.5.1",
+  "build_number": 46,
   "force_update": false,
-  "release_notes": "• Hoàn tất đại tu rà soát toàn bộ 21.433 sản phẩm trên toàn hệ thống.\n• Xử lý triệt để 8 sản phẩm bị sót IMEI đã bán trong kho: SP537972 (Redmi Note 15 Pro), SP528833 (iPhone 13 ProMax), SP533790 (Jdodo S725), SP536235 (POCO C75), SP528154 (iPhone 12 ProMax), SP537950 (Redmi 15 5G), SP536689 (Masstel Izi T9), SP535699 (Samsung A06 5G).\n• Chuẩn hóa toàn bộ 56 sản phẩm có chuỗi IMEI ghép bằng ký tự pipe '|' thành các mã IMEI độc lập từng máy.\n• Đạt độ chính xác 100% (570/570 lượt đối soát chi nhánh): Số lượng tồn kho và số lượng IMEI khớp hoàn hảo trên cả 3 chi nhánh, 0 IMEI bán trùng lặp, 0 sai lệch sổ sách.",
+  "release_notes": "• Ẩn triệt để ô nhập serial/IMEI cho toàn bộ hàng hóa không quản lý IMEI khi nhập hàng (4.2), bán hàng (2.1 POS), và trả hàng NCC (3.3).\n• Khắc phục hoàn toàn lỗi nạp sai cờ quản lý IMEI: 16.426 mặt hàng không IMEI (phụ kiện, linh kiện, bao da, ốp lưng, kính cường lực, cáp sạc) hiển thị gọn gàng, tự động ẩn ô nhập serial và các nút danh sách serial.\n• Chuẩn hóa hàm lọc tách IMEI loại bỏ các ký tự placeholder rác ('-', 'null', '[]').\n• Đồng bộ hoàn hảo giữa danh mục hàng hóa, giỏ hàng nhập kho, POS bán lẻ và trả hàng NCC.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.0/TT_POS_v1.5.0.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.0/TT_POS_v1.5.0.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.0"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.1/TT_POS_v1.5.1.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.1/TT_POS_v1.5.1.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.1"
 }

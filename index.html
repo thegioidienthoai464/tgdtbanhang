@@ -378,7 +378,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.5.0</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.5.1</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -9387,10 +9387,21 @@ function formatVND(amount) {
           }
           window.imeiListByProductAndBranch[cleanMa][targetCN] = imeiListCN;
 
-          if (sp.coQuanLyIMEI || imeiListCN.length > 0 || (rawTonMap && rawTonMap[cleanMa]) || (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanMa])) {
+          const isQuanLyIMEI = Boolean(
+            (sp.coQuanLyIMEI === true || String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || String(sp.coQuanLyIMEI).trim() === '1') ||
+            (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanMa]) ||
+            (imeiListCN && imeiListCN.length > 0)
+          );
+
+          if (isQuanLyIMEI) {
             sp.coQuanLyIMEI = true;
             sp.danhSachIMEI = imeiListCN;
             sp.tonIMEI = imeiListCN.length;
+            sp.tonKho = tonSoSach;
+          } else {
+            sp.coQuanLyIMEI = false;
+            sp.danhSachIMEI = [];
+            sp.tonIMEI = 0;
             sp.tonKho = tonSoSach;
           }
 
@@ -9539,6 +9550,13 @@ function formatVND(amount) {
         items.forEach(it => {
           const cleanMa = String(it.maHang || '').trim().toUpperCase();
           if (!cleanMa || !it.imeiStr) return;
+          const sp = (rawHangHoa || []).find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa);
+          const isSpIMEI = Boolean(
+            (sp && (sp.coQuanLyIMEI === true || String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || String(sp.coQuanLyIMEI).trim() === '1')) ||
+            (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanMa])
+          );
+          if (!isSpIMEI && (!it.coQuanLyIMEI || it.coQuanLyIMEI === 'false')) return;
+
           const arr = tachDanhSachImei(it.imeiStr);
           if (!arr.length) return;
 
@@ -9749,7 +9767,12 @@ function formatVND(amount) {
                   const sl = Number(it.soLuong) || 0;
                   if (!m || !sl) return;
                   const sp = (rawHangHoa || []).find(h => String(h.maHang || '').trim().toUpperCase() === m);
-                  if (it.imeiStr || (sp && sp.coQuanLyIMEI)) {
+                  const validImeis = tachDanhSachImei(it.imeiStr);
+                  const isSpIMEI = Boolean(
+                    (sp && (sp.coQuanLyIMEI === true || String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || String(sp.coQuanLyIMEI).trim() === '1')) ||
+                    (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[m])
+                  );
+                  if (isSpIMEI || validImeis.length > 0) {
                     if (sp) sp.coQuanLyIMEI = true;
                     return; // Sản phẩm quản lý theo IMEI đã được tính chính xác từ kho_imei & danh sách IMEI
                   }
@@ -12161,21 +12184,22 @@ function formatVND(amount) {
       // Nạp hàng vào giỏ
       const items = Array.isArray(don.chiTietSanPham) ? don.chiTietSanPham : [];
       nhapCart = items.map(it => {
+        const cleanMa = String(it.maHang || it.ma_hang || '').trim().toUpperCase();
         const sp = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) 
-          ? rawHangHoa.find(h => String(h.maHang || '').trim().toUpperCase() === String(it.maHang || '').trim().toUpperCase()) 
+          ? rawHangHoa.find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa) 
           : null;
+        const validImeis = tachDanhSachImei(it.imeiStr || it.imei);
         const hasIMEI = Boolean(
-          it.coQuanLyIMEI === true || 
-          it.co_quan_ly_imei === true ||
           (sp && (sp.coQuanLyIMEI === true || String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || String(sp.coQuanLyIMEI).trim() === '1')) ||
-          (it.imeiStr && it.imeiStr.trim().length > 0)
+          (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanMa]) ||
+          (validImeis.length > 0)
         );
         return {
-          maHang: it.maHang,
-          tenHang: it.tenHang || it.maHang,
+          maHang: it.maHang || cleanMa,
+          tenHang: it.tenHang || (sp ? sp.tenHang : cleanMa),
           soLuong: Number(it.soLuong) || 1,
-          donGia: Number(it.donGia || it.giaNhap) || 0,
-          imeiStr: it.imeiStr || "",
+          donGia: Number(it.donGia || it.giaNhap || (sp ? sp.giaVon : 0)) || 0,
+          imeiStr: hasIMEI ? validImeis.join(', ') : "",
           coQuanLyIMEI: hasIMEI
         };
       });
@@ -12589,6 +12613,7 @@ function formatVND(amount) {
       const sp = allItems.find(h => String(h.maHang || '').trim().toUpperCase() === String(maHang || '').trim().toUpperCase());
       if (!sp) return;
 
+      const cleanMa = String(sp.maHang || '').trim().toUpperCase();
       const isItemIMEI = Boolean(
         sp.coQuanLyIMEI === true || 
         String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || 
@@ -12596,7 +12621,8 @@ function formatVND(amount) {
         String(sp.coQuanLyIMEI).trim() === '1' ||
         sp.co_quan_ly_imei === true ||
         String(sp.co_quan_ly_imei).trim().toLowerCase() === 'true' ||
-        String(sp.co_quan_ly_imei).trim() === '1'
+        String(sp.co_quan_ly_imei).trim() === '1' ||
+        (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanMa])
       );
 
       const exist = nhapCart.find(i => String(i.maHang || '').trim().toUpperCase() === String(sp.maHang || '').trim().toUpperCase());
@@ -12635,6 +12661,7 @@ function formatVND(amount) {
         return;
       }
 
+      const cleanMa = String(sp.maHang || '').trim().toUpperCase();
       const isItemIMEI = Boolean(
         sp.coQuanLyIMEI === true || 
         String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || 
@@ -12642,7 +12669,8 @@ function formatVND(amount) {
         String(sp.coQuanLyIMEI).trim() === '1' ||
         sp.co_quan_ly_imei === true ||
         String(sp.co_quan_ly_imei).trim().toLowerCase() === 'true' ||
-        String(sp.co_quan_ly_imei).trim() === '1'
+        String(sp.co_quan_ly_imei).trim() === '1' ||
+        (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanMa])
       );
 
       const exist = nhapCart.find(i => String(i.maHang || '').trim().toUpperCase() === String(sp.maHang || '').trim().toUpperCase());
@@ -12669,11 +12697,18 @@ function formatVND(amount) {
 
     function tachDanhSachImei(str) {
       if (!str) return [];
-      if (Array.isArray(str)) return str.map(s => String(s || '').trim()).filter(Boolean);
-      return String(str)
-        .split(/[\n,;\r\t]+/)
-        .map(s => s.trim())
-        .filter(Boolean);
+      let arr = [];
+      if (Array.isArray(str)) {
+        arr = str.map(s => String(s || '').trim());
+      } else {
+        arr = String(str).split(/[\n,;\r\t]+/).map(s => s.trim());
+      }
+      const invalidPlaceholders = new Set(['-', '--', '---', 'null', 'undefined', 'none', 'n/a', 'na', '[]', '{}', '[object object]']);
+      return arr.filter(s => {
+        if (!s || s.length < 3) return false;
+        if (invalidPlaceholders.has(s.toLowerCase())) return false;
+        return true;
+      });
     }
 
     function moModalNhapImeiHangHoa(idx) {
@@ -12909,29 +12944,30 @@ function formatVND(amount) {
         const thanhTien = sl * donGia;
 
         // Xác định sản phẩm có quản lý theo IMEI hay không
+        const cleanMa = String(it.maHang || '').trim().toUpperCase();
+        const sp = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) 
+          ? rawHangHoa.find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa) 
+          : null;
+        const validImeis = tachDanhSachImei(it.imeiStr);
         let hasIMEI = false;
-        if (it.coQuanLyIMEI !== undefined && it.coQuanLyIMEI !== null) {
+        if (sp) {
+          hasIMEI = Boolean(
+            sp.coQuanLyIMEI === true || 
+            String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || 
+            String(sp.coQuanLyIMEI).trim().toLowerCase().indexOf('c') === 0 || 
+            String(sp.coQuanLyIMEI).trim() === '1' ||
+            (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanMa])
+          );
+        } else if (it.coQuanLyIMEI !== undefined && it.coQuanLyIMEI !== null) {
           hasIMEI = Boolean(it.coQuanLyIMEI);
-        } else {
-          const sp = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) 
-            ? rawHangHoa.find(h => String(h.maHang || '').trim().toUpperCase() === String(it.maHang || '').trim().toUpperCase()) 
-            : null;
-          if (sp) {
-            hasIMEI = Boolean(
-              sp.coQuanLyIMEI === true || 
-              String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || 
-              String(sp.coQuanLyIMEI).trim().toLowerCase().indexOf('c') === 0 || 
-              String(sp.coQuanLyIMEI).trim() === '1' ||
-              sp.co_quan_ly_imei === true ||
-              String(sp.co_quan_ly_imei).trim().toLowerCase() === 'true' ||
-              String(sp.co_quan_ly_imei).trim() === '1'
-            );
-          }
         }
-        if (!hasIMEI && it.imeiStr && it.imeiStr.trim().length > 0) {
+        if (!hasIMEI && validImeis.length > 0) {
           hasIMEI = true;
         }
         it.coQuanLyIMEI = hasIMEI;
+        if (!hasIMEI) {
+          it.imeiStr = "";
+        }
 
         const imeiArr = hasIMEI ? tachDanhSachImei(it.imeiStr) : [];
         const imeiCount = imeiArr.length;
@@ -19943,14 +19979,15 @@ function formatVND(amount) {
 
       if (sp.tonKho <= 0) return showNotification("Sản phẩm này đã hết hàng trong kho!", true);
 
-      // KÍCH HOẠT THÔNG MINH: Chỉ cần tồn IMEI > 0 hoặc có danh sách IMEI trong kho là tự động bật quản lý IMEI
+      // KÍCH HOẠT THÔNG MINH: Chỉ các sản phẩm thực sự quản lý theo IMEI (Điện thoại, máy tính bảng...) mới bật quản lý IMEI
       const qlIMEI = Boolean(
         (sp.tonIMEI && sp.tonIMEI > 0) ||
         (sp.danhSachIMEI && sp.danhSachIMEI.length > 0) ||
         sp.coQuanLyIMEI === true || 
         String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || 
         String(sp.coQuanLyIMEI).trim().toLowerCase().indexOf('c') === 0 || 
-        String(sp.coQuanLyIMEI).trim() === '1'
+        String(sp.coQuanLyIMEI).trim() === '1' ||
+        (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanTarget])
       );
 
       const exist = posCart.find(c => String(c.maHang || "").trim().toUpperCase() === cleanTarget);
@@ -20109,17 +20146,25 @@ function formatVND(amount) {
       }
       
       tbody.innerHTML = posCart.map((c, idx) => {
-        let hasIMEI = c.hasIMEI;
-        if (hasIMEI === undefined || hasIMEI === false) {
-          const sp = rawHangHoa.find(h => String(h.maHang || "").trim().toUpperCase() === String(c.maHang || "").trim().toUpperCase());
-          hasIMEI = sp && Boolean(
-            (sp.tonIMEI && sp.tonIMEI > 0) ||
-            (sp.danhSachIMEI && sp.danhSachIMEI.length > 0) ||
+        const cleanMa = String(c.maHang || "").trim().toUpperCase();
+        const sp = rawHangHoa.find(h => String(h.maHang || "").trim().toUpperCase() === cleanMa);
+        let hasIMEI = false;
+        if (sp) {
+          hasIMEI = Boolean(
             sp.coQuanLyIMEI === true || 
             String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || 
             String(sp.coQuanLyIMEI).trim().toLowerCase().indexOf('c') === 0 || 
-            String(sp.coQuanLyIMEI).trim() === '1'
+            String(sp.coQuanLyIMEI).trim() === '1' ||
+            (sp.tonIMEI && sp.tonIMEI > 0) ||
+            (sp.danhSachIMEI && sp.danhSachIMEI.length > 0) ||
+            (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanMa])
           );
+        } else if (c.hasIMEI !== undefined && c.hasIMEI !== null) {
+          hasIMEI = Boolean(c.hasIMEI);
+        }
+        c.hasIMEI = hasIMEI;
+        if (!hasIMEI) {
+          c.imeiStr = "";
         }
         
         return `
@@ -26603,7 +26648,7 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.5.0";
+    const APP_CLIENT_VERSION = "1.5.1";
     const APP_CLIENT_BUILD = 45;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
@@ -27423,20 +27468,7 @@ function formatVND(amount) {
       box.classList.remove('hidden');
     }
 
-    function chonSanPhamVaoPhieuNhap(maHang) {
-      const allItems = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) ? rawHangHoa : [];
-      const sp = allItems.find(h => h.maHang === maHang);
-      if (!sp) return;
-
-      const exist = nhapCart.find(i => i.maHang === sp.maHang);
-      if (exist) exist.soLuong++;
-      else nhapCart.push({ maHang: sp.maHang, tenHang: sp.tenHang, soLuong: 1, donGia: Number(sp.giaVon) || 0, imeiStr: "" });
-
-      document.getElementById('nhap-search-item').value = "";
-      const box = document.getElementById('nhap-item-dropdown');
-      if (box) box.classList.add('hidden');
-      renderNhapCart();
-    }
+    // chonSanPhamVaoPhieuNhap được định nghĩa đầy đủ ở trên (hỗ trợ kiểm tra quản lý IMEI chuẩn xác)
 
 
     // --- 2. GỢI Ý TÌM KIẾM NHÀ CUNG CẤP KHI NHẬP HÀNG ---
@@ -28062,11 +28094,21 @@ function formatVND(amount) {
         ? allBranchImeisMap[targetCN]
         : (h.danhSachIMEI || [])).filter(im => !soldCacheXem.includes(String(im).trim()));
       const totalAllImeis = Object.values(allBranchImeisMap).flat();
-      const isQuanLyIMEI = Boolean(h.coQuanLyIMEI || totalAllImeis.length > 0 || branchImeis.length > 0);
+      const cleanMa = String(h.maHang || '').trim().toUpperCase();
+      const isQuanLyIMEI = Boolean(
+        (h.coQuanLyIMEI === true || String(h.coQuanLyIMEI).trim().toLowerCase() === 'true' || String(h.coQuanLyIMEI).trim() === '1') ||
+        (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanMa]) ||
+        totalAllImeis.length > 0 || 
+        branchImeis.length > 0
+      );
       if (isQuanLyIMEI) {
         h.coQuanLyIMEI = true;
         h.danhSachIMEI = branchImeis;
         h.tonIMEI = branchImeis.length;
+      } else {
+        h.coQuanLyIMEI = false;
+        h.danhSachIMEI = [];
+        h.tonIMEI = 0;
       }
 
       let imeiHtml = '<span class="text-slate-400 italic text-xs">Sản phẩm không quản lý IMEI / Serial riêng biệt</span>';
@@ -31731,11 +31773,25 @@ function loadSoQuy(filter) {
       traNCCCart.forEach((item, idx) => {
         const thanhTien = item.soLuong * item.giaTra;
         tongTien += thanhTien;
+        const cleanMa = String(item.maHang || '').trim().toUpperCase();
+        const sp = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa))
+          ? rawHangHoa.find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa)
+          : null;
+        const hasIMEI = Boolean(
+          (sp && (sp.coQuanLyIMEI === true || String(sp.coQuanLyIMEI).trim().toLowerCase() === 'true' || String(sp.coQuanLyIMEI).trim() === '1')) ||
+          (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanMa]) ||
+          (item.coQuanLyIMEI === true)
+        );
+
+        const imeiColHtml = hasIMEI 
+          ? '<input type="text" value="' + (item.imeiStr || '') + '" onchange="thayDoiIMEITraNCC(' + idx + ', this.value)" placeholder="Nhập IMEI (phẩy)..." class="w-full border rounded-lg p-1 text-[11px] font-mono">'
+          : '<span class="text-slate-400 italic text-[11px] px-1">Không quản lý IMEI</span>';
+
         tbody.innerHTML += '<tr class="border-b border-slate-100 hover:bg-slate-50 text-xs transition">' +
           '<td class="p-2.5 font-bold text-slate-800">' + item.tenHang + '<br><span class="text-[10px] text-blue-600 font-mono">' + item.maHang + '</span></td>' +
           '<td class="p-2.5 text-center"><input type="number" min="1" value="' + item.soLuong + '" onchange="thayDoiSLTraNCC(' + idx + ', this.value)" class="w-16 border rounded-lg p-1 text-center font-bold font-mono"></td>' +
           '<td class="p-2.5 text-right font-mono"><input type="number" value="' + item.giaTra + '" onchange="thayDoiGiaTraNCC(' + idx + ', this.value)" class="w-24 border rounded-lg p-1 text-right font-bold text-amber-700 font-mono"></td>' +
-          '<td class="p-2.5"><input type="text" value="' + (item.imeiStr || '') + '" onchange="thayDoiIMEITraNCC(' + idx + ', this.value)" placeholder="Nhập IMEI (phẩy)..." class="w-full border rounded-lg p-1 text-[11px] font-mono"></td>' +
+          '<td class="p-2.5">' + imeiColHtml + '</td>' +
           '<td class="p-2.5 text-right font-mono font-bold text-slate-800">' + thanhTien.toLocaleString('vi-VN') + ' đ</td>' +
           '<td class="p-2.5 text-center"><button type="button" onclick="xoaHangTraNCC(' + idx + ')" class="text-rose-500 hover:text-rose-700 transition"><i class="fa-solid fa-trash-can"></i></button></td>' +
           '</tr>';
