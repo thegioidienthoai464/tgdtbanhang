@@ -37,44 +37,47 @@ class OrderRepository {
       debugPrint("Lỗi tải don_hang từ Supabase: $e. Sẽ nạp dữ liệu offline.");
     }
 
-    // 2. Nạp dữ liệu offline đơn bán hàng từ assets nếu chưa có đơn bán hàng
-    final hasSales = orders.any((o) => o.isPosSale);
-    if (!hasSales) {
-      try {
-        final jsonStr = await rootBundle.loadString('assets/data/danh_sach_don_hang_full.json');
-        final list = jsonDecode(jsonStr);
-        if (list is List) {
-          for (final item in list) {
-            if (item is Map) {
-              try {
-                orders.add(OrderModel.fromJson(Map<String, dynamic>.from(item)));
-              } catch (_) {}
-            }
+    // 2. Nạp dữ liệu offline đơn bán hàng từ assets và kết hợp với dữ liệu Supabase
+    final Set<String> existingCodes = orders.map((o) => o.maDonHang).where((c) => c.isNotEmpty).toSet();
+    try {
+      final jsonStr = await rootBundle.loadString('assets/data/danh_sach_don_hang_full.json');
+      final list = jsonDecode(jsonStr);
+      if (list is List) {
+        for (final item in list) {
+          if (item is Map) {
+            try {
+              final parsed = OrderModel.fromJson(Map<String, dynamic>.from(item));
+              if (parsed.maDonHang.isNotEmpty && !existingCodes.contains(parsed.maDonHang)) {
+                orders.add(parsed);
+                existingCodes.add(parsed.maDonHang);
+              }
+            } catch (_) {}
           }
         }
-      } catch (e) {
-        debugPrint("Lỗi nạp offline danh_sach_don_hang_full.json: $e");
       }
+    } catch (e) {
+      debugPrint("Lỗi nạp offline danh_sach_don_hang_full.json: $e");
     }
 
     // 3. Nạp dữ liệu offline đơn nhập hàng NCC (assets/data/danh_sach_nhap_hang_full.json)
-    final hasImport = orders.any((o) => o.isImportOrder);
-    if (!hasImport) {
-      try {
-        final jsonStr = await rootBundle.loadString('assets/data/danh_sach_nhap_hang_full.json');
-        final list = jsonDecode(jsonStr);
-        if (list is List) {
-          for (final item in list) {
-            if (item is Map) {
-              try {
-                orders.add(OrderModel.fromJson(Map<String, dynamic>.from(item)));
-              } catch (_) {}
-            }
+    try {
+      final jsonStr = await rootBundle.loadString('assets/data/danh_sach_nhap_hang_full.json');
+      final list = jsonDecode(jsonStr);
+      if (list is List) {
+        for (final item in list) {
+          if (item is Map) {
+            try {
+              final parsed = OrderModel.fromJson(Map<String, dynamic>.from(item));
+              if (parsed.maDonHang.isNotEmpty && !existingCodes.contains(parsed.maDonHang)) {
+                orders.add(parsed);
+                existingCodes.add(parsed.maDonHang);
+              }
+            } catch (_) {}
           }
         }
-      } catch (e) {
-        debugPrint("Lỗi nạp offline danh_sach_nhap_hang_full.json: $e");
       }
+    } catch (e) {
+      debugPrint("Lỗi nạp offline danh_sach_nhap_hang_full.json: $e");
     }
 
     // Sắp xếp đơn mới nhất lên đầu

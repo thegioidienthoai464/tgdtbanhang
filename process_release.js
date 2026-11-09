@@ -6,8 +6,8 @@ const { execSync } = require('child_process');
 const env = fs.readFileSync('.env', 'utf8');
 const token = env.match(/GITHUB_TOKEN=(.*)/)[1].trim();
 const repo = 'thegioidienthoai464/tgdtbanhang';
-const TARGET_VERSION = 'v1.2.4';
-const TARGET_BUILD = 25;
+const TARGET_VERSION = 'v1.5.2';
+const TARGET_BUILD = 51;
 
 function githubRequest(endpoint, method = 'GET', data = null, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -117,18 +117,29 @@ async function waitForRunCompletion(minCreatedAtISO) {
   while (Date.now() - startTime < maxWaitMs) {
     const runsRes = await githubRequest(`/repos/${repo}/actions/workflows/build_apk.yml/runs?per_page=5`);
     if (runsRes.data && runsRes.data.workflow_runs && runsRes.data.workflow_runs.length > 0) {
-      // Tìm run mới nhất
       const latestRun = runsRes.data.workflow_runs[0];
       const isNewRun = !minCreatedAtISO || new Date(latestRun.created_at) >= new Date(minCreatedAtISO);
 
       console.log(`   [Trạng thái Run #${latestRun.id}]: ${latestRun.status} (${latestRun.conclusion || 'đang chạy...'}) - Commit: ${latestRun.head_commit?.message?.slice(0, 40)}`);
 
       if (isNewRun) {
+        // Kiểm tra xem artifact Android APK đã sẵn sàng chưa
+        const artCheck = await githubRequest(`/repos/${repo}/actions/runs/${latestRun.id}/artifacts`);
+        if (artCheck.data && artCheck.data.artifacts && artCheck.data.artifacts.some(a => a.name.includes('Android') || a.name.toLowerCase().includes('apk'))) {
+          console.log(`🎉 Tìm thấy artifact Android APK từ Run #${latestRun.id}!`);
+          return latestRun.id;
+        }
+
         if (latestRun.status === 'completed') {
           if (latestRun.conclusion === 'success') {
             console.log(`🎉 Workflow Run #${latestRun.id} đã hoàn thành xuất sắc!`);
             return latestRun.id;
           } else {
+            const finalArtCheck = await githubRequest(`/repos/${repo}/actions/runs/${latestRun.id}/artifacts`);
+            if (finalArtCheck.data && finalArtCheck.data.artifacts && finalArtCheck.data.artifacts.some(a => a.name.includes('Android') || a.name.toLowerCase().includes('apk'))) {
+              console.log(`🎉 Tìm thấy artifact Android APK từ Run #${latestRun.id} (bất chấp trạng thái iOS)!`);
+              return latestRun.id;
+            }
             console.error(`❌ Workflow Run #${latestRun.id} kết thúc với kết quả: ${latestRun.conclusion}`);
             return null;
           }

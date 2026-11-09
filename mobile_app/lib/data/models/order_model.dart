@@ -187,6 +187,8 @@ class OrderModel {
 
     final maDon = json['ma_don_hang']?.toString() ??
         json['maDonHang']?.toString() ??
+        json['maDon']?.toString() ??
+        json['ma_don']?.toString() ??
         json['ma_phieu']?.toString() ??
         json['maPhieu']?.toString() ??
         '';

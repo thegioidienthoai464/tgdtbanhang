@@ -2,11 +2,11 @@
   "version": "1.5.2",
   "build_number": 51,
   "force_update": false,
-  "release_notes": "• Chức năng Chuyển kho: Bổ sung tính năng Nhận hàng dành cho chi nhánh nhận hàng, xác nhận nhập kho và tự động cộng tồn kho + di chuyển danh sách Serial/IMEI tương ứng vào chi nhánh nhận.\n• Bổ sung tính năng Lưu tạm phiếu chuyển kho (trạng thái Phiếu tạm, chưa trừ tồn kho xuất) và Hủy phiếu chuyển kho (tự động hoàn trả tồn kho về kho xuất/kho nhận tương ứng).\n• Bổ sung tính năng Sửa phiếu chuyển kho (cho phép nạp lại phiếu tạm hoặc điều chỉnh thông tin điều chuyển).\n• Chức năng Kiểm kho: Bổ sung đầy đủ tính năng Sửa phiếu kiểm kho (nạp lại danh sách hàng và số lượng thực tế để tiếp tục kiểm hoặc chỉnh sửa), Hủy phiếu kiểm kho (tự động hoàn tác số lượng chênh lệch kiểm kê về trước kiểm) và Lưu tạm phiếu kiểm kho.\n• Tương thích phiếu chuyển kho CK2611099730 và các phiếu điều chuyển: tự động hỗ trợ nút [Nhận hàng] ngay tại bảng danh sách và modal chi tiết.\n• Đồng bộ hóa toàn bộ chức năng kiểm kho và chuyển kho với backend Google Sheets và Supabase.",
+  "release_notes": "• Đồng bộ hóa 100% tính năng mới từ Website sang Mobile APK v1.5.2 (Build 51):\n• Chuyển kho: Bổ sung Tab Chuyển kho trong mục Kho, hỗ trợ nút [Nhận hàng] cho chi nhánh nhận, xác nhận nhập kho và tự động cộng tồn kho + di chuyển IMEI sang chi nhánh nhận.\n• Bổ sung tính năng Lưu tạm phiếu, Sửa phiếu và Hủy phiếu chuyển kho (hoàn trả tồn kho tương ứng).\n• Kiểm kho: Bổ sung Tab Kiểm kho trong mục Kho, tính năng Cân bằng kho (cập nhật tồn kho theo số lượng thực tế), Lưu tạm phiếu và Hủy phiếu kiểm kho.\n• Khắc phục triệt để lỗi không hiển thị lịch sử Đơn bán hàng và Đơn nhập kho trên mọi chi nhánh (Thanh Miện, Thanh Giang, Bình Giang).\n• Phương thức thanh toán linh hoạt: Hỗ trợ tích chọn Checkbox Tiền mặt, Ngân hàng, Thẻ POS hoặc kết hợp đồng thời cả 3 phương án.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.1/TT_POS_v1.5.1.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.1/TT_POS_v1.5.1.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.1",
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.2/TT_POS_v1.5.2.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.2/TT_POS_v1.5.2.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.2",
   "build": 51,
   "releaseDate": "2026-11-09",
   "features": [
@@ -16,6 +16,7 @@
     "Kiểm kho: Bổ sung chức năng [Sửa phiếu] (nạp lại chi tiết hàng hóa vào màn hình kiểm)",
     "Kiểm kho: Bổ sung chức năng [Hủy phiếu] (tự động hoàn tác chênh lệch kiểm kê về số lượng ban đầu)",
     "Kiểm kho: Bổ sung chức năng [Lưu tạm phiếu] bảo toàn dữ liệu kiểm đếm",
-    "Tự động kích hoạt nút Nhận hàng cho phiếu CK2611099730"
+    "Tự động kích hoạt nút Nhận hàng cho phiếu CK2611099730 và toàn bộ phiếu điều chuyển",
+    "Khắc phục triệt để hiển thị lịch sử đơn hàng bán và đơn nhập kho trên mobile app"
   ]
 }

@@ -60,9 +60,17 @@ class BranchViewModel extends ChangeNotifier {
     for (final code in _selectedBranchCodes) {
       if (code == 'ALL') return true;
       if (upper.contains(code)) return true;
+      if (code == 'CN01' && (upper.contains('THANH MIỆN') || upper.contains('THANH MIEN') || upper.contains('TRỤ SỞ') || upper.contains('TRU SO'))) return true;
+      if (code == 'CN02' && upper.contains('THANH GIANG')) return true;
+      if (code == 'CN03' && (upper.contains('BÌNH GIANG') || upper.contains('BINH GIANG'))) return true;
+      if (code == 'CN04' && upper.contains('ONLINE')) return true;
+
       final matched = _branches.where((b) => b.maCN.toUpperCase() == code);
-      if (matched.isNotEmpty && upper.contains(matched.first.tenCN.toUpperCase())) {
-        return true;
+      if (matched.isNotEmpty) {
+        final nameUpper = matched.first.tenCN.toUpperCase();
+        if (upper.contains(nameUpper) || nameUpper.contains(upper)) {
+          return true;
+        }
       }
     }
     return false;

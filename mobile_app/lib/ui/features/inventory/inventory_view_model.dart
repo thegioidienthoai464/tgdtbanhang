@@ -1,17 +1,34 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/product_model.dart';
+import '../../../data/models/stock_transfer_model.dart';
+import '../../../data/models/stock_audit_model.dart';
 import '../../../data/repositories/product_repository.dart';
+import '../../../data/repositories/stock_transfer_repository.dart';
+import '../../../data/repositories/stock_audit_repository.dart';
 
 class InventoryViewModel extends ChangeNotifier {
   final ProductRepository _productRepo = ProductRepository();
+  final StockTransferRepository _transferRepo = StockTransferRepository();
+  final StockAuditRepository _auditRepo = StockAuditRepository();
 
+  // Tồn kho
   List<ProductModel> _allProducts = [];
   List<ProductModel> _filteredProducts = [];
   bool _isLoading = false;
   String _searchQuery = '';
 
+  // Chuyển kho & Kiểm kho
+  List<StockTransferModel> _transfers = [];
+  List<StockAuditModel> _audits = [];
+  bool _isLoadingTransfers = false;
+  bool _isLoadingAudits = false;
+
   List<ProductModel> get products => _filteredProducts;
   bool get isLoading => _isLoading;
+  List<StockTransferModel> get transfers => _transfers;
+  bool get isLoadingTransfers => _isLoadingTransfers;
+  List<StockAuditModel> get audits => _audits;
+  bool get isLoadingAudits => _isLoadingAudits;
 
   double get totalStock => _allProducts.fold(0, (sum, p) => sum + p.tonKho);
   double get totalStockValue => _allProducts.fold(0, (sum, p) => sum + (p.tonKho * p.giaVon));
@@ -29,6 +46,82 @@ class InventoryViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> fetchTransfers() async {
+    _isLoadingTransfers = true;
+    notifyListeners();
+    try {
+      _transfers = await _transferRepo.fetchTransfers();
+    } catch (e) {
+      debugPrint("Lỗi tải chuyển kho: $e");
+    } finally {
+      _isLoadingTransfers = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchAudits() async {
+    _isLoadingAudits = true;
+    notifyListeners();
+    try {
+      _audits = await _auditRepo.fetchAudits();
+    } catch (e) {
+      debugPrint("Lỗi tải kiểm kho: $e");
+    } finally {
+      _isLoadingAudits = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> receiveTransfer(String maPhieu, String currentBranch) async {
+    final ok = await _transferRepo.receiveTransfer(maPhieu, currentBranch);
+    if (ok) {
+      await fetchTransfers();
+      await fetchInventory();
+    }
+    return ok;
+  }
+
+  Future<bool> cancelTransfer(String maPhieu) async {
+    final ok = await _transferRepo.cancelTransfer(maPhieu);
+    if (ok) {
+      await fetchTransfers();
+    }
+    return ok;
+  }
+
+  Future<bool> saveTransfer(StockTransferModel transfer) async {
+    final ok = await _transferRepo.saveTransfer(transfer);
+    if (ok) {
+      await fetchTransfers();
+    }
+    return ok;
+  }
+
+  Future<bool> balanceAudit(String maKiemKho) async {
+    final ok = await _auditRepo.balanceAudit(maKiemKho);
+    if (ok) {
+      await fetchAudits();
+      await fetchInventory();
+    }
+    return ok;
+  }
+
+  Future<bool> cancelAudit(String maKiemKho) async {
+    final ok = await _auditRepo.cancelAudit(maKiemKho);
+    if (ok) {
+      await fetchAudits();
+    }
+    return ok;
+  }
+
+  Future<bool> saveAudit(StockAuditModel audit) async {
+    final ok = await _auditRepo.saveAudit(audit);
+    if (ok) {
+      await fetchAudits();
+    }
+    return ok;
   }
 
   void search(String query) {
