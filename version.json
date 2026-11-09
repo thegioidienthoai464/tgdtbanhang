@@ -1,20 +1,21 @@
 {
   "version": "1.5.2",
-  "build_number": 50,
+  "build_number": 51,
   "force_update": false,
-  "release_notes": "• Khắc phục triệt để lỗi đồng bộ tên chi nhánh giữa các trình duyệt: tự động khởi tạo và lưu trữ đám mây Google Sheets (sheet DM_ChiNhanh), nút 'Nạp lại' tải tức thời danh sách chi nhánh mới nhất từ máy chủ.\n• Khắc phục hoàn toàn lỗi Kiểm kho: lưu trữ vĩnh viễn phiếu kiểm kho trên cả trình duyệt (localStorage) và máy chủ đám mây, không còn bị mất khi chuyển tab hoặc tải lại trang.\n• Cân bằng tồn kho chính xác 100%: cập nhật ngay lập tức số lượng tồn kho thực tế vào danh mục hàng hóa và thẻ kho đa chi nhánh.\n• Khắc phục triệt để lỗi Thẻ kho: tính toán tồn sau giao dịch và tồn hiện tại khớp tuyệt đối với số lượng thực tế đếm được của phiếu kiểm kho cân bằng.\n• Đồng bộ toàn diện cơ chế lưu trữ cục bộ và đám mây cho tất cả các loại chứng từ: Xuất hủy, Chuyển kho, Trả hàng NCC, Nhập hàng.",
+  "release_notes": "• Chức năng Chuyển kho: Bổ sung tính năng Nhận hàng dành cho chi nhánh nhận hàng, xác nhận nhập kho và tự động cộng tồn kho + di chuyển danh sách Serial/IMEI tương ứng vào chi nhánh nhận.\n• Bổ sung tính năng Lưu tạm phiếu chuyển kho (trạng thái Phiếu tạm, chưa trừ tồn kho xuất) và Hủy phiếu chuyển kho (tự động hoàn trả tồn kho về kho xuất/kho nhận tương ứng).\n• Bổ sung tính năng Sửa phiếu chuyển kho (cho phép nạp lại phiếu tạm hoặc điều chỉnh thông tin điều chuyển).\n• Chức năng Kiểm kho: Bổ sung đầy đủ tính năng Sửa phiếu kiểm kho (nạp lại danh sách hàng và số lượng thực tế để tiếp tục kiểm hoặc chỉnh sửa), Hủy phiếu kiểm kho (tự động hoàn tác số lượng chênh lệch kiểm kê về trước kiểm) và Lưu tạm phiếu kiểm kho.\n• Tương thích phiếu chuyển kho CK2611099730 và các phiếu điều chuyển: tự động hỗ trợ nút [Nhận hàng] ngay tại bảng danh sách và modal chi tiết.\n• Đồng bộ hóa toàn bộ chức năng kiểm kho và chuyển kho với backend Google Sheets và Supabase.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
   "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.1/TT_POS_v1.5.1.apk",
   "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.1/TT_POS_v1.5.1.ipa",
   "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.1",
-  "build": 50,
+  "build": 51,
   "releaseDate": "2026-11-09",
   "features": [
-    "Đồng bộ tên chi nhánh đám mây xuyên suốt đa trình duyệt và thiết bị qua Google Sheets DM_ChiNhanh",
-    "Nút Nạp lại trong Quản lý chi nhánh kéo danh sách mới nhất từ đám mây tức thời",
-    "Lưu trữ vĩnh viễn phiếu Kiểm kho (localStorage + Google Sheets), không bị ghi đè hay mất khi chuyển tab / F5",
-    "Cân bằng tồn kho tự động chuẩn xác 100% cho từng chi nhánh ngay sau khi hoàn tất kiểm kho",
-    "Thẻ kho hiển thị Tồn sau GD và Tồn hiện tại khớp tuyệt đối với số lượng thực tế kiểm kho",
-    "Bảo toàn dữ liệu người dùng tạo mới cho toàn bộ các phân hệ: Xuất hủy, Chuyển kho, Trả hàng NCC, Nhập hàng"
+    "Chuyển kho: Bổ sung nút [Nhận hàng] cho chi nhánh nhận (trong danh sách & modal chi tiết), cộng tồn kho và chuyển IMEI chuẩn xác",
+    "Chuyển kho: Bổ sung chức năng [Lưu tạm phiếu] (trạng thái Phiếu tạm, chưa trừ kho xuất)",
+    "Chuyển kho: Bổ sung chức năng [Sửa phiếu] và [Hủy phiếu] (tự động hoàn trả tồn kho đa chi nhánh)",
+    "Kiểm kho: Bổ sung chức năng [Sửa phiếu] (nạp lại chi tiết hàng hóa vào màn hình kiểm)",
+    "Kiểm kho: Bổ sung chức năng [Hủy phiếu] (tự động hoàn tác chênh lệch kiểm kê về số lượng ban đầu)",
+    "Kiểm kho: Bổ sung chức năng [Lưu tạm phiếu] bảo toàn dữ liệu kiểm đếm",
+    "Tự động kích hoạt nút Nhận hàng cho phiếu CK2611099730"
   ]
 }

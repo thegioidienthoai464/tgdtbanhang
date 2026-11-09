@@ -672,6 +672,182 @@ function apiLuuPhieuKiemKho(phieu) {
   return { success: true, maPhieu: maPhieu };
 }
 
+// Hủy phiếu kiểm kho trên Google Sheets
+function apiHuyPhieuKiemKho(maChungTu) {
+  const ss = getAppSpreadsheet();
+  let sheet = ss.getSheetByName("KiemKho");
+  if (!sheet) return { success: false, message: "Không tìm thấy sheet KiemKho" };
+  const rows = sheet.getDataRange().getValues();
+  if (rows.length < 2) return { success: false, message: "Chưa có dữ liệu" };
+
+  const headers = rows[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s_]+/g, ''));
+  const idxMa = headers.indexOf("maphieu");
+  const idxTrangThai = headers.indexOf("trangthai");
+
+  if (idxMa > -1 && idxTrangThai > -1) {
+    for (let i = 1; i < rows.length; i++) {
+      if (String(rows[i][idxMa]).trim() === String(maChungTu).trim()) {
+        sheet.getRange(i + 1, idxTrangThai + 1).setValue("Đã hủy");
+        return { success: true, maChungTu: maChungTu };
+      }
+    }
+  }
+  return { success: false, message: "Không tìm thấy mã phiếu kiểm kho: " + maChungTu };
+}
+
+// =========================================================================
+// PHÂN HỆ ĐIỀU CHUYỂN KHO HÀNG HÓA (CHUYEN_KHO) BACKEND GOOGLE SHEETS
+// =========================================================================
+
+// 1. Đọc danh sách phiếu chuyển kho từ Google Sheets
+function apiGetDanhSachChuyenKho() {
+  const ss = getAppSpreadsheet();
+  let sheet = ss.getSheetByName("ChuyenKho");
+  if (!sheet) return [];
+  const rows = sheet.getDataRange().getValues();
+  if (rows.length < 2) return [];
+
+  const headers = rows[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s_]+/g, ''));
+  const idxMa = headers.indexOf("maphieu");
+  const idxNgay = headers.indexOf("ngaychuyen");
+  const idxXuat = headers.indexOf("khoxuat");
+  const idxNhan = headers.indexOf("khonhan");
+  const idxNguoi = headers.indexOf("nguoilap");
+  const idxSL = headers.indexOf("tongsoluong");
+  const idxTien = headers.indexOf("tonggiatri");
+  const idxTrangThai = headers.indexOf("trangthai");
+  const idxGhiChu = headers.indexOf("ghichu");
+  const idxChiTiet = headers.indexOf("chitietsanpham");
+  const idxNgayNhan = headers.indexOf("ngaynhan");
+  const idxNguoiNhan = headers.indexOf("nguoinhan");
+
+  let list = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (idxMa > -1 && !r[idxMa]) continue;
+    let chiTiet = [];
+    if (idxChiTiet > -1 && r[idxChiTiet]) {
+      try {
+        chiTiet = typeof r[idxChiTiet] === 'string' ? JSON.parse(r[idxChiTiet]) : r[idxChiTiet];
+      } catch(e) {
+        chiTiet = [];
+      }
+    }
+    list.push({
+      maPhieu: idxMa > -1 ? String(r[idxMa]) : "",
+      ngayChuyen: idxNgay > -1 ? String(r[idxNgay]) : "",
+      cnXuat: idxXuat > -1 ? String(r[idxXuat]) : "CN01",
+      cnNhan: idxNhan > -1 ? String(r[idxNhan]) : "CN02",
+      nguoiLap: idxNguoi > -1 ? String(r[idxNguoi]) : "Quản trị viên",
+      tongSoLuong: idxSL > -1 ? Number(r[idxSL]) || 0 : 0,
+      tongTien: idxTien > -1 ? Number(r[idxTien]) || 0 : 0,
+      tongGiaTri: idxTien > -1 ? Number(r[idxTien]) || 0 : 0,
+      trangThai: idxTrangThai > -1 ? String(r[idxTrangThai]) : "Đang chuyển",
+      ghiChu: idxGhiChu > -1 ? String(r[idxGhiChu]) : "",
+      ngayNhan: idxNgayNhan > -1 ? String(r[idxNgayNhan]) : "",
+      nguoiNhan: idxNguoiNhan > -1 ? String(r[idxNguoiNhan]) : "",
+      chiTietSanPham: chiTiet
+    });
+  }
+  return list.reverse();
+}
+
+// 2. Lưu phiếu chuyển kho vào Google Sheets
+function apiLuuPhieuChuyenKho(phieu) {
+  const ss = getAppSpreadsheet();
+  let sheet = ss.getSheetByName("ChuyenKho");
+  if (!sheet) {
+    sheet = ss.insertSheet("ChuyenKho");
+    sheet.appendRow(["MaPhieu", "NgayChuyen", "KhoXuat", "KhoNhan", "NguoiLap", "TongSoLuong", "TongGiaTri", "TrangThai", "GhiChu", "ChiTietSanPham", "NgayNhan", "NguoiNhan"]);
+  }
+
+  const maPhieu = phieu.maPhieu || ("CK" + Date.now().toString().slice(-8));
+  const ngayChuyen = phieu.ngayChuyen || new Date().toISOString();
+  const khoXuat = phieu.cnXuat || "CN01";
+  const khoNhan = phieu.cnNhan || "CN02";
+  const nguoiLap = phieu.nguoiLap || "Quản trị viên";
+  const tongSL = Number(phieu.tongSoLuong) || 0;
+  const tongGiaTri = Number(phieu.tongTien || phieu.tongGiaTri) || 0;
+  const trangThai = phieu.trangThai || "Đang chuyển";
+  const ghiChu = phieu.ghiChu || "";
+  const chiTiet = Array.isArray(phieu.chiTietSanPham) ? phieu.chiTietSanPham : [];
+  const ngayNhan = phieu.ngayNhan || "";
+  const nguoiNhan = phieu.nguoiNhan || "";
+
+  // Kiểm tra nếu phiếu đã tồn tại trong sheet thì cập nhật
+  const rows = sheet.getDataRange().getValues();
+  if (rows.length > 1) {
+    const headers = rows[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s_]+/g, ''));
+    const idxMa = headers.indexOf("maphieu");
+    if (idxMa > -1) {
+      for (let i = 1; i < rows.length; i++) {
+        if (String(rows[i][idxMa]).trim() === String(maPhieu).trim()) {
+          sheet.getRange(i + 1, 1, 1, 12).setValues([[
+            maPhieu, ngayChuyen, khoXuat, khoNhan, nguoiLap, tongSL, tongGiaTri, trangThai, ghiChu, JSON.stringify(chiTiet), ngayNhan, nguoiNhan
+          ]]);
+          return { success: true, maPhieu: maPhieu, updated: true };
+        }
+      }
+    }
+  }
+
+  sheet.appendRow([
+    maPhieu, ngayChuyen, khoXuat, khoNhan, nguoiLap, tongSL, tongGiaTri, trangThai, ghiChu, JSON.stringify(chiTiet), ngayNhan, nguoiNhan
+  ]);
+
+  return { success: true, maPhieu: maPhieu };
+}
+
+// 3. Nhận hàng chuyển kho trên Google Sheets
+function apiNhanHangChuyenKho(maPhieu, thongTinNhan) {
+  const ss = getAppSpreadsheet();
+  let sheet = ss.getSheetByName("ChuyenKho");
+  if (!sheet) return { success: false, message: "Không tìm thấy sheet ChuyenKho" };
+  const rows = sheet.getDataRange().getValues();
+  if (rows.length < 2) return { success: false, message: "Chưa có dữ liệu" };
+
+  const headers = rows[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s_]+/g, ''));
+  const idxMa = headers.indexOf("maphieu");
+  const idxTrangThai = headers.indexOf("trangthai");
+  const idxNgayNhan = headers.indexOf("ngaynhan");
+  const idxNguoiNhan = headers.indexOf("nguoinhan");
+
+  if (idxMa > -1) {
+    for (let i = 1; i < rows.length; i++) {
+      if (String(rows[i][idxMa]).trim() === String(maPhieu).trim()) {
+        if (idxTrangThai > -1) sheet.getRange(i + 1, idxTrangThai + 1).setValue("Đã nhận");
+        if (idxNgayNhan > -1) sheet.getRange(i + 1, idxNgayNhan + 1).setValue(thongTinNhan?.ngayNhan || new Date().toISOString());
+        if (idxNguoiNhan > -1) sheet.getRange(i + 1, idxNguoiNhan + 1).setValue(thongTinNhan?.nguoiNhan || "Quản trị viên");
+        return { success: true, maPhieu: maPhieu };
+      }
+    }
+  }
+  return { success: false, message: "Không tìm thấy mã phiếu: " + maPhieu };
+}
+
+// 4. Hủy phiếu chuyển kho trên Google Sheets
+function apiHuyPhieuChuyenKho(maPhieu) {
+  const ss = getAppSpreadsheet();
+  let sheet = ss.getSheetByName("ChuyenKho");
+  if (!sheet) return { success: false, message: "Không tìm thấy sheet ChuyenKho" };
+  const rows = sheet.getDataRange().getValues();
+  if (rows.length < 2) return { success: false, message: "Chưa có dữ liệu" };
+
+  const headers = rows[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s_]+/g, ''));
+  const idxMa = headers.indexOf("maphieu");
+  const idxTrangThai = headers.indexOf("trangthai");
+
+  if (idxMa > -1 && idxTrangThai > -1) {
+    for (let i = 1; i < rows.length; i++) {
+      if (String(rows[i][idxMa]).trim() === String(maPhieu).trim()) {
+        sheet.getRange(i + 1, idxTrangThai + 1).setValue("Đã hủy");
+        return { success: true, maPhieu: maPhieu };
+      }
+    }
+  }
+  return { success: false, message: "Không tìm thấy mã phiếu: " + maPhieu };
+}
+
 // Đọc danh sách phiếu xuất hủy từ Google Sheets
 function apiGetDanhSachXuatHuy() {
   const ss = getAppSpreadsheet();
