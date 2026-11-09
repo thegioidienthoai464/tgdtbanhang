@@ -378,7 +378,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.8</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.9</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -9182,11 +9182,64 @@ function formatVND(amount) {
 
     // 5b. Quản lý danh sách IMEI đã bán và trừ triệt để khỏi bộ nhớ / cache
     function layDanhSachImeiDaBan() {
-      try {
-        return JSON.parse(localStorage.getItem('tt_pos_sold_imeis') || '[]');
-      } catch(e) {
-        return [];
+      const now = Date.now();
+      if (window._cachedSoldImeisArray && (now - window._cachedSoldImeisTime < 3000)) {
+        return window._cachedSoldImeisArray;
       }
+      const soldSet = new Set();
+      // 1. Quét từ cache localStorage (đơn bán offline/local)
+      try {
+        const localCache = JSON.parse(localStorage.getItem('tt_pos_sold_imeis') || '[]');
+        if (Array.isArray(localCache)) {
+          localCache.forEach(im => { if (im) soldSet.add(String(im).trim()); });
+        }
+      } catch(e) {}
+
+      // 2. Quét từ danh sách đơn hàng thực tế (rawDonHangList, RAW_DON_HANG_THANH_GIANG)
+      const listDH = (typeof rawDonHangList !== 'undefined' && Array.isArray(rawDonHangList) && rawDonHangList.length > 0)
+        ? rawDonHangList
+        : ((typeof RAW_DON_HANG_THANH_GIANG !== 'undefined' && Array.isArray(RAW_DON_HANG_THANH_GIANG)) ? RAW_DON_HANG_THANH_GIANG : []);
+
+      listDH.forEach(dh => {
+        if (dh.trangThai === 'Đã hủy' || dh.trang_thai === 'Đã hủy') return;
+        const items = dh.chiTietSanPham || dh.sanPham || [];
+        items.forEach(it => {
+          const raw = it.imei || it.danhSachIMEI || it.serial || it.imeiStr || '';
+          if (Array.isArray(raw)) {
+            raw.forEach(x => { if (x) soldSet.add(String(x).trim()); });
+          } else if (typeof raw === 'string' && raw.trim()) {
+            raw.split(/[\n,;]+/).forEach(x => {
+              const s = x.trim();
+              if (s) soldSet.add(s);
+            });
+          }
+        });
+      });
+
+      // 3. Quét thêm đơn từ localStorage TT_POS_LOCAL_ORDERS nếu có
+      try {
+        const localOrders = JSON.parse(localStorage.getItem('TT_POS_LOCAL_ORDERS') || '[]');
+        if (Array.isArray(localOrders)) {
+          localOrders.forEach(dh => {
+            if (dh.trangThai === 'Đã hủy') return;
+            (dh.chiTietSanPham || []).forEach(it => {
+              const raw = it.imei || it.imeiStr || '';
+              if (Array.isArray(raw)) {
+                raw.forEach(x => { if (x) soldSet.add(String(x).trim()); });
+              } else if (typeof raw === 'string' && raw.trim()) {
+                raw.split(/[\n,;]+/).forEach(x => {
+                  const s = x.trim();
+                  if (s) soldSet.add(s);
+                });
+              }
+            });
+          });
+        }
+      } catch(e) {}
+
+      window._cachedSoldImeisArray = Array.from(soldSet);
+      window._cachedSoldImeisTime = now;
+      return window._cachedSoldImeisArray;
     }
     window.layDanhSachImeiDaBan = layDanhSachImeiDaBan;
 
@@ -9196,6 +9249,9 @@ function formatVND(amount) {
       const imeisToPrune = Array.isArray(soldImeis) ? soldImeis.map(s => String(s).trim()).filter(Boolean) : [];
       if (!cleanMa || !imeisToPrune.length) return;
 
+      window._cachedSoldImeisArray = null;
+      window._cachedSoldImeisTime = 0;
+
       // 1. Lưu vào cache localStorage các IMEI đã bán
       try {
         let soldCache = layDanhSachImeiDaBan();
@@ -9203,6 +9259,8 @@ function formatVND(amount) {
           if (!soldCache.includes(im)) soldCache.push(im);
         });
         localStorage.setItem('tt_pos_sold_imeis', JSON.stringify(soldCache));
+        window._cachedSoldImeisArray = null;
+        window._cachedSoldImeisTime = 0;
       } catch(e) {}
 
       // 2. Loại bỏ khỏi imeiListByProductAndBranch trên tất cả các chi nhánh
@@ -9312,40 +9370,28 @@ function formatVND(amount) {
           if (!window.imeiListByProductAndBranch[cleanMa]) {
             window.imeiListByProductAndBranch[cleanMa] = { CN01: [], CN02: [], CN03: [], CN04: [] };
           }
-          if (Array.isArray(sp.danhSachIMEI) && sp.danhSachIMEI.length > 0) {
-            sp.danhSachIMEI = sp.danhSachIMEI.filter(im => !isSoldImeiCapNhat(im));
-            sp.coQuanLyIMEI = true;
-            sp.danhSachIMEI.forEach(im => {
-              if (!isSoldImeiCapNhat(im) && !window.imeiListByProductAndBranch[cleanMa][targetCN].includes(im)) {
-                window.imeiListByProductAndBranch[cleanMa][targetCN].push(im);
-              }
-            });
-          }
 
+          // Lấy danh sách IMEI của chi nhánh đang chọn, loại bỏ mọi IMEI đã bán
           let imeiListCN = (window.imeiListByProductAndBranch[cleanMa][targetCN] || []).filter(im => !isSoldImeiCapNhat(im));
+
+          // Số tồn kho chi nhánh theo sổ sách (không để IMEI vượt quá số lượng tồn sổ sách)
+          const tonSoSach = (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa])
+            ? (Number(window.tonKhoChiNhanhMap[cleanMa][targetCN]) || 0)
+            : 0;
+
+          // Nếu tồn kho sổ sách bằng 0, không được phép có IMEI còn tồn ở chi nhánh này!
+          if (tonSoSach <= 0) {
+            imeiListCN = [];
+          } else if (imeiListCN.length > tonSoSach) {
+            imeiListCN = imeiListCN.slice(0, tonSoSach);
+          }
           window.imeiListByProductAndBranch[cleanMa][targetCN] = imeiListCN;
-          if (imeiListCN.length > 0) {
+
+          if (sp.coQuanLyIMEI || imeiListCN.length > 0 || (rawTonMap && rawTonMap[cleanMa]) || (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanMa])) {
             sp.coQuanLyIMEI = true;
             sp.danhSachIMEI = imeiListCN;
             sp.tonIMEI = imeiListCN.length;
-            sp.tonKho = imeiListCN.length;
-            if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) {
-              window.tonKhoChiNhanhMap[cleanMa][targetCN] = imeiListCN.length;
-            }
-          } else if (Array.isArray(sp.danhSachIMEI) && sp.danhSachIMEI.length > 0) {
-            sp.coQuanLyIMEI = true;
-            sp.tonIMEI = sp.danhSachIMEI.length;
-            sp.tonKho = sp.tonIMEI;
-            if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) {
-              window.tonKhoChiNhanhMap[cleanMa][targetCN] = sp.tonIMEI;
-            }
-          } else if (sp.coQuanLyIMEI) {
-            sp.danhSachIMEI = [];
-            sp.tonIMEI = 0;
-            sp.tonKho = 0;
-            if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) {
-              window.tonKhoChiNhanhMap[cleanMa][targetCN] = 0;
-            }
+            sp.tonKho = tonSoSach;
           }
 
           // 👉 ĐỒNG BỘ TỒN KHO CHO SẢN PHẨM KHÔNG QUẢN LÝ IMEI TỪ CÁC PHIẾU NHẬP/BÁN THỰC TẾ:
@@ -9407,10 +9453,11 @@ function formatVND(amount) {
           sp.tonKho = Object.values(map).reduce((a, b) => a + (Number(b) || 0), 0);
           if (sp.giaVonBanDau) sp.giaVon = sp.giaVonBanDau;
           if (sp.coQuanLyIMEI && window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa]) {
-            const allImeis = Object.values(window.imeiListByProductAndBranch[cleanMa]).flat();
+            const allImeis = Object.values(window.imeiListByProductAndBranch[cleanMa]).flat().filter(im => {
+              return (typeof layDanhSachImeiDaBan === 'function') ? !layDanhSachImeiDaBan().includes(String(im).trim()) : true;
+            });
             sp.danhSachIMEI = allImeis;
             sp.tonIMEI = allImeis.length;
-            if (allImeis.length > 0) sp.tonKho = allImeis.length;
           }
         });
         if (thTonKho) thTonKho.innerText = "Tổng Tồn (Toàn Chuỗi)";
@@ -9429,13 +9476,17 @@ function formatVND(amount) {
             else if (sp.giaVonBanDau) sp.giaVon = sp.giaVonBanDau;
           }
           if (sp.coQuanLyIMEI && window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa]) {
-            const cnImeis = window.imeiListByProductAndBranch[cleanMa][targetCN] || [];
+            let cnImeis = (window.imeiListByProductAndBranch[cleanMa][targetCN] || []).filter(im => {
+              return (typeof layDanhSachImeiDaBan === 'function') ? !layDanhSachImeiDaBan().includes(String(im).trim()) : true;
+            });
+            if (sp.tonKho <= 0) {
+              cnImeis = [];
+              window.imeiListByProductAndBranch[cleanMa][targetCN] = [];
+            } else if (cnImeis.length > sp.tonKho) {
+              cnImeis = cnImeis.slice(0, sp.tonKho);
+            }
             sp.danhSachIMEI = cnImeis;
             sp.tonIMEI = cnImeis.length;
-            sp.tonKho = cnImeis.length;
-            if (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa]) {
-              window.tonKhoChiNhanhMap[cleanMa][targetCN] = cnImeis.length;
-            }
           }
         });
         const cnObj = (rawChiNhanhList || []).find(x => x.ma === targetCN);
@@ -9448,9 +9499,9 @@ function formatVND(amount) {
     // 8.1 Đồng bộ toàn bộ IMEI từ các phiếu nhập kho đã lập vào bộ nhớ đa chi nhánh
     function dongBoImeiTuDonNhapHang() {
       if (!window.imeiListByProductAndBranch) window.imeiListByProductAndBranch = {};
-      const phieuList = Array.isArray(rawNhapHangList) ? [...rawNhapHangList] : [];
+      const phieuList = [];
 
-      // Quét thêm cả đơn lưu tạm từ localStorage
+      // Quét các đơn lưu tạm từ localStorage
       try {
         let allDraftKeys = JSON.parse(localStorage.getItem('SMART_ERP_DRAFT_KEYS') || '[]');
         allDraftKeys.forEach(key => {
@@ -9464,11 +9515,25 @@ function formatVND(amount) {
         });
       } catch(e) {}
 
+      // Quét các đơn nhập mới tạo / chỉnh sửa cục bộ (tránh quét lại 3.232 đơn lịch sử KiotViet gây hồi sinh IMEI đã bán)
+      if (Array.isArray(rawNhapHangList)) {
+        rawNhapHangList.forEach(p => {
+          if (p.isLocalCreated || p.isNewCreated || (p.maPhieu && p.maPhieu === 'PN003232')) {
+            if (!phieuList.some(x => x.maPhieu === p.maPhieu)) {
+              phieuList.push(p);
+            }
+          }
+        });
+      }
+
       if (!phieuList.length) return;
+
+      const soldCacheNhap = (typeof layDanhSachImeiDaBan === 'function') ? layDanhSachImeiDaBan() : [];
+      const isSoldNhap = (im) => soldCacheNhap.includes(String(im).trim());
 
       let coThayDoi = false;
       phieuList.forEach(phieu => {
-        if (phieu.trangThai === 'Đã hủy') return;
+        if (phieu.trangThai === 'Đã hủy' || phieu.trang_thai === 'Đã hủy') return;
         const targetCN = layMaChiNhanh(phieu.chiNhanh || 'CN01');
         const items = Array.isArray(phieu.chiTietSanPham) ? phieu.chiTietSanPham : [];
         items.forEach(it => {
@@ -9484,8 +9549,9 @@ function formatVND(amount) {
             window.imeiListByProductAndBranch[cleanMa][targetCN] = [];
           }
           arr.forEach(im => {
-            if (!window.imeiListByProductAndBranch[cleanMa][targetCN].includes(im)) {
-              window.imeiListByProductAndBranch[cleanMa][targetCN].push(im);
+            const cleanIm = String(im).trim();
+            if (cleanIm && !isSoldNhap(cleanIm) && !window.imeiListByProductAndBranch[cleanMa][targetCN].includes(cleanIm)) {
+              window.imeiListByProductAndBranch[cleanMa][targetCN].push(cleanIm);
               coThayDoi = true;
             }
           });
@@ -9592,7 +9658,7 @@ function formatVND(amount) {
         });
       }
 
-      // Nạp danh sách IMEI từ rawHangHoa nếu có
+      // Nạp danh sách IMEI từ rawHangHoa nếu có (chỉ bổ sung nếu sản phẩm chưa có IMEI trong rawImeiMap)
       rawHangHoa.forEach(h => {
         const ma = String(h.maHang || '').trim().toUpperCase();
         if (Array.isArray(h.danhSachIMEI) && h.danhSachIMEI.length > 0) {
@@ -9600,12 +9666,19 @@ function formatVND(amount) {
           if (!window.imeiListByProductAndBranch[ma]) {
             window.imeiListByProductAndBranch[ma] = { CN01: [], CN02: [], CN03: [], CN04: [] };
           }
-          const curCN = layMaChiNhanh(currentChiNhanh || 'CN01');
-          h.danhSachIMEI.forEach(im => {
-            if (!isSoldInit(im) && !window.imeiListByProductAndBranch[ma][curCN].includes(im)) {
-              window.imeiListByProductAndBranch[ma][curCN].push(im);
+          // Chỉ bổ sung nếu cả 3 chi nhánh đều chưa có IMEI nào được định nghĩa
+          const hasAnyBranchImei = Object.values(window.imeiListByProductAndBranch[ma]).some(arr => arr && arr.length > 0);
+          if (!hasAnyBranchImei) {
+            const curCN = layMaChiNhanh(currentChiNhanh || 'CN01');
+            const cnTon = (window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[ma]) ? (Number(window.tonKhoChiNhanhMap[ma][curCN]) || 0) : 0;
+            if (cnTon > 0) {
+              h.danhSachIMEI.forEach(im => {
+                if (!isSoldInit(im) && !window.imeiListByProductAndBranch[ma][curCN].includes(im)) {
+                  window.imeiListByProductAndBranch[ma][curCN].push(im);
+                }
+              });
             }
-          });
+          }
           h.coQuanLyIMEI = true;
         }
       });
@@ -26519,8 +26592,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.4.8";
-    const APP_CLIENT_BUILD = 43;
+    const APP_CLIENT_VERSION = "1.4.9";
+    const APP_CLIENT_BUILD = 44;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
