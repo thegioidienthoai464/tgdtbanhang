@@ -1,10 +1,10 @@
 {
-  "version": "1.4.9",
-  "build_number": 44,
+  "version": "1.5.0",
+  "build_number": 45,
   "force_update": false,
-  "release_notes": "• Khắc phục triệt để sai lệch tồn kho và danh sách IMEI đa chi nhánh: Chấm dứt hiện tượng rò rỉ IMEI chéo giữa các chi nhánh (CN01, CN02, CN03).\n• Đồng bộ chính xác tồn kho sản phẩm SP530124 (iPhone 12 128GB Trắng A) tại Chi nhánh Thanh Giang: Khớp 100% với KiotViet (Tồn kho = 0, IMEI = 0 sau đơn bán HD021199 ngày 07/11/2026).\n• Cập nhật đơn bán hàng HD021199 (khách Nguyễn Thế Thắng, 7.190.000 đ) vào Lịch sử đơn hàng và phiếu thu TTHD021199 vào Sổ Quỹ Tiền Mặt CN02.\n• Tối ưu bộ lọc O(1) danh sách IMEI đã bán từ lịch sử đơn hàng, ngăn ngừa phục hồi các IMEI cũ đã bán từ đơn nhập lịch sử.\n• Đảm bảo số lượng tồn kho hiển thị luôn tuân thủ nghiêm ngặt theo sổ sách kế toán của từng chi nhánh.",
+  "release_notes": "• Hoàn tất đại tu rà soát toàn bộ 21.433 sản phẩm trên toàn hệ thống.\n• Xử lý triệt để 8 sản phẩm bị sót IMEI đã bán trong kho: SP537972 (Redmi Note 15 Pro), SP528833 (iPhone 13 ProMax), SP533790 (Jdodo S725), SP536235 (POCO C75), SP528154 (iPhone 12 ProMax), SP537950 (Redmi 15 5G), SP536689 (Masstel Izi T9), SP535699 (Samsung A06 5G).\n• Chuẩn hóa toàn bộ 56 sản phẩm có chuỗi IMEI ghép bằng ký tự pipe '|' thành các mã IMEI độc lập từng máy.\n• Đạt độ chính xác 100% (570/570 lượt đối soát chi nhánh): Số lượng tồn kho và số lượng IMEI khớp hoàn hảo trên cả 3 chi nhánh, 0 IMEI bán trùng lặp, 0 sai lệch sổ sách.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.9/TT_POS_v1.4.9.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.4.9/TT_POS_v1.4.9.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.4.9"
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.0/TT_POS_v1.5.0.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.0/TT_POS_v1.5.0.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.0"
 }

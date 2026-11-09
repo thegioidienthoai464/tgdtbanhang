@@ -378,7 +378,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.4.9</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.5.0</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -9580,7 +9580,7 @@ function formatVND(amount) {
       const rawImeiMap = window.RAW_IMEI_3_CHI_NHANH || {};
 
       // Tự động dọn sạch cache tồn kho cũ khi hệ thống vừa nạp lại tồn kho mới
-      const RESET_INVENTORY_KEY = 'tt_pos_reset_inventory_v146_sync';
+      const RESET_INVENTORY_KEY = 'tt_pos_reset_inventory_v150_sync';
       try {
         if (!localStorage.getItem(RESET_INVENTORY_KEY)) {
           localStorage.removeItem('tt_pos_tonkho_chinhanh');
@@ -9641,13 +9641,24 @@ function formatVND(amount) {
       const isSoldInit = (im) => soldCacheInit.includes(String(im).trim());
 
       if (rawImeiMap && typeof rawImeiMap === 'object') {
+        const splitImeis = (arr) => {
+          const res = [];
+          (Array.isArray(arr) ? arr : []).forEach(x => {
+            String(x).split(/[|,;\n]+/).forEach(s => {
+              const clean = s.trim();
+              if (clean && !isSoldInit(clean)) res.push(clean);
+            });
+          });
+          return res;
+        };
+
         Object.keys(rawImeiMap).forEach(m => {
           const itemImeis = rawImeiMap[m] || {};
           if (!window.imeiListByProductAndBranch[m]) {
             window.imeiListByProductAndBranch[m] = {
-              CN01: (Array.isArray(itemImeis.CN01) ? itemImeis.CN01 : []).filter(im => !isSoldInit(im)),
-              CN02: (Array.isArray(itemImeis.CN02) ? itemImeis.CN02 : []).filter(im => !isSoldInit(im)),
-              CN03: (Array.isArray(itemImeis.CN03) ? itemImeis.CN03 : []).filter(im => !isSoldInit(im)),
+              CN01: splitImeis(itemImeis.CN01),
+              CN02: splitImeis(itemImeis.CN02),
+              CN03: splitImeis(itemImeis.CN03),
               CN04: []
             };
           }
@@ -26592,8 +26603,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.4.9";
-    const APP_CLIENT_BUILD = 44;
+    const APP_CLIENT_VERSION = "1.5.0";
+    const APP_CLIENT_BUILD = 45;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
