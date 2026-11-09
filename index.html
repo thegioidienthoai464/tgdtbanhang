@@ -9603,7 +9603,6 @@ function formatVND(amount) {
             }
           });
 
-          const sp = (rawHangHoa || []).find(h => String(h.maHang || '').trim().toUpperCase() === cleanMa);
           if (sp) {
             sp.coQuanLyIMEI = true;
           }
@@ -28135,7 +28134,6 @@ function formatVND(amount) {
         ? allBranchImeisMap[targetCN]
         : (h.danhSachIMEI || [])).filter(im => !soldCacheXem.includes(String(im).trim()));
       const totalAllImeis = Object.values(allBranchImeisMap).flat();
-      const cleanMa = String(h.maHang || '').trim().toUpperCase();
       const isQuanLyIMEI = Boolean(
         (h.coQuanLyIMEI === true || String(h.coQuanLyIMEI).trim().toLowerCase() === 'true' || String(h.coQuanLyIMEI).trim() === '1') ||
         (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanMa]) ||
