@@ -35,10 +35,27 @@
   <!-- Dữ liệu tồn kho, giá vốn & IMEI 3 chi nhánh từ Excel gốc -->
   <script src="ton_kho_3_chinhanh.js?v=29"></script>
   <!-- Dữ liệu thực tế 100% từ KiotViet Chi Nhánh Thanh Giang -->
-  <script src="du_lieu_thanh_giang.js?v=32"></script>
+  <script src="du_lieu_thanh_giang.js?v=33"></script>
+  <!-- Dữ liệu 33.292 khách hàng chuẩn hóa 100% từ KiotViet -->
+  <script src="du_lieu_khach_hang.js?v=33"></script>
 
   <script>
-    
+    // Tiện ích loại bỏ dấu tiếng Việt để tìm kiếm thông minh không phân biệt dấu
+    function xoaDauTiengViet(str) {
+      if (!str) return '';
+      return String(str).normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd')
+                .replace(/Đ/g, 'D')
+                .toLowerCase();
+    }
+    window.xoaDauTiengViet = xoaDauTiengViet;
+
+    // Tự động khởi tạo ngay rawKHList từ dữ liệu KiotViet thực tế
+    if (typeof window.RAW_KHACH_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_KHACH_HANG_THANH_GIANG) && window.RAW_KHACH_HANG_THANH_GIANG.length > 0) {
+      window.rawKHList = window.RAW_KHACH_HANG_THANH_GIANG;
+    }
+
     // ====================================================================
     // TIỆN ÍCH TOÀN CỤC: XỬ LÝ NGÀY THÁNG VÀ CHI NHÁNH CHUẨN XÁC 100%
     // ====================================================================
@@ -8973,7 +8990,16 @@ function formatVND(amount) {
         return;
       }
       
-      // Đảm bảo rawKHList luôn là một mảng
+      // Đảm bảo rawKHList luôn là một mảng và được nạp ngay lập tức từ dữ liệu chuẩn
+      if (typeof rawKHList === 'undefined' || !Array.isArray(rawKHList) || rawKHList.length === 0) {
+        if (typeof window.RAW_KHACH_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_KHACH_HANG_THANH_GIANG) && window.RAW_KHACH_HANG_THANH_GIANG.length > 0) {
+          rawKHList = window.RAW_KHACH_HANG_THANH_GIANG;
+        } else if (typeof window.RAW_DOI_TAC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG)) {
+          const listKH = window.RAW_DOI_TAC_THANH_GIANG.filter(d => d.loaiDoiTac === 'KHACH_HANG');
+          if (listKH.length > 0) rawKHList = listKH;
+        }
+      }
+
       if (typeof rawKHList === 'undefined' || !Array.isArray(rawKHList) || rawKHList.length === 0) {
         box.innerHTML = '<div class="p-3 text-slate-400 text-center text-xs"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang tải danh sách khách hàng...</div>';
         box.classList.remove('hidden');
@@ -8997,12 +9023,17 @@ function formatVND(amount) {
         return;
       }
 
-      // Lọc danh sách theo Tên, Số điện thoại hoặc Mã khách hàng trong RAM
+      // Lọc danh sách theo Tên, Số điện thoại hoặc Mã khách hàng trong RAM (hỗ trợ cả tìm có dấu và không dấu)
+      const valNoTone = typeof xoaDauTiengViet === 'function' ? xoaDauTiengViet(val) : val;
       const matched = rawKHList.filter(k => {
         const ten = String(k.tenDoiTac || k.tenKH || "").toLowerCase();
-        const sdt = String(k.soDienThoai || "").toLowerCase();
+        const sdt = String(k.soDienThoai || k.dienThoai || "").toLowerCase();
         const ma = String(k.maDoiTac || k.maKH || "").toLowerCase();
-        return ten.includes(val) || sdt.includes(val) || ma.includes(val);
+        if (ma.includes(val) || sdt.includes(val) || ten.includes(val)) return true;
+        if (valNoTone.length >= 2 && typeof xoaDauTiengViet === 'function') {
+          if (xoaDauTiengViet(ten).includes(valNoTone)) return true;
+        }
+        return false;
       });
 
       // Nếu tìm thấy trong RAM, hiển thị ngay (tối đa 15 dòng)
@@ -11552,6 +11583,11 @@ const rawGv = rawGiaVonMap[ma];
     function loadKH() {
       if (typeof window.masterLoadKH === 'function') {
         return window.masterLoadKH();
+      }
+      if (typeof window.RAW_KHACH_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_KHACH_HANG_THANH_GIANG) && window.RAW_KHACH_HANG_THANH_GIANG.length > 0) {
+        rawKHList = window.RAW_KHACH_HANG_THANH_GIANG;
+        if (typeof locDanhSachKH === 'function') locDanhSachKH(false);
+        return Promise.resolve(rawKHList);
       }
     }
 
@@ -20106,6 +20142,11 @@ const rawGv = rawGiaVonMap[ma];
       if (typeof window.masterLoadKH === 'function') {
         return window.masterLoadKH();
       }
+      if (typeof window.RAW_KHACH_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_KHACH_HANG_THANH_GIANG) && window.RAW_KHACH_HANG_THANH_GIANG.length > 0) {
+        rawKHList = window.RAW_KHACH_HANG_THANH_GIANG;
+        if (typeof locDanhSachKH === 'function') locDanhSachKH(false);
+        return Promise.resolve(rawKHList);
+      }
     }
 
     function napKHTuSheets() {
@@ -20122,15 +20163,23 @@ const rawGv = rawGiaVonMap[ma];
     function locDanhSachKH(reset = false) {
       if (reset) pageKH = 1;
       const kw = (document.getElementById('filter-kh-search')?.value || '').toLowerCase().trim();
+      const kwNoTone = typeof xoaDauTiengViet === 'function' ? xoaDauTiengViet(kw) : kw;
       const filterTT = document.getElementById('filter-kh-trangthai')?.value || 'HoatDong';
 
-      const filtered = rawKHList.filter(k => {
-        const isAct = k.trangThai !== 'NgungHoatDong';
+      if ((!rawKHList || rawKHList.length === 0) && typeof window.RAW_KHACH_HANG_THANH_GIANG !== 'undefined') {
+        rawKHList = window.RAW_KHACH_HANG_THANH_GIANG;
+      }
+
+      const filtered = (rawKHList || []).filter(k => {
+        const isAct = k.trangThai !== 'NgungHoatDong' && k.trangThai !== 'Ngừng hoạt động';
         let matchStatus = true;
         if (filterTT === 'HoatDong') matchStatus = isAct;
         else if (filterTT === 'NgungHoatDong') matchStatus = !isAct;
 
-        const matchKW = !kw || k.tenDoiTac.toLowerCase().includes(kw) || k.maDoiTac.toLowerCase().includes(kw) || (k.soDienThoai && k.soDienThoai.includes(kw));
+        const ma = String(k.maDoiTac || k.maKH || '').toLowerCase();
+        const ten = String(k.tenDoiTac || k.tenKH || '').toLowerCase();
+        const sdt = String(k.soDienThoai || k.dienThoai || '').toLowerCase();
+        const matchKW = !kw || ten.includes(kw) || ma.includes(kw) || sdt.includes(kw) || (kwNoTone.length >= 2 && typeof xoaDauTiengViet === 'function' && xoaDauTiengViet(ten).includes(kwNoTone));
         return matchStatus && matchKW;
       });
 
@@ -33712,25 +33761,41 @@ function loadSoQuy(filter) {
     var dangNapToanBoKH = false;
 
     async function loadKH() {
-      // Ưu tiên nạp 100% Khách hàng thực tế từ KiotViet
+      // 0. Ưu tiên nạp 100% Khách hàng thực tế từ RAW_KHACH_HANG_THANH_GIANG hoặc RAW_DOI_TAC_THANH_GIANG
+      if (typeof window.RAW_KHACH_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_KHACH_HANG_THANH_GIANG) && window.RAW_KHACH_HANG_THANH_GIANG.length > 0) {
+        rawKHList = window.RAW_KHACH_HANG_THANH_GIANG;
+        locDanhSachKH(false);
+        console.log(`⚡ Đã nạp ${rawKHList.length} khách hàng thực tế từ RAW_KHACH_HANG_THANH_GIANG!`);
+        if (typeof luuKHVaoCache === 'function') {
+          luuKHVaoCache(rawKHList);
+        }
+        return;
+      }
       if (typeof window.RAW_DOI_TAC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DOI_TAC_THANH_GIANG)) {
         const listKH = window.RAW_DOI_TAC_THANH_GIANG.filter(d => d.loaiDoiTac === 'KHACH_HANG');
         if (listKH.length > 0) {
           rawKHList = listKH;
           locDanhSachKH(false);
           console.log(`⚡ Đã nạp ${rawKHList.length} khách hàng thực tế từ KiotViet!`);
+          if (typeof luuKHVaoCache === 'function') {
+            luuKHVaoCache(rawKHList);
+          }
           return;
         }
       }
 
-      // 1. Nạp tức thì từ Cache (IndexedDB & LocalStorage) < 10ms
+      // 1. Nạp tức thì từ Cache (IndexedDB & LocalStorage) < 10ms (bỏ qua cache cũ bị lệch cột)
       try {
         if (typeof layKHTuCache === 'function') {
           const cached = await layKHTuCache();
           if (Array.isArray(cached) && cached.length > 0) {
-            rawKHList = cached;
-            locDanhSachKH(false);
-            console.log(`⚡ Đã tải trước ${rawKHList.length} khách hàng từ bộ nhớ máy!`);
+            if (cached[0] && cached[0].maDoiTac === 'Cá nhân') {
+              console.warn("⚠️ Bỏ qua cache KH cũ do bị lệch cột.");
+            } else {
+              rawKHList = cached;
+              locDanhSachKH(false);
+              console.log(`⚡ Đã tải trước ${rawKHList.length} khách hàng từ bộ nhớ máy!`);
+            }
           }
         }
       } catch(e) {}
