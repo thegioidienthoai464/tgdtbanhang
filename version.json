@@ -1,20 +1,20 @@
 {
   "version": "1.5.2",
-  "build_number": 52,
+  "build_number": 53,
   "force_update": false,
-  "release_notes": "• Khắc phục triệt để lỗi tìm kiếm khách hàng: Chuẩn hóa 100% dữ liệu 33.292 khách hàng từ KiotViet, khắc phục lỗi lệch cột dữ liệu khiến không tìm thấy khách hàng (ví dụ: KH026853 - Nguyên Đình Thùy).\n• Tìm kiếm khách hàng tức thì (< 1ms): Hỗ trợ tìm kiếm theo Mã khách hàng (KH...), Số điện thoại hoặc Tên khách hàng (cả gõ có dấu và gõ không dấu).\n• Đồng bộ hóa toàn diện dữ liệu khách hàng cho cả Web POS bán lẻ, Đặt hàng, Khách trả hàng và Quản lý khách hàng.",
+  "release_notes": "• Chuyển đổi hoàn toàn tính năng Xóa hóa đơn thành HỦY HÓA ĐƠN tại Tab 2.5 Lịch sử đơn hàng.\n• Khi hủy hóa đơn: Trạng thái chuyển thành 'Đã hủy', hủy toàn bộ phiếu thu liên quan trong Sổ Quỹ (không tính vào doanh thu/tồn quỹ), tự động hoàn trả số lượng hàng và IMEI về kho, đồng thời hoàn tác công nợ khách hàng (nếu đơn còn nợ).\n• Bộ lọc trạng thái: Lọc 'Đã hủy' hiển thị đầy đủ danh sách hóa đơn đã hủy; lọc 'Tất cả' hiển thị cả đơn hoàn thành và đơn đã hủy.\n• Hỗ trợ hủy đơn hàng lẻ và hủy hàng loạt đơn hàng đã chọn, tích hợp nút Hủy trực tiếp trong modal chi tiết đơn hàng.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
   "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.2/TT_POS_v1.5.2.apk",
   "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.2/TT_POS_v1.5.2.ipa",
   "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.2",
-  "build": 52,
+  "build": 53,
   "releaseDate": "2026-11-10",
   "features": [
-    "Khắc phục triệt để lỗi tìm kiếm khách hàng: Đồng bộ chuẩn hóa toàn bộ 33.292 khách hàng thực tế từ KiotViet",
-    "Khắc phục lỗi lệch cột dữ liệu khiến mã khách hàng bị lưu thành 'Cá nhân' và tên bị thành tên chi nhánh",
-    "Tìm thấy ngay lập tức khách hàng KH026853 (Nguyên Đình Thùy - 0356759515) và toàn bộ 33.292 khách hàng",
-    "Hỗ trợ tìm kiếm thông minh không dấu và có dấu (gõ 'Nguyen Dinh Thuy' hoặc 'Nguyên Đình Thùy')",
-    "Tối ưu tốc độ tìm kiếm khách hàng tại màn hình Thu ngân POS bán lẻ phản hồi tức thì < 2ms",
-    "Đồng bộ bộ dữ liệu sạch sang ứng dụng di động mobile_app/assets/data/danh_sach_khach_hang_full.json"
+    "Chuyển đổi tính năng 'Xóa' đơn hàng thành 'HỦY' hóa đơn bảo toàn lịch sử và đối soát kế toán",
+    "Tự động hủy các phiếu thu/chi liên quan trong Sổ Quỹ khi hóa đơn bị hủy, loại trừ khỏi doanh thu và tồn quỹ",
+    "Tự động hoàn trả tồn kho sản phẩm và mã IMEI về kho chi nhánh khi hủy hóa đơn",
+    "Tự động trừ công nợ khách hàng nếu đơn hàng trước đó có ghi nhận nợ",
+    "Lọc trạng thái 'Đã hủy' hiển thị chính xác các đơn đã hủy; lọc 'Tất cả' hiển thị toàn bộ",
+    "Thêm nút 'Hủy chọn' xử lý hàng loạt và nút 'Hủy Hóa Đơn' trong modal xem chi tiết"
   ]
 }

@@ -2641,8 +2641,8 @@
               <i class="fa-solid fa-receipt text-amber-500 mr-1.5 text-base"></i>Lịch sử đơn hàng
             </span>
             <span id="badge-tong-donhang" class="px-2.5 py-0.5 bg-blue-50 text-blue-700 rounded-full font-bold text-xs border border-blue-200">0 đơn</span>
-            <button type="button" onclick="xoaCacDonHangChon()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition ml-1">
-              <i class="fa-solid fa-trash-can"></i><span>Xóa chọn (<span id="count-selected-don">0</span>)</span>
+            <button type="button" id="btn-huy-donhang-batch" onclick="huyCacDonHangChon()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition ml-1" title="Hủy các hóa đơn đã chọn và hoàn tác giao dịch liên quan">
+              <i class="fa-solid fa-ban"></i><span>Hủy chọn (<span id="count-selected-don">0</span>)</span>
             </button>
             <button type="button" onclick="loadLichSuDonHang()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition flex items-center space-x-1.5" title="Tải lại toàn bộ dữ liệu đơn hàng">
               <i class="fa-solid fa-rotate"></i><span>Làm mới</span>
@@ -4772,6 +4772,10 @@
           <button type="button" id="ctdh-btn-sua-thongtin" onclick="moModalSuaThongTinDonHang()" class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-xs font-bold border border-amber-200 transition flex items-center space-x-1.5 shadow-2xs">
             <i class="fa-solid fa-pen-to-square text-amber-600"></i>
             <span>Sửa Ngày Giờ & Người Bán</span>
+          </button>
+          <button type="button" id="ctdh-btn-huy-don" onclick="huyDonHangTuModal()" class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold border border-rose-200 transition flex items-center space-x-1.5 shadow-2xs">
+            <i class="fa-solid fa-ban text-rose-600"></i>
+            <span>Hủy Hóa Đơn</span>
           </button>
           <button type="button" id="ctdh-btn-in-hoadon" onclick="inHoaDonBanHang(window.currentViewingDonHang ? window.currentViewingDonHang.maDonHang : null)" class="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold border border-blue-200 transition flex items-center space-x-1.5 shadow-2xs">
             <i class="fa-solid fa-print text-blue-600"></i>
@@ -7474,6 +7478,19 @@ function loadDuLieuSoQuy(loaiQuy) {
 
     // TỰ ĐỘNG ĐỒNG BỘ CÁC ĐƠN HÀNG BÁN ĐÃ THU TIỀN VÀO SỔ QUỸ (Tra cứu O(1) bằng Set siêu tốc)
     try {
+      const canceledOrderList = (typeof layDanhSachDonHangDaHuy === 'function') ? layDanhSachDonHangDaHuy() : [];
+      const canceledSet = new Set(canceledOrderList.map(x => String(x).trim()));
+
+      // Đánh dấu DaHuy trước cho bất kỳ bản ghi nào trong sourceRecords trùng mã đơn đã hủy
+      sourceRecords.forEach(item => {
+        const p1 = String(item.ma_chung_tu || item.maChungTu || '').trim();
+        const p2 = String(item.ma_phieu || item.maPhieu || '').trim();
+        if (canceledSet.has(p1) || (p2.startsWith('TTHD') && canceledSet.has('HD' + p2.replace(/^TTHD/, ''))) || (p1.startsWith('HD') && canceledSet.has(p1))) {
+          item.trang_thai = 'DaHuy';
+          item.trangThai = 'DaHuy';
+        }
+      });
+
       const existingSQSet = new Set();
       sourceRecords.forEach(sq => {
         const p1 = String(sq.maChungTu || sq.ma_chung_tu || '').trim();
@@ -7502,6 +7519,23 @@ function loadDuLieuSoQuy(loaiQuy) {
         const maHD = String(ord.maDonHang || ord.maDon || ord.ma_don_hang || '').trim();
         if (!maHD || seenOrderCodes.has(maHD)) return;
         seenOrderCodes.add(maHD);
+
+        const isOrdHuy = canceledSet.has(maHD) ||
+                         ord.trangThai === 'Đã hủy' || ord.trang_thai === 'Đã hủy' ||
+                         ord.trangThai === 'DaHuy' || ord.trang_thai === 'DaHuy' ||
+                         (typeof kiemTraDonHangDaHuy === 'function' && kiemTraDonHangDaHuy(maHD));
+
+        if (isOrdHuy) {
+          sourceRecords.forEach(sq => {
+            const p1 = String(sq.maChungTu || sq.ma_chung_tu || '').trim();
+            const p2 = String(sq.maPhieu || sq.ma_phieu || '').trim();
+            if (p1 === maHD || p2 === ('TTHD' + maHD.replace(/^HD/, '')) || p2 === maHD) {
+              sq.trangThai = 'DaHuy';
+              sq.trang_thai = 'DaHuy';
+            }
+          });
+          return;
+        }
 
         const payAmount = Number(ord.khachTra ?? ord.khach_tra ?? (ord.trangThai === 'Hoàn thành' ? ord.tongTien : 0)) || 0;
         if (payAmount <= 0) return;
@@ -27892,7 +27926,7 @@ const rawGv = rawGiaVonMap[ma];
         { selector: '#btn-batch-inactive-kh, #btn-batch-active-kh', allowed: hasPermission('KHACH_HANG_XOA') },
         
         // Lịch sử đơn hàng
-        { selector: '#btn-xoa-donhang-batch, button[onclick*="xoaCacDonHangChon"]', allowed: hasPermission('LICHSU_DONHANG_XOA') },
+        { selector: '#btn-huy-donhang-batch, #btn-xoa-donhang-batch, button[onclick*="huyCacDonHangChon"], button[onclick*="xoaCacDonHangChon"]', allowed: (typeof hasPermission === 'function' ? (hasPermission('LICHSU_DONHANG_HUY') || hasPermission('LICHSU_DONHANG_XOA') || hasPermission('DON_HANG')) : true) },
         
         // Nhà cung cấp
         { selector: 'button[onclick*="moModalDoiTac(\'NCC\')"], button[onclick*="moModalDoiTac(\"NCC\")"]', allowed: hasPermission('NCC_THEM') },
@@ -29491,12 +29525,30 @@ const rawGv = rawGiaVonMap[ma];
         nganHangNhan: d.nganHangNhan || d.ngan_hang_nhan || '',
         chiTietSanPham: itemsList,
         sanPham: itemsList,
-        trangThai: d.trangThai || d.trang_thai || 'Hoàn thành',
+        trangThai: ((typeof kiemTraDonHangDaHuy === 'function' && kiemTraDonHangDaHuy(ma)) || d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy' || d.trangThai === 'DaHuy' || d.trang_thai === 'DaHuy') ? 'Đã hủy' : (d.trangThai || d.trang_thai || 'Hoàn thành'),
         nhanVien: nguoiBan,
         nguoiBan: nguoiBan,
         nguoiGiaoDich: nguoiGiaoDich
       };
     }
+
+    function layDanhSachDonHangDaHuy() {
+      try {
+        const list = JSON.parse(localStorage.getItem('TT_POS_CANCELED_ORDERS') || '[]');
+        return Array.isArray(list) ? list : [];
+      } catch(e) {
+        return [];
+      }
+    }
+    window.layDanhSachDonHangDaHuy = layDanhSachDonHangDaHuy;
+
+    function kiemTraDonHangDaHuy(maDon) {
+      if (!maDon) return false;
+      const list = layDanhSachDonHangDaHuy();
+      const clean = String(maDon).trim();
+      return list.includes(clean);
+    }
+    window.kiemTraDonHangDaHuy = kiemTraDonHangDaHuy;
 
     function sapXepCotDonHang(col) {
       if (window.donHangSortState.col === col) {
@@ -29696,6 +29748,14 @@ const rawGv = rawGiaVonMap[ma];
 
       // Chuyển Map thành mảng rawDonHangList
       rawDonHangList = Array.from(mergedMap.values());
+      const canceledSet = new Set(layDanhSachDonHangDaHuy().map(x => String(x).trim()));
+      rawDonHangList.forEach(d => {
+        const ma = String(d.maDonHang || d.maDon || d.ma_don_hang || '').trim();
+        if (canceledSet.has(ma) || d.trangThai === 'DaHuy' || d.trang_thai === 'DaHuy') {
+          d.trangThai = 'Đã hủy';
+          d.trang_thai = 'Đã hủy';
+        }
+      });
       window.rawDonHangList = rawDonHangList;
 
       // Đồng bộ giữ các đơn hàng POS cục bộ
@@ -29729,6 +29789,13 @@ const rawGv = rawGiaVonMap[ma];
               });
               if (hasNew) {
                 rawDonHangList = Array.from(mergedMap.values());
+                rawDonHangList.forEach(d => {
+                  const ma = String(d.maDonHang || d.maDon || d.ma_don_hang || '').trim();
+                  if (canceledSet.has(ma) || d.trangThai === 'DaHuy' || d.trang_thai === 'DaHuy') {
+                    d.trangThai = 'Đã hủy';
+                    d.trang_thai = 'Đã hủy';
+                  }
+                });
                 locDanhSachDonHang(false);
               }
             }
@@ -29838,7 +29905,10 @@ const rawGv = rawGiaVonMap[ma];
         }
 
         if (fTT !== 'ALL') {
-          const isHuy = d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy';
+          const isHuy = (typeof kiemTraDonHangDaHuy === 'function' && kiemTraDonHangDaHuy(d.maDonHang || d.maDon)) ||
+                        d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy' ||
+                        d.trangThai === 'DaHuy' || d.trang_thai === 'DaHuy' ||
+                        String(d.trangThai || '').toLowerCase().includes('hủy');
           if (fTT === 'DA_HUY' && !isHuy) return false;
           if (fTT === 'CON_NO') {
             if (isHuy || daTra >= phaiTra) return false;
@@ -29911,9 +29981,13 @@ const rawGv = rawGiaVonMap[ma];
         const isChecked = selectedDonHangIds.includes(d.maDonHang);
         const phaiTra = Number(d.khachPhaiTra ?? d.tongTien) || 0;
         const daTra = Number(d.khachTra ?? d.khach_tra) || 0;
+        const isHuy = (typeof kiemTraDonHangDaHuy === 'function' && kiemTraDonHangDaHuy(d.maDonHang || d.maDon)) ||
+                      d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy' ||
+                      d.trangThai === 'DaHuy' || d.trang_thai === 'DaHuy' ||
+                      String(d.trangThai || '').toLowerCase().includes('hủy');
         let trangThaiBadge = '';
-        if (d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy') {
-          trangThaiBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-500 font-semibold">Đã hủy</span>';
+        if (isHuy) {
+          trangThaiBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-rose-100 text-rose-700 font-bold border border-rose-200">Đã hủy</span>';
         } else if (daTra < phaiTra) {
           const conThieu = phaiTra - daTra;
           trangThaiBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] bg-amber-100 text-amber-700 font-bold" title="Còn thiếu: ${conThieu.toLocaleString()} đ"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Thiếu ${conThieu.toLocaleString()} đ</span>`;
@@ -29921,19 +29995,23 @@ const rawGv = rawGiaVonMap[ma];
           trangThaiBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-700 font-semibold">${d.trangThai || 'Hoàn thành'}</span>`;
         }
         return `
-          <tr class="hover:bg-slate-50 border-b transition">
+          <tr class="hover:bg-slate-50 border-b transition ${isHuy ? 'bg-slate-50/50 text-slate-500' : ''}">
             <td class="p-3 text-center"><input type="checkbox" value="${d.maDonHang}" ${isChecked ? 'checked' : ''} onchange="toggleCheckDonHang('${d.maDonHang}')" class="rounded text-blue-600 w-3.5 h-3.5 chk-don-item cursor-pointer"></td>
-            <td class="p-3 font-semibold text-blue-600 font-mono">${d.maDonHang}</td>
+            <td class="p-3 font-semibold ${isHuy ? 'text-slate-500 line-through' : 'text-blue-600'} font-mono">${d.maDonHang}</td>
             <td class="p-3 font-mono text-slate-500">${d.ngayBan}</td>
             <td class="p-3 font-medium text-slate-800">${d.tenKH} <span class="text-slate-400 font-mono text-[10px]">(${d.maKH})</span></td>
-            <td class="p-3 text-right font-mono font-bold text-slate-900">${phaiTra.toLocaleString()} đ</td>
-            <td class="p-3 text-right font-mono font-bold ${daTra < phaiTra ? 'text-amber-600' : 'text-emerald-600'}">${daTra.toLocaleString()} đ</td>
+            <td class="p-3 text-right font-mono font-bold ${isHuy ? 'text-slate-400' : 'text-slate-900'}">${phaiTra.toLocaleString()} đ</td>
+            <td class="p-3 text-right font-mono font-bold ${isHuy ? 'text-slate-400' : (daTra < phaiTra ? 'text-amber-600' : 'text-emerald-600')}">${daTra.toLocaleString()} đ</td>
             <td class="p-3 text-center">${trangThaiBadge}</td>
             <td class="p-3 text-center space-x-1 whitespace-nowrap">
-              <button type="button" onclick="xemChiTietDonHang('${d.maDonHang}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-blue-600 rounded-lg text-xs font-semibold">Xem</button>
+              <button type="button" onclick="xemChiTietDonHang('${d.maDonHang}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-blue-600 rounded-lg text-xs font-semibold" title="Xem chi tiết đơn hàng"><i class="fa-solid fa-eye mr-0.5"></i>Xem</button>
               <button type="button" onclick="inHoaDonBanHang('${d.maDonHang}')" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold" title="In hóa đơn"><i class="fa-solid fa-print mr-0.5"></i>In</button>
-              <button type="button" onclick="moModalSuaThongTinDonHang('${d.maDonHang}')" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs font-semibold" title="Sửa ngày giờ & người bán"><i class="fa-solid fa-pen-to-square mr-0.5"></i>Sửa</button>
-              <button type="button" onclick="xoaMotDonHang('${d.maDonHang}')" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold">Xóa</button>
+              ${!isHuy ? `
+                <button type="button" onclick="moModalSuaThongTinDonHang('${d.maDonHang}')" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs font-semibold" title="Sửa ngày giờ & người bán"><i class="fa-solid fa-pen-to-square mr-0.5"></i>Sửa</button>
+                <button type="button" onclick="huyMotDonHang('${d.maDonHang}')" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold" title="Hủy hóa đơn và hoàn tác sổ quỹ, tồn kho"><i class="fa-solid fa-ban mr-0.5"></i>Hủy</button>
+              ` : `
+                <span class="px-2 py-1 bg-slate-100 text-slate-400 rounded-lg text-xs italic font-medium inline-flex items-center"><i class="fa-solid fa-ban mr-1 text-slate-400"></i>Đã hủy</span>
+              `}
             </td>
           </tr>
         `;
@@ -29965,89 +30043,365 @@ const rawGv = rawGiaVonMap[ma];
       if (el) el.innerText = selectedDonHangIds.length;
     }
 
-    async function xoaMotDonHang(maDon) {
-      if (typeof hasPermission === 'function' && !hasPermission('LICHSU_DONHANG_XOA')) {
-        return showNotification("Bạn không có quyền Xóa đơn hàng! Vui lòng liên hệ Quản trị viên.", true);
-      }
-      showConfirm("Xác nhận xóa đơn hàng", `Bạn có chắc chắn muốn xóa đơn hàng [${maDon}] không? Thao tác này sẽ xóa đơn và phiếu thu liên quan.`, async () => {
+    async function thucHienHuyDonHang(d) {
+      if (!d) return;
+      const maDon = String(d.maDonHang || d.maDon || d.ma_don_hang || '').trim();
+      if (!maDon) return;
+
+      // 1. Thêm vào danh sách TT_POS_CANCELED_ORDERS trong localStorage
+      let canceledList = layDanhSachDonHangDaHuy();
+      if (!canceledList.includes(maDon)) {
+        canceledList.push(maDon);
         try {
-          if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-            const { error: errDH } = await supabaseClient.from('don_hang').delete().eq('ma_don_hang', maDon);
-            if (errDH) console.warn("Lỗi xóa đơn Supabase:", errDH);
-            await supabaseClient.from('so_quy').delete().eq('ma_chung_tu', maDon);
+          localStorage.setItem('TT_POS_CANCELED_ORDERS', JSON.stringify(canceledList));
+        } catch(e) {}
+      }
+
+      // 2. Đổi trạng thái đơn hàng thành 'Đã hủy'
+      d.trangThai = 'Đã hủy';
+      d.trang_thai = 'Đã hủy';
+
+      if (Array.isArray(rawDonHangList)) {
+        const idx = rawDonHangList.findIndex(x => (x.maDonHang || x.maDon) === maDon);
+        if (idx >= 0) {
+          rawDonHangList[idx].trangThai = 'Đã hủy';
+          rawDonHangList[idx].trang_thai = 'Đã hủy';
+        }
+      }
+      if (typeof window.RAW_DON_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DON_HANG_THANH_GIANG)) {
+        const rIdx = window.RAW_DON_HANG_THANH_GIANG.findIndex(x => (x.maDonHang || x.maDon || x.ma_don) === maDon);
+        if (rIdx >= 0) {
+          window.RAW_DON_HANG_THANH_GIANG[rIdx].trangThai = 'Đã hủy';
+          window.RAW_DON_HANG_THANH_GIANG[rIdx].trang_thai = 'Đã hủy';
+        }
+      }
+
+      // Cập nhật TT_POS_LOCAL_ORDERS
+      try {
+        let localOrders = JSON.parse(localStorage.getItem('TT_POS_LOCAL_ORDERS') || '[]');
+        let foundLocal = false;
+        localOrders.forEach(o => {
+          if ((o.maDonHang || o.maDon || o.ma_don_hang) === maDon) {
+            o.trangThai = 'Đã hủy';
+            o.trang_thai = 'Đã hủy';
+            foundLocal = true;
           }
-        } catch (e) {
-          console.warn("Lỗi Supabase:", e);
+        });
+        if (!foundLocal) {
+          localOrders.unshift({ ...d, trangThai: 'Đã hủy', trang_thai: 'Đã hủy' });
+        }
+        localStorage.setItem('TT_POS_LOCAL_ORDERS', JSON.stringify(localOrders.slice(0, 500)));
+      } catch(e) {}
+
+      // Cập nhật tt_sandbox_don_hang
+      try {
+        let sbOrders = (typeof getSandboxCache === 'function') ? getSandboxCache('don_hang') : JSON.parse(localStorage.getItem('tt_sandbox_don_hang') || '[]');
+        sbOrders.forEach(o => {
+          if ((o.maDonHang || o.maDon || o.ma_don_hang) === maDon) {
+            o.trangThai = 'Đã hủy';
+            o.trang_thai = 'Đã hủy';
+          }
+        });
+        localStorage.setItem('tt_sandbox_don_hang', JSON.stringify(sbOrders.slice(0, 500)));
+      } catch(e) {}
+
+      // 3. HỦY CÁC PHIẾU THU SỔ QUỸ LIÊN QUAN
+      const maTTHD = 'TTHD' + maDon.replace(/^HD/, '');
+      const isMatchSQ = (sq) => {
+        const c1 = String(sq.maChungTu || sq.ma_chung_tu || '').trim();
+        const c2 = String(sq.maPhieu || sq.ma_phieu || '').trim();
+        const c3 = String(sq.ghiChu || sq.ghi_chu || '');
+        return c1 === maDon || c2 === maTTHD || c2 === maDon || (c1.startsWith('HD') && c1 === maDon) || c3.includes(maDon);
+      };
+
+      if (typeof window.RAW_SO_QUY_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_SO_QUY_THANH_GIANG)) {
+        window.RAW_SO_QUY_THANH_GIANG.forEach(sq => {
+          if (isMatchSQ(sq)) {
+            sq.trangThai = 'DaHuy';
+            sq.trang_thai = 'DaHuy';
+          }
+        });
+      }
+
+      if (Array.isArray(window.rawSoQuyAllRecords)) {
+        window.rawSoQuyAllRecords.forEach(sq => {
+          if (isMatchSQ(sq)) {
+            sq.trangThai = 'DaHuy';
+            sq.trang_thai = 'DaHuy';
+          }
+        });
+      }
+
+      if (window.rawSoQuyData && Array.isArray(window.rawSoQuyData.danhSach)) {
+        window.rawSoQuyData.danhSach.forEach(sq => {
+          if (isMatchSQ(sq)) {
+            sq.trangThai = 'DaHuy';
+            sq.trang_thai = 'DaHuy';
+          }
+        });
+      }
+
+      try {
+        let localSQ = JSON.parse(localStorage.getItem('TT_POS_LOCAL_SO_QUY') || '[]');
+        let updatedLocalSQ = false;
+        localSQ.forEach(sq => {
+          if (isMatchSQ(sq)) {
+            sq.trangThai = 'DaHuy';
+            sq.trang_thai = 'DaHuy';
+            updatedLocalSQ = true;
+          }
+        });
+        if (!updatedLocalSQ) {
+          localSQ.unshift({
+            maPhieu: maTTHD,
+            ma_phieu: maTTHD,
+            maChungTu: maDon,
+            ma_chung_tu: maDon,
+            trangThai: 'DaHuy',
+            trang_thai: 'DaHuy',
+            ghiChu: `Hủy giao dịch theo đơn hàng ${maDon}`
+          });
+        }
+        localStorage.setItem('TT_POS_LOCAL_SO_QUY', JSON.stringify(localSQ.slice(0, 500)));
+      } catch(e) {}
+
+      // 4. HOÀN TRẢ TỒN KHO VÀ IMEI
+      const targetBranch = (typeof layMaChiNhanh === 'function') ? layMaChiNhanh(d.chiNhanh || currentChiNhanh || 'CN01') : 'CN01';
+      let items = (Array.isArray(d.chiTietSanPham) && d.chiTietSanPham.length > 0)
+        ? d.chiTietSanPham
+        : (Array.isArray(d.sanPham) && d.sanPham.length > 0 ? d.sanPham : []);
+
+      if (!items.length && typeof window.RAW_DON_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_DON_HANG_THANH_GIANG)) {
+        const rawMatch = window.RAW_DON_HANG_THANH_GIANG.find(x => (x.maDonHang || x.maDon || x.ma_don) === maDon);
+        if (rawMatch) {
+          items = (Array.isArray(rawMatch.chiTietSanPham) && rawMatch.chiTietSanPham.length > 0)
+            ? rawMatch.chiTietSanPham
+            : (Array.isArray(rawMatch.sanPham) ? rawMatch.sanPham : []);
+        }
+      }
+
+      const restoredImeis = [];
+
+      items.forEach(it => {
+        const maHang = String(it.maHang || it.ma_hang || '').trim().toUpperCase();
+        if (!maHang) return;
+        const sl = Math.max(1, Number(it.soLuong ?? it.so_luong ?? 1) || 1);
+        const sp = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa))
+          ? rawHangHoa.find(h => String(h.maHang || '').trim().toUpperCase() === maHang)
+          : null;
+
+        let itemImeis = [];
+        if (it.imeiStr || it.imei) {
+          itemImeis = String(it.imeiStr || it.imei).split(/[\n,;\r\t]+/).map(s => s.trim()).filter(Boolean);
         }
 
-        xoaDonHangLocal(maDon);
+        const isIMEI = Boolean(
+          it.hasIMEI ||
+          (sp && sp.coQuanLyIMEI) ||
+          itemImeis.length > 0 ||
+          (window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[maHang] && Object.values(window.imeiListByProductAndBranch[maHang]).some(arr => arr && arr.length > 0))
+        );
 
-        if (typeof google !== 'undefined' && google?.script?.run) {
-          google.script.run.withSuccessHandler(function() {
-            finishDelete();
-          }).withFailureHandler(function() {
-            finishDelete();
-          }).apiXoaDonHang([maDon]);
-          return;
-        }
+        if (isIMEI) {
+          if (itemImeis.length > 0) {
+            try {
+              let soldCache = (typeof layDanhSachImeiDaBan === 'function') ? layDanhSachImeiDaBan() : [];
+              soldCache = soldCache.filter(im => !itemImeis.includes(String(im).trim()));
+              localStorage.setItem('tt_pos_sold_imeis', JSON.stringify(soldCache));
+              window._cachedSoldImeisArray = null;
+              window._cachedSoldImeisTime = 0;
+            } catch(e) {}
 
-        finishDelete();
+            if (!window.imeiListByProductAndBranch) window.imeiListByProductAndBranch = {};
+            if (!window.imeiListByProductAndBranch[maHang]) window.imeiListByProductAndBranch[maHang] = { CN01: [], CN02: [], CN03: [], CN04: [] };
+            if (!Array.isArray(window.imeiListByProductAndBranch[maHang][targetBranch])) window.imeiListByProductAndBranch[maHang][targetBranch] = [];
+            itemImeis.forEach(im => {
+              if (!window.imeiListByProductAndBranch[maHang][targetBranch].includes(im)) {
+                window.imeiListByProductAndBranch[maHang][targetBranch].push(im);
+              }
+              restoredImeis.push(im);
+            });
 
-        function finishDelete() {
-          rawDonHangList = rawDonHangList.filter(d => (d.maDonHang || d.maDon) !== maDon);
-          window.rawDonHangList = rawDonHangList;
-          const idx = selectedDonHangIds.indexOf(maDon);
-          if (idx > -1) selectedDonHangIds.splice(idx, 1);
-          showNotification(`Đã xóa đơn hàng [${maDon}] thành công!`);
-          locDanhSachDonHang();
-          if (typeof loadDashboard === 'function') loadDashboard();
-          if (typeof loadSoQuy === 'function') loadSoQuy();
+            const totalImeisInBranch = window.imeiListByProductAndBranch[maHang][targetBranch].length;
+            if (sp) {
+              if (!Array.isArray(sp.danhSachIMEI)) sp.danhSachIMEI = [];
+              itemImeis.forEach(im => {
+                if (!sp.danhSachIMEI.includes(im)) sp.danhSachIMEI.push(im);
+              });
+              sp.tonIMEI = totalImeisInBranch;
+              sp.tonKho = totalImeisInBranch;
+            }
+            if (!window.tonKhoChiNhanhMap) window.tonKhoChiNhanhMap = {};
+            if (!window.tonKhoChiNhanhMap[maHang]) window.tonKhoChiNhanhMap[maHang] = {};
+            window.tonKhoChiNhanhMap[maHang][targetBranch] = totalImeisInBranch;
+          }
+        } else {
+          if (typeof dieuChinhTonKhoChiNhanh === 'function') {
+            dieuChinhTonKhoChiNhanh(maHang, targetBranch, sl);
+          }
+          if (sp) {
+            sp.tonKho = (Number(sp.tonKho) || 0) + sl;
+          }
         }
       });
-    }
 
-    async function xoaCacDonHangChon() {
-      if (typeof hasPermission === 'function' && !hasPermission('LICHSU_DONHANG_XOA')) {
-        return showNotification("Bạn không có quyền Xóa đơn hàng! Vui lòng liên hệ Quản trị viên.", true);
+      try {
+        if (window.tonKhoChiNhanhMap) {
+          localStorage.setItem('tt_pos_tonkho_chinhanh', JSON.stringify(window.tonKhoChiNhanhMap));
+        }
+      } catch(e) {}
+
+      // 5. HOÀN TÁC CÔNG NỢ KHÁCH HÀNG (NẾU ĐƠN CÓ NỢ)
+      const phaiTra = Number(d.khachPhaiTra ?? d.tongTien) || 0;
+      const daTra = Number(d.khachTra ?? d.khach_tra) || 0;
+      const conNo = Math.max(0, phaiTra - daTra);
+      const maKH = d.maKH || d.ma_kh;
+
+      if (conNo > 0 && maKH && maKH !== 'KHACHLE') {
+        const allKH = [
+          ...(typeof rawKhachHang !== 'undefined' && Array.isArray(rawKhachHang) ? rawKhachHang : []),
+          ...(Array.isArray(window.danhSachKhachHang) ? window.danhSachKhachHang : [])
+        ];
+        const kh = allKH.find(k => (k.maKhachHang || k.ma_khach_hang || k.maKH || k.maDoiTac) === maKH);
+        if (kh) {
+          kh.congNo = Math.max(0, (Number(kh.congNo) || 0) - conNo);
+          try {
+            let localKH = JSON.parse(localStorage.getItem('TT_POS_LOCAL_CUSTOMERS') || '[]');
+            let kItem = localKH.find(k => (k.maKhachHang || k.maKH) === maKH);
+            if (kItem) {
+              kItem.congNo = kh.congNo;
+            } else {
+              localKH.push({ maKhachHang: maKH, congNo: kh.congNo });
+            }
+            localStorage.setItem('TT_POS_LOCAL_CUSTOMERS', JSON.stringify(localKH));
+          } catch(e) {}
+        }
       }
-      if (!selectedDonHangIds.length) return showNotification("Vui lòng chọn ít nhất một đơn hàng để xóa!", true);
-      const dsXoa = [...selectedDonHangIds];
-      showConfirm("Xác nhận xóa hàng loạt", `Bạn có chắc chắn muốn xóa ${dsXoa.length} đơn hàng đã chọn không?`, async () => {
+
+      // 6. ĐỒNG BỘ SUPABASE (ASYNC)
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         try {
-          if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-            for (const ma of dsXoa) {
-              await supabaseClient.from('don_hang').delete().eq('ma_don_hang', ma);
-              await supabaseClient.from('so_quy').delete().eq('ma_chung_tu', ma);
+          await supabaseClient.from('don_hang').update({ trang_thai: 'Đã hủy' }).eq('ma_don_hang', maDon);
+          await supabaseClient.from('so_quy').update({ trang_thai: 'DaHuy' }).eq('ma_chung_tu', maDon);
+          await supabaseClient.from('so_quy').update({ trang_thai: 'DaHuy' }).eq('ma_phieu', maTTHD);
+          if (restoredImeis.length > 0) {
+            await supabaseClient.from('kho_imei').update({ trang_thai: 'TrongKho', ngay_xuat: null }).in('imei', restoredImeis);
+          }
+          if (conNo > 0 && maKH && maKH !== 'KHACHLE') {
+            const kh = (window.danhSachKhachHang || []).find(k => (k.maKhachHang || k.maKH) === maKH);
+            if (kh) {
+              await supabaseClient.from('dm_doitac').update({ cong_no: kh.congNo }).eq('ma_doi_tac', maKH);
             }
           }
-        } catch (e) {
-          console.warn("Lỗi Supabase:", e);
+          items.forEach(it => {
+            const maHang = String(it.maHang || it.ma_hang || '').trim().toUpperCase();
+            const sp = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa))
+              ? rawHangHoa.find(h => String(h.maHang || '').trim().toUpperCase() === maHang)
+              : null;
+            if (sp) {
+              supabaseClient.from('dm_hanghoa').update({ ton_kho: sp.tonKho }).eq('ma_hang', maHang).then(() => {}, () => {});
+            }
+          });
+        } catch (eSB) {
+          console.warn("Lỗi sync hủy đơn sang Supabase:", eSB);
         }
+      }
 
-        xoaDonHangLocal(dsXoa);
-
-        if (typeof google !== 'undefined' && google?.script?.run) {
-          google.script.run.withSuccessHandler(function() {
-            finishBatch();
-          }).withFailureHandler(function() {
-            finishBatch();
-          }).apiXoaDonHang(dsXoa);
-          return;
-        }
-
-        finishBatch();
-
-        function finishBatch() {
-          rawDonHangList = rawDonHangList.filter(d => !dsXoa.includes(d.maDonHang || d.maDon));
-          window.rawDonHangList = rawDonHangList;
-          selectedDonHangIds = [];
-          showNotification(`Đã xóa thành công ${dsXoa.length} đơn hàng!`);
-          locDanhSachDonHang();
-          if (typeof loadDashboard === 'function') loadDashboard();
-          if (typeof loadSoQuy === 'function') loadSoQuy();
-        }
-      });
+      if (typeof capNhatTonKhoTheoChiNhanhHienTai === 'function') capNhatTonKhoTheoChiNhanhHienTai();
+      if (typeof renderBangHangHoa === 'function') renderBangHangHoa();
     }
+    window.thucHienHuyDonHang = thucHienHuyDonHang;
+
+    async function huyMotDonHang(maDon) {
+      if (typeof hasPermission === 'function' && !hasPermission('LICHSU_DONHANG_HUY') && !hasPermission('LICHSU_DONHANG_XOA')) {
+        return showNotification("Bạn không có quyền Hủy đơn hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
+      const d = (rawDonHangList || []).find(x => (x.maDonHang || x.maDon) === maDon);
+      if (!d) return showNotification(`Không tìm thấy đơn hàng [${maDon}]!`, true);
+      if (d.trangThai === 'Đã hủy' || kiemTraDonHangDaHuy(maDon)) {
+        return showNotification(`Đơn hàng [${maDon}] đã ở trạng thái ĐÃ HỦY trước đó!`, true);
+      }
+
+      showConfirm(
+        "Xác nhận hủy hóa đơn",
+        `Bạn có chắc chắn muốn HỦY hóa đơn [<b>${maDon}</b>] không?<br><br>` +
+        `<ul class="text-left text-xs text-slate-600 list-disc pl-5 space-y-1">` +
+        `<li>Chuyển trạng thái hóa đơn thành <b>Đã hủy</b>.</li>` +
+        `<li>Hủy các phiếu thu liên quan trong <b>Sổ quỹ</b> (không tính vào doanh thu/tồn quỹ).</li>` +
+        `<li>Tự động hoàn trả hàng hóa và số <b>IMEI</b> về lại kho.</li>` +
+        `<li>Hoàn tác công nợ khách hàng nếu đơn còn nợ.</li>` +
+        `</ul>`,
+        async () => {
+          try {
+            await thucHienHuyDonHang(d);
+            const idx = selectedDonHangIds.indexOf(maDon);
+            if (idx > -1) selectedDonHangIds.splice(idx, 1);
+            capNhatDemDonChon();
+            showNotification(`Đã hủy thành công đơn hàng [${maDon}]! Tất cả giao dịch liên quan và tồn kho đã được hoàn tác.`);
+            locDanhSachDonHang();
+            if (typeof loadDuLieuSoQuy === 'function') {
+              const currentQuy = typeof currentLoaiQuy !== 'undefined' ? currentLoaiQuy : (typeof currentQuyDangXem !== 'undefined' ? currentQuyDangXem : 'ALL');
+              loadDuLieuSoQuy(currentQuy);
+            }
+            if (typeof loadDashboard === 'function') loadDashboard();
+            if (typeof dongModal === 'function') dongModal('modal-chitiet-donhang');
+          } catch (err) {
+            console.error("Lỗi khi hủy đơn hàng:", err);
+            showNotification("Có lỗi xảy ra khi hủy đơn hàng: " + err.message, true);
+          }
+        }
+      );
+    }
+    window.huyMotDonHang = huyMotDonHang;
+    window.xoaMotDonHang = huyMotDonHang;
+
+    async function huyCacDonHangChon() {
+      if (typeof hasPermission === 'function' && !hasPermission('LICHSU_DONHANG_HUY') && !hasPermission('LICHSU_DONHANG_XOA')) {
+        return showNotification("Bạn không có quyền Hủy đơn hàng! Vui lòng liên hệ Quản trị viên.", true);
+      }
+      if (!selectedDonHangIds.length) return showNotification("Vui lòng chọn ít nhất một đơn hàng để hủy!", true);
+
+      const dsChuaHuy = selectedDonHangIds.filter(ma => !kiemTraDonHangDaHuy(ma));
+      if (!dsChuaHuy.length) {
+        return showNotification("Tất cả các đơn hàng được chọn đều đã ở trạng thái ĐÃ HỦY!", true);
+      }
+
+      showConfirm(
+        "Xác nhận hủy hàng loạt",
+        `Bạn có chắc chắn muốn HỦY <b>${dsChuaHuy.length}</b> đơn hàng đã chọn không?<br><br>` +
+        `Toàn bộ phiếu thu liên quan trong <b>Sổ quỹ</b> và <b>tồn kho / IMEI</b> sẽ được tự động hoàn tác.`,
+        async () => {
+          try {
+            for (const ma of dsChuaHuy) {
+              const d = (rawDonHangList || []).find(x => (x.maDonHang || x.maDon) === ma);
+              if (d) {
+                await thucHienHuyDonHang(d);
+              } else {
+                let canceledList = layDanhSachDonHangDaHuy();
+                if (!canceledList.includes(ma)) {
+                  canceledList.push(ma);
+                  localStorage.setItem('TT_POS_CANCELED_ORDERS', JSON.stringify(canceledList));
+                }
+              }
+            }
+            selectedDonHangIds = [];
+            capNhatDemDonChon();
+            showNotification(`Đã hủy thành công ${dsChuaHuy.length} đơn hàng!`);
+            locDanhSachDonHang();
+            if (typeof loadDuLieuSoQuy === 'function') {
+              const currentQuy = typeof currentLoaiQuy !== 'undefined' ? currentLoaiQuy : (typeof currentQuyDangXem !== 'undefined' ? currentQuyDangXem : 'ALL');
+              loadDuLieuSoQuy(currentQuy);
+            }
+            if (typeof loadDashboard === 'function') loadDashboard();
+          } catch (e) {
+            console.error("Lỗi hủy hàng loạt:", e);
+            showNotification("Có lỗi xảy ra: " + e.message, true);
+          }
+        }
+      );
+    }
+    window.huyCacDonHangChon = huyCacDonHangChon;
+    window.xoaCacDonHangChon = huyCacDonHangChon;
 
     window.rawDonHangList = rawDonHangList;
     window.sapXepCotDonHang = sapXepCotDonHang;
@@ -30073,15 +30427,34 @@ const rawGv = rawGiaVonMap[ma];
         const daTra = Number(d.khachTra ?? d.khach_tra) || 0;
         const conNo = Math.max(0, phaiTra - daTra);
 
+        const isHuy = (typeof kiemTraDonHangDaHuy === 'function' && kiemTraDonHangDaHuy(d.maDonHang || d.maDon)) ||
+                      d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy' ||
+                      d.trangThai === 'DaHuy' || d.trang_thai === 'DaHuy' ||
+                      String(d.trangThai || '').toLowerCase().includes('hủy');
+
         const badge = document.getElementById('ctdh-badge-trangthai');
         if (badge) {
-          if (conNo <= 0) {
+          if (isHuy) {
+            badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200';
+            badge.innerText = 'Đã hủy';
+          } else if (conNo <= 0) {
             badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700';
             badge.innerText = d.trangThai || 'Hoàn thành';
           } else {
-            badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700';
+            badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700';
             badge.innerText = (daTra > 0) ? 'Một phần' : 'Còn nợ';
           }
+        }
+
+        const btnSuaModal = document.getElementById('ctdh-btn-sua-thongtin');
+        if (btnSuaModal) {
+          if (isHuy) btnSuaModal.classList.add('hidden');
+          else btnSuaModal.classList.remove('hidden');
+        }
+        const btnHuyModal = document.getElementById('ctdh-btn-huy-don');
+        if (btnHuyModal) {
+          if (isHuy) btnHuyModal.classList.add('hidden');
+          else btnHuyModal.classList.remove('hidden');
         }
 
         // Điền thông tin giao dịch & người bán / người GD
@@ -30210,6 +30583,14 @@ const rawGv = rawGiaVonMap[ma];
       }
     }
 
+    function huyDonHangTuModal() {
+      if (!window.currentViewingDonHang) return;
+      const ma = window.currentViewingDonHang.maDonHang || window.currentViewingDonHang.maDon;
+      if (!ma) return;
+      huyMotDonHang(ma);
+    }
+    window.huyDonHangTuModal = huyDonHangTuModal;
+
     // ====================================================================
     // SỬA NGÀY GIỜ & NGƯỜI BÁN CỦA HÓA ĐƠN ĐÃ BÁN
     // ====================================================================
@@ -30223,7 +30604,7 @@ const rawGv = rawGiaVonMap[ma];
       const d = (rawDonHangList || []).find(x => (x.maDonHang || x.ma_don_hang) === ma);
       if (!d) return showNotification(`Không tìm thấy hóa đơn [${ma}] trong hệ thống!`, true);
 
-      if (d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy') {
+      if (d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy' || (typeof kiemTraDonHangDaHuy === 'function' && kiemTraDonHangDaHuy(ma))) {
         return showNotification("Hóa đơn này đã bị hủy, không thể chỉnh sửa thông tin!", true);
       }
 

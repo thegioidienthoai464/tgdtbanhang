@@ -1,9 +1,6 @@
-# Ignore everything by default
 **/**
-
-# Whitelist source files
 !appsscript.json
 !Code.js
 !DB.js
-!Index.html
 !index.html
+!Scripts.html
