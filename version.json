@@ -1,20 +1,18 @@
 {
   "version": "1.5.2",
-  "build_number": 54,
+  "build_number": 55,
   "force_update": false,
-  "release_notes": "• Chuẩn hóa và đồng bộ 100% dữ liệu 33.292 khách hàng từ KHACHHANG.xlsx và master KiotViet theo đúng Mã khách hàng.\n• Bổ sung toàn diện các trường thông tin còn thiếu: Chi nhánh tạo, Người tạo, Ngày tạo, Ngày giao dịch cuối, Tổng bán, Tổng bán trừ trả hàng, Điểm hiện tại, Tổng điểm, Nhóm khách hàng, Loại khách, Giới tính, Email, Facebook, Ghi chú...\n• Tự động suy luận chuẩn xác giới tính qua từ điển tên tiếng Việt cho 5.171 khách hàng chưa có giới tính.\n• Chuẩn hóa định dạng ngày sinh, ngày tạo, công nợ và địa chỉ giao hàng chuẩn chỉnh.\n• Đồng bộ xuyên suốt Web, Mobile App và xuất bản file KHACHHANG.xlsx tại thư mục gốc dự án.",
+  "release_notes": "• Tối ưu hóa toàn diện hiệu năng 4 phân hệ lớn: Lịch sử đơn hàng (21k+ đơn), Sổ quỹ (29k+ phiếu), Khách hàng (33k+ KH) và Danh mục sản phẩm (21k+ SP).\n• Khắc phục triệt để tình trạng treo/đơ 10-20s khi bấm Hoàn thành đơn hàng POS: tách in hóa đơn, loại bỏ in trùng 2 lần và không chặn luồng bằng render ẩn.\n• Loại bỏ ghi hàng loạt 33.292 bản ghi tĩnh vào IndexedDB và tự động dọn cache tồn kho phình 1.3MB ở localStorage.\n• Bổ sung bộ nhớ đệm tra cứu O(1), tiền xử lý timestamp, cache kết quả lọc & debounce ô tìm kiếm để chuyển tab và gõ lọc mượt tức thì.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
   "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.2/TT_POS_v1.5.2.apk",
   "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.2/TT_POS_v1.5.2.ipa",
   "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.2",
-  "build": 54,
-  "releaseDate": "2026-11-10",
+  "build": 55,
+  "releaseDate": "2026-11-11",
   "features": [
-    "Chuẩn hóa và đồng bộ 100% dữ liệu 33.292 khách hàng từ KHACHHANG.xlsx và KiotViet",
-    "Bổ sung đầy đủ thông tin: Chi nhánh tạo, Người tạo, Ngày tạo, Ngày GD cuối, Tổng bán, Điểm tích lũy...",
-    "Suy luận tự động giới tính người Việt cho 5.171 khách hàng",
-    "Định dạng ngày tháng dd/mm/yyyy chuẩn xác, điền 0 cho công nợ trống",
-    "Xuất file Excel KHACHHANG.xlsx và Kiotviet/KHACHHANG.xlsx đầy đủ thông tin chi tiết",
-    "Đồng bộ du_lieu_khach_hang.js và danh_sach_khach_hang_full.json cho Web & Mobile"
+    "Khắc phục treo 10-20s khi Hoàn thành đơn hàng POS và bỏ gọi in trùng",
+    "Tăng tốc vượt bậc 4 tab: Lịch sử đơn hàng, Sổ quỹ, Khách hàng, Danh mục sản phẩm",
+    "Loại bỏ ghi 33.292 bản ghi tĩnh vào IndexedDB và dọn cache tồn kho localStorage phình 1.3MB",
+    "Cache bộ nhớ O(1), tiền xử lý ngày giờ và debounce ô lọc tìm kiếm"
   ]
 }
