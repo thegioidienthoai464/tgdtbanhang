@@ -985,10 +985,17 @@
         <!-- CHẾ ĐỘ 1: DANH SÁCH LỊCH SỬ PHIẾU KIỂM KHO -->
         <div id="view-kiemkho-danhsach" class="space-y-3">
           <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap justify-between items-center gap-3">
-            <div class="flex items-center space-x-2">
+            <div class="flex flex-wrap items-center gap-2">
               <button type="button" onclick="moLapPhieuKiemKho()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition">
                 <i class="fa-solid fa-plus"></i><span>Tạo phiếu kiểm kho</span>
               </button>
+              <button type="button" onclick="taiFileMauKiemKho()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-300 transition flex items-center space-x-1.5" title="Tải file Excel mẫu kiểm kho">
+                <i class="fa-solid fa-file-excel text-emerald-600"></i><span>Tải file mẫu</span>
+              </button>
+              <button type="button" onclick="document.getElementById('input-excel-kiemkho').click()" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-semibold border border-indigo-300 transition flex items-center space-x-1.5" title="Nhập danh sách kiểm kho từ file Excel">
+                <i class="fa-solid fa-file-import text-indigo-600"></i><span>Nhập từ Excel</span>
+              </button>
+              <input type="file" id="input-excel-kiemkho" accept=".xlsx,.xls" class="hidden" onchange="nhapExcelKiemKho(event)">
               <button type="button" onclick="loadKiemKho()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition flex items-center space-x-1.5">
                 <i class="fa-solid fa-arrows-rotate text-blue-600"></i><span>Tải lại</span>
               </button>
@@ -1081,6 +1088,14 @@
               <!-- Nút Chọn nhóm hàng phong cách KiotViet -->
               <button type="button" onclick="moModalChonNhomKiemKho()" class="px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition flex-shrink-0">
                 <i class="fa-solid fa-folder-tree"></i><span>Chọn nhóm hàng</span>
+              </button>
+
+              <!-- Nút Tải file mẫu & Nhập Excel kiểm kho -->
+              <button type="button" onclick="taiFileMauKiemKho()" class="px-3 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-300 transition flex items-center space-x-1 flex-shrink-0" title="Tải file Excel mẫu kiểm kho">
+                <i class="fa-solid fa-file-excel text-emerald-600"></i><span>Tải file mẫu</span>
+              </button>
+              <button type="button" onclick="document.getElementById('input-excel-kiemkho').click()" class="px-3 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-semibold border border-indigo-300 transition flex items-center space-x-1 flex-shrink-0" title="Nhập danh sách kiểm kho từ file Excel">
+                <i class="fa-solid fa-file-import text-indigo-600"></i><span>Nhập từ Excel</span>
               </button>
 
               <!-- Nút Kiểm toàn bộ kho -->
@@ -1219,10 +1234,17 @@
         <!-- CHẾ ĐỘ 1: DANH SÁCH LỊCH SỬ PHIẾU XUẤT HỦY -->
         <div id="view-xuathuy-danhsach" class="space-y-3">
           <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap justify-between items-center gap-3">
-            <div class="flex items-center space-x-2">
+            <div class="flex flex-wrap items-center gap-2">
               <button type="button" onclick="moLapPhieuXuatHuy()" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition">
                 <i class="fa-solid fa-plus"></i><span>Tạo phiếu xuất hủy</span>
               </button>
+              <button type="button" onclick="taiFileMauXuatHuy()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-300 transition flex items-center space-x-1.5" title="Tải file Excel mẫu xuất hủy">
+                <i class="fa-solid fa-file-excel text-emerald-600"></i><span>Tải file mẫu</span>
+              </button>
+              <button type="button" onclick="document.getElementById('input-excel-xuathuy').click()" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold border border-rose-300 transition flex items-center space-x-1.5" title="Nhập danh sách xuất hủy từ file Excel">
+                <i class="fa-solid fa-file-import text-rose-600"></i><span>Nhập từ Excel</span>
+              </button>
+              <input type="file" id="input-excel-xuathuy" accept=".xlsx,.xls" class="hidden" onchange="nhapExcelXuatHuy(event)">
               <button type="button" onclick="loadXuatHuy()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition flex items-center space-x-1.5">
                 <i class="fa-solid fa-arrows-rotate text-rose-600"></i><span>Tải lại</span>
               </button>
@@ -1310,6 +1332,14 @@
               <!-- Nút Chọn nhóm hàng -->
               <button type="button" onclick="moModalChonNhomXuatHuy()" class="px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition flex-shrink-0">
                 <i class="fa-solid fa-folder-tree"></i><span>Chọn nhóm hàng</span>
+              </button>
+
+              <!-- Nút Tải file mẫu & Nhập Excel xuất hủy -->
+              <button type="button" onclick="taiFileMauXuatHuy()" class="px-3 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-300 transition flex items-center space-x-1 flex-shrink-0" title="Tải file Excel mẫu xuất hủy">
+                <i class="fa-solid fa-file-excel text-emerald-600"></i><span>Tải file mẫu</span>
+              </button>
+              <button type="button" onclick="document.getElementById('input-excel-xuathuy').click()" class="px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold border border-rose-300 transition flex items-center space-x-1 flex-shrink-0" title="Nhập danh sách xuất hủy từ file Excel">
+                <i class="fa-solid fa-file-import text-rose-600"></i><span>Nhập từ Excel</span>
               </button>
 
               <!-- Nút Xóa trắng danh sách -->
@@ -1421,6 +1451,13 @@
               <button type="button" onclick="moLapPhieuChuyenKho()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition">
                 <i class="fa-solid fa-plus"></i><span>+ Lập phiếu chuyển hàng</span>
               </button>
+              <button type="button" onclick="taiFileMauChuyenKho()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-300 transition flex items-center space-x-1.5" title="Tải file Excel mẫu chuyển kho">
+                <i class="fa-solid fa-file-excel text-emerald-600"></i><span>Tải file mẫu</span>
+              </button>
+              <button type="button" onclick="document.getElementById('input-excel-chuyenkho').click()" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-semibold border border-indigo-300 transition flex items-center space-x-1.5" title="Nhập danh sách chuyển hàng từ file Excel">
+                <i class="fa-solid fa-file-import text-indigo-600"></i><span>Nhập từ Excel</span>
+              </button>
+              <input type="file" id="input-excel-chuyenkho" accept=".xlsx,.xls" class="hidden" onchange="nhapExcelChuyenKho(event)">
               <button type="button" onclick="loadDanhSachChuyenKho()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition flex items-center space-x-1.5">
                 <i class="fa-solid fa-arrows-rotate text-indigo-600"></i><span>Làm mới</span>
               </button>
@@ -1514,7 +1551,15 @@
                 </h3>
               </div>
             </div>
-            <span class="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-xl" id="display-maphieu-chuyenkho">CK...</span>
+            <div class="flex items-center space-x-2">
+              <button type="button" onclick="taiFileMauChuyenKho()" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-300 transition flex items-center space-x-1.5" title="Tải file Excel mẫu chuyển kho">
+                <i class="fa-solid fa-file-excel text-emerald-600"></i><span>Tải file mẫu</span>
+              </button>
+              <button type="button" onclick="document.getElementById('input-excel-chuyenkho').click()" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-semibold border border-indigo-300 transition flex items-center space-x-1.5" title="Nhập danh sách chuyển hàng từ file Excel">
+                <i class="fa-solid fa-file-import text-indigo-600"></i><span>Nhập từ Excel</span>
+              </button>
+              <span class="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-xl" id="display-maphieu-chuyenkho">CK...</span>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -1712,6 +1757,13 @@
               <button type="button" onclick="chuyenViewNhapHang('taodon')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition">
                 <i class="fa-solid fa-plus"></i><span>+ Lập đơn nhập hàng</span>
               </button>
+              <button type="button" onclick="taiFileMauNhapHang()" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-300 transition flex items-center space-x-1.5" title="Tải file Excel mẫu đơn nhập hàng">
+                <i class="fa-solid fa-file-excel text-emerald-600"></i><span>Tải file mẫu</span>
+              </button>
+              <button type="button" onclick="document.getElementById('input-excel-nhaphang').click()" class="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-semibold border border-blue-300 transition flex items-center space-x-1.5" title="Nhập danh sách hàng hóa từ file Excel">
+                <i class="fa-solid fa-file-import text-blue-600"></i><span>Nhập từ Excel</span>
+              </button>
+              <input type="file" id="input-excel-nhaphang" accept=".xlsx,.xls" class="hidden" onchange="nhapExcelNhapHang(event)">
               <button type="button" onclick="xuatExcelDanhSachNhapHang()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition flex items-center space-x-1.5">
                 <i class="fa-solid fa-file-export text-emerald-600"></i><span>Xuất file Excel</span>
               </button>
@@ -1805,14 +1857,20 @@
 
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div class="lg:col-span-2 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-              <div class="relative flex space-x-2">
-                <input type="text" id="nhap-search-item" oninput="xuLyGoiYSanPhamNhap(this.value)" placeholder="Quét mã vạch hoặc nhập mã/tên hàng hóa nhập..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs bg-slate-50 focus:outline-none focus:border-blue-500">
+              <div class="relative flex flex-wrap gap-2">
+                <input type="text" id="nhap-search-item" oninput="xuLyGoiYSanPhamNhap(this.value)" placeholder="Quét mã vạch hoặc nhập mã/tên hàng hóa nhập..." class="flex-1 min-w-[200px] border border-slate-300 rounded-xl px-3 py-2 text-xs bg-slate-50 focus:outline-none focus:border-blue-500">
                 <button type="button" onclick="themHangVaoPhieuNhap()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1 whitespace-nowrap">
                   <i class="fa-solid fa-plus mr-0.5"></i><span>Đưa vào đơn</span>
                 </button>
                 <button type="button" onclick="moModalNhapImeiTuToolbar()" class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1.5 whitespace-nowrap transition" title="Mở bảng dán danh sách serial từ Excel hoặc quét mã">
                   <i class="fa-solid fa-barcode"></i>
                   <span>📋 DS Serial Hàng Loạt</span>
+                </button>
+                <button type="button" onclick="taiFileMauNhapHang()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-300 transition flex items-center space-x-1 whitespace-nowrap" title="Tải file mẫu Excel đơn nhập hàng">
+                  <i class="fa-solid fa-file-excel text-emerald-600"></i><span>Tải file mẫu</span>
+                </button>
+                <button type="button" onclick="document.getElementById('input-excel-nhaphang').click()" class="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-semibold border border-blue-300 transition flex items-center space-x-1 whitespace-nowrap" title="Nhập danh sách hàng hóa từ file Excel">
+                  <i class="fa-solid fa-file-import text-blue-600"></i><span>Nhập từ Excel</span>
                 </button>
                 <div id="nhap-item-dropdown" class="absolute left-0 right-72 top-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-60 overflow-y-auto z-50 hidden divide-y divide-slate-100"></div>
               </div>
@@ -1920,6 +1978,13 @@
               <button type="button" onclick="chuyenViewTraHangNCC('taodon')" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition">
                 <i class="fa-solid fa-arrow-turn-down"></i><span>+ Tạo phiếu trả hàng NCC</span>
               </button>
+              <button type="button" onclick="taiFileMauTraHangNCC()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-300 transition flex items-center space-x-1.5" title="Tải file Excel mẫu phiếu trả hàng NCC">
+                <i class="fa-solid fa-file-excel text-emerald-600"></i><span>Tải file mẫu</span>
+              </button>
+              <button type="button" onclick="document.getElementById('input-excel-tranhap').click()" class="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-xs font-semibold border border-amber-300 transition flex items-center space-x-1.5" title="Nhập danh sách trả hàng NCC từ file Excel">
+                <i class="fa-solid fa-file-import text-amber-600"></i><span>Nhập từ Excel</span>
+              </button>
+              <input type="file" id="input-excel-tranhap" accept=".xlsx,.xls" class="hidden" onchange="nhapExcelTraHangNCC(event)">
               <button type="button" onclick="xuatExcelDanhSachTraHangNCC()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition flex items-center space-x-1.5">
                 <i class="fa-solid fa-file-export text-emerald-600"></i><span>Xuất file Excel</span>
               </button>
@@ -1993,10 +2058,16 @@
 
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div class="lg:col-span-2 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-              <div class="relative flex space-x-2">
-                <input type="text" id="tranhap-search-item" oninput="xuLyGoiYSanPhamTraNCC(this.value)" placeholder="Quét mã vạch hoặc nhập mã/tên hàng hóa cần trả NCC..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs bg-slate-50 focus:outline-none focus:border-amber-500">
-                <button type="button" onclick="themHangVaoPhieuTraNCC()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold shadow-xs">
+              <div class="relative flex flex-wrap gap-2">
+                <input type="text" id="tranhap-search-item" oninput="xuLyGoiYSanPhamTraNCC(this.value)" placeholder="Quét mã vạch hoặc nhập mã/tên hàng hóa cần trả NCC..." class="flex-1 min-w-[200px] border border-slate-300 rounded-xl px-3 py-2 text-xs bg-slate-50 focus:outline-none focus:border-amber-500">
+                <button type="button" onclick="themHangVaoPhieuTraNCC()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold shadow-xs whitespace-nowrap">
                   <i class="fa-solid fa-plus mr-1"></i>Đưa vào đơn trả
+                </button>
+                <button type="button" onclick="taiFileMauTraHangNCC()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-300 transition flex items-center space-x-1 whitespace-nowrap" title="Tải file mẫu Excel trả hàng NCC">
+                  <i class="fa-solid fa-file-excel text-emerald-600"></i><span>Tải file mẫu</span>
+                </button>
+                <button type="button" onclick="document.getElementById('input-excel-tranhap').click()" class="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-xs font-semibold border border-amber-300 transition flex items-center space-x-1 whitespace-nowrap" title="Nhập danh sách trả hàng NCC từ file Excel">
+                  <i class="fa-solid fa-file-import text-amber-600"></i><span>Nhập từ Excel</span>
                 </button>
                 <div id="tranhap-item-dropdown" class="absolute left-0 right-28 top-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-60 overflow-y-auto z-50 hidden divide-y divide-slate-100"></div>
               </div>
@@ -27796,7 +27867,7 @@ function formatVND(amount) {
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
     const APP_CLIENT_VERSION = "1.5.2";
-    const APP_CLIENT_BUILD = 55;
+    const APP_CLIENT_BUILD = 56;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
@@ -43249,6 +43320,688 @@ function loadSoQuy(filter) {
 
     khoiTaoDuLieuMauNeuRong();
   })();
+
+    // ==========================================================================
+    // TÍNH NĂNG XUẤT FILE EXCEL MẪU & NHẬP TỪ EXCEL CHO 5 PHÂN HỆ QUẢN LÝ KHO
+    // 1. Kiểm kho (3.3) | 2. Xuất hủy (3.4) | 3. Chuyển kho (3.5)
+    // 4. Đơn nhập hàng (4.2) | 5. Trả hàng NCC (4.3)
+    // ==========================================================================
+
+    function xuLyDocFileExcel(file, callback) {
+      if (!file) return;
+      if (typeof XLSX === 'undefined') {
+        showNotification("Thư viện xử lý Excel (SheetJS) chưa sẵn sàng, vui lòng thử lại sau giây lát!", true);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          if (!workbook.SheetNames || !workbook.SheetNames.length) {
+            showNotification("File Excel không có trang tính (Sheet) nào!", true);
+            return;
+          }
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
+          callback(rows);
+        } catch (err) {
+          console.error("Lỗi đọc file Excel:", err);
+          showNotification("Không thể đọc tệp Excel: " + (err.message || err), true);
+        }
+      };
+      reader.onerror = function() {
+        showNotification("Có lỗi xảy ra khi đọc tệp tin từ máy tính!", true);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function layGiaTriCot(row, aliases) {
+      if (!row || typeof row !== 'object') return '';
+      for (const alias of aliases) {
+        if (row[alias] !== undefined && row[alias] !== null && String(row[alias]).trim() !== '') {
+          return row[alias];
+        }
+        const aliasNorm = alias.toLowerCase().replace(/[^a-z0-9]/g, '');
+        for (const key of Object.keys(row)) {
+          const keyNorm = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (keyNorm === aliasNorm && row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== '') {
+            return row[key];
+          }
+        }
+      }
+      return '';
+    }
+
+    // --------------------------------------------------------------------------
+    // PHÂN HỆ 1 (3.3): KIỂM KHO (tab-kiemkho)
+    // --------------------------------------------------------------------------
+    function taiFileMauKiemKho() {
+      if (typeof XLSX === 'undefined') return showNotification("Thư viện Excel chưa sẵn sàng!", true);
+      const sampleData = [
+        {
+          "Mã hàng": "SP527547",
+          "Tên hàng (không bắt buộc)": "Chân sạc SS Note 5",
+          "Số lượng thực tế": 10,
+          "Ghi chú": "Kiểm định kỳ đủ hộp"
+        },
+        {
+          "Mã hàng": "SP000001",
+          "Tên hàng (không bắt buộc)": "Màn hình iPhone 11 Promax Oled",
+          "Số lượng thực tế": 5,
+          "Ghi chú": "Khớp số lượng"
+        },
+        {
+          "Mã hàng": "SP000002",
+          "Tên hàng (không bắt buộc)": "Pin iPhone 12 Pro Pisen",
+          "Số lượng thực tế": 12,
+          "Ghi chú": "Thừa 2 cái so với sổ"
+        }
+      ];
+      const ws = XLSX.utils.json_to_sheet(sampleData);
+      ws['!cols'] = [
+        { wch: 16 },
+        { wch: 35 },
+        { wch: 18 },
+        { wch: 28 }
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Mau_KiemKho");
+      XLSX.writeFile(wb, "File_Mau_Kiem_Kho.xlsx");
+      showNotification("Đã tải file Excel mẫu kiểm kho thành công!");
+    }
+
+    function nhapExcelKiemKho(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const viewDs = document.getElementById('view-kiemkho-danhsach');
+      if (viewDs && !viewDs.classList.contains('hidden')) {
+        if (typeof moLapPhieuKiemKho === 'function') moLapPhieuKiemKho();
+      }
+
+      xuLyDocFileExcel(file, function(rows) {
+        if (!rows || !rows.length) {
+          showNotification("File Excel không có dữ liệu!", true);
+          event.target.value = '';
+          return;
+        }
+
+        let countThem = 0;
+        let countCapNhat = 0;
+        let countBoQua = 0;
+
+        rows.forEach(r => {
+          const maRaw = String(layGiaTriCot(r, ["Mã hàng", "MaHang", "Mã sản phẩm", "MaSP", "Mã", "Barcode", "Mã vạch"])).trim().toUpperCase();
+          if (!maRaw) return;
+
+          const slThucTeRaw = layGiaTriCot(r, ["Số lượng thực tế", "SL thực tế", "Thực tế", "SoLuongThucTe", "Số lượng", "SL"]);
+          const slThucTe = Math.max(0, parseInt(slThucTeRaw, 10) || 0);
+          const ghiChu = String(layGiaTriCot(r, ["Ghi chú", "GhiChu", "Lý do", "Ghi chú kiểm kho"])).trim();
+
+          const hang = typeof getHangHoaByMaFast === 'function' ? getHangHoaByMaFast(maRaw) : null;
+          if (!hang) {
+            countBoQua++;
+            return;
+          }
+
+          const cnTarget = (typeof currentChiNhanh !== 'undefined' && currentChiNhanh) ? currentChiNhanh : 'CN01';
+          const tonSoSach = typeof layTonKhoSanPhamTaiChiNhanh === 'function' 
+            ? layTonKhoSanPhamTaiChiNhanh(hang.maHang, cnTarget) 
+            : (Number(hang.tonKho) || 0);
+
+          if (typeof danhSachKiemKhoItems === 'undefined') window.danhSachKiemKhoItems = [];
+          const exist = danhSachKiemKhoItems.find(it => String(it.maHang || '').trim().toUpperCase() === hang.maHang.toUpperCase());
+          if (exist) {
+            exist.slThucTe = slThucTe;
+            exist.chenhLech = slThucTe - (exist.slSoSach !== undefined ? exist.slSoSach : tonSoSach);
+            if (ghiChu) exist.ghiChu = ghiChu;
+            countCapNhat++;
+          } else {
+            danhSachKiemKhoItems.push({
+              maHang: hang.maHang,
+              tenHang: hang.tenHang,
+              maNhom: hang.maNhom || '',
+              donViTinh: hang.donViTinh || 'Cái',
+              slSoSach: tonSoSach,
+              slThucTe: slThucTe,
+              chenhLech: slThucTe - tonSoSach,
+              coQuanLyIMEI: hang.coQuanLyIMEI,
+              ghiChu: ghiChu
+            });
+            countThem++;
+          }
+        });
+
+        if (typeof renderBangKiemKhoItems === 'function') renderBangKiemKhoItems();
+        if (typeof capNhatThongKePhieuKiemKho === 'function') capNhatThongKePhieuKiemKho();
+
+        event.target.value = '';
+        const msg = `Nạp Excel kiểm kho thành công: thêm mới ${countThem}, cập nhật ${countCapNhat} sản phẩm.` + (countBoQua > 0 ? ` (Bỏ qua ${countBoQua} mã không tìm thấy trong hệ thống)` : '');
+        showNotification(msg, countThem === 0 && countCapNhat === 0);
+      });
+    }
+
+    // --------------------------------------------------------------------------
+    // PHÂN HỆ 2 (3.4): XUẤT HỦY HÀNG HỎNG (tab-xuathuy)
+    // --------------------------------------------------------------------------
+    function taiFileMauXuatHuy() {
+      if (typeof XLSX === 'undefined') return showNotification("Thư viện Excel chưa sẵn sàng!", true);
+      const sampleData = [
+        {
+          "Mã hàng": "SP527547",
+          "Tên hàng (không bắt buộc)": "Chân sạc SS Note 5",
+          "Số lượng hủy": 2,
+          "Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)": "",
+          "Lý do xuất hủy": "Hỏng gãy chân tiếp xúc"
+        },
+        {
+          "Mã hàng": "SP000001",
+          "Tên hàng (không bắt buộc)": "Màn hình iPhone 11 Promax Oled",
+          "Số lượng hủy": 1,
+          "Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)": "352849102847591",
+          "Lý do xuất hủy": "Lỗi sọc màn hình khi lưu kho"
+        },
+        {
+          "Mã hàng": "SP000002",
+          "Tên hàng (không bắt buộc)": "Pin iPhone 12 Pro Pisen",
+          "Số lượng hủy": 1,
+          "Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)": "862374029471928",
+          "Lý do xuất hủy": "Phồng rộp pin"
+        }
+      ];
+      const ws = XLSX.utils.json_to_sheet(sampleData);
+      ws['!cols'] = [
+        { wch: 16 },
+        { wch: 35 },
+        { wch: 15 },
+        { wch: 35 },
+        { wch: 28 }
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Mau_XuatHuy");
+      XLSX.writeFile(wb, "File_Mau_Xuat_Huy.xlsx");
+      showNotification("Đã tải file Excel mẫu xuất hủy thành công!");
+    }
+
+    function nhapExcelXuatHuy(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const viewDs = document.getElementById('view-xuathuy-danhsach');
+      if (viewDs && !viewDs.classList.contains('hidden')) {
+        if (typeof moLapPhieuXuatHuy === 'function') moLapPhieuXuatHuy();
+      }
+
+      xuLyDocFileExcel(file, function(rows) {
+        if (!rows || !rows.length) {
+          showNotification("File Excel không có dữ liệu!", true);
+          event.target.value = '';
+          return;
+        }
+
+        let countThem = 0;
+        let countCapNhat = 0;
+        let countBoQua = 0;
+        let firstLyDo = "";
+
+        rows.forEach(r => {
+          const maRaw = String(layGiaTriCot(r, ["Mã hàng", "MaHang", "Mã", "Barcode", "Mã sản phẩm"])).trim().toUpperCase();
+          if (!maRaw) return;
+
+          const slHuyRaw = layGiaTriCot(r, ["Số lượng hủy", "Số lượng", "SL", "SoLuong", "SL Hủy"]);
+          const slHuy = Math.max(1, parseInt(slHuyRaw, 10) || 1);
+
+          const lyDo = String(layGiaTriCot(r, ["Lý do xuất hủy", "Lý do", "LyDo", "Ghi chú"])).trim();
+          if (lyDo && !firstLyDo) firstLyDo = lyDo;
+
+          const imeiRaw = String(layGiaTriCot(r, ["Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)", "Serial/IMEI", "IMEI", "Serial", "Danh sách IMEI"])).trim();
+          const imeis = imeiRaw ? imeiRaw.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean) : [];
+
+          const hang = typeof getHangHoaByMaFast === 'function' ? getHangHoaByMaFast(maRaw) : null;
+          if (!hang) {
+            countBoQua++;
+            return;
+          }
+
+          const cnTarget = (typeof currentChiNhanh !== 'undefined' && currentChiNhanh) ? currentChiNhanh : 'CN01';
+          const tonKho = typeof layTonKhoSanPhamTaiChiNhanh === 'function' 
+            ? layTonKhoSanPhamTaiChiNhanh(hang.maHang, cnTarget) 
+            : (Number(hang.tonKho) || 0);
+
+          const giaVon = Number(hang.giaVon || hang.giaNhap || 0);
+
+          if (typeof danhSachXuatHuyItems === 'undefined') window.danhSachXuatHuyItems = [];
+          const exist = danhSachXuatHuyItems.find(it => String(it.maHang || '').trim().toUpperCase() === hang.maHang.toUpperCase());
+          if (exist) {
+            exist.soLuong = (exist.soLuong || 0) + slHuy;
+            exist.thanhTien = exist.soLuong * (exist.giaVon || giaVon);
+            if (imeis.length) {
+              exist.danhSachIMEI = Array.from(new Set([...(exist.danhSachIMEI || []), ...imeis]));
+            }
+            if (lyDo && !exist.lyDo) exist.lyDo = lyDo;
+            countCapNhat++;
+          } else {
+            danhSachXuatHuyItems.push({
+              maHang: hang.maHang,
+              tenHang: hang.tenHang || '',
+              maNhom: hang.maNhom || '',
+              donViTinh: hang.donViTinh || 'Cái',
+              tonKho: tonKho,
+              giaVon: giaVon,
+              soLuong: slHuy,
+              thanhTien: slHuy * giaVon,
+              coQuanLyIMEI: !!hang.coQuanLyIMEI,
+              danhSachIMEI: imeis,
+              lyDo: lyDo
+            });
+            countThem++;
+          }
+        });
+
+        const lydoInput = document.getElementById('xh-phieu-lydo');
+        if (lydoInput && !lydoInput.value.trim() && firstLyDo) {
+          lydoInput.value = firstLyDo;
+        }
+
+        if (typeof renderBangXuatHuyItems === 'function') renderBangXuatHuyItems();
+        if (typeof capNhatThongKePhieuXuatHuy === 'function') capNhatThongKePhieuXuatHuy();
+
+        event.target.value = '';
+        const msg = `Nạp Excel xuất hủy thành công: thêm mới ${countThem}, cộng dồn ${countCapNhat} sản phẩm.` + (countBoQua > 0 ? ` (Bỏ qua ${countBoQua} mã không tìm thấy trong hệ thống)` : '');
+        showNotification(msg, countThem === 0 && countCapNhat === 0);
+      });
+    }
+
+    // --------------------------------------------------------------------------
+    // PHÂN HỆ 3 (3.5): CHUYỂN HÀNG CHI NHÁNH (tab-chuyenkho)
+    // --------------------------------------------------------------------------
+    function taiFileMauChuyenKho() {
+      if (typeof XLSX === 'undefined') return showNotification("Thư viện Excel chưa sẵn sàng!", true);
+      const sampleData = [
+        {
+          "Mã hàng": "SP527547",
+          "Tên hàng (không bắt buộc)": "Chân sạc SS Note 5",
+          "Số lượng chuyển": 5,
+          "Đơn giá chuyển (tùy chọn)": 15000,
+          "Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)": ""
+        },
+        {
+          "Mã hàng": "SP000001",
+          "Tên hàng (không bắt buộc)": "Màn hình iPhone 11 Promax Oled",
+          "Số lượng chuyển": 2,
+          "Đơn giá chuyển (tùy chọn)": 1200000,
+          "Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)": "352849102847591, 352849102847592"
+        },
+        {
+          "Mã hàng": "SP000002",
+          "Tên hàng (không bắt buộc)": "Pin iPhone 12 Pro Pisen",
+          "Số lượng chuyển": 3,
+          "Đơn giá chuyển (tùy chọn)": 350000,
+          "Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)": "862374029471928, 862374029471929, 862374029471930"
+        }
+      ];
+      const ws = XLSX.utils.json_to_sheet(sampleData);
+      ws['!cols'] = [
+        { wch: 16 },
+        { wch: 35 },
+        { wch: 18 },
+        { wch: 24 },
+        { wch: 35 }
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Mau_ChuyenKho");
+      XLSX.writeFile(wb, "File_Mau_Chuyen_Kho.xlsx");
+      showNotification("Đã tải file Excel mẫu chuyển kho thành công!");
+    }
+
+    function nhapExcelChuyenKho(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const viewDs = document.getElementById('view-chuyenkho-danhsach');
+      if (viewDs && !viewDs.classList.contains('hidden')) {
+        if (typeof moLapPhieuChuyenKho === 'function') moLapPhieuChuyenKho();
+      }
+
+      xuLyDocFileExcel(file, function(rows) {
+        if (!rows || !rows.length) {
+          showNotification("File Excel không có dữ liệu!", true);
+          event.target.value = '';
+          return;
+        }
+
+        const khoXuat = document.getElementById('select-chuyenkho-xuat')?.value || (typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01');
+        const khoNhan = document.getElementById('select-chuyenkho-nhan')?.value || 'CN02';
+
+        let countThem = 0;
+        let countCapNhat = 0;
+        let countBoQua = 0;
+
+        rows.forEach(r => {
+          const maRaw = String(layGiaTriCot(r, ["Mã hàng", "MaHang", "Mã", "Barcode", "Mã sản phẩm"])).trim().toUpperCase();
+          if (!maRaw) return;
+
+          const slChuyenRaw = layGiaTriCot(r, ["Số lượng chuyển", "Số lượng", "SL", "SoLuong", "SL Chuyển"]);
+          const slChuyen = Math.max(1, parseInt(slChuyenRaw, 10) || 1);
+
+          const giaRaw = layGiaTriCot(r, ["Đơn giá chuyển (tùy chọn)", "Đơn giá chuyển", "Đơn giá", "DonGia", "Giá"]);
+          const donGiaNhap = parseFloat(giaRaw);
+
+          const imeiRaw = String(layGiaTriCot(r, ["Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)", "Serial/IMEI", "IMEI", "Serial", "Danh sách IMEI"])).trim();
+          const imeis = imeiRaw ? imeiRaw.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean) : [];
+
+          const hang = typeof getHangHoaByMaFast === 'function' ? getHangHoaByMaFast(maRaw) : null;
+          if (!hang) {
+            countBoQua++;
+            return;
+          }
+
+          const tonXuat = typeof layTonKhoSanPhamTaiChiNhanh === 'function' 
+            ? layTonKhoSanPhamTaiChiNhanh(hang.maHang, khoXuat) 
+            : (Number(hang.tonKho) || 0);
+
+          const tonNhan = typeof layTonKhoSanPhamTaiChiNhanh === 'function' 
+            ? layTonKhoSanPhamTaiChiNhanh(hang.maHang, khoNhan) 
+            : 0;
+
+          const donGia = (!isNaN(donGiaNhap) && donGiaNhap >= 0) ? donGiaNhap : Number(hang.giaVon || 0);
+
+          if (typeof danhSachChuyenKhoCart === 'undefined') window.danhSachChuyenKhoCart = [];
+          const exist = danhSachChuyenKhoCart.find(it => String(it.maHang || '').trim().toUpperCase() === hang.maHang.toUpperCase());
+          if (exist) {
+            exist.soLuong = (Number(exist.soLuong) || 0) + slChuyen;
+            if (!isNaN(donGiaNhap) && donGiaNhap >= 0) {
+              exist.donGia = donGiaNhap;
+              exist.daSuaGia = true;
+            }
+            if (imeis.length) {
+              exist.imeiDaChon = Array.from(new Set([...(exist.imeiDaChon || []), ...imeis]));
+              if (exist.coQuanLyIMEI && exist.imeiDaChon.length > exist.soLuong) {
+                exist.soLuong = exist.imeiDaChon.length;
+              }
+            }
+            countCapNhat++;
+          } else {
+            const finalSL = (imeis.length > 0 && !!hang.coQuanLyIMEI) ? Math.max(slChuyen, imeis.length) : slChuyen;
+            danhSachChuyenKhoCart.push({
+              maHang: hang.maHang,
+              tenHang: hang.tenHang,
+              donViTinh: hang.donViTinh || 'Cái',
+              tonXuat: tonXuat,
+              tonNhan: tonNhan,
+              soLuong: finalSL,
+              donGia: donGia,
+              daSuaGia: (!isNaN(donGiaNhap) && donGiaNhap >= 0 && donGiaNhap !== Number(hang.giaVon || 0)),
+              coQuanLyIMEI: !!hang.coQuanLyIMEI,
+              imeiDaChon: imeis
+            });
+            countThem++;
+          }
+        });
+
+        if (typeof renderChuyenKhoCart === 'function') renderChuyenKhoCart();
+
+        event.target.value = '';
+        const msg = `Nạp Excel chuyển kho thành công: thêm mới ${countThem}, cộng dồn ${countCapNhat} sản phẩm.` + (countBoQua > 0 ? ` (Bỏ qua ${countBoQua} mã không tìm thấy trong hệ thống)` : '');
+        showNotification(msg, countThem === 0 && countCapNhat === 0);
+      });
+    }
+
+    // --------------------------------------------------------------------------
+    // PHÂN HỆ 4 (4.2): ĐƠN NHẬP HÀNG (tab-nhaphang)
+    // --------------------------------------------------------------------------
+    function taiFileMauNhapHang() {
+      if (typeof XLSX === 'undefined') return showNotification("Thư viện Excel chưa sẵn sàng!", true);
+      const sampleData = [
+        {
+          "Mã hàng": "SP527547",
+          "Tên hàng (không bắt buộc)": "Chân sạc SS Note 5",
+          "Số lượng nhập": 10,
+          "Đơn giá nhập": 12000,
+          "Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)": ""
+        },
+        {
+          "Mã hàng": "SP000001",
+          "Tên hàng (không bắt buộc)": "Màn hình iPhone 11 Promax Oled",
+          "Số lượng nhập": 2,
+          "Đơn giá nhập": 1150000,
+          "Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)": "352849102847591, 352849102847592"
+        },
+        {
+          "Mã hàng": "SP000002",
+          "Tên hàng (không bắt buộc)": "Pin iPhone 12 Pro Pisen",
+          "Số lượng nhập": 5,
+          "Đơn giá nhập": 320000,
+          "Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)": "862374029471928, 862374029471929, 862374029471930, 862374029471931, 862374029471932"
+        }
+      ];
+      const ws = XLSX.utils.json_to_sheet(sampleData);
+      ws['!cols'] = [
+        { wch: 16 },
+        { wch: 35 },
+        { wch: 16 },
+        { wch: 18 },
+        { wch: 35 }
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Mau_NhapHang");
+      XLSX.writeFile(wb, "File_Mau_Nhap_Hang.xlsx");
+      showNotification("Đã tải file Excel mẫu nhập hàng thành công!");
+    }
+
+    function nhapExcelNhapHang(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const viewDs = document.getElementById('view-nhaphang-danhsach');
+      if (viewDs && !viewDs.classList.contains('hidden')) {
+        if (typeof chuyenViewNhapHang === 'function') chuyenViewNhapHang('taodon');
+      }
+
+      xuLyDocFileExcel(file, function(rows) {
+        if (!rows || !rows.length) {
+          showNotification("File Excel không có dữ liệu!", true);
+          event.target.value = '';
+          return;
+        }
+
+        let countThem = 0;
+        let countCapNhat = 0;
+        let countBoQua = 0;
+
+        rows.forEach(r => {
+          const maRaw = String(layGiaTriCot(r, ["Mã hàng", "MaHang", "Mã", "Barcode", "Mã sản phẩm"])).trim().toUpperCase();
+          if (!maRaw) return;
+
+          const slNhapRaw = layGiaTriCot(r, ["Số lượng nhập", "Số lượng", "SL", "SoLuong", "SL Nhập"]);
+          const slNhap = Math.max(1, parseInt(slNhapRaw, 10) || 1);
+
+          const giaRaw = layGiaTriCot(r, ["Đơn giá nhập", "Đơn giá", "DonGia", "Giá nhập", "GiaNhap", "Giá"]);
+          const donGiaNhap = parseFloat(giaRaw);
+
+          const imeiRaw = String(layGiaTriCot(r, ["Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)", "Serial/IMEI", "IMEI", "Serial", "Danh sách IMEI"])).trim();
+
+          const hang = typeof getHangHoaByMaFast === 'function' ? getHangHoaByMaFast(maRaw) : null;
+          if (!hang) {
+            countBoQua++;
+            return;
+          }
+
+          const donGia = (!isNaN(donGiaNhap) && donGiaNhap >= 0) ? donGiaNhap : Number(hang.giaVon || hang.giaNhap || 0);
+
+          if (typeof nhapCart === 'undefined') window.nhapCart = [];
+          const exist = nhapCart.find(it => String(it.maHang || '').trim().toUpperCase() === hang.maHang.toUpperCase());
+          if (exist) {
+            exist.soLuong = (Number(exist.soLuong) || 0) + slNhap;
+            if (!isNaN(donGiaNhap) && donGiaNhap >= 0) {
+              exist.donGia = donGiaNhap;
+            }
+            if (imeiRaw) {
+              exist.imeiStr = exist.imeiStr ? (exist.imeiStr + "\n" + imeiRaw) : imeiRaw;
+            }
+            countCapNhat++;
+          } else {
+            nhapCart.push({
+              maHang: hang.maHang,
+              tenHang: hang.tenHang,
+              soLuong: slNhap,
+              donGia: donGia,
+              imeiStr: imeiRaw,
+              coQuanLyIMEI: !!hang.coQuanLyIMEI
+            });
+            countThem++;
+          }
+        });
+
+        if (typeof renderNhapCart === 'function') renderNhapCart();
+
+        event.target.value = '';
+        const msg = `Nạp Excel đơn nhập thành công: thêm mới ${countThem}, cộng dồn ${countCapNhat} sản phẩm.` + (countBoQua > 0 ? ` (Bỏ qua ${countBoQua} mã không tìm thấy trong hệ thống)` : '');
+        showNotification(msg, countThem === 0 && countCapNhat === 0);
+      });
+    }
+
+    // --------------------------------------------------------------------------
+    // PHÂN HỆ 5 (4.3): TRẢ HÀNG NCC (tab-tranhap)
+    // --------------------------------------------------------------------------
+    function taiFileMauTraHangNCC() {
+      if (typeof XLSX === 'undefined') return showNotification("Thư viện Excel chưa sẵn sàng!", true);
+      const sampleData = [
+        {
+          "Mã hàng": "SP527547",
+          "Tên hàng (không bắt buộc)": "Chân sạc SS Note 5",
+          "Số lượng trả": 3,
+          "Đơn giá hoàn trả": 12000,
+          "Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)": "",
+          "Lý do trả": "Hàng lỗi đổi trả NCC"
+        },
+        {
+          "Mã hàng": "SP000001",
+          "Tên hàng (không bắt buộc)": "Màn hình iPhone 11 Promax Oled",
+          "Số lượng trả": 1,
+          "Đơn giá hoàn trả": 1150000,
+          "Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)": "352849102847591",
+          "Lý do trả": "Màn bị ám vàng gửi bảo hành NCC"
+        },
+        {
+          "Mã hàng": "SP000002",
+          "Tên hàng (không bắt buộc)": "Pin iPhone 12 Pro Pisen",
+          "Số lượng trả": 2,
+          "Đơn giá hoàn trả": 320000,
+          "Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)": "862374029471928, 862374029471929",
+          "Lý do trả": "Pin không kích nguồn được"
+        }
+      ];
+      const ws = XLSX.utils.json_to_sheet(sampleData);
+      ws['!cols'] = [
+        { wch: 16 },
+        { wch: 35 },
+        { wch: 16 },
+        { wch: 20 },
+        { wch: 35 },
+        { wch: 30 }
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Mau_TraHangNCC");
+      XLSX.writeFile(wb, "File_Mau_Tra_Hang_NCC.xlsx");
+      showNotification("Đã tải file Excel mẫu trả hàng NCC thành công!");
+    }
+
+    function nhapExcelTraHangNCC(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const viewDs = document.getElementById('view-tranhap-danhsach');
+      if (viewDs && !viewDs.classList.contains('hidden')) {
+        if (typeof chuyenViewTraHangNCC === 'function') chuyenViewTraHangNCC('taodon');
+      }
+
+      xuLyDocFileExcel(file, function(rows) {
+        if (!rows || !rows.length) {
+          showNotification("File Excel không có dữ liệu!", true);
+          event.target.value = '';
+          return;
+        }
+
+        let countThem = 0;
+        let countCapNhat = 0;
+        let countBoQua = 0;
+
+        rows.forEach(r => {
+          const maRaw = String(layGiaTriCot(r, ["Mã hàng", "MaHang", "Mã", "Barcode", "Mã sản phẩm"])).trim().toUpperCase();
+          if (!maRaw) return;
+
+          const slTraRaw = layGiaTriCot(r, ["Số lượng trả", "Số lượng", "SL", "SoLuong", "SL Trả"]);
+          const slTra = Math.max(1, parseInt(slTraRaw, 10) || 1);
+
+          const giaRaw = layGiaTriCot(r, ["Đơn giá hoàn trả", "Đơn giá trả", "Đơn giá", "DonGia", "GiaTra", "Giá"]);
+          const donGiaTra = parseFloat(giaRaw);
+
+          const imeiRaw = String(layGiaTriCot(r, ["Serial/IMEI (nếu có, cách nhau dấu phẩy hoặc xuống dòng)", "Serial/IMEI", "IMEI", "Serial", "Danh sách IMEI"])).trim();
+          const lyDo = String(layGiaTriCot(r, ["Lý do trả", "Lý do", "LyDo", "Ghi chú"])).trim();
+
+          const hang = typeof getHangHoaByMaFast === 'function' ? getHangHoaByMaFast(maRaw) : null;
+          if (!hang) {
+            countBoQua++;
+            return;
+          }
+
+          const cnTarget = (typeof currentChiNhanh !== 'undefined' && currentChiNhanh) ? currentChiNhanh : 'CN01';
+          const tonKho = typeof layTonKhoSanPhamTaiChiNhanh === 'function' 
+            ? layTonKhoSanPhamTaiChiNhanh(hang.maHang, cnTarget) 
+            : (Number(hang.tonKho) || 0);
+
+          const giaTra = (!isNaN(donGiaTra) && donGiaTra >= 0) ? donGiaTra : Number(hang.giaNhap || hang.giaVon || 0);
+
+          if (typeof traNCCCart === 'undefined') window.traNCCCart = [];
+          const exist = traNCCCart.find(it => String(it.maHang || '').trim().toUpperCase() === hang.maHang.toUpperCase());
+          if (exist) {
+            exist.soLuong = (Number(exist.soLuong) || 0) + slTra;
+            if (!isNaN(donGiaTra) && donGiaTra >= 0) {
+              exist.giaTra = donGiaTra;
+            }
+            if (imeiRaw) {
+              exist.imeiStr = exist.imeiStr ? (exist.imeiStr + "\n" + imeiRaw) : imeiRaw;
+            }
+            if (lyDo && !exist.lyDo) exist.lyDo = lyDo;
+            countCapNhat++;
+          } else {
+            traNCCCart.push({
+              maHang: hang.maHang,
+              tenHang: hang.tenHang,
+              soLuong: slTra,
+              giaTra: giaTra,
+              tonKho: tonKho,
+              imeiStr: imeiRaw,
+              lyDo: lyDo
+            });
+            countThem++;
+          }
+        });
+
+        if (typeof renderCartTraNCC === 'function') renderCartTraNCC();
+
+        event.target.value = '';
+        const msg = `Nạp Excel trả hàng NCC thành công: thêm mới ${countThem}, cộng dồn ${countCapNhat} sản phẩm.` + (countBoQua > 0 ? ` (Bỏ qua ${countBoQua} mã không tìm thấy trong hệ thống)` : '');
+        showNotification(msg, countThem === 0 && countCapNhat === 0);
+      });
+    }
+
+    // Đăng ký toàn cục trên window
+    window.xuLyDocFileExcel = xuLyDocFileExcel;
+    window.layGiaTriCot = layGiaTriCot;
+    window.taiFileMauKiemKho = taiFileMauKiemKho;
+    window.nhapExcelKiemKho = nhapExcelKiemKho;
+    window.taiFileMauXuatHuy = taiFileMauXuatHuy;
+    window.nhapExcelXuatHuy = nhapExcelXuatHuy;
+    window.taiFileMauChuyenKho = taiFileMauChuyenKho;
+    window.nhapExcelChuyenKho = nhapExcelChuyenKho;
+    window.taiFileMauNhapHang = taiFileMauNhapHang;
+    window.nhapExcelNhapHang = nhapExcelNhapHang;
+    window.taiFileMauTraHangNCC = taiFileMauTraHangNCC;
+    window.nhapExcelTraHangNCC = nhapExcelTraHangNCC;
+
   </script>
 
 </body>
