@@ -1,18 +1,18 @@
 {
-  "version": "1.6.1",
-  "build_number": 64,
+  "version": "1.6.2",
+  "build_number": 65,
   "force_update": false,
-  "release_notes": "• Thêm cột 'Công nợ' (Công nợ sau GD) tại thẻ 'Lịch sử nhập, trả hàng & Thanh toán' của Nhà cung cấp, theo dõi chính xác số dư nợ lũy kế sau từng đơn nhập, trả hàng và phiếu chi.\n• Tối ưu hóa siêu tốc (< 5ms) thuật toán tính công nợ và nạp danh sách 4.1 Nhà cung cấp bằng bảng băm biến động cục bộ O(1), triệt tiêu hoàn toàn hiện tượng đơ/lag.\n• Triển khai Optimistic UI cho chức năng Lưu phiếu nhập hàng (4.2): lưu và làm mới form lập tức (< 50ms) mà không bị kẹt 'Đang lưu phiếu nhập...'.\n• Hỗ trợ xuất Excel lịch sử giao dịch NCC đầy đủ cột Công nợ sau giao dịch (VNĐ).",
+  "release_notes": "• Khôi phục và đồng bộ toàn diện 419 đơn trả hàng NCC từ KiotViet vào mục 4.3 Trả hàng NCC (chuẩn hóa thuộc tính mã phiếu, ngày trả, nhà cung cấp, chi nhánh, tiền hoàn và danh sách sản phẩm/IMEI).\n• Đồng bộ hoàn hảo Trả hàng NCC với Thẻ 2 Lịch sử NCC (ghi nhận đúng loại giao dịch, giảm công nợ), Sổ quỹ (tự động tạo phiếu thu hoàn tiền khi nhận tiền mặt/ngân hàng) và Báo cáo.\n• Hỗ trợ đầy đủ xem chi tiết đơn trả hàng (kèm Serial/IMEI linh kiện/máy), in phiếu trả hàng NCC và xuất file Excel.\n• Triển khai Optimistic UI cho chức năng Lập phiếu trả hàng NCC: ghi nhận tức thì (< 50ms) và đồng bộ ngầm lên máy chủ.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.1/TT_POS_v1.6.1.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.1/TT_POS_v1.6.1.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.1",
-  "build": 64,
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.2/TT_POS_v1.6.2.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.2/TT_POS_v1.6.2.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.2",
+  "build": 65,
   "releaseDate": "2026-11-13",
   "features": [
-    "Hiển thị cột Công nợ lũy kế sau mỗi giao dịch trong thẻ Lịch sử NCC",
-    "Tối ưu hóa siêu tốc nạp danh sách Nhà cung cấp (4.1) không còn bị đơ hay giật lag",
-    "Lưu phiếu nhập hàng (4.2) hoàn tất tức thì với cơ chế Optimistic UI",
-    "Xuất file Excel lịch sử giao dịch NCC có cột Công nợ sau GD"
+    "Khôi phục và hiển thị đầy đủ 419 đơn trả hàng NCC từ KiotViet trong mục 4.3",
+    "Đồng bộ liên thông dữ liệu Trả hàng NCC với Công nợ nhà cung cấp, Sổ quỹ và Báo cáo",
+    "Xem chi tiết đơn trả hàng đầy đủ thông tin IMEI/Serial, In phiếu và Xuất file Excel",
+    "Lập phiếu trả hàng NCC hoàn tất tức thì với cơ chế Optimistic UI"
   ]
 }
