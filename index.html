@@ -440,7 +440,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.6.2</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.6.3</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -2064,7 +2064,7 @@
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div class="lg:col-span-2 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
               <div class="relative flex flex-wrap gap-2">
-                <input type="text" id="tranhap-search-item" oninput="xuLyGoiYSanPhamTraNCC(this.value)" placeholder="Quét mã vạch hoặc nhập mã/tên hàng hóa cần trả NCC..." class="flex-1 min-w-[200px] border border-slate-300 rounded-xl px-3 py-2 text-xs bg-slate-50 focus:outline-none focus:border-amber-500">
+                <input type="text" id="tranhap-search-item" oninput="xuLyGoiYSanPhamTraNCC(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();themHangVaoPhieuTraNCC();}" placeholder="Quét mã vạch hoặc nhập mã/tên hàng hóa cần trả NCC..." class="flex-1 min-w-[200px] border border-slate-300 rounded-xl px-3 py-2 text-xs bg-slate-50 focus:outline-none focus:border-amber-500">
                 <button type="button" onclick="themHangVaoPhieuTraNCC()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold shadow-xs whitespace-nowrap">
                   <i class="fa-solid fa-plus mr-1"></i>Đưa vào đơn trả
                 </button>
@@ -7537,7 +7537,7 @@ function luuPhieuSoQuyLocal(phieuObj) {
     arr.splice(pos, 0, item);
   };
 
-  // 0. Cập nhật cache tổng hợp _soQuyMasterCache (O(1) khi thêm mới, không rebuild 30k dòng)
+  // 0. Cập nhật cache tổng hợp _soQuyMasterCache (O(1) khi thêm mới, không rebuild 66k dòng)
   if (Array.isArray(window._soQuyMasterCache) && window._soQuyMasterMap instanceof Map) {
     const existingM = window._soQuyMasterMap.get(ma);
     if (existingM) {
@@ -9602,7 +9602,13 @@ function formatVND(amount) {
       resetPosSearchFields();
     }
 
-    let currentChiNhanh = "CN02"; // Mặc định luôn là chi nhánh chính CN01
+    let currentChiNhanh = (function() {
+      try {
+        const saved = localStorage.getItem('tt_pos_current_chinhanh') || sessionStorage.getItem('tt_pos_current_chinhanh');
+        if (saved) return saved;
+      } catch(e) {}
+      return "CN01";
+    })(); // Mặc định luôn là chi nhánh chính CN01
     rawChiNhanhList = rawChiNhanhList || [
       { ma: "CN01", ten: "Trụ sở chính Thanh Miện" },
       { ma: "CN02", ten: "Chi nhánh Thanh Giang" },
@@ -10017,40 +10023,48 @@ function formatVND(amount) {
       // Pre-aggregate nhập/bán 1 lần duy nhất cho các SP không IMEI và không có trong rawTonMap
       let nhapMapByMa = null;
       let banMapByMa = null;
-      if (typeof rawNhapHangList !== 'undefined' && Array.isArray(rawNhapHangList) && rawNhapHangList.length > 0) {
-        for (let i = 0; i < rawNhapHangList.length; i++) {
-          const p = rawNhapHangList[i];
-          if (!p || p.trangThai === 'Đã hủy') continue;
-          if (layMaChiNhanh(p.chiNhanh || 'CN01') !== targetCN) continue;
-          const items = p.chiTietSanPham;
+      const allNhapList = [
+        ...(Array.isArray(rawNhapHangList) ? rawNhapHangList : []),
+        ...((typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG)) ? window.RAW_NHAP_HANG_THANH_GIANG : [])
+      ];
+      const seenNhapPhieu = new Set();
+      for (let i = 0; i < allNhapList.length; i++) {
+        const p = allNhapList[i];
+        if (!p || p.trangThai === 'Đã hủy' || p.trang_thai === 'Đã hủy') continue;
+        const maP = String(p.maPhieu || p.ma_don_hang || '').trim();
+        if (maP && seenNhapPhieu.has(maP)) continue;
+        if (maP) seenNhapPhieu.add(maP);
+
+        if (layMaChiNhanh(p.chiNhanh || p.chi_nhanh || 'CN01') !== targetCN) continue;
+        const items = (Array.isArray(p.chiTietSanPham) && p.chiTietSanPham.length > 0)
+          ? p.chiTietSanPham
+          : (Array.isArray(p.sanPham) ? p.sanPham : (Array.isArray(p.chi_tiet_san_pham) ? p.chi_tiet_san_pham : []));
+        for (let j = 0; j < items.length; j++) {
+          const it = items[j];
+          if (!it) continue;
+          const m = String(it.maHang || it.ma_hang || '').trim().toUpperCase();
+          const sl = Number(it.soLuong ?? it.so_luong ?? 0) || 0;
+          if (!m || !sl) continue;
+          if (rawTonMap[m]) continue;
+          if (!nhapMapByMa) nhapMapByMa = new Map();
+          nhapMapByMa.set(m, (nhapMapByMa.get(m) || 0) + sl);
+        }
+      }
+      if (nhapMapByMa && nhapMapByMa.size > 0 && typeof rawDonHangList !== 'undefined' && Array.isArray(rawDonHangList) && rawDonHangList.length > 0) {
+        banMapByMa = new Map();
+        for (let i = 0; i < rawDonHangList.length; i++) {
+          const dh = rawDonHangList[i];
+          if (!dh || dh.trangThai === 'Đã hủy') continue;
+          if (layMaChiNhanh(dh.chiNhanh || 'CN01') !== targetCN) continue;
+          const items = dh.chiTietSanPham;
           if (!Array.isArray(items)) continue;
           for (let j = 0; j < items.length; j++) {
             const it = items[j];
             if (!it) continue;
-            const m = String(it.maHang || '').trim().toUpperCase();
+            const m = String(it.maHang || it.ma_hang || '').trim().toUpperCase();
+            if (!nhapMapByMa.has(m)) continue;
             const sl = Number(it.soLuong) || 0;
-            if (!m || !sl) continue;
-            if (rawTonMap[m]) continue;
-            if (!nhapMapByMa) nhapMapByMa = new Map();
-            nhapMapByMa.set(m, (nhapMapByMa.get(m) || 0) + sl);
-          }
-        }
-        if (nhapMapByMa && nhapMapByMa.size > 0 && typeof rawDonHangList !== 'undefined' && Array.isArray(rawDonHangList) && rawDonHangList.length > 0) {
-          banMapByMa = new Map();
-          for (let i = 0; i < rawDonHangList.length; i++) {
-            const dh = rawDonHangList[i];
-            if (!dh || dh.trangThai === 'Đã hủy') continue;
-            if (layMaChiNhanh(dh.chiNhanh || 'CN01') !== targetCN) continue;
-            const items = dh.chiTietSanPham;
-            if (!Array.isArray(items)) continue;
-            for (let j = 0; j < items.length; j++) {
-              const it = items[j];
-              if (!it) continue;
-              const m = String(it.maHang || it.ma_hang || '').trim().toUpperCase();
-              if (!nhapMapByMa.has(m)) continue;
-              const sl = Number(it.soLuong) || 0;
-              if (sl) banMapByMa.set(m, (banMapByMa.get(m) || 0) + sl);
-            }
+            if (sl) banMapByMa.set(m, (banMapByMa.get(m) || 0) + sl);
           }
         }
       }
@@ -10129,15 +10143,16 @@ function formatVND(amount) {
             sp.tonKho = tonSoSach;
 
             // 👉 ĐỒNG BỘ TỒN KHO CHO SẢN PHẨM KHÔNG QUẢN LÝ IMEI TỪ CÁC PHIẾU NHẬP/BÁN THỰC TẾ:
+            let tonThucTe = tonSoSach;
             if (nhapMapByMa && nhapMapByMa.has(cleanMa)) {
               const tongNhapSp = nhapMapByMa.get(cleanMa) || 0;
               if (tongNhapSp > 0) {
                 const tongBanSp = banMapByMa ? (banMapByMa.get(cleanMa) || 0) : 0;
-                const tonThucTe = Math.max(0, tongNhapSp - tongBanSp);
-                sp.tonKho = tonThucTe;
+                tonThucTe = Math.max(tonSoSach, Math.max(0, tongNhapSp - tongBanSp));
                 tonMapEntry[targetCN] = tonThucTe;
               }
             }
+            sp.tonKho = tonThucTe;
           }
         }
       }
@@ -12662,6 +12677,8 @@ function formatVND(amount) {
         dongBoImeiTuDonNhapHang();
         rawNhapHangList.sort(sapXepDonNhapGiamDan);
         locDanhSachNhapHangTable();
+        if (typeof capNhatTonKhoTheoChiNhanhHienTai === 'function') capNhatTonKhoTheoChiNhanhHienTai();
+        if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
         console.log(`⚡ Đã nạp ${rawNhapHangList.length} phiếu nhập hàng thực tế của Thanh Giang từ KiotViet!`);
         return;
       }
@@ -12699,6 +12716,8 @@ function formatVND(amount) {
               dongBoImeiTuDonNhapHang();
               rawNhapHangList.sort(sapXepDonNhapGiamDan);
               locDanhSachNhapHangTable();
+              if (typeof capNhatTonKhoTheoChiNhanhHienTai === 'function') capNhatTonKhoTheoChiNhanhHienTai();
+              if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
               return;
             }
             napNhapHangTuSheets();
@@ -28673,8 +28692,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.6.2";
-    const APP_CLIENT_BUILD = 65;
+    const APP_CLIENT_VERSION = "1.6.3";
+    const APP_CLIENT_BUILD = 66;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
@@ -30125,6 +30144,16 @@ function formatVND(amount) {
       // 1. Render Tab Thông tin
       const cleanMa = String(h.maHang || '').trim().toUpperCase();
       const targetCN = layMaChiNhanh(typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01');
+      const tonKhoHienTai = (typeof layTonKhoSanPhamTaiChiNhanh === 'function')
+        ? layTonKhoSanPhamTaiChiNhanh(cleanMa, targetCN)
+        : ((window.tonKhoChiNhanhMap && window.tonKhoChiNhanhMap[cleanMa] && window.tonKhoChiNhanhMap[cleanMa][targetCN] !== undefined)
+          ? Number(window.tonKhoChiNhanhMap[cleanMa][targetCN])
+          : (Number(h.tonKho) || 0));
+      h.tonKho = tonKhoHienTai;
+      const giaVonHienTai = (typeof layGiaVonSanPhamTaiChiNhanh === 'function')
+        ? layGiaVonSanPhamTaiChiNhanh(cleanMa, targetCN)
+        : (Number(h.giaVon) || 0);
+      if (giaVonHienTai > 0) h.giaVon = giaVonHienTai;
       
       // Đồng bộ thông tin IMEI từ bộ nhớ đệm
       const allBranchImeisMap = (window.imeiListByProductAndBranch && window.imeiListByProductAndBranch[cleanMa]) || {};
@@ -30215,7 +30244,7 @@ function formatVND(amount) {
             </div>
             <div class="bg-purple-50/50 p-3.5 rounded-2xl border border-purple-100 space-y-1">
               <span class="text-slate-400 block font-semibold text-[11px]">TỔNG TỒN KHO (${targetCN})</span>
-              <strong class="text-purple-700 font-mono text-base font-extrabold">${(Number(h.tonKho) || 0).toLocaleString()} ${h.donViTinh || 'Cái'}</strong>
+              <strong class="text-purple-700 font-mono text-base font-extrabold">${tonKhoHienTai.toLocaleString()} ${h.donViTinh || 'Cái'}</strong>
               <span class="text-[10px] text-purple-600 block">${isQuanLyIMEI ? 'Quản lý theo Serial/IMEI' : 'Quản lý theo số lượng thông thường'}</span>
             </div>
           </div>
@@ -34231,6 +34260,19 @@ function loadSoQuy(filter) {
       }
       dongBoImeiTuDonNhapHang();
       locDanhSachNhapHangTable();
+      if (typeof capNhatTonKhoTheoChiNhanhHienTai === 'function') capNhatTonKhoTheoChiNhanhHienTai();
+      if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
+
+      // Cập nhật tồn kho Supabase dm_hanghoa
+      if (typeof supabaseClient !== 'undefined' && supabaseClient && Array.isArray(payload.chiTietSanPham)) {
+        payload.chiTietSanPham.forEach(it => {
+          const m = String(it.maHang || '').trim().toUpperCase();
+          if (m) {
+            const tk = (typeof layTonKhoSanPhamTaiChiNhanh === 'function') ? layTonKhoSanPhamTaiChiNhanh(m, layMaChiNhanh(payload.chiNhanh)) : it.soLuong;
+            supabaseClient.from('dm_hanghoa').update({ ton_kho: tk }).eq('ma_hang', m).then(() => {});
+          }
+        });
+      }
 
       // Đồng bộ đơn nhập hàng lên Supabase Cloud (cho Netlify & Standalone)
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
@@ -34611,103 +34653,213 @@ function loadSoQuy(filter) {
       if (box) box.classList.add('hidden');
     }
 
-    function timKiemSanPhamTraNCC(kw) {
-      const box = document.getElementById('tranhap-search-dropdown');
+    function xuLyGoiYSanPhamTraNCC(kw) {
+      const box = document.getElementById('tranhap-item-dropdown');
       if (!box) return;
       const val = (kw || '').toLowerCase().trim();
       if (!val) {
         box.classList.add('hidden');
+        box.innerHTML = '';
         return;
       }
+      const curCN = layMaChiNhanh(typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01');
       const hangArr = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) ? rawHangHoa : [];
-      const filtered = hangArr.filter(h => 
-        (h.maHang || h.ma_hang || '').toLowerCase().includes(val) ||
-        (h.tenHang || h.ten_hang || '').toLowerCase().includes(val) ||
-        (h.barcode || '').toLowerCase().includes(val)
-      );
+      
+      const filtered = hangArr.filter(h => {
+        if (!h) return false;
+        const ma = String(h.maHang || h.ma_hang || '').toLowerCase();
+        const ten = String(h.tenHang || h.ten_hang || '').toLowerCase();
+        const bc = String(h.barcode || '').toLowerCase();
+        if (ma.includes(val) || ten.includes(val) || bc.includes(val)) return true;
+        if (h.coQuanLyIMEI && window.imeiListByProductAndBranch) {
+          const cleanM = String(h.maHang || h.ma_hang || '').trim().toUpperCase();
+          const imeis = (window.imeiListByProductAndBranch[cleanM] && window.imeiListByProductAndBranch[cleanM][curCN]) || [];
+          if (imeis.some(im => String(im).toLowerCase().includes(val))) return true;
+        }
+        return false;
+      });
+
+      if (!filtered.length) {
+        box.innerHTML = '<div class="p-3 text-center text-slate-400 text-xs italic">Không tìm thấy hàng hóa nào phù hợp</div>';
+        box.classList.remove('hidden');
+        return;
+      }
 
       let html = '';
-      filtered.slice(0, 12).forEach(h => {
+      filtered.slice(0, 15).forEach(h => {
         const ma = h.maHang || h.ma_hang || '';
         const ten = h.tenHang || h.ten_hang || '';
-        const giaVon = Number(h.giaVon || h.giaNhap || h.gia_von || 0);
-        html += `<div onclick="themHangVaoCartTraNCC('${ma}')" class="p-2 hover:bg-amber-50 cursor-pointer border-b border-slate-100 text-xs flex justify-between items-center transition">
-          <div>
-            <div class="font-semibold text-slate-800">${ten}</div>
-            <div class="text-[10px] text-slate-400 font-mono">${ma} ${h.coQuanLyIMEI ? '<span class="text-amber-600 font-bold ml-1"><i class="fa-solid fa-barcode"></i> Có IMEI</span>' : ''}</div>
+        const dvt = h.donViTinh || h.dvt || 'Cái';
+        const cleanM = String(ma).trim().toUpperCase();
+        const tonKho = (typeof layTonKhoSanPhamTaiChiNhanh === 'function') ? layTonKhoSanPhamTaiChiNhanh(cleanM, curCN) : (Number(h.tonKho) || 0);
+        const giaVon = (typeof layGiaVonSanPhamTaiChiNhanh === 'function') ? layGiaVonSanPhamTaiChiNhanh(cleanM, curCN) : (Number(h.giaVon || h.giaNhap || h.gia_von || 0));
+
+        html += `
+          <div onclick="themHangVaoPhieuTraNCC('${ma}')" class="p-2.5 hover:bg-amber-50 cursor-pointer border-b border-slate-100 text-xs flex justify-between items-center transition">
+            <div class="space-y-0.5">
+              <div class="font-bold text-slate-800">${ten}</div>
+              <div class="text-[11px] text-slate-400 font-mono flex items-center space-x-2">
+                <span class="text-blue-600 font-semibold">${ma}</span>
+                <span>•</span>
+                <span>ĐVT: ${dvt}</span>
+                <span>•</span>
+                <span class="${tonKho > 0 ? 'text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200' : 'text-slate-400'}">Tồn (${curCN}): ${tonKho.toLocaleString()} ${dvt}</span>
+                ${h.coQuanLyIMEI ? '<span class="text-amber-700 font-bold bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded text-[10px]"><i class="fa-solid fa-barcode mr-0.5"></i>Có IMEI</span>' : ''}
+              </div>
+            </div>
+            <div class="text-right pl-3">
+              <div class="font-bold font-mono text-amber-700 text-xs">${giaVon.toLocaleString('vi-VN')} đ</div>
+              <span class="text-[10px] text-slate-400">Giá xuất trả</span>
+            </div>
           </div>
-          <div class="font-bold font-mono text-amber-700 text-right">${giaVon.toLocaleString('vi-VN')} đ</div>
-        </div>`;
+        `;
       });
       box.innerHTML = html;
       box.classList.remove('hidden');
     }
 
-    function themHangVaoCartTraNCC(maHang) {
-      const box = document.getElementById('tranhap-search-dropdown');
+    function timKiemSanPhamTraNCC(kw) {
+      xuLyGoiYSanPhamTraNCC(kw);
+    }
+
+    function themHangVaoPhieuTraNCC(maHangOptional) {
+      const box = document.getElementById('tranhap-item-dropdown');
       if (box) box.classList.add('hidden');
       const sInp = document.getElementById('tranhap-search-item');
-      if (sInp) sInp.value = '';
+      let targetMa = maHangOptional;
 
-      const hang = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) ? rawHangHoa.find(h => (h.maHang || h.ma_hang) === maHang) : null;
-      if (!hang) return showNotification("Không tìm thấy hàng hóa!", true);
+      if (!targetMa && sInp) {
+        const val = sInp.value.trim().toLowerCase();
+        if (!val) {
+          return showNotification("Vui lòng nhập mã hoặc tên hàng hóa cần trả!", true);
+        }
+        const hangArr = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) ? rawHangHoa : [];
+        let found = hangArr.find(h => String(h.maHang || h.ma_hang || '').trim().toLowerCase() === val || String(h.barcode || '').trim().toLowerCase() === val);
+        if (!found) {
+          const curCN = layMaChiNhanh(typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01');
+          if (window.imeiListByProductAndBranch) {
+            for (let i = 0; i < hangArr.length; i++) {
+              const h = hangArr[i];
+              const cm = String(h.maHang || h.ma_hang || '').trim().toUpperCase();
+              const ims = (window.imeiListByProductAndBranch[cm] && window.imeiListByProductAndBranch[cm][curCN]) || [];
+              if (ims.some(im => String(im).trim().toLowerCase() === val)) {
+                found = h;
+                break;
+              }
+            }
+          }
+        }
+        if (!found) {
+          found = hangArr.find(h => 
+            String(h.maHang || h.ma_hang || '').toLowerCase().includes(val) || 
+            String(h.tenHang || h.ten_hang || '').toLowerCase().includes(val)
+          );
+        }
+        if (found) {
+          targetMa = found.maHang || found.ma_hang;
+        }
+      }
 
-      const ex = traNCCCart.find(i => i.maHang === maHang);
+      if (!targetMa) {
+        return showNotification("Không tìm thấy hàng hóa phù hợp để đưa vào đơn trả!", true);
+      }
+
+      const hang = (typeof rawHangHoa !== 'undefined' && Array.isArray(rawHangHoa)) 
+        ? rawHangHoa.find(h => String(h.maHang || h.ma_hang || '').trim().toUpperCase() === String(targetMa).trim().toUpperCase()) 
+        : null;
+      if (!hang) return showNotification("Không tìm thấy thông tin hàng hóa " + targetMa + "!", true);
+
+      const curCN = layMaChiNhanh(typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01');
+      const cleanMa = String(hang.maHang || hang.ma_hang || '').trim().toUpperCase();
+      const giaVon = (typeof layGiaVonSanPhamTaiChiNhanh === 'function') 
+        ? layGiaVonSanPhamTaiChiNhanh(cleanMa, curCN) 
+        : Number(hang.giaVon || hang.giaNhap || hang.gia_von || 0);
+
+      const isIMEI = Boolean(
+        hang.coQuanLyIMEI === true || 
+        String(hang.coQuanLyIMEI).trim().toLowerCase() === 'true' || 
+        String(hang.coQuanLyIMEI).trim() === '1' ||
+        (window.RAW_IMEI_3_CHI_NHANH && window.RAW_IMEI_3_CHI_NHANH[cleanMa])
+      );
+
+      const ex = traNCCCart.find(i => String(i.maHang).trim().toUpperCase() === cleanMa);
       if (ex) {
         ex.soLuong += 1;
       } else {
         traNCCCart.push({
-          maHang: maHang,
+          maHang: cleanMa,
           tenHang: hang.tenHang || hang.ten_hang || '',
-          dvt: hang.dvt || hang.donViTinh || '',
+          dvt: hang.dvt || hang.donViTinh || 'Cái',
           soLuong: 1,
-          giaTra: Number(hang.giaVon || hang.giaNhap || hang.gia_von || 0),
-          donGia: Number(hang.giaVon || hang.giaNhap || hang.gia_von || 0),
-          coQuanLyIMEI: Boolean(hang.coQuanLyIMEI),
+          giaTra: giaVon,
+          donGia: giaVon,
+          coQuanLyIMEI: isIMEI,
           imeiList: [],
           imeiStr: '',
           imei: ''
         });
       }
+
+      if (sInp) {
+        sInp.value = '';
+        sInp.focus();
+      }
       renderCartTraNCC();
+      showNotification(`Đã thêm [${hang.tenHang || cleanMa}] vào đơn trả NCC!`, false);
+    }
+
+    function themHangVaoCartTraNCC(maHang) {
+      themHangVaoPhieuTraNCC(maHang);
     }
 
     function renderCartTraNCC() {
       const tbody = document.getElementById('tranhap-cart-body');
-      const elTongTien = document.getElementById('tranhap-tongtien-display');
+      const elTongTien = document.getElementById('tranhap-tongtien');
       if (!tbody) return;
 
       if (!traNCCCart.length) {
         tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400 italic">Chưa có sản phẩm nào được chọn để trả hàng NCC</td></tr>';
         if (elTongTien) elTongTien.innerText = '0 đ';
+        tinhTienHonHopTraNCC();
         return;
       }
 
+      const curCN = layMaChiNhanh(typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01');
       let total = 0;
       tbody.innerHTML = traNCCCart.map((item, idx) => {
-        const tt = item.soLuong * item.giaTra;
+        const tt = (Number(item.soLuong) || 1) * (Number(item.giaTra) || 0);
         total += tt;
+        const tonKho = (typeof layTonKhoSanPhamTaiChiNhanh === 'function') ? layTonKhoSanPhamTaiChiNhanh(item.maHang, curCN) : 0;
         return `
           <tr class="hover:bg-slate-50 border-b border-slate-100 text-xs transition">
-            <td class="p-2.5 text-center text-slate-400 font-mono">${idx + 1}</td>
             <td class="p-2.5">
               <div class="font-bold text-slate-800">${item.tenHang}</div>
-              <div class="text-[10px] text-slate-400 font-mono">${item.maHang}</div>
-              ${item.coQuanLyIMEI ? `
-                <div class="mt-1">
-                  <input type="text" value="${item.imeiStr || item.imei || ''}" onchange="capNhatImeiTraNCC(${idx}, this.value)" placeholder="Nhập Serial / IMEI xuất trả..." class="w-full text-[11px] font-mono border border-amber-300 rounded-lg px-2 py-0.5 bg-amber-50/60 focus:bg-white focus:outline-none">
-                </div>
-              ` : ''}
+              <div class="text-[11px] text-slate-400 font-mono mt-0.5 flex items-center space-x-2">
+                <span class="text-blue-600 font-bold">${item.maHang}</span>
+                <span>•</span>
+                <span class="${tonKho > 0 ? 'text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-semibold' : 'text-slate-400'}">Tồn (${curCN}): <b>${tonKho.toLocaleString()}</b> ${item.dvt || 'Cái'}</span>
+              </div>
             </td>
             <td class="p-2.5 text-center">
-              <input type="number" min="1" value="${item.soLuong}" onchange="capNhatSLTraNCC(${idx}, this.value)" class="w-14 text-center border border-slate-300 rounded-lg py-1 font-mono font-bold focus:border-amber-500">
+              <input type="number" min="1" value="${item.soLuong}" onchange="capNhatSLTraNCC(${idx}, this.value)" class="w-16 text-center border border-slate-300 rounded-lg py-1 px-1 font-mono font-bold text-slate-800 focus:border-amber-500 focus:outline-none">
             </td>
             <td class="p-2.5 text-right font-mono">
-              <input type="number" min="0" value="${item.giaTra}" onchange="capNhatGiaTraNCC(${idx}, this.value)" class="w-24 text-right border border-slate-300 rounded-lg py-1 px-1.5 font-mono font-bold focus:border-amber-500">
+              <input type="number" min="0" step="1000" value="${item.giaTra}" onchange="capNhatGiaTraNCC(${idx}, this.value)" class="w-28 text-right border border-slate-300 rounded-lg py-1 px-2 font-mono font-bold text-slate-800 focus:border-amber-500 focus:outline-none">
             </td>
-            <td class="p-2.5 text-right font-mono font-extrabold text-amber-700">${tt.toLocaleString('vi-VN')} đ</td>
+            <td class="p-2.5">
+              ${item.coQuanLyIMEI ? `
+                <input type="text" value="${item.imeiStr || item.imei || ''}" onchange="capNhatImeiTraNCC(${idx}, this.value)" placeholder="Nhập Serial / IMEI xuất trả..." class="w-full text-[11px] font-mono border border-amber-300 rounded-lg px-2 py-1 bg-amber-50/60 focus:bg-white focus:border-amber-500 focus:outline-none">
+              ` : `
+                <span class="text-slate-400 italic text-[11px] block text-center">-</span>
+              `}
+            </td>
+            <td class="p-2.5 text-right font-mono font-extrabold text-amber-700 text-sm whitespace-nowrap">
+              ${tt.toLocaleString('vi-VN')} đ
+            </td>
             <td class="p-2.5 text-center">
-              <button type="button" onclick="xoaKhoiCartTraNCC(${idx})" class="text-rose-500 hover:text-rose-700 transition p-1" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
+              <button type="button" onclick="xoaKhoiCartTraNCC(${idx})" class="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition" title="Xóa mặt hàng này">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
             </td>
           </tr>
         `;
@@ -34742,11 +34894,15 @@ function loadSoQuy(filter) {
     }
 
     function thayDoiHinhThucTraNCC(val) {
-      const boxNH = document.getElementById('tranhap-nganhang-box');
-      const boxHH = document.getElementById('tranhap-honhop-box');
+      const boxNH = document.getElementById('box-tranhap-nganhang');
+      const boxHH = document.getElementById('box-tranhap-honhop');
       if (boxNH) {
-        if (val === 'TAI_KHOAN' || val === 'HON_HOP') boxNH.classList.remove('hidden');
-        else boxNH.classList.add('hidden');
+        if (val === 'TAI_KHOAN' || val === 'HON_HOP') {
+          boxNH.classList.remove('hidden');
+          if (typeof napDanhSachNganHangVaoSelect === 'function') napDanhSachNganHangVaoSelect('tranhap-nganhang-select');
+        } else {
+          boxNH.classList.add('hidden');
+        }
       }
       if (boxHH) {
         if (val === 'HON_HOP') boxHH.classList.remove('hidden');
@@ -34767,6 +34923,7 @@ function loadSoQuy(filter) {
         if (tmInp) tmInp.value = Math.max(0, tongTien - ck);
       }
     }
+
 
     function xacNhanLuuPhieuTraNCC() {
       if (typeof hasPermission === 'function' && !hasPermission('TRA_NHAP_THEM')) {

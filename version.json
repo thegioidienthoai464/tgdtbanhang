@@ -1,18 +1,18 @@
 {
-  "version": "1.6.2",
-  "build_number": 65,
+  "version": "1.6.3",
+  "build_number": 66,
   "force_update": false,
-  "release_notes": "• Khôi phục và đồng bộ toàn diện 419 đơn trả hàng NCC từ KiotViet vào mục 4.3 Trả hàng NCC (chuẩn hóa thuộc tính mã phiếu, ngày trả, nhà cung cấp, chi nhánh, tiền hoàn và danh sách sản phẩm/IMEI).\n• Đồng bộ hoàn hảo Trả hàng NCC với Thẻ 2 Lịch sử NCC (ghi nhận đúng loại giao dịch, giảm công nợ), Sổ quỹ (tự động tạo phiếu thu hoàn tiền khi nhận tiền mặt/ngân hàng) và Báo cáo.\n• Hỗ trợ đầy đủ xem chi tiết đơn trả hàng (kèm Serial/IMEI linh kiện/máy), in phiếu trả hàng NCC và xuất file Excel.\n• Triển khai Optimistic UI cho chức năng Lập phiếu trả hàng NCC: ghi nhận tức thì (< 50ms) và đồng bộ ngầm lên máy chủ.",
+  "release_notes": "• Khắc phục triệt để hiển thị tồn kho hàng hóa sau khi nhập hàng: đảm bảo thẻ chi tiết \"TỔNG TỒN KHO\" và bảng danh mục hàng hóa luôn cập nhật chính xác, đồng bộ 100% với phân bổ tồn kho chi nhánh khi phát sinh đơn nhập hàng.\n• Khắc phục và tối ưu hóa ô tìm kiếm sản phẩm tại màn hình Lập phiếu trả hàng NCC (mục 4.3): tự động gợi ý tức thì theo mã hàng, tên hàng, barcode và Serial/IMEI; hỗ trợ chọn trực tiếp hoặc nhấn Enter / bấm nút \"+ Đưa vào đơn trả\" để thêm vào bảng trả hàng.\n• Chuẩn hóa bảng sản phẩm trả hàng NCC: căn chỉnh chính xác 6 cột theo mẫu (Sản phẩm trả, Số lượng, Đơn giá trả, Serial/IMEI trả, Thành tiền, Xóa) và tự động tính tổng tiền hoàn lại / cấn trừ nợ.\n• Tự động chọn chi nhánh mặc định là CN01 (Trụ sở chính Thanh Miện) hoặc chi nhánh đang làm việc đã lưu, không bị lệch tồn kho khi mở ứng dụng.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.2/TT_POS_v1.6.2.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.2/TT_POS_v1.6.2.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.2",
-  "build": 65,
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.3/TT_POS_v1.6.3.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.3/TT_POS_v1.6.3.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.3",
+  "build": 66,
   "releaseDate": "2026-11-13",
   "features": [
-    "Khôi phục và hiển thị đầy đủ 419 đơn trả hàng NCC từ KiotViet trong mục 4.3",
-    "Đồng bộ liên thông dữ liệu Trả hàng NCC với Công nợ nhà cung cấp, Sổ quỹ và Báo cáo",
-    "Xem chi tiết đơn trả hàng đầy đủ thông tin IMEI/Serial, In phiếu và Xuất file Excel",
-    "Lập phiếu trả hàng NCC hoàn tất tức thì với cơ chế Optimistic UI"
+    "Đồng bộ chuẩn xác tồn kho hàng hóa sau khi nhập hàng giữa bảng danh mục và thẻ chi tiết",
+    "Tìm kiếm & gợi ý sản phẩm mượt mà tại mục 4.3 Trả hàng NCC (theo mã, tên, barcode, IMEI)",
+    "Hỗ trợ phím Enter và nút '+ Đưa vào đơn trả' đưa nhanh sản phẩm vào đơn trả NCC",
+    "Căn chỉnh chuẩn hóa giao diện bảng trả hàng và tính tổng tiền cấn trừ nợ chính xác"
   ]
 }
