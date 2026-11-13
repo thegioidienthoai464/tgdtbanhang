@@ -1,18 +1,18 @@
 {
-  "version": "1.5.7",
-  "build_number": 60,
+  "version": "1.5.8",
+  "build_number": 61,
   "force_update": false,
-  "release_notes": "• Tự động đồng bộ và hiển thị tức thì (0ms) Thẻ 2: 'Lịch sử nhập, trả hàng & Thanh toán' trong hồ sơ Nhà Cung Cấp.\n• Tích hợp toàn diện dữ liệu lịch sử KiotViet và toàn bộ các đơn nhập hàng, phiếu trả hàng, phiếu chi thanh toán mới tạo trong hệ thống.\n• Tính toán chuẩn xác các chỉ số tài chính: Tổng giá trị hàng đã nhập, Tổng tiền đã thanh toán, và Nợ còn lại phải trả cho từng nhà cung cấp.\n• Đồng bộ nền siêu tốc cùng Supabase và Google Sheets, hỗ trợ xuất Excel và bộ lọc chi tiết theo từng loại giao dịch.",
+  "release_notes": "• Tính toán và cập nhật công nợ nhà cung cấp chuẩn xác 100% khi tạo đơn nhập hàng chưa thanh toán hoặc thanh toán một phần.\n• Tự động cộng dồn công nợ đơn nhập mới vào hồ sơ NCC (Thẻ 1: 'Nợ còn lại phải trả' và cột 'Công nợ' ở danh sách 4.1).\n• Khắc phục hoàn toàn lỗi triệt tiêu nợ do trùng lặp phiếu chi sổ quỹ và tiền thanh toán đơn nhập lịch sử KiotViet.\n• Tự động đồng bộ công nợ đa nền tảng (RAM, LocalStorage, Supabase Cloud) và hỗ trợ thanh toán nợ linh hoạt.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.7/TT_POS_v1.5.7.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.7/TT_POS_v1.5.7.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.7",
-  "build": 60,
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.8/TT_POS_v1.5.8.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.8/TT_POS_v1.5.8.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.8",
+  "build": 61,
   "releaseDate": "2026-11-13",
   "features": [
-    "Đồng bộ tức thời lịch sử nhập, trả hàng & thanh toán của Nhà cung cấp từ KiotViet và đơn mới tạo",
-    "Tự động tính toán tổng giá trị nhập, tổng tiền đã thanh toán và công nợ còn lại chuẩn xác",
-    "Hỗ trợ bộ lọc nhanh theo từng loại giao dịch và tìm kiếm theo mã phiếu, ghi chú, số tiền",
-    "Kết nối song song Supabase và RAM giúp nạp dữ liệu siêu tốc < 5ms"
+    "Tự động tính toán và ghi nhận công nợ NCC khi tạo đơn nhập hàng chưa thanh toán hoặc trả một phần",
+    "Cân đối công nợ và tổng tiền đã thanh toán chuẩn xác, loại trừ trùng lặp phiếu chi Sổ Quỹ KiotViet",
+    "Đồng bộ liên thông dữ liệu công nợ NCC giữa RAM, LocalStorage và Supabase Cloud",
+    "Hỗ trợ thanh toán công nợ NCC trực tiếp tại hồ sơ với đồng bộ tự động vào Sổ Quỹ"
   ]
 }
