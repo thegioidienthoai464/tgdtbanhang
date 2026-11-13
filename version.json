@@ -1,18 +1,18 @@
 {
-  "version": "1.5.8",
-  "build_number": 61,
+  "version": "1.5.9",
+  "build_number": 62,
   "force_update": false,
-  "release_notes": "• Tính toán và cập nhật công nợ nhà cung cấp chuẩn xác 100% khi tạo đơn nhập hàng chưa thanh toán hoặc thanh toán một phần.\n• Tự động cộng dồn công nợ đơn nhập mới vào hồ sơ NCC (Thẻ 1: 'Nợ còn lại phải trả' và cột 'Công nợ' ở danh sách 4.1).\n• Khắc phục hoàn toàn lỗi triệt tiêu nợ do trùng lặp phiếu chi sổ quỹ và tiền thanh toán đơn nhập lịch sử KiotViet.\n• Tự động đồng bộ công nợ đa nền tảng (RAM, LocalStorage, Supabase Cloud) và hỗ trợ thanh toán nợ linh hoạt.",
+  "release_notes": "• Tự động sắp xếp thông minh tất cả các đơn hàng nhập (4.2), đơn trả hàng NCC (4.3) và lịch sử giao dịch NCC theo thứ tự mới nhất luôn ở trên đầu.\n• Chuẩn hóa thuật toán bóc tách ngày giờ đa định dạng (KiotViet dd/mm/yyyy và ISO yyyy-mm-dd), đảm bảo phân trang, lọc tìm kiếm hay xuất Excel đều chính xác 100%.\n• Ưu tiên hiển thị tức thời các đơn nhập mới tạo cục bộ và đơn vừa lưu trên cùng của danh sách.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.8/TT_POS_v1.5.8.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.8/TT_POS_v1.5.8.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.8",
-  "build": 61,
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.9/TT_POS_v1.5.9.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.9/TT_POS_v1.5.9.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.9",
+  "build": 62,
   "releaseDate": "2026-11-13",
   "features": [
-    "Tự động tính toán và ghi nhận công nợ NCC khi tạo đơn nhập hàng chưa thanh toán hoặc trả một phần",
-    "Cân đối công nợ và tổng tiền đã thanh toán chuẩn xác, loại trừ trùng lặp phiếu chi Sổ Quỹ KiotViet",
-    "Đồng bộ liên thông dữ liệu công nợ NCC giữa RAM, LocalStorage và Supabase Cloud",
-    "Hỗ trợ thanh toán công nợ NCC trực tiếp tại hồ sơ với đồng bộ tự động vào Sổ Quỹ"
+    "Luôn sắp xếp đơn hàng nhập mới nhất lên đầu danh sách tại mục 4.2",
+    "Sắp xếp đơn trả hàng NCC mới nhất lên đầu danh sách tại mục 4.3",
+    "Đồng bộ thứ tự thời gian giảm dần cho Thẻ 2 Lịch sử giao dịch nhà cung cấp",
+    "Duy trì thứ tự mới nhất khi tìm kiếm, đổi chi nhánh, lọc ngày và xuất file Excel"
   ]
 }
