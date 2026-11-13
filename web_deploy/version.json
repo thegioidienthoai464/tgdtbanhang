@@ -1,20 +1,19 @@
 {
-  "version": "1.5.3",
-  "build_number": 56,
+  "version": "1.5.4",
+  "build_number": 57,
   "force_update": false,
-  "release_notes": "• Bổ sung tính năng 'Tải file mẫu Excel' và 'Nhập từ Excel' cho 5 phân hệ nghiệp vụ kho:\n  1. Mục 3.3: Lịch sử kiểm kho (hỗ trợ kiểm kê số lượng thực tế, tự tính chênh lệch và cập nhật ghi chú).\n  2. Mục 3.4: Xuất hủy hàng hỏng/lỗi (hỗ trợ số lượng hủy, danh sách Serial/IMEI và lý do xuất hủy).\n  3. Mục 3.5: Chuyển hàng chi nhánh (hỗ trợ số lượng chuyển, đơn giá chuyển và danh sách Serial/IMEI).\n  4. Mục 4.2: Đơn nhập hàng NCC (hỗ trợ số lượng nhập, đơn giá nhập và nạp danh sách Serial/IMEI).\n  5. Mục 4.3: Trả hàng nhà cung cấp (hỗ trợ số lượng trả, đơn giá hoàn trả, Serial/IMEI và lý do trả hàng).\n• Tự động nhận diện thông minh các biến thể tiêu đề cột Excel, hoạt động linh hoạt ở cả màn hình danh sách và màn hình lập phiếu.",
+  "release_notes": "• Sửa lỗi lưu nhà cung cấp (NCC): Tự động lưu và cập nhật nhà cung cấp mới tạo khi nhập hàng, lưu đồng bộ vào bộ nhớ và hiển thị đầy đủ trong danh mục 4.1 Nhà cung cấp.\n• Thêm nút '+ Thêm mới NCC' và tùy chọn tạo nhanh NCC ngay trên thanh tìm kiếm nhà cung cấp của đơn nhập hàng.\n• Sửa lỗi sổ quỹ: Tự động tạo và hiển thị phiếu chi thanh toán tiền nhập hàng (PCNH... cho tiền mặt, PCNH_CK... cho tài khoản ngân hàng) trong 5.1 Quỹ tiền mặt, 5.2 Quỹ tài khoản và 5.3 Tổng hợp dòng tiền.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.3/TT_POS_v1.5.3.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.3/TT_POS_v1.5.3.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.3",
-  "build": 56,
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.4/TT_POS_v1.5.4.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.4/TT_POS_v1.5.4.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.4",
+  "build": 57,
   "releaseDate": "2026-11-13",
   "features": [
-    "Tải file mẫu Excel và Nhập Excel cho 3.3 Lịch sử kiểm kho",
-    "Tải file mẫu Excel và Nhập Excel cho 3.4 Xuất hủy hàng hỏng",
-    "Tải file mẫu Excel và Nhập Excel cho 3.5 Chuyển hàng chi nhánh",
-    "Tải file mẫu Excel và Nhập Excel cho 4.2 Đơn nhập hàng",
-    "Tải file mẫu Excel và Nhập Excel cho 4.3 Trả hàng NCC",
-    "Tương thích thông minh tiêu đề cột, hỗ trợ cả hàng hóa quản lý Serial/IMEI"
+    "Tự động lưu và đồng bộ NCC mới tạo khi lập đơn nhập hàng vào 4.1 Quản lý NCC",
+    "Bổ sung nút '+ Thêm mới NCC' và tìm kiếm tạo nhanh NCC trực quan",
+    "Tự động tạo phiếu chi tiền mặt (PCNH) khi đơn nhập thanh toán tiền mặt 100% hoặc trả trước",
+    "Tự động tạo phiếu chi ngân hàng (PCNH_CK) khi thanh toán qua tài khoản ngân hàng",
+    "Tự động cập nhật tức thì vào Sổ quỹ tiền mặt và Sổ quỹ tổng hợp không bị sót dữ liệu"
   ]
 }
