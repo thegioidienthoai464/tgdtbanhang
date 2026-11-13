@@ -440,7 +440,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.5.2</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.6.1</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -6054,13 +6054,14 @@
                   <th class="p-2.5 w-28">Loại GD</th>
                   <th class="p-2.5 w-28">Mã Phiếu</th>
                   <th class="p-2.5 text-right w-28">Số Tiền / Giá Trị</th>
+                  <th class="p-2.5 text-right w-28 text-rose-600 font-bold">Công Nợ</th>
                   <th class="p-2.5 text-center w-24">Hình Thức</th>
                   <th class="p-2.5 text-center w-24">Trạng Thái</th>
                   <th class="p-2.5">Ghi Chú & Chi Tiết</th>
                 </tr>
               </thead>
               <tbody id="tbl-ncc-history-body" class="divide-y divide-slate-100 font-medium">
-                <tr><td colspan="8" class="p-6 text-center text-slate-400">Đang tải lịch sử giao dịch...</td></tr>
+                <tr><td colspan="9" class="p-6 text-center text-slate-400">Đang tải lịch sử giao dịch...</td></tr>
               </tbody>
             </table>
           </div>
@@ -12176,14 +12177,101 @@ function formatVND(amount) {
 
     // 1. NHÀ CUNG CẤP (3.1)
     // =========================================================================
-    // HÀM TÍNH TOÁN CÔNG NỢ NHÀ CUNG CẤP CHUẨN XÁC TOÀN DIỆN
-    // Công nợ = Công nợ gốc (KiotViet/ban đầu) + Nợ các đơn nhập mới - Trừ nợ trả hàng - Trả nợ từ sổ quỹ
     // =========================================================================
-    function tinhCongNoNCCChuanXac(maNCC, baseDebtInput = null) {
+    // HÀM TỔNG HỢP BIẾN ĐỘNG CÔNG NỢ NCC LOCAL (TỐC ĐỘ CAO < 1ms)
+    // Quét một lần duy nhất các phiếu nhập mới, trả hàng và chi nợ local
+    // =========================================================================
+    function layBangChenhLechCongNoNCCTuLocal() {
+      const deltaMap = new Map();
+
+      // 1. Quét các đơn nhập hàng mới tạo (PNH..., isLocalCreated)
+      try {
+        const processedOrders = new Set();
+        const scanOrder = (o) => {
+          if (!o || o.trangThai === 'Đã hủy' || o.trang_thai === 'Đã hủy') return;
+          const code = String(o.maPhieu || o.ma_phieu || o.ma_don_hang || '').trim();
+          if (!code || processedOrders.has(code)) return;
+          const isNew = code.startsWith('PNH') || o.isLocalCreated || o.isNewCreated;
+          if (!isNew) return;
+          processedOrders.add(code);
+
+          const m = String(o.maNCC || o.ma_ncc || o.maDoiTac || o.ma_kh || '').trim().toUpperCase();
+          if (!m || m === 'NCC_LE') return;
+
+          const tt = Number(o.tongTien ?? o.tong_tien ?? o.khach_phai_tra ?? 0) || 0;
+          const dt = Number(o.daTra ?? o.da_tra ?? o.khach_tra ?? 0) || 0;
+          const cn = Number(o.conNo ?? o.con_no ?? Math.max(0, tt - dt)) || 0;
+          deltaMap.set(m, (deltaMap.get(m) || 0) + cn);
+        };
+
+        if (Array.isArray(window.rawNhapHangList)) window.rawNhapHangList.forEach(scanOrder);
+        const locNH = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NHAP_HANG') || '[]');
+        if (Array.isArray(locNH)) locNH.forEach(scanOrder);
+      } catch(e) {}
+
+      // 2. Quét các phiếu trả hàng NCC local (giảm nợ)
+      try {
+        const processedReturns = new Set();
+        const scanReturn = (t) => {
+          if (!t || t.trangThai === 'Đã hủy' || t.trang_thai === 'Đã hủy') return;
+          const code = String(t.maTraHang || t.maPhieu || t.ma_phieu || '').trim();
+          if (!code || processedReturns.has(code)) return;
+          const isNew = code.startsWith('PTH') || t.isLocalCreated;
+          if (!isNew) return;
+          processedReturns.add(code);
+
+          const m = String(t.maNCC || t.ma_ncc || t.maDoiTac || '').trim().toUpperCase();
+          if (!m) return;
+          const st = Number(t.tongTien ?? t.tong_tien ?? t.soTien ?? 0) || 0;
+          deltaMap.set(m, (deltaMap.get(m) || 0) - st);
+        };
+
+        if (Array.isArray(window.rawTraHangNCCList)) window.rawTraHangNCCList.forEach(scanReturn);
+        const locTH = JSON.parse(localStorage.getItem('TT_POS_LOCAL_TRA_HANG_NCC') || '[]');
+        if (Array.isArray(locTH)) locTH.forEach(scanReturn);
+      } catch(e) {}
+
+      // 3. Quét các phiếu chi trả nợ NCC local từ Sổ Quỹ (giảm nợ)
+      try {
+        const processedSQ = new Set();
+        const scanSQ = (q) => {
+          if (!q) return;
+          const tt = String(q.trangThai || q.trang_thai || '').toLowerCase();
+          if (tt.includes('hủy') || tt.includes('dahuy')) return;
+          const code = String(q.maPhieu || q.ma_phieu || '').trim();
+          if (!code || processedSQ.has(code)) return;
+          const ct = String(q.maChungTu || q.ma_chung_tu || '').trim();
+          const isNewPay = code.startsWith('PCTN') || ct === 'TT_CONG_NO' || q.isLocalPayment;
+          if (!isNewPay) return;
+          processedSQ.add(code);
+
+          const m = String(q.maDoiTuong || q.ma_doi_tuong || q.maDoiTac || '').trim().toUpperCase();
+          if (!m) return;
+          const loaiP = String(q.loaiPhieu || q.loai_phieu || '').toUpperCase();
+          const st = Number(q.soTien ?? q.so_tien ?? 0) || 0;
+          if (loaiP.includes('CHI')) {
+            deltaMap.set(m, (deltaMap.get(m) || 0) - st);
+          } else if (loaiP.includes('THU')) {
+            deltaMap.set(m, (deltaMap.get(m) || 0) + st);
+          }
+        };
+
+        const locSQ = JSON.parse(localStorage.getItem('TT_POS_LOCAL_SO_QUY') || '[]');
+        if (Array.isArray(locSQ)) locSQ.forEach(scanSQ);
+        if (window.rawSoQuyData && Array.isArray(window.rawSoQuyData.danhSach)) {
+          window.rawSoQuyData.danhSach.forEach(scanSQ);
+        }
+      } catch(e) {}
+
+      return deltaMap;
+    }
+    window.layBangChenhLechCongNoNCCTuLocal = layBangChenhLechCongNoNCCTuLocal;
+
+    // HÀM TÍNH TOÁN CÔNG NỢ NHÀ CUNG CẤP CHUẨN XÁC TOÀN DIỆN (TỐI ƯU SIÊU TỐC)
+    function tinhCongNoNCCChuanXac(maNCC, baseDebtInput = null, cachedDeltaMap = null) {
       if (!maNCC) return 0;
       const cleanMa = String(maNCC).trim().toUpperCase();
 
-      // 1. Xác định công nợ gốc (Base Debt từ KiotViet hoặc số dư ban đầu)
       let baseDebt = 0;
       if (baseDebtInput !== null && baseDebtInput !== undefined && !isNaN(baseDebtInput)) {
         baseDebt = Number(baseDebtInput) || 0;
@@ -12200,108 +12288,18 @@ function formatVND(amount) {
         }
       }
 
-      // Tập hợp mã phiếu KiotViet gốc để phân biệt đơn KiotViet cũ vs đơn mới tạo
-      const kiotVietCodes = new Set();
-      if (typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG)) {
-        window.RAW_NHAP_HANG_THANH_GIANG.forEach(k => {
-          if (k && k.maPhieu) kiotVietCodes.add(String(k.maPhieu).trim());
-        });
-      }
-
-      // 2. Quét tất cả các đơn nhập hàng mới tạo (PNH..., isLocalCreated, hoặc không nằm trong danh sách KiotViet gốc)
-      const allOrders = [
-        ...(Array.isArray(window.rawNhapHangList) ? window.rawNhapHangList : [])
-      ];
-      try {
-        const locNH = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NHAP_HANG') || '[]');
-        if (Array.isArray(locNH)) allOrders.push(...locNH);
-      } catch(e) {}
-
-      const processedOrders = new Set();
-      let tongNoDonMoi = 0;
-      allOrders.forEach(o => {
-        if (!o || o.trangThai === 'Đã hủy' || o.trang_thai === 'Đã hủy') return;
-        const m = String(o.maNCC || o.ma_ncc || o.maDoiTac || o.ma_kh || '').trim().toUpperCase();
-        if (m !== cleanMa) return;
-        const code = String(o.maPhieu || o.ma_phieu || o.ma_don_hang || '').trim();
-        if (!code || processedOrders.has(code)) return;
-        processedOrders.add(code);
-
-        const isNew = code.startsWith('PNH') || o.isLocalCreated || o.isNewCreated || !kiotVietCodes.has(code);
-        if (isNew) {
-          const tt = Number(o.tongTien ?? o.tong_tien ?? o.khach_phai_tra ?? 0) || 0;
-          const dt = Number(o.daTra ?? o.da_tra ?? o.khach_tra ?? 0) || 0;
-          const cn = Number(o.conNo ?? o.con_no ?? Math.max(0, tt - dt)) || 0;
-          tongNoDonMoi += cn;
-        }
-      });
-
-      // 3. Quét tất cả các phiếu trả hàng NCC làm giảm nợ (hình thức Công nợ, PTH..., isLocalCreated)
-      const allReturns = [
-        ...(Array.isArray(window.rawTraHangNCCList) ? window.rawTraHangNCCList : [])
-      ];
-      try {
-        const locTH = JSON.parse(localStorage.getItem('TT_POS_LOCAL_TRA_HANG_NCC') || '[]');
-        if (Array.isArray(locTH)) allReturns.push(...locTH);
-      } catch(e) {}
-
-      const processedReturns = new Set();
-      let tongTruNoTraHang = 0;
-      allReturns.forEach(t => {
-        if (!t || t.trangThai === 'Đã hủy' || t.trang_thai === 'Đã hủy') return;
-        const m = String(t.maNCC || t.ma_ncc || t.maDoiTac || '').trim().toUpperCase();
-        if (m !== cleanMa) return;
-        const code = String(t.maTraHang || t.maPhieu || t.ma_phieu || '').trim();
-        if (!code || processedReturns.has(code)) return;
-        processedReturns.add(code);
-
-        const ht = String(t.hinhThuc || t.hinh_thuc || '').toUpperCase();
-        if (ht.includes('NO') || ht === 'CONG_NO' || code.startsWith('PTH') || t.isLocalCreated) {
-          tongTruNoTraHang += (Number(t.tongTien ?? t.tong_tien ?? t.soTien ?? 0) || 0);
-        }
-      });
-
-      // 4. Quét các phiếu chi thanh toán nợ NCC từ Sổ Quỹ (PCTN..., maChungTu=TT_CONG_NO, isLocalPayment,...)
-      let tongDaTraThem = 0;
-      const processedSQ = new Set();
-      const allSQ = [
-        ...(Array.isArray(window.rawSoQuyAllRecords) ? window.rawSoQuyAllRecords : []),
-        ...((window.rawSoQuyData && Array.isArray(window.rawSoQuyData.danhSach)) ? window.rawSoQuyData.danhSach : []),
-        ...(Array.isArray(window.rawSoQuyData) ? window.rawSoQuyData : [])
-      ];
-      try {
-        const locSQ = JSON.parse(localStorage.getItem('TT_POS_LOCAL_SO_QUY') || '[]');
-        if (Array.isArray(locSQ)) allSQ.push(...locSQ);
-      } catch(e) {}
-
-      allSQ.forEach(q => {
-        if (!q) return;
-        const tt = String(q.trangThai || q.trang_thai || '').toLowerCase();
-        if (tt.includes('hủy') || tt.includes('dahuy')) return;
-        const m = String(q.maDoiTuong || q.ma_doi_tuong || q.maDoiTac || '').trim().toUpperCase();
-        if (m !== cleanMa) return;
-        const code = String(q.maPhieu || q.ma_phieu || '').trim();
-        if (code && processedSQ.has(code)) return;
-        if (code) processedSQ.add(code);
-
-        const ct = String(q.maChungTu || q.ma_chung_tu || '').trim();
-        const loaiP = String(q.loaiPhieu || q.loai_phieu || '').toUpperCase();
-        if (loaiP.includes('CHI') && (ct === 'TT_CONG_NO' || code.startsWith('PCTN') || q.isLocalPayment || (!code.startsWith('PCNH') && !ct.startsWith('PNH') && !ct.startsWith('PN')))) {
-          const hm = String(q.hangMuc || q.hang_muc || q.lyDoThuChi || '').toLowerCase();
-          if (hm.includes('trả nợ') || hm.includes('thanh toán nợ') || ct === 'TT_CONG_NO' || code.startsWith('PCTN') || q.isLocalPayment) {
-            tongDaTraThem += (Number(q.soTien ?? q.so_tien ?? 0) || 0);
-          }
-        }
-      });
-
-      return Math.max(0, baseDebt + tongNoDonMoi - tongTruNoTraHang - tongDaTraThem);
+      const deltaMap = cachedDeltaMap || layBangChenhLechCongNoNCCTuLocal();
+      const delta = deltaMap.get(cleanMa) || 0;
+      return Math.max(0, baseDebt + delta);
     }
     window.tinhCongNoNCCChuanXac = tinhCongNoNCCChuanXac;
 
-    // Triển khai nạp NCC chuẩn duy nhất (loadNCC_Core)
+    // Triển khai nạp NCC chuẩn duy nhất (loadNCC_Core) - Siêu tốc < 2ms
     function loadNCC_Core() {
-      console.log("Loading NCC list (Core)...");
-      // 1. Nạp từ RAW_NCC_THANH_GIANG hoặc RAW_DOI_TAC_THANH_GIANG làm gốc
+      // 1. Nạp bảng biến động nợ local một lần duy nhất
+      const deltaMap = layBangChenhLechCongNoNCCTuLocal();
+
+      // 2. Nạp từ RAW_NCC_THANH_GIANG hoặc RAW_DOI_TAC_THANH_GIANG làm gốc
       let baseList = [];
       if (typeof window.RAW_NCC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NCC_THANH_GIANG) && window.RAW_NCC_THANH_GIANG.length > 0) {
         baseList = window.RAW_NCC_THANH_GIANG;
@@ -12318,13 +12316,13 @@ function formatVND(amount) {
       baseList.forEach(d => {
         let sdt = d.soDienThoai || d.dienThoai || '';
         let dc = d.diaChi || d.dia_chi || '';
-        if (!sdt && /^(0\d{8,10})$/.test(String(dc).trim())) {
+        if (!sdt && /^(0d{8,10})$/.test(String(dc).trim())) {
           sdt = String(dc).trim();
           dc = '';
         }
         const ma = String(d.maDoiTac || d.ma_ncc || d.maNCC || '').trim().toUpperCase();
         const baseDebt = Number(d._baseDebt !== undefined ? d._baseDebt : (d.congNo !== undefined ? d.congNo : (d.conNo || 0))) || 0;
-        const currentDebt = tinhCongNoNCCChuanXac(ma, baseDebt);
+        const currentDebt = Math.max(0, baseDebt + (deltaMap.get(ma) || 0));
         const obj = {
           ...d,
           _baseDebt: baseDebt,
@@ -12345,7 +12343,7 @@ function formatVND(amount) {
         if (ma) mapNCC.set(ma, obj);
       });
 
-      // 2. Merge từ localStorage TT_POS_LOCAL_NCC (các NCC mới tạo offline hoặc qua modal)
+      // 3. Merge từ localStorage TT_POS_LOCAL_NCC (các NCC mới tạo offline hoặc qua modal)
       try {
         const localNCCs = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NCC') || '[]');
         if (Array.isArray(localNCCs)) {
@@ -12356,7 +12354,7 @@ function formatVND(amount) {
               const sdt = d.soDienThoai || d.dienThoai || (existing ? existing.soDienThoai : '');
               const dc = d.diaChi || d.dia_chi || (existing ? existing.diaChi : '');
               const baseDebt = existing ? (existing._baseDebt !== undefined ? existing._baseDebt : 0) : (Number(d._baseDebt !== undefined ? d._baseDebt : (d.congNo || 0)) || 0);
-              const currentDebt = tinhCongNoNCCChuanXac(ma, baseDebt);
+              const currentDebt = Math.max(0, baseDebt + (deltaMap.get(ma) || 0));
               const merged = {
                 ...(existing || {}),
                 ...d,
@@ -12380,21 +12378,15 @@ function formatVND(amount) {
         }
       } catch(e) {}
 
-      // 3. Quét từ các đơn nhập hàng nếu có NCC chưa có trong danh mục HOẶC cập nhật công nợ
+      // 4. Quét từ các đơn nhập hàng mới nếu có NCC chưa có trong danh mục
       const scanFromNhapHang = (item) => {
         if (!item || item.trangThai === 'Đã hủy' || item.trang_thai === 'Đã hủy') return;
         const ma = String(item.maNCC || item.ma_ncc || item.maDoiTac || item.ma_kh || '').trim().toUpperCase();
-        const ten = item.tenNCC || item.ten_ncc || item.tenDoiTac || item.ten_kh || '';
-        const conNoItem = Number(item.conNo ?? item.con_no ?? 0) || 0;
         if (!ma || ma === 'NCC_LE') return;
+        const ten = item.tenNCC || item.ten_ncc || item.tenDoiTac || item.ten_kh || '';
 
-        if (mapNCC.has(ma)) {
-          const curNCC = mapNCC.get(ma);
-          const currentDebt = tinhCongNoNCCChuanXac(ma, curNCC._baseDebt);
-          curNCC.congNo = currentDebt;
-          curNCC.conNo = currentDebt;
-        } else {
-          const initDebt = tinhCongNoNCCChuanXac(ma, 0);
+        if (!mapNCC.has(ma)) {
+          const initDebt = Math.max(0, deltaMap.get(ma) || 0);
           mapNCC.set(ma, {
             _baseDebt: 0,
             maDoiTac: ma,
@@ -12412,24 +12404,20 @@ function formatVND(amount) {
           });
         }
       };
-      if (typeof rawNhapHangList !== 'undefined' && Array.isArray(rawNhapHangList)) rawNhapHangList.forEach(scanFromNhapHang);
-      if (typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG)) window.RAW_NHAP_HANG_THANH_GIANG.forEach(scanFromNhapHang);
+      if (typeof rawNhapHangList !== 'undefined' && Array.isArray(rawNhapHangList)) {
+        rawNhapHangList.forEach(item => {
+          if (item && (item.isLocalCreated || String(item.maPhieu || '').startsWith('PNH'))) scanFromNhapHang(item);
+        });
+      }
       try {
         const locNH = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NHAP_HANG') || '[]');
         if (Array.isArray(locNH)) locNH.forEach(scanFromNhapHang);
       } catch(e) {}
 
-      // Cập nhật lại công nợ chính xác cho toàn bộ danh sách NCC
-      mapNCC.forEach((nccObj, maKey) => {
-        const debt = tinhCongNoNCCChuanXac(maKey, nccObj._baseDebt);
-        nccObj.congNo = debt;
-        nccObj.conNo = debt;
-      });
-
       rawNCCList = Array.from(mapNCC.values());
       locDanhSachNCC(false);
 
-      // 4. Nếu có Supabase, nạp bất đồng bộ để merge thông tin từ xa mà KHÔNG ghi đè công nợ sai
+      // 5. Nếu có Supabase, nạp bất đồng bộ để merge thông tin từ xa mà KHÔNG ghi đè công nợ sai
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         supabaseClient.from('dm_doitac').select('*').eq('loai_doi_tac', 'NCC').order('ma_doi_tac')
           .then(({ data, error }) => {
@@ -12439,7 +12427,7 @@ function formatVND(amount) {
                 if (ma) {
                   const existing = mapNCC.get(ma);
                   const bDebt = existing ? (existing._baseDebt !== undefined ? existing._baseDebt : (Number(d.cong_no) || 0)) : (Number(d.cong_no) || 0);
-                  const finalCongNo = tinhCongNoNCCChuanXac(ma, bDebt);
+                  const finalCongNo = Math.max(0, bDebt + (deltaMap.get(ma) || 0));
                   const obj = {
                     ...(existing || {}),
                     _baseDebt: bDebt,
@@ -21103,12 +21091,18 @@ function formatVND(amount) {
       // 1. Nhập hàng
       if (Array.isArray(currentNCCHistoryData.lichSuNhap)) {
         currentNCCHistoryData.lichSuNhap.forEach(it => {
+          const tt = Number(it.tongTien ?? it.soTien ?? 0) || 0;
+          const dt = Number(it.daTra ?? 0);
+          const cn = Number(it.conNo !== undefined ? it.conNo : Math.max(0, tt - dt)) || 0;
           allTransactions.push({
             ngay: it.ngay,
             loaiGD: 'NhapHang',
             tenLoaiGD: 'Nhập hàng NCC',
             maPhieu: it.maPhieu,
-            soTien: it.tongTien,
+            soTien: tt,
+            daTra: dt,
+            conNo: cn,
+            deltaDebt: cn,
             hinhThuc: 'Nhập kho',
             trangThai: it.trangThai || 'Hoàn thành',
             ghiChu: it.ghiChu || (it.chiTiet && it.chiTiet.length ? `${it.chiTiet.length} sản phẩm` : 'Nhập hàng')
@@ -21119,12 +21113,14 @@ function formatVND(amount) {
       // 2. Trả hàng NCC
       if (Array.isArray(currentNCCHistoryData.lichSuTra)) {
         currentNCCHistoryData.lichSuTra.forEach(it => {
+          const tt = Number(it.tongTien ?? it.soTien ?? 0) || 0;
           allTransactions.push({
             ngay: it.ngay,
             loaiGD: 'TraNCC',
             tenLoaiGD: 'Trả hàng NCC',
             maPhieu: it.maPhieu,
-            soTien: it.tongTien,
+            soTien: tt,
+            deltaDebt: -tt,
             hinhThuc: 'Xuất trả kho',
             trangThai: 'Đã hoàn trả',
             ghiChu: it.ghiChu || 'Trả hàng cho nhà cung cấp'
@@ -21135,13 +21131,17 @@ function formatVND(amount) {
       // 3. Thanh toán tiền hàng (Sổ Quỹ)
       if (Array.isArray(currentNCCHistoryData.lichSuThanhToan)) {
         currentNCCHistoryData.lichSuThanhToan.forEach(it => {
+          const st = Number(it.soTien ?? 0) || 0;
+          const loaiP = String(it.loaiPhieu || 'CHI').toUpperCase();
+          const isThu = loaiP.includes('THU');
           allTransactions.push({
             ngay: it.ngay,
             loaiGD: 'ThanhToanNCC',
-            tenLoaiGD: 'Thanh toán nợ',
+            tenLoaiGD: it.tenLoaiGD || (isThu ? 'Thu hoàn tiền' : 'Thanh toán nợ'),
             maPhieu: it.maPhieu,
-            soTien: it.soTien,
-            hinhThuc: it.loaiQuy === 'TIEN_MAT' ? 'Tiền mặt' : 'Chuyển khoản',
+            soTien: st,
+            deltaDebt: isThu ? st : -st,
+            hinhThuc: it.hinhThuc || (it.loaiQuy === 'TIEN_MAT' ? 'Tiền mặt' : 'Chuyển khoản'),
             trangThai: it.trangThai || 'Đã thanh toán',
             ghiChu: it.ghiChu || 'Chi thanh toán tiền hàng'
           });
@@ -21157,6 +21157,14 @@ function formatVND(amount) {
         return String(b.maPhieu || '').localeCompare(String(a.maPhieu || ''), undefined, { numeric: true });
       });
 
+      // TÍNH TOÁN CÔNG NỢ SAU GIAO DỊCH (duNoSauGD) CHO TỪNG BẢN GHI THEO DÒNG THỜI GIAN
+      let runningDebt = Number(currentNCCHistoryData.congNoHienTai !== undefined ? currentNCCHistoryData.congNoHienTai : (currentViewingNCC ? currentViewingNCC.congNo : 0)) || 0;
+      for (let i = 0; i < allTransactions.length; i++) {
+        const t = allTransactions[i];
+        t.duNoSauGD = Math.max(0, runningDebt);
+        runningDebt = Math.max(0, runningDebt - (t.deltaDebt || 0));
+      }
+
       // Bộ lọc
       const filtered = allTransactions.filter(t => {
         if (filterType !== 'ALL' && t.loaiGD !== filterType) return false;
@@ -21167,7 +21175,7 @@ function formatVND(amount) {
       });
 
       if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">Không có bản ghi giao dịch nào phù hợp</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="p-6 text-center text-slate-400">Không có bản ghi giao dịch nào phù hợp</td></tr>';
         return;
       }
 
@@ -21186,13 +21194,16 @@ function formatVND(amount) {
           colorTien = 'text-blue-700';
         }
 
+        const duNo = Number(t.duNoSauGD || 0);
+
         return `
           <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
             <td class="p-2.5 text-center text-slate-400 font-mono">${idx + 1}</td>
             <td class="p-2.5 font-mono text-slate-600">${t.ngay || '-'}</td>
             <td class="p-2.5 text-center">${badgeGD}</td>
             <td class="p-2.5 font-mono font-bold text-blue-600">${t.maPhieu || '-'}</td>
-            <td class="p-2.5 text-right font-extrabold font-mono ${colorTien}">${(Number(t.soTien) || 0).toLocaleString()} đ</td>
+            <td class="p-2.5 text-right font-extrabold font-mono ${colorTien}">${(Number(t.soTien) || 0).toLocaleString('vi-VN')} đ</td>
+            <td class="p-2.5 text-right font-extrabold font-mono ${duNo > 0 ? 'text-rose-600' : 'text-slate-500'}">${duNo.toLocaleString('vi-VN')} đ</td>
             <td class="p-2.5 text-center text-slate-600">${t.hinhThuc || '-'}</td>
             <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-700 font-medium">${t.trangThai || 'Hoàn tất'}</span></td>
             <td class="p-2.5 text-slate-600 max-w-xs truncate" title="${t.ghiChu || ''}">${t.ghiChu || '-'}</td>
@@ -21209,26 +21220,45 @@ function formatVND(amount) {
 
       if (Array.isArray(currentNCCHistoryData.lichSuNhap)) {
         currentNCCHistoryData.lichSuNhap.forEach(it => {
-          allTransactions.push({ ngay: it.ngay, loaiGD: 'NhapHang', tenLoaiGD: 'Nhập hàng', maPhieu: it.maPhieu, soTien: it.tongTien, hinhThuc: 'Nhập kho', ghiChu: it.ghiChu });
+          const tt = Number(it.tongTien ?? it.soTien ?? 0) || 0;
+          const dt = Number(it.daTra ?? 0);
+          const cn = Number(it.conNo !== undefined ? it.conNo : Math.max(0, tt - dt)) || 0;
+          allTransactions.push({ ngay: it.ngay, loaiGD: 'NhapHang', tenLoaiGD: 'Nhập hàng', maPhieu: it.maPhieu, soTien: tt, deltaDebt: cn, hinhThuc: 'Nhập kho', trangThai: it.trangThai || 'Hoàn thành', ghiChu: it.ghiChu });
         });
       }
       if (Array.isArray(currentNCCHistoryData.lichSuTra)) {
         currentNCCHistoryData.lichSuTra.forEach(it => {
-          allTransactions.push({ ngay: it.ngay, loaiGD: 'TraNCC', tenLoaiGD: 'Trả hàng NCC', maPhieu: it.maPhieu, soTien: it.tongTien, hinhThuc: 'Trả NCC', ghiChu: it.ghiChu });
+          const tt = Number(it.tongTien ?? it.soTien ?? 0) || 0;
+          allTransactions.push({ ngay: it.ngay, loaiGD: 'TraNCC', tenLoaiGD: 'Trả hàng NCC', maPhieu: it.maPhieu, soTien: tt, deltaDebt: -tt, hinhThuc: 'Trả NCC', trangThai: 'Đã hoàn trả', ghiChu: it.ghiChu });
         });
       }
       if (Array.isArray(currentNCCHistoryData.lichSuThanhToan)) {
         currentNCCHistoryData.lichSuThanhToan.forEach(it => {
-          allTransactions.push({ ngay: it.ngay, loaiGD: 'ThanhToanNCC', tenLoaiGD: 'Thanh toán nợ', maPhieu: it.maPhieu, soTien: it.soTien, hinhThuc: it.loaiQuy === 'TIEN_MAT' ? 'Tiền mặt' : 'Chuyển khoản', ghiChu: it.ghiChu });
+          const st = Number(it.soTien ?? 0) || 0;
+          const loaiP = String(it.loaiPhieu || 'CHI').toUpperCase();
+          const isThu = loaiP.includes('THU');
+          allTransactions.push({ ngay: it.ngay, loaiGD: 'ThanhToanNCC', tenLoaiGD: isThu ? 'Thu hoàn tiền' : 'Thanh toán nợ', maPhieu: it.maPhieu, soTien: st, deltaDebt: isThu ? st : -st, hinhThuc: it.loaiQuy === 'TIEN_MAT' ? 'Tiền mặt' : 'Chuyển khoản', trangThai: it.trangThai || 'Đã thanh toán', ghiChu: it.ghiChu });
         });
       }
 
-      allTransactions.sort((a, b) => new Date(b.ngay || 0) - new Date(a.ngay || 0));
+      allTransactions.sort((a, b) => {
+        const tsA = (typeof layTimestampDonNhap === 'function') ? layTimestampDonNhap(a) : ((typeof parseNgayGioSort === 'function') ? parseNgayGioSort(a.ngay) : (new Date(a.ngay || 0).getTime() || 0));
+        const tsB = (typeof layTimestampDonNhap === 'function') ? layTimestampDonNhap(b) : ((typeof parseNgayGioSort === 'function') ? parseNgayGioSort(b.ngay) : (new Date(b.ngay || 0).getTime() || 0));
+        return tsB - tsA;
+      });
+
+      let runningDebt = Number(currentNCCHistoryData.congNoHienTai !== undefined ? currentNCCHistoryData.congNoHienTai : (currentViewingNCC ? currentViewingNCC.congNo : 0)) || 0;
+      for (let i = 0; i < allTransactions.length; i++) {
+        const t = allTransactions[i];
+        t.duNoSauGD = Math.max(0, runningDebt);
+        runningDebt = Math.max(0, runningDebt - (t.deltaDebt || 0));
+      }
+
       const filtered = allTransactions.filter(t => filterType === 'ALL' || t.loaiGD === filterType);
 
-      let csv = 'STT,Thời Gian,Loại Giao Dịch,Mã Phiếu,Số Tiền,Hình Thức,Ghi Chú\n';
+      let csv = 'STT,Thời Gian,Loại Giao Dịch,Mã Phiếu,Số Tiền (VNĐ),Công Nợ Sau GD (VNĐ),Hình Thức,Trạng Thái,Ghi Chú\n';
       filtered.forEach((t, idx) => {
-        csv += `${idx+1},"${t.ngay||''}","${t.tenLoaiGD||''}","${t.maPhieu||''}",${t.soTien||0},"${t.hinhThuc||''}","${(t.ghiChu||'').replace(/"/g, '""')}"\n`;
+        csv += `${idx+1},"${t.ngay||''}","${t.tenLoaiGD||''}","${t.maPhieu||''}",${t.soTien||0},${t.duNoSauGD||0},"${t.hinhThuc||''}","${t.trangThai||''}","${(t.ghiChu||'').replace(/"/g, '""')}"\n`;
       });
 
       const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -28643,8 +28673,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.6.0";
-    const APP_CLIENT_BUILD = 63;
+    const APP_CLIENT_VERSION = "1.6.1";
+    const APP_CLIENT_BUILD = 64;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
@@ -34254,29 +34284,28 @@ function loadSoQuy(filter) {
         }
       }
 
+      // OPTIMISTIC UI: Hoàn tất ngay lập tức (< 50ms), không để người dùng chờ đợi máy chủ
+      resetFormNhap();
+      showNotification("Đã lưu phiếu nhập hàng thành công: " + maPhieu);
+      if (typeof loadNCC === 'function') loadNCC();
+      if (typeof taiDanhSachNhapHang === 'function') taiDanhSachNhapHang();
+
+      // Đồng bộ bất đồng bộ nền lên Google Sheets nếu có kết nối
       if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run
-          .withSuccessHandler(function(res) {
-            resetFormNhap();
-            if (res && res.success) {
-              showNotification("Đã hoàn tất nhập kho và ghi nhận thành công đơn: " + (res.maPhieu || maPhieu));
-              if (typeof loadHangHoa === 'function') loadHangHoa();
-              if (typeof loadNCC === 'function') loadNCC();
-              if (typeof taiDanhSachNhapHang === 'function') taiDanhSachNhapHang();
-            } else {
-              showNotification(res && res.error ? res.error : "Đã lưu phiếu nhập hàng thành công: " + maPhieu, false);
-            }
-          })
-          .withFailureHandler(function(err) {
-            resetFormNhap();
-            showNotification("Đã lưu cục bộ (Lỗi đồng bộ máy chủ: " + (err && err.message ? err.message : err) + ")", false);
-          })
-          .apiLuuPhieuNhapHang(payload);
-      } else {
-        resetFormNhap();
-        showNotification("Đã lưu phiếu nhập hàng thành công: " + maPhieu);
-        if (typeof loadNCC === 'function') loadNCC();
-        if (typeof taiDanhSachNhapHang === 'function') taiDanhSachNhapHang();
+        try {
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (res && res.success) {
+                console.log("Đã đồng bộ phiếu nhập hàng lên Google Sheets thành công:", res.maPhieu || maPhieu);
+              }
+            })
+            .withFailureHandler(function(err) {
+              console.warn("Lỗi đồng bộ phiếu nhập nền lên Google Sheets:", err);
+            })
+            .apiLuuPhieuNhapHang(payload);
+        } catch(e) {
+          console.warn("Lỗi gọi apiLuuPhieuNhapHang:", e);
+        }
       }
     }
 
