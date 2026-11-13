@@ -20652,34 +20652,308 @@ function formatVND(amount) {
       }
     }
 
-    function taiLichSuGiaoDichNCC(maNCC) {
+    function tongHopLichSuNCC(maNCC) {
       const tbody = document.getElementById('tbl-ncc-history-body');
-      if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải dữ liệu lịch sử nhập, trả & thanh toán...</td></tr>';
+      const targetNCC = (Array.isArray(rawNCCList) ? rawNCCList.find(n => (n.maDoiTac || n.maNCC) === maNCC) : null) || 
+                        (currentViewingNCC && (currentViewingNCC.maDoiTac === maNCC || currentViewingNCC.maNCC === maNCC) ? currentViewingNCC : { maDoiTac: maNCC, tenDoiTac: maNCC, congNo: 0 });
+      const cleanMa = String(targetNCC.maDoiTac || targetNCC.maNCC || maNCC || '').trim().toUpperCase();
+      const cleanTen = String(targetNCC.tenDoiTac || targetNCC.tenNCC || '').trim().toLowerCase();
+      const cleanSdt = String(targetNCC.soDienThoai || targetNCC.dienThoai || '').replace(/[^\d]/g, '');
+      const baseName = cleanTen.replace(/\s*-\s*(all|hcm|hn|hkd.*)$/i, '').trim();
 
-      document.getElementById('ncc-metric-tongnhap').innerText = 'Đang tính...';
-      document.getElementById('ncc-metric-datt').innerText = 'Đang tính...';
+      const parseTs = (s) => (typeof parseNgayGioSort === 'function') ? parseNgayGioSort(s) : (new Date(s || 0).getTime() || 0);
 
-      google.script.run.withSuccessHandler(function(res) {
-        if (res && res.success) {
-          currentNCCHistoryData = res;
-          document.getElementById('ncc-metric-tongnhap').innerText = (res.tongGiaTriNhap || 0).toLocaleString() + ' đ';
-          document.getElementById('ncc-metric-datt').innerText = (res.tongDaThanhToan || 0).toLocaleString() + ' đ';
-          
-          if (res.congNoHienTai !== undefined) {
-            document.getElementById('ncc-metric-conno').innerText = (Number(res.congNoHienTai) || 0).toLocaleString() + ' đ';
-            if (currentViewingNCC) currentViewingNCC.congNo = res.congNoHienTai;
-          }
-          locLichSuGiaoDichNCCTable();
-        } else {
-          if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-rose-500">${res ? res.error : 'Không thể tải lịch sử'}</td></tr>`;
-          document.getElementById('ncc-metric-tongnhap').innerText = '0 đ';
-          document.getElementById('ncc-metric-datt').innerText = '0 đ';
+      const isMatchItem = (d) => {
+        if (!d) return false;
+        const m = String(d.maNCC || d.ma_ncc || d.maDoiTac || d.ma_doi_tac || '').trim().toUpperCase();
+        if (cleanMa && m === cleanMa) return true;
+        const t = String(d.tenNCC || d.ten_ncc || d.tenDoiTac || d.ten_doi_tac || '').trim().toLowerCase();
+        if (cleanTen && (t === cleanTen || (cleanTen.includes('- all') && baseName.length >= 3 && t.includes(baseName)))) return true;
+        const s = String(d.dienThoai || d.soDienThoai || d.sdt || '').replace(/[^\d]/g, '');
+        if (cleanSdt && s && cleanSdt.length >= 8 && (s === cleanSdt || s.includes(cleanSdt) || cleanSdt.includes(s))) return true;
+        return false;
+      };
+
+      // 1. Tổng hợp Nhập hàng từ tất cả các nguồn (RAM, KiotViet, LocalStorage)
+      const allNhap = [
+        ...(Array.isArray(window.rawNhapHangList) ? window.rawNhapHangList : []),
+        ...((typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG)) ? window.RAW_NHAP_HANG_THANH_GIANG : [])
+      ];
+      try {
+        const loc = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NHAP_HANG') || '[]');
+        if (Array.isArray(loc)) allNhap.push(...loc);
+      } catch(e) {}
+
+      const nhapMap = new Map();
+      allNhap.forEach(d => {
+        if (!d || d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy') return;
+        const code = String(d.maPhieu || d.ma_phieu || d.ma_don_hang || '').trim();
+        if (code && !nhapMap.has(code)) nhapMap.set(code, d);
+      });
+
+      const matchedNhap = [];
+      let tongGiaTriNhap = 0;
+      nhapMap.forEach(d => {
+        if (isMatchItem(d)) {
+          const tt = Number(d.tongTien ?? d.tong_tien ?? d.tongGiaTri ?? 0) || 0;
+          const dt = Number(d.daTra ?? d.da_tra ?? 0) || 0;
+          const cn = Number(d.conNo ?? d.con_no ?? (tt - dt)) || 0;
+          tongGiaTriNhap += tt;
+          matchedNhap.push({
+            ngay: d.ngayNhap || d.ngay_nhap || d.ngayTao || d.thoiGian || d.ngay_ban || '',
+            maPhieu: d.maPhieu || d.ma_phieu || d.ma_don_hang || '',
+            loaiGD: 'NhapHang',
+            tenLoaiGD: 'Nhập hàng NCC',
+            tongTien: tt,
+            daTra: dt,
+            conNo: cn,
+            hinhThuc: d.hinhThuc || d.hinh_thuc || 'Nhập kho',
+            trangThai: d.trangThai || d.trang_thai || 'Hoàn thành',
+            ghiChu: d.ghiChu || d.ghi_chu || (d.chiTietSanPham && d.chiTietSanPham.length ? `${d.chiTietSanPham.length} sản phẩm` : (d.sanPham && d.sanPham.length ? `${d.sanPham.length} sản phẩm` : 'Nhập hàng')),
+            chiTiet: d.chiTietSanPham || d.sanPham || []
+          });
         }
-      }).withFailureHandler(function(err) {
-        if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-rose-500">Lỗi kết nối: ${err.message}</td></tr>`;
-        document.getElementById('ncc-metric-tongnhap').innerText = '0 đ';
-        document.getElementById('ncc-metric-datt').innerText = '0 đ';
-      }).apiGetLichSuGiaoDichNCC(maNCC);
+      });
+
+      // 2. Tổng hợp Trả hàng NCC
+      const allTra = [
+        ...(Array.isArray(window.rawTraHangNCCList) ? window.rawTraHangNCCList : []),
+        ...((typeof window.RAW_TRA_HANG_NCC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_TRA_HANG_NCC_THANH_GIANG)) ? window.RAW_TRA_HANG_NCC_THANH_GIANG : [])
+      ];
+      try {
+        const loc = JSON.parse(localStorage.getItem('TT_POS_LOCAL_TRA_HANG_NCC') || '[]');
+        if (Array.isArray(loc)) allTra.push(...loc);
+      } catch(e) {}
+
+      const traMap = new Map();
+      allTra.forEach(d => {
+        if (!d || d.trangThai === 'Đã hủy' || d.trang_thai === 'Đã hủy') return;
+        const code = String(d.maTraHang || d.maPhieu || d.ma_phieu || '').trim();
+        if (code && !traMap.has(code)) traMap.set(code, d);
+      });
+
+      const matchedTra = [];
+      let tongGiaTriTra = 0;
+      traMap.forEach(d => {
+        if (isMatchItem(d)) {
+          const tt = Number(d.tongTien ?? d.soTien ?? d.so_tien ?? 0) || 0;
+          tongGiaTriTra += tt;
+          matchedTra.push({
+            ngay: d.ngayTra || d.thoiGian || d.ngayTao || d.ngay_tra || '',
+            maPhieu: d.maTraHang || d.maPhieu || d.ma_phieu || '',
+            loaiGD: 'TraNCC',
+            tenLoaiGD: 'Trả hàng NCC',
+            tongTien: tt,
+            hinhThuc: 'Xuất trả kho',
+            trangThai: d.trangThai || d.trang_thai || 'Đã hoàn trả',
+            ghiChu: d.ghiChu || d.ghi_chu || 'Trả hàng cho nhà cung cấp',
+            chiTiet: d.chiTietSanPham || d.sanPham || []
+          });
+        }
+      });
+
+      // 3. Tổng hợp Thanh toán (Sổ Quỹ)
+      const nhapOrderCodes = new Set(matchedNhap.map(d => d.maPhieu));
+      const traOrderCodes = new Set(matchedTra.map(d => d.maPhieu));
+
+      const allSQ = [
+        ...(Array.isArray(window.rawSoQuyAllRecords) ? window.rawSoQuyAllRecords : []),
+        ...((window.rawSoQuyData && Array.isArray(window.rawSoQuyData.danhSach)) ? window.rawSoQuyData.danhSach : []),
+        ...((typeof window.RAW_SO_QUY_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_SO_QUY_THANH_GIANG)) ? window.RAW_SO_QUY_THANH_GIANG : [])
+      ];
+      try {
+        const loc = JSON.parse(localStorage.getItem('TT_POS_LOCAL_SO_QUY') || '[]');
+        if (Array.isArray(loc)) allSQ.push(...loc);
+      } catch(e) {}
+
+      const sqMap = new Map();
+      const canceledSQSet = (typeof layDanhSachDonHangDaHuySet === 'function') ? layDanhSachDonHangDaHuySet() : new Set();
+      allSQ.forEach(q => {
+        if (!q) return;
+        const tt = String(q.trangThai || q.trang_thai || '').toLowerCase();
+        if (tt.includes('hủy') || tt.includes('dahuy')) return;
+        const code = String(q.maPhieu || q.ma_phieu || '').trim();
+        if (code && canceledSQSet.has(code)) return;
+        if (code && !sqMap.has(code)) sqMap.set(code, q);
+      });
+
+      const matchedSQ = [];
+      const sqChungTuSet = new Set();
+      let tongDaThanhToan = 0;
+
+      sqMap.forEach(q => {
+        const m = String(q.maDoiTuong || q.ma_doi_tuong || q.maDoiTac || q.ma_doi_tac || '').trim().toUpperCase();
+        const ct = String(q.maChungTu || q.ma_chung_tu || '').trim();
+        const t = String(q.doiTuong || q.doi_tuong || q.nguoiNopNhan || q.tenDoiTac || '').trim().toLowerCase();
+        const note = String(q.ghiChu || q.ghi_chu || q.lyDoThuChi || '').toLowerCase();
+        const hangMuc = String(q.hangMuc || q.hang_muc || '').toLowerCase();
+
+        let isMatch = false;
+        if (cleanMa && (m === cleanMa || note.includes(cleanMa.toLowerCase()))) isMatch = true;
+        else if (ct && (nhapOrderCodes.has(ct) || traOrderCodes.has(ct))) isMatch = true;
+        else if (cleanTen && (t === cleanTen || (cleanTen.includes('- all') && baseName.length >= 3 && t.includes(baseName)))) {
+          if (hangMuc.includes('ncc') || hangMuc.includes('tiền trả') || note.includes('ncc') || note.includes('trả') || (baseName.length >= 3 && note.includes(baseName))) {
+            isMatch = true;
+          }
+        }
+
+        if (isMatch) {
+          const loaiP = String(q.loaiPhieu || q.loai_phieu || 'CHI').toUpperCase();
+          const st = Number(q.soTien ?? q.so_tien ?? 0) || 0;
+          if (loaiP === 'CHI' || loaiP.includes('CHI')) {
+            tongDaThanhToan += st;
+          } else if (loaiP === 'THU' || loaiP.includes('THU')) {
+            tongDaThanhToan -= st;
+          }
+          matchedSQ.push({
+            ngay: q.ngayGiaoDich || q.ngayGD || q.ngay || q.thoiGian || '',
+            maPhieu: q.maPhieu || q.ma_phieu || '',
+            loaiGD: 'ThanhToanNCC',
+            tenLoaiGD: (loaiP === 'CHI' || loaiP.includes('CHI')) ? 'Thanh toán nợ' : 'Thu hoàn tiền NCC',
+            soTien: st,
+            loaiQuy: q.loaiQuy || q.loai_quy || (q.quyNguon === 'Ngân hàng' ? 'TAI_KHOAN' : 'TIEN_MAT'),
+            trangThai: q.trangThai || q.trang_thai || 'Đã thanh toán',
+            ghiChu: q.ghiChu || q.ghi_chu || q.lyDoThuChi || q.hangMuc || 'Chi thanh toán tiền hàng'
+          });
+          if (ct) sqChungTuSet.add(ct);
+          const cleanP = String(q.maPhieu || q.ma_phieu || '').replace(/^[^\d]+/, '');
+          if (cleanP) sqChungTuSet.add('PN' + cleanP);
+        }
+      });
+
+      // Thêm các khoản thanh toán trực tiếp từ đơn nhập (nếu chưa có phiếu chi tương ứng trong Sổ Quỹ)
+      matchedNhap.forEach(o => {
+        const dt = Number(o.daTra) || 0;
+        const cleanNum = String(o.maPhieu).replace(/^[^\d]+/, '');
+        if (dt > 0 && !sqChungTuSet.has(o.maPhieu) && !sqChungTuSet.has('PCNH' + cleanNum)) {
+          tongDaThanhToan += dt;
+          matchedSQ.push({
+            ngay: o.ngay,
+            maPhieu: 'TT-' + o.maPhieu,
+            loaiGD: 'ThanhToanNCC',
+            tenLoaiGD: 'Thanh toán đơn nhập',
+            soTien: dt,
+            loaiQuy: o.hinhThuc || 'TIEN_MAT',
+            trangThai: 'Đã thanh toán',
+            ghiChu: 'Thanh toán khi lập phiếu nhập ' + o.maPhieu
+          });
+        }
+      });
+
+      // Sắp xếp thời gian giảm dần
+      matchedNhap.sort((a, b) => parseTs(b.ngay) - parseTs(a.ngay));
+      matchedTra.sort((a, b) => parseTs(b.ngay) - parseTs(a.ngay));
+      matchedSQ.sort((a, b) => parseTs(b.ngay) - parseTs(a.ngay));
+
+      // Tính công nợ hiện tại
+      let congNoHienTai = 0;
+      if (targetNCC && targetNCC.congNo !== undefined && targetNCC.congNo !== null && Number(targetNCC.congNo) > 0) {
+        congNoHienTai = Number(targetNCC.congNo);
+      } else {
+        congNoHienTai = Math.max(0, tongGiaTriNhap - tongGiaTriTra - tongDaThanhToan);
+      }
+
+      currentNCCHistoryData = {
+        success: true,
+        maNCC: cleanMa,
+        infoNCC: targetNCC,
+        tongGiaTriNhap: tongGiaTriNhap,
+        tongGiaTriTra: tongGiaTriTra,
+        tongDaThanhToan: tongDaThanhToan,
+        congNoHienTai: congNoHienTai,
+        lichSuNhap: matchedNhap,
+        lichSuTra: matchedTra,
+        lichSuThanhToan: matchedSQ
+      };
+
+      // Cập nhật DOM Metrics ngay lập tức (0ms)
+      const elTongNhap = document.getElementById('ncc-metric-tongnhap');
+      if (elTongNhap) elTongNhap.innerText = (tongGiaTriNhap || 0).toLocaleString('vi-VN') + ' đ';
+
+      const elDaTT = document.getElementById('ncc-metric-datt');
+      if (elDaTT) elDaTT.innerText = (tongDaThanhToan || 0).toLocaleString('vi-VN') + ' đ';
+
+      const elConNo = document.getElementById('ncc-metric-conno');
+      if (elConNo) elConNo.innerText = (congNoHienTai || 0).toLocaleString('vi-VN') + ' đ';
+
+      if (currentViewingNCC) currentViewingNCC.congNo = congNoHienTai;
+
+      locLichSuGiaoDichNCCTable();
+
+      // Đồng bộ bất đồng bộ từ Supabase nếu có kết nối (< 200ms)
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        let filterNH = 'ma_kh.eq.' + cleanMa;
+        if (cleanTen) filterNH += ',ghi_chu.ilike.*' + cleanTen + '*';
+        let filterSQ = 'ma_doi_tuong.eq.' + cleanMa;
+        if (cleanTen) filterSQ += ',ghi_chu.ilike.*' + cleanTen + '*';
+
+        Promise.all([
+          supabaseClient.from('dm_nhaphang').select('*').or(filterNH).limit(200),
+          supabaseClient.from('so_quy').select('*').or(filterSQ).limit(200)
+        ]).then(([resNH, resSQ]) => {
+          let hasNewData = false;
+          if (resNH && resNH.data && resNH.data.length > 0) {
+            resNH.data.forEach(sn => {
+              const code = String(sn.ma_don_hang || sn.ma_phieu || sn.maPhieu || '').trim();
+              if (code && !nhapMap.has(code)) {
+                nhapMap.set(code, {
+                  maPhieu: code,
+                  ngayNhap: sn.ngay_ban || sn.ngay_tao || sn.ngayTao,
+                  tongTien: Number(sn.tong_tien || sn.khach_phai_tra || 0),
+                  daTra: Number(sn.da_tra || 0),
+                  conNo: Number(sn.con_no || 0),
+                  chiTietSanPham: sn.chi_tiet_san_pham || [],
+                  trangThai: sn.trang_thai || 'Hoàn thành',
+                  ghiChu: sn.ghi_chu || ''
+                });
+                hasNewData = true;
+              }
+            });
+          }
+          if (resSQ && resSQ.data && resSQ.data.length > 0) {
+            resSQ.data.forEach(sq => {
+              const code = String(sq.ma_phieu || sq.maPhieu || '').trim();
+              if (code && !sqMap.has(code)) {
+                sqMap.set(code, {
+                  maPhieu: code,
+                  loaiPhieu: sq.loai_phieu || 'CHI',
+                  loaiQuy: sq.loai_quy || 'TIEN_MAT',
+                  ngayGD: sq.ngay_gd || sq.ngay_giao_dich,
+                  soTien: Number(sq.so_tien || 0),
+                  doiTuong: sq.doi_tuong,
+                  maDoiTuong: sq.ma_doi_tuong,
+                  maChungTu: sq.ma_chung_tu,
+                  ghiChu: sq.ghi_chu,
+                  trangThai: sq.trang_thai || 'DaThanhToan'
+                });
+                hasNewData = true;
+              }
+            });
+          }
+          if (hasNewData && currentViewingNCC && (currentViewingNCC.maDoiTac === cleanMa || currentViewingNCC.maNCC === cleanMa)) {
+            tongHopLichSuNCC(cleanMa);
+          }
+        }).catch(e => console.warn("Supabase NCC history background sync error:", e));
+      }
+
+      // Background GAS call nếu có
+      if (typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run.apiGetLichSuGiaoDichNCC === 'function') {
+        try {
+          google.script.run.withSuccessHandler(function(gasRes) {
+            if (gasRes && gasRes.success && Array.isArray(gasRes.lichSuNhap) && gasRes.lichSuNhap.length > matchedNhap.length) {
+              currentNCCHistoryData = gasRes;
+              if (elTongNhap) elTongNhap.innerText = (gasRes.tongGiaTriNhap || 0).toLocaleString('vi-VN') + ' đ';
+              if (elDaTT) elDaTT.innerText = (gasRes.tongDaThanhToan || 0).toLocaleString('vi-VN') + ' đ';
+              if (elConNo && gasRes.congNoHienTai !== undefined) elConNo.innerText = (Number(gasRes.congNoHienTai) || 0).toLocaleString('vi-VN') + ' đ';
+              locLichSuGiaoDichNCCTable();
+            }
+          }).apiGetLichSuGiaoDichNCC(cleanMa);
+        } catch(e) {}
+      }
+    }
+
+    function taiLichSuGiaoDichNCC(maNCC) {
+      tongHopLichSuNCC(maNCC);
     }
 
     function locLichSuGiaoDichNCCTable() {
@@ -20740,7 +21014,8 @@ function formatVND(amount) {
       }
 
       // Sắp xếp thời gian mới nhất lên đầu
-      allTransactions.sort((a, b) => new Date(b.ngay || 0) - new Date(a.ngay || 0));
+      const parseTs = (s) => (typeof parseNgayGioSort === 'function') ? parseNgayGioSort(s) : (new Date(s || 0).getTime() || 0);
+      allTransactions.sort((a, b) => parseTs(b.ngay) - parseTs(a.ngay));
 
       // Bộ lọc
       const filtered = allTransactions.filter(t => {
@@ -21089,6 +21364,8 @@ function formatVND(amount) {
     window.xemChiTietNCC = xemChiTietNCC;
     window.doiTrangThaiNCCNhanh = doiTrangThaiNCCNhanh;
     window.chuyenTabModalNCC = chuyenTabModalNCC;
+    window.tongHopLichSuNCC = tongHopLichSuNCC;
+    window.taiLichSuGiaoDichNCC = taiLichSuGiaoDichNCC;
     window.locLichSuGiaoDichNCCTable = locLichSuGiaoDichNCCTable;
     window.xuatExcelLichSuNCCHienTai = xuatExcelLichSuNCCHienTai;
     window.taiLaiLichSuNCCHienTai = taiLaiLichSuNCCHienTai;
@@ -28197,8 +28474,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.5.6";
-    const APP_CLIENT_BUILD = 59;
+    const APP_CLIENT_VERSION = "1.5.7";
+    const APP_CLIENT_BUILD = 60;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
