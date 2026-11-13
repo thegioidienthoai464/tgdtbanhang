@@ -1,19 +1,19 @@
 {
-  "version": "1.5.4",
-  "build_number": 57,
+  "version": "1.5.5",
+  "build_number": 58,
   "force_update": false,
-  "release_notes": "• Sửa lỗi lưu nhà cung cấp (NCC): Tự động lưu và cập nhật nhà cung cấp mới tạo khi nhập hàng, lưu đồng bộ vào bộ nhớ và hiển thị đầy đủ trong danh mục 4.1 Nhà cung cấp.\n• Thêm nút '+ Thêm mới NCC' và tùy chọn tạo nhanh NCC ngay trên thanh tìm kiếm nhà cung cấp của đơn nhập hàng.\n• Sửa lỗi sổ quỹ: Tự động tạo và hiển thị phiếu chi thanh toán tiền nhập hàng (PCNH... cho tiền mặt, PCNH_CK... cho tài khoản ngân hàng) trong 5.1 Quỹ tiền mặt, 5.2 Quỹ tài khoản và 5.3 Tổng hợp dòng tiền.",
+  "release_notes": "• Sửa triệt để lỗi không phản hồi khi bấm 'Thêm hàng hóa' ở danh mục sản phẩm và '+ Tạo mã hàng mới' ở đơn nhập hàng.\n• Tối ưu cơ chế phân quyền: Cho phép người dùng tạo nhanh hàng hóa trực tiếp từ màn hình đơn nhập kho và đặt hàng mà không bị chặn phân quyền.\n• Tối ưu hiệu năng nạp nhóm hàng hóa và bảng giá: Loại bỏ các vòng lặp thừa, mở modal thêm/sửa hàng hóa tức thì (< 5ms) không gây đứng máy hay giật lag.\n• Mã hóa an toàn từ khóa tìm kiếm khi tạo mã hàng mới từ dropdown đơn nhập kho, chống lỗi ký tự đặc biệt.\n• Đảm bảo toàn bộ hàm xử lý modal hàng hóa được liên kết toàn cục trên window an toàn.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.4/TT_POS_v1.5.4.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.4/TT_POS_v1.5.4.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.4",
-  "build": 57,
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.5/TT_POS_v1.5.5.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.5/TT_POS_v1.5.5.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.5",
+  "build": 58,
   "releaseDate": "2026-11-13",
   "features": [
-    "Tự động lưu và đồng bộ NCC mới tạo khi lập đơn nhập hàng vào 4.1 Quản lý NCC",
-    "Bổ sung nút '+ Thêm mới NCC' và tìm kiếm tạo nhanh NCC trực quan",
-    "Tự động tạo phiếu chi tiền mặt (PCNH) khi đơn nhập thanh toán tiền mặt 100% hoặc trả trước",
-    "Tự động tạo phiếu chi ngân hàng (PCNH_CK) khi thanh toán qua tài khoản ngân hàng",
-    "Tự động cập nhật tức thì vào Sổ quỹ tiền mặt và Sổ quỹ tổng hợp không bị sót dữ liệu"
+    "Sửa lỗi không mở modal 'Thêm hàng hóa' ở danh mục hàng hóa (3.1)",
+    "Sửa lỗi không mở modal '+ Tạo mã hàng mới' ở gợi ý đơn nhập hàng (4.2)",
+    "Hỗ trợ phân quyền linh hoạt cho phép tạo hàng hóa khi đang lập đơn nhập kho / đặt hàng",
+    "Tối ưu tốc độ mở modal hàng hóa siêu tốc, không bị treo đơ trình duyệt",
+    "Xử lý ký tự đặc biệt an toàn trên thanh tìm kiếm hàng hóa đơn nhập"
   ]
 }
