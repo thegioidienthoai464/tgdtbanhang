@@ -1,18 +1,18 @@
 {
-  "version": "1.5.9",
-  "build_number": 62,
+  "version": "1.6.0",
+  "build_number": 63,
   "force_update": false,
-  "release_notes": "• Tự động sắp xếp thông minh tất cả các đơn hàng nhập (4.2), đơn trả hàng NCC (4.3) và lịch sử giao dịch NCC theo thứ tự mới nhất luôn ở trên đầu.\n• Chuẩn hóa thuật toán bóc tách ngày giờ đa định dạng (KiotViet dd/mm/yyyy và ISO yyyy-mm-dd), đảm bảo phân trang, lọc tìm kiếm hay xuất Excel đều chính xác 100%.\n• Ưu tiên hiển thị tức thời các đơn nhập mới tạo cục bộ và đơn vừa lưu trên cùng của danh sách.",
+  "release_notes": "• Tính toán và cộng dồn công nợ nhà cung cấp tuyệt đối chuẩn xác khi tạo đơn nhập hàng mới (còn nợ hoặc thanh toán một phần).\n• Thiết lập công thức công nợ toàn diện: Công nợ hiện tại = Công nợ gốc + Tổng nợ đơn nhập mới - Trừ nợ trả hàng - Trả nợ từ Sổ quỹ.\n• Đồng bộ tức thì công nợ trên cả Module 4.1 Danh sách NCC, Thẻ 1 Thông tin chi tiết, Thẻ 2 Lịch sử nhập/trả và Modal Thanh toán nợ NCC.\n• Ngăn chặn hoàn toàn việc Supabase tải đè dữ liệu công nợ cũ lên số liệu mới phát sinh.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.9/TT_POS_v1.5.9.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.9/TT_POS_v1.5.9.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.9",
-  "build": 62,
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.0/TT_POS_v1.6.0.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.0/TT_POS_v1.6.0.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.0",
+  "build": 63,
   "releaseDate": "2026-11-13",
   "features": [
-    "Luôn sắp xếp đơn hàng nhập mới nhất lên đầu danh sách tại mục 4.2",
-    "Sắp xếp đơn trả hàng NCC mới nhất lên đầu danh sách tại mục 4.3",
-    "Đồng bộ thứ tự thời gian giảm dần cho Thẻ 2 Lịch sử giao dịch nhà cung cấp",
-    "Duy trì thứ tự mới nhất khi tìm kiếm, đổi chi nhánh, lọc ngày và xuất file Excel"
+    "Cộng dồn chuẩn xác công nợ nhà cung cấp khi tạo đơn nhập hàng mới còn nợ",
+    "Bảo toàn công nợ gốc và tổng hợp chính xác các khoản trả nợ qua sổ quỹ",
+    "Hiển thị đồng bộ số nợ tại Danh sách NCC, Thẻ 1 chi tiết và Modal thanh toán nợ",
+    "Ngăn chặn dữ liệu cũ từ Supabase ghi đè lên công nợ thực tế mới nhất"
   ]
 }
