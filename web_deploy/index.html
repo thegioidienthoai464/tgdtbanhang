@@ -5208,11 +5208,11 @@
         </div>
         <div>
           <label class="font-semibold text-slate-600">Giá vốn (VNĐ):</label>
-          <input type="number" id="form-giavon" value="0" class="w-full border rounded-xl p-2 bg-slate-50 mt-1 font-mono font-bold">
+          <input type="text" inputmode="numeric" id="form-giavon" value="0" oninput="formatInputMoney(this)" onblur="onBlurMoneyInput(this)" onfocus="this.select()" class="w-full border rounded-xl p-2 bg-slate-50 mt-1 font-mono font-bold focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0">
         </div>
         <div>
           <label class="font-semibold text-slate-600">Giá bán (VNĐ):</label>
-          <input type="number" id="form-giaban" value="0" class="w-full border rounded-xl p-2 bg-slate-50 mt-1 font-mono font-bold text-blue-600">
+          <input type="text" inputmode="numeric" id="form-giaban" value="0" oninput="formatInputMoney(this)" onblur="onBlurMoneyInput(this)" onfocus="this.select()" class="w-full border rounded-xl p-2 bg-slate-50 mt-1 font-mono font-bold text-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0">
         </div>
         <div class="col-span-2 flex items-center space-x-2 pt-1">
           <input type="checkbox" id="form-coimei" onchange="toggleBoxIMEI()" class="w-4 h-4 rounded text-blue-600">
@@ -16265,10 +16265,10 @@ function formatVND(amount) {
         if (inpDVT) inpDVT.value = "Cái";
 
         const inpGiaVon = document.getElementById('form-giavon');
-        if (inpGiaVon) inpGiaVon.value = 0;
+        if (inpGiaVon) inpGiaVon.value = (typeof formatMoneyDisplay === 'function') ? formatMoneyDisplay(0) : "0";
 
         const inpGiaBan = document.getElementById('form-giaban');
-        if (inpGiaBan) inpGiaBan.value = 0;
+        if (inpGiaBan) inpGiaBan.value = (typeof formatMoneyDisplay === 'function') ? formatMoneyDisplay(0) : "0";
 
         const chkImei = document.getElementById('form-coimei');
         if (chkImei) chkImei.checked = false;
@@ -16303,8 +16303,12 @@ function formatVND(amount) {
         if (prefillData && typeof prefillData === 'object') {
           if (prefillData.maHang && inpMa) inpMa.value = prefillData.maHang;
           if (prefillData.tenHang && inpTen) inpTen.value = prefillData.tenHang;
-          if (prefillData.giaVon !== undefined && inpGiaVon) inpGiaVon.value = prefillData.giaVon;
-          if (prefillData.giaBan !== undefined && inpGiaBan) inpGiaBan.value = prefillData.giaBan;
+          if (prefillData.giaVon !== undefined && inpGiaVon) {
+            inpGiaVon.value = (typeof formatMoneyDisplay === 'function') ? formatMoneyDisplay(prefillData.giaVon) : String(prefillData.giaVon);
+          }
+          if (prefillData.giaBan !== undefined && inpGiaBan) {
+            inpGiaBan.value = (typeof formatMoneyDisplay === 'function') ? formatMoneyDisplay(prefillData.giaBan) : String(prefillData.giaBan);
+          }
           if (prefillData.maNhom) {
             const elNhom = document.getElementById('form-nhomhang');
             if (elNhom) elNhom.value = prefillData.maNhom;
@@ -16351,10 +16355,10 @@ function formatVND(amount) {
         if (inpDVT) inpDVT.value = h.donViTinh || "Cái";
 
         const inpGiaVon = document.getElementById('form-giavon');
-        if (inpGiaVon) inpGiaVon.value = h.giaVon || 0;
+        if (inpGiaVon) inpGiaVon.value = (typeof formatMoneyDisplay === 'function') ? formatMoneyDisplay(h.giaVon || 0) : String(h.giaVon || 0);
 
         const inpGiaBan = document.getElementById('form-giaban');
-        if (inpGiaBan) inpGiaBan.value = h.giaBan || 0;
+        if (inpGiaBan) inpGiaBan.value = (typeof formatMoneyDisplay === 'function') ? formatMoneyDisplay(h.giaBan || 0) : String(h.giaBan || 0);
 
         const chkImei = document.getElementById('form-coimei');
         if (chkImei) chkImei.checked = Boolean(h.coQuanLyIMEI);
@@ -16468,9 +16472,15 @@ function formatVND(amount) {
       }
 
       const targetCN = layMaChiNhanh(typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01');
-      const gVon = Number(document.getElementById('form-giavon')?.value) || 0;
-      const gBan = Number(document.getElementById('form-giaban')?.value) || 0;
-      const tKho = Number(document.getElementById('form-tonkho')?.value) || 0;
+      const gVon = (typeof parseMoneyValue === 'function')
+        ? parseMoneyValue(document.getElementById('form-giavon')?.value)
+        : (Number(String(document.getElementById('form-giavon')?.value || '').replace(/[^\d]/g, '')) || 0);
+      const gBan = (typeof parseMoneyValue === 'function')
+        ? parseMoneyValue(document.getElementById('form-giaban')?.value)
+        : (Number(String(document.getElementById('form-giaban')?.value || '').replace(/[^\d]/g, '')) || 0);
+      const tKho = (typeof parseMoneyValue === 'function')
+        ? parseMoneyValue(document.getElementById('form-tonkho')?.value)
+        : (Number(document.getElementById('form-tonkho')?.value) || 0);
       const coIMEI = document.getElementById('form-coimei')?.checked || false;
 
       const obj = {
@@ -28187,8 +28197,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.5.5";
-    const APP_CLIENT_BUILD = 58;
+    const APP_CLIENT_VERSION = "1.5.6";
+    const APP_CLIENT_BUILD = 59;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 

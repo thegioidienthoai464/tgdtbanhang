@@ -1,19 +1,18 @@
 {
-  "version": "1.5.5",
-  "build_number": 58,
+  "version": "1.5.6",
+  "build_number": 59,
   "force_update": false,
-  "release_notes": "• Sửa triệt để lỗi không phản hồi khi bấm 'Thêm hàng hóa' ở danh mục sản phẩm và '+ Tạo mã hàng mới' ở đơn nhập hàng.\n• Tối ưu cơ chế phân quyền: Cho phép người dùng tạo nhanh hàng hóa trực tiếp từ màn hình đơn nhập kho và đặt hàng mà không bị chặn phân quyền.\n• Tối ưu hiệu năng nạp nhóm hàng hóa và bảng giá: Loại bỏ các vòng lặp thừa, mở modal thêm/sửa hàng hóa tức thì (< 5ms) không gây đứng máy hay giật lag.\n• Mã hóa an toàn từ khóa tìm kiếm khi tạo mã hàng mới từ dropdown đơn nhập kho, chống lỗi ký tự đặc biệt.\n• Đảm bảo toàn bộ hàm xử lý modal hàng hóa được liên kết toàn cục trên window an toàn.",
+  "release_notes": "• Thêm phân cách hàng nghìn bằng dấu chấm (.) trực tiếp khi nhập giá vốn và giá bán tại form 'Thêm hàng hóa mới' và 'Sửa hàng hóa'.\n• Hỗ trợ định dạng số tiền chuẩn Việt Nam (VD: 70.000 đ, 150.000 đ) tự động cập nhật linh hoạt theo từng thao tác gõ phím.\n• Tự động chọn toàn bộ giá trị khi nhấp chuột (select all on focus) giúp nhập liệu nhanh chóng và tiện lợi.\n• Chuyển đổi an toàn giá trị tiền có dấu chấm sang số nguyên chuẩn xác khi lưu vào cơ sở dữ liệu và giỏ hàng nhập kho.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.5/TT_POS_v1.5.5.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.5/TT_POS_v1.5.5.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.5",
-  "build": 58,
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.6/TT_POS_v1.5.6.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.5.6/TT_POS_v1.5.6.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.5.6",
+  "build": 59,
   "releaseDate": "2026-11-13",
   "features": [
-    "Sửa lỗi không mở modal 'Thêm hàng hóa' ở danh mục hàng hóa (3.1)",
-    "Sửa lỗi không mở modal '+ Tạo mã hàng mới' ở gợi ý đơn nhập hàng (4.2)",
-    "Hỗ trợ phân quyền linh hoạt cho phép tạo hàng hóa khi đang lập đơn nhập kho / đặt hàng",
-    "Tối ưu tốc độ mở modal hàng hóa siêu tốc, không bị treo đơ trình duyệt",
-    "Xử lý ký tự đặc biệt an toàn trên thanh tìm kiếm hàng hóa đơn nhập"
+    "Định dạng phân cách dấu chấm (.) cho ô Giá vốn và Giá bán ở modal Thêm/Sửa hàng hóa",
+    "Tự động định dạng tiền tệ khi người dùng gõ phím trong ô giá",
+    "Tự động chọn (select text) khi focus vào ô giá để nhập mới nhanh chóng",
+    "Lưu trữ chính xác giá trị số nguyên vào hệ thống mà không bị sai lệch số"
   ]
 }
