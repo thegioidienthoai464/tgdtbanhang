@@ -440,7 +440,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.6.3</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.6.4</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -2017,6 +2017,12 @@
                 <option value="CURRENT">📍 Chi nhánh hiện tại</option>
                 <option value="ALL">🌐 Tất cả chi nhánh</option>
               </select>
+              <select id="filter-tranhap-trangthai" onchange="locDanhSachTraHangNCCTable()" class="border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs bg-slate-50 font-semibold text-slate-700 shadow-2xs">
+                <option value="ALL">Tất cả trạng thái</option>
+                <option value="HOAN_THANH">Đã trả hàng</option>
+                <option value="DRAFT">Lưu tạm</option>
+                <option value="HUY">Đã hủy</option>
+              </select>
               <input type="text" id="search-danhsach-tranhap" oninput="locDanhSachTraHangNCCTable()" placeholder="Tìm mã phiếu trả, NCC, ghi chú..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs w-64 bg-slate-50 focus:bg-white focus:outline-none focus:border-amber-500">
               <button type="button" onclick="moCaiDatCot('tranhap')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold border border-slate-300 transition flex items-center space-x-1 text-xs" title="Tùy chỉnh ẩn/hiện cột Trả hàng NCC">
                 <i class="fa-solid fa-sliders text-indigo-600"></i><span>Cột</span>
@@ -2094,20 +2100,56 @@
             </div>
 
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-              <h4 class="font-bold text-slate-800 text-xs border-b pb-2 flex items-center space-x-1.5">
-                <i class="fa-solid fa-file-invoice-dollar text-amber-600"></i>
-                <span>Thông Tin Trả Hàng NCC</span>
+              <h4 class="font-bold text-slate-800 text-xs border-b pb-2 flex items-center justify-between">
+                <span class="flex items-center space-x-1.5">
+                  <i class="fa-solid fa-file-invoice-dollar text-amber-600"></i>
+                  <span>Thông Tin Trả Hàng NCC</span>
+                </span>
+                <span id="tranhap-badge-editing" class="hidden text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold border border-amber-300">
+                  <i class="fa-solid fa-pen-to-square mr-1"></i>Đang sửa phiếu tạm
+                </span>
               </h4>
+
               <div class="relative">
                 <label class="text-[11px] font-semibold text-slate-600">Nhà Cung Cấp Nhận Hàng (*):</label>
                 <input type="text" id="tranhap-ncc-search" oninput="timKiemNCCTraHang(this.value)" placeholder="Gõ tên, mã, SĐT nhà cung cấp..." class="w-full border rounded-xl p-2 text-xs bg-slate-50 mt-1">
                 <input type="hidden" id="tranhap-mancc" value="">
                 <div id="tranhap-ncc-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border rounded-xl shadow-xl z-20 max-h-48 overflow-y-auto hidden"></div>
               </div>
-              <div class="p-2 bg-slate-50 rounded-xl border flex justify-between items-center text-xs">
-                <span class="text-slate-500">Tổng tiền hoàn lại:</span>
-                <span id="tranhap-tongtien" class="font-bold text-amber-600 font-mono text-sm">0 đ</span>
+
+              <!-- Điều chỉnh ngày giờ trả & Nhân viên trả hàng -->
+              <div class="grid grid-cols-2 gap-2 p-2 bg-slate-50 rounded-xl border border-slate-200">
+                <div>
+                  <label class="text-[10px] font-bold text-slate-600 block">Thời gian trả hàng:</label>
+                  <input type="datetime-local" id="tranhap-ngaytra" class="w-full border rounded-lg p-1 text-[11px] bg-white mt-0.5 font-medium text-slate-700">
+                </div>
+                <div>
+                  <label class="text-[10px] font-bold text-slate-600 block">Nhân viên trả hàng:</label>
+                  <select id="tranhap-nguoitra" class="w-full border rounded-lg p-1 text-[11px] bg-white mt-0.5 font-medium text-slate-700"></select>
+                </div>
               </div>
+
+              <!-- Tiền hàng, Phí trả hàng & Tổng tiền hoàn lại -->
+              <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 text-xs">
+                <div class="flex justify-between items-center text-slate-600">
+                  <span>Tổng tiền hàng trả:</span>
+                  <span id="tranhap-tongtienhang" class="font-bold text-slate-700 font-mono">0 đ</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <label for="tranhap-phitra" class="text-slate-600 font-medium flex items-center space-x-1">
+                    <span>Phí trả hàng (nếu có):</span>
+                    <i class="fa-solid fa-circle-question text-slate-400 text-[10px]" title="Phí nhà cung cấp khấu trừ khi nhận lại hàng"></i>
+                  </label>
+                  <div class="w-32">
+                    <input type="text" id="tranhap-phitra" oninput="formatInputMoney(this); tinhTongTienTraNCC();" onblur="onBlurMoneyInput(this)" value="0" class="w-full text-right border border-slate-300 rounded-lg px-2 py-1 text-xs font-mono font-semibold text-rose-600 bg-white focus:outline-none focus:border-amber-500" placeholder="0">
+                  </div>
+                </div>
+                <div class="flex justify-between items-center pt-1 border-t border-slate-200 text-xs">
+                  <span class="font-bold text-slate-700">Tổng tiền hoàn lại:</span>
+                  <span id="tranhap-tongtien" class="font-bold text-amber-600 font-mono text-sm">0 đ</span>
+                </div>
+              </div>
+
               <div>
                 <label class="text-[11px] font-semibold text-slate-600">Hình thức hoàn tiền / Cấn trừ:</label>
                 <select id="tranhap-hinhthuc" onchange="thayDoiHinhThucTraNCC(this.value)" class="w-full border rounded-xl p-2 text-xs bg-slate-50 mt-1 font-medium">
@@ -2121,11 +2163,11 @@
                 <div class="grid grid-cols-2 gap-2">
                   <div>
                     <label class="text-[10px] font-bold text-slate-700">Tiền mặt (VNĐ):</label>
-                    <input type="number" id="tranhap-tienmat-val" oninput="tinhTienHonHopTraNCC('TM')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-slate-800 bg-white">
+                    <input type="text" id="tranhap-tienmat-val" oninput="formatInputMoney(this); tinhTienHonHopTraNCC('TM');" onblur="onBlurMoneyInput(this)" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-slate-800 bg-white">
                   </div>
                   <div>
                     <label class="text-[10px] font-bold text-slate-700">Chuyển khoản (VNĐ):</label>
-                    <input type="number" id="tranhap-chuyenkhoan-val" oninput="tinhTienHonHopTraNCC('CK')" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-amber-600 bg-white">
+                    <input type="text" id="tranhap-chuyenkhoan-val" oninput="formatInputMoney(this); tinhTienHonHopTraNCC('CK');" onblur="onBlurMoneyInput(this)" value="0" class="w-full border rounded-xl p-1.5 text-xs font-mono font-bold text-amber-600 bg-white">
                   </div>
                 </div>
               </div>
@@ -2137,9 +2179,16 @@
                 <label class="text-[11px] font-semibold text-slate-600">Lý do trả hàng:</label>
                 <input type="text" id="tranhap-ghichu" placeholder="Lỗi nhà sản xuất, đổi mẫu..." class="w-full border rounded-xl p-2 text-xs bg-slate-50 mt-1">
               </div>
-              <button type="button" id="btn-xacnhan-tranhap" onclick="xacNhanLuuPhieuTraNCC()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs shadow transition flex items-center justify-center space-x-1.5">
-                <i class="fa-solid fa-check"></i><span>HOÀN TẤT TRẢ HÀNG NCC</span>
-              </button>
+
+              <!-- Buttons: LƯU TẠM PHIẾU & HOÀN TẤT TRẢ HÀNG -->
+              <div class="grid grid-cols-2 gap-2 pt-1">
+                <button type="button" id="btn-luutam-tranhap" onclick="luuTamPhieuTraNCC()" class="py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center space-x-1.5" title="Lưu tạm phiếu này để tiếp tục làm việc sau">
+                  <i class="fa-solid fa-floppy-disk"></i><span>LƯU TẠM PHIẾU</span>
+                </button>
+                <button type="button" id="btn-xacnhan-tranhap" onclick="xacNhanLuuPhieuTraNCC()" class="py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs shadow transition flex items-center justify-center space-x-1.5">
+                  <i class="fa-solid fa-check"></i><span>HOÀN TẤT TRẢ</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -5107,8 +5156,16 @@
             <div id="cttn-chinhanh" class="font-medium text-slate-700">-</div>
           </div>
           <div>
+            <div class="text-slate-400 text-[11px]">Nhân viên thực hiện:</div>
+            <div id="cttn-nhanvien" class="font-semibold text-slate-700">-</div>
+          </div>
+          <div>
             <div class="text-slate-400 text-[11px]">Hình thức nhận:</div>
             <div id="cttn-hinhthuc" class="font-semibold text-slate-700">-</div>
+          </div>
+          <div>
+            <div class="text-slate-400 text-[11px]">Phí trả hàng:</div>
+            <div id="cttn-phitra" class="font-semibold text-rose-600 font-mono">0 đ</div>
           </div>
           <div class="col-span-2">
             <div class="text-slate-400 text-[11px]">Ghi chú / Lý do:</div>
@@ -5131,9 +5188,19 @@
           </table>
         </div>
 
-        <div class="p-3 bg-amber-50 rounded-2xl border border-amber-200 flex justify-between items-center">
-          <span class="font-semibold text-slate-700">Tổng tiền hoàn trả:</span>
-          <span id="cttn-tongtien" class="text-base font-extrabold text-amber-700 font-mono">0 đ</span>
+        <div class="p-3 bg-amber-50 rounded-2xl border border-amber-200 space-y-1 text-xs">
+          <div class="flex justify-between items-center text-slate-600">
+            <span>Tổng tiền hàng trả:</span>
+            <span id="cttn-tongtienhang" class="font-bold font-mono text-slate-700">0 đ</span>
+          </div>
+          <div id="cttn-row-phitra" class="flex justify-between items-center text-slate-600">
+            <span>Phí trả hàng khấu trừ:</span>
+            <span id="cttn-phitra-row" class="font-bold font-mono text-rose-600">0 đ</span>
+          </div>
+          <div class="flex justify-between items-center pt-1 border-t border-amber-200/60">
+            <span class="font-bold text-slate-700">Tổng tiền hoàn trả thực tế:</span>
+            <span id="cttn-tongtien" class="text-base font-extrabold text-amber-700 font-mono">0 đ</span>
+          </div>
         </div>
       </div>
 
@@ -28692,8 +28759,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.6.3";
-    const APP_CLIENT_BUILD = 66;
+    const APP_CLIENT_VERSION = "1.6.4";
+    const APP_CLIENT_BUILD = 67;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
@@ -34362,9 +34429,13 @@ function loadSoQuy(filter) {
       const timeVal = d.ngayTra || d.thoiGian || d.ngayTao || d.ngay || d.ngay_tra || '';
       const rawCN = d.chiNhanh || d.chi_nhanh || 'CN01: Trụ sở chính Thanh Miện';
       const st = Number(d.tongTien ?? d.soTien ?? d.tong_tien ?? 0) || 0;
+      const phi = Number(d.phiTra ?? d.phi_tra ?? 0) || 0;
+      const ttHang = Number(d.tongTienHang ?? d.tong_tien_hang ?? (st + phi)) || (st + phi);
       const ht = d.hinhThuc || d.hinh_thuc || (d.tienMat > 0 ? 'TIEN_MAT' : (d.chuyenKhoan > 0 ? 'TAI_KHOAN' : 'CONG_NO'));
       const tt = d.trangThai || d.trang_thai || 'Đã trả hàng';
       const sp = (Array.isArray(d.sanPham) && d.sanPham.length > 0) ? d.sanPham : (Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (d.chiTiet || []));
+      const isDraft = Boolean(d.isDraft || tt === 'Lưu tạm' || code.includes('DRAFT'));
+      const nv = d.nhanVien || d.nguoiTra || d.nguoiTao || d.nhan_vien || '';
 
       return {
         ...d,
@@ -34375,13 +34446,13 @@ function loadSoQuy(filter) {
         chiNhanh: rawCN,
         tongTien: st,
         soTien: st,
+        phiTra: phi,
+        tongTienHang: ttHang,
         hinhThuc: ht,
-        trangThai: tt,
-        tenNCC: d.tenNCC || d.ten_ncc || d.tenDoiTac || 'Nhà cung cấp',
-        maNCC: d.maNCC || d.ma_ncc || d.maDoiTac || '',
-        dienThoai: d.dienThoai || d.soDienThoai || '',
-        nguoiTra: d.nguoiTra || d.nguoi_tra || d.nhanVien || 'Quản trị viên',
-        ghiChu: d.ghiChu || d.ghi_chu || '',
+        trangThai: isDraft ? 'Lưu tạm' : tt,
+        isDraft: isDraft,
+        nhanVien: nv,
+        nguoiTra: nv,
         sanPham: sp,
         chiTietSanPham: sp
       };
@@ -34396,6 +34467,7 @@ function loadSoQuy(filter) {
     var selectedTraHangNCCIds = window.selectedTraHangNCCIds || new Set();
     var traNCCCart = window.traNCCCart || [];
     window.currentViewingTraNCC = null;
+    window.dangSuaDonTraNCCMaPhieu = null;
 
     function chuyenViewTraHangNCC(view) {
       const listView = document.getElementById('view-tranhap-danhsach');
@@ -34412,21 +34484,73 @@ function loadSoQuy(filter) {
         if (cnDisplay) cnDisplay.innerText = `Chi nhánh: ${currentChiNhanh || 'CN01: Trụ sở chính Thanh Miện'}`;
         if (typeof rawNCCList === 'undefined' || !rawNCCList.length) { if (typeof loadNCC === 'function') loadNCC(); }
         if (typeof rawHangHoa === 'undefined' || !rawHangHoa.length) { if (typeof loadHangHoa === 'function') loadHangHoa(); }
-        traNCCCart = [];
-        renderCartTraNCC();
-        const searchNCCInp = document.getElementById('tranhap-ncc-search');
-        if (searchNCCInp) searchNCCInp.value = '';
-        const maNCCInp = document.getElementById('tranhap-mancc');
-        if (maNCCInp) maNCCInp.value = '';
-        const ghiChuInp = document.getElementById('tranhap-ghichu');
-        if (ghiChuInp) ghiChuInp.value = '';
-        const searchItemInp = document.getElementById('tranhap-search-item');
-        if (searchItemInp) searchItemInp.value = '';
+
+        // Nếu tạo mới hoàn toàn (không phải mở draft sửa) thì reset form
+        if (!window.dangSuaDonTraNCCMaPhieu) {
+          traNCCCart = [];
+          renderCartTraNCC();
+          const searchNCCInp = document.getElementById('tranhap-ncc-search');
+          if (searchNCCInp) searchNCCInp.value = '';
+          const maNCCInp = document.getElementById('tranhap-mancc');
+          if (maNCCInp) maNCCInp.value = '';
+          const ghiChuInp = document.getElementById('tranhap-ghichu');
+          if (ghiChuInp) ghiChuInp.value = '';
+          const searchItemInp = document.getElementById('tranhap-search-item');
+          if (searchItemInp) searchItemInp.value = '';
+          const phiTraInp = document.getElementById('tranhap-phitra');
+          if (phiTraInp) phiTraInp.value = '0';
+          const htSelect = document.getElementById('tranhap-hinhthuc');
+          if (htSelect) {
+            htSelect.value = 'CONG_NO';
+            thayDoiHinhThucTraNCC('CONG_NO');
+          }
+          const badgeEdit = document.getElementById('tranhap-badge-editing');
+          if (badgeEdit) badgeEdit.classList.add('hidden');
+
+          // Đặt ngày giờ hiện tại
+          const inpNgay = document.getElementById('tranhap-ngaytra');
+          if (inpNgay) {
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            inpNgay.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+          }
+
+          // Nạp nhân viên
+          if (typeof napDanhSachNhanVienVaoSelect === 'function') {
+            const curName = (typeof currentUser !== 'undefined' && currentUser) ? (currentUser.hoTen || currentUser.username) : '';
+            napDanhSachNhanVienVaoSelect('tranhap-nguoitra', curName);
+          }
+        }
+
         if (typeof napDanhSachNganHangVaoSelect === 'function') napDanhSachNganHangVaoSelect('tranhap-nganhang-select');
+        tinhTongTienTraNCC();
       } else {
         if (formView) formView.classList.add('hidden');
         if (listView) listView.classList.remove('hidden');
+        window.dangSuaDonTraNCCMaPhieu = null;
         taiDanhSachTraHangNCC();
+      }
+    }
+
+    function dongBoDonLuuTamTraNCCVaoDanhSach() {
+      try {
+        let allDraftKeys = JSON.parse(localStorage.getItem('SMART_ERP_DRAFT_TRA_NCC_KEYS') || '[]');
+        if (Array.isArray(allDraftKeys) && allDraftKeys.length > 0) {
+          allDraftKeys.forEach(key => {
+            const rawDraft = localStorage.getItem('SMART_ERP_DRAFT_TRA_NCC_' + key);
+            if (rawDraft) {
+              const d = JSON.parse(rawDraft);
+              const norm = chuanHoaDonTraNCC(d);
+              if (norm) {
+                const exIdx = rawTraHangNCCList.findIndex(x => x.maPhieu === norm.maPhieu);
+                if (exIdx >= 0) rawTraHangNCCList[exIdx] = norm;
+                else rawTraHangNCCList.unshift(norm);
+              }
+            }
+          });
+        }
+      } catch(e) {
+        console.warn("Lỗi đồng bộ draft trả hàng NCC:", e);
       }
     }
 
@@ -34436,7 +34560,7 @@ function loadSoQuy(filter) {
 
       const mapTH = new Map();
 
-      // 1. Nạp danh sách Đơn trả hàng NCC thực tế từ KiotViet Thanh Giang (419 đơn)
+      // 1. Nạp danh sách Đơn trả hàng NCC thực tế từ KiotViet Thanh Giang
       if (typeof window.RAW_TRA_HANG_NCC_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_TRA_HANG_NCC_THANH_GIANG)) {
         window.RAW_TRA_HANG_NCC_THANH_GIANG.forEach(d => {
           const norm = chuanHoaDonTraNCC(d);
@@ -34444,7 +34568,7 @@ function loadSoQuy(filter) {
         });
       }
 
-      // 2. Nạp bổ sung từ localStorage (ưu tiên đơn mới tạo cục bộ)
+      // 2. Nạp bổ sung từ localStorage (đơn hoàn tất cục bộ)
       try {
         const localKeys = ['TT_POS_LOCAL_TRA_HANG_NCC', 'tt_pos_danh_sach_tra_hang_ncc'];
         localKeys.forEach(k => {
@@ -34458,16 +34582,31 @@ function loadSoQuy(filter) {
         });
       } catch(e) {}
 
+      // 3. Nạp phiếu lưu tạm từ localStorage
+      try {
+        let allDraftKeys = JSON.parse(localStorage.getItem('SMART_ERP_DRAFT_TRA_NCC_KEYS') || '[]');
+        if (Array.isArray(allDraftKeys)) {
+          allDraftKeys.forEach(key => {
+            const rawDraft = localStorage.getItem('SMART_ERP_DRAFT_TRA_NCC_' + key);
+            if (rawDraft) {
+              const d = JSON.parse(rawDraft);
+              const norm = chuanHoaDonTraNCC(d);
+              if (norm) mapTH.set(norm.maPhieu, norm);
+            }
+          });
+        }
+      } catch(e) {}
+
       rawTraHangNCCList = Array.from(mapTH.values()).sort((a, b) => {
-        const tA = (typeof parseNgayGioSort === 'function') ? parseNgayGioSort(a.ngayTra || a.thoiGian) : (new Date(a.ngayTra || a.thoiGian || 0).getTime() || 0);
-        const tB = (typeof parseNgayGioSort === 'function') ? parseNgayGioSort(b.ngayTra || b.thoiGian) : (new Date(b.ngayTra || b.thoiGian || 0).getTime() || 0);
+        const tA = (typeof layTimestampDonNhap === 'function') ? layTimestampDonNhap(a) : ((typeof parseNgayGioSort === 'function') ? parseNgayGioSort(a.ngayTra || a.thoiGian) : (new Date(a.ngayTra || a.thoiGian || 0).getTime() || 0));
+        const tB = (typeof layTimestampDonNhap === 'function') ? layTimestampDonNhap(b) : ((typeof parseNgayGioSort === 'function') ? parseNgayGioSort(b.ngayTra || b.thoiGian) : (new Date(b.ngayTra || b.thoiGian || 0).getTime() || 0));
         return tB - tA;
       });
       window.rawTraHangNCCList = rawTraHangNCCList;
 
       locDanhSachTraHangNCCTable();
 
-      // 3. Tải từ Google Sheets (chạy ngầm)
+      // 4. Tải từ Google Sheets (chạy ngầm)
       if (typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run.apiGetDanhSachTraHangNCC === 'function') {
         try {
           google.script.run
@@ -34478,8 +34617,8 @@ function loadSoQuy(filter) {
                   if (norm && !mapTH.has(norm.maPhieu)) mapTH.set(norm.maPhieu, norm);
                 });
                 rawTraHangNCCList = Array.from(mapTH.values()).sort((a, b) => {
-                  const tA = (typeof parseNgayGioSort === 'function') ? parseNgayGioSort(a.ngayTra || a.thoiGian) : (new Date(a.ngayTra || a.thoiGian || 0).getTime() || 0);
-                  const tB = (typeof parseNgayGioSort === 'function') ? parseNgayGioSort(b.ngayTra || b.thoiGian) : (new Date(b.ngayTra || b.thoiGian || 0).getTime() || 0);
+                  const tA = (typeof layTimestampDonNhap === 'function') ? layTimestampDonNhap(a) : ((typeof parseNgayGioSort === 'function') ? parseNgayGioSort(a.ngayTra || a.thoiGian) : (new Date(a.ngayTra || a.thoiGian || 0).getTime() || 0));
+                  const tB = (typeof layTimestampDonNhap === 'function') ? layTimestampDonNhap(b) : ((typeof parseNgayGioSort === 'function') ? parseNgayGioSort(b.ngayTra || b.thoiGian) : (new Date(b.ngayTra || b.thoiGian || 0).getTime() || 0));
                   return tB - tA;
                 });
                 window.rawTraHangNCCList = rawTraHangNCCList;
@@ -34503,7 +34642,7 @@ function loadSoQuy(filter) {
       if (chkAll) chkAll.checked = false;
 
       if (!list || list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400">Chưa có đơn trả hàng NCC nào. Bấm <b>+ Tạo phiếu trả hàng NCC</b> để lập phiếu trả hàng.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400">Chưa có đơn trả hàng NCC nào phù hợp. Bấm <b>+ Tạo phiếu trả hàng NCC</b> để lập phiếu trả hàng.</td></tr>';
         return;
       }
 
@@ -34511,6 +34650,7 @@ function loadSoQuy(filter) {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
         const tongTien = Number(item.tongTien) || 0;
+        const isDraft = Boolean(item.isDraft || item.trangThai === 'Lưu tạm');
         
         let hinhThucText = 'Cấn trừ nợ';
         if (item.hinhThuc === 'TIEN_MAT') hinhThucText = 'Tiền mặt';
@@ -34522,27 +34662,50 @@ function loadSoQuy(filter) {
             <input type="checkbox" value="${item.maPhieu}" onchange="toggleSelectTraHangNCC('${item.maPhieu}')" class="chk-tranhap-item rounded text-amber-600 w-3.5 h-3.5">
           </td>
           <td class="p-3 font-mono font-bold text-amber-600">
-            <a href="javascript:void(0)" onclick="xemChiTietDonTraNCC('${item.maPhieu}')" class="hover:underline">${item.maPhieu}</a>
+            <a href="javascript:void(0)" onclick="${isDraft ? `tiepTucNhapDonLuuTamTraNCC('${item.maPhieu}')` : `xemChiTietDonTraNCC('${item.maPhieu}')`}" class="hover:underline">${item.maPhieu}</a>
           </td>
-          <td class="p-3 text-slate-600 font-mono">${item.ngayTra || item.thoiGian || '-'}</td>
+          <td class="p-3 text-slate-600 font-mono">
+            <div>${item.ngayTra || item.thoiGian || '-'}</div>
+            ${item.nguoiTra || item.nhanVien ? `<div class="text-[10px] text-slate-400 font-normal"><i class="fa-solid fa-user mr-1"></i>${item.nguoiTra || item.nhanVien}</div>` : ''}
+          </td>
           <td class="p-3">
             <div class="font-semibold text-slate-800">${item.tenNCC || 'Nhà cung cấp'}</div>
             ${item.maNCC ? `<div class="text-[10px] text-slate-400 font-mono">${item.maNCC}</div>` : ''}
           </td>
           <td class="p-3 text-slate-600">${item.chiNhanh || 'CN01: Trụ sở chính'}</td>
-          <td class="p-3 text-right font-mono font-bold text-amber-700">${tongTien.toLocaleString('vi-VN')} đ</td>
+          <td class="p-3 text-right font-mono font-bold text-amber-700">
+            <div>${tongTien.toLocaleString('vi-VN')} đ</div>
+            ${item.phiTra > 0 ? `<div class="text-[10px] text-rose-500 font-normal">Phí: -${(Number(item.phiTra)||0).toLocaleString('vi-VN')} đ</div>` : ''}
+          </td>
           <td class="p-3 text-center text-slate-600 font-medium">${hinhThucText}</td>
           <td class="p-3 text-center">
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">${item.trangThai || 'Đã trả hàng'}</span>
+            ${isDraft ? `
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                <i class="fa-solid fa-floppy-disk mr-1"></i>Lưu tạm
+              </span>
+            ` : `
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                ${item.trangThai || 'Đã trả hàng'}
+              </span>
+            `}
           </td>
           <td class="p-3 text-center">
             <div class="flex items-center justify-center space-x-1.5">
-              <button type="button" onclick="xemChiTietDonTraNCC('${item.maPhieu}')" title="Xem chi tiết" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs font-semibold transition">
-                <i class="fa-solid fa-eye mr-0.5"></i>Xem
-              </button>
-              <button type="button" onclick="inPhieuTraNCC('${item.maPhieu}')" title="In phiếu trả" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition">
-                <i class="fa-solid fa-print mr-0.5"></i>In
-              </button>
+              ${isDraft ? `
+                <button type="button" onclick="tiepTucNhapDonLuuTamTraNCC('${item.maPhieu}')" title="Tiếp tục chỉnh sửa đơn lưu tạm" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold transition flex items-center space-x-1">
+                  <i class="fa-solid fa-pen-to-square"></i><span>Tiếp tục</span>
+                </button>
+                <button type="button" onclick="xacNhanXoaDonLuuTamTraNCC('${item.maPhieu}')" title="Xóa đơn lưu tạm" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
+                  <i class="fa-solid fa-trash-can"></i><span>Xóa</span>
+                </button>
+              ` : `
+                <button type="button" onclick="xemChiTietDonTraNCC('${item.maPhieu}')" title="Xem chi tiết" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs font-semibold transition">
+                  <i class="fa-solid fa-eye mr-0.5"></i>Xem
+                </button>
+                <button type="button" onclick="inPhieuTraNCC('${item.maPhieu}')" title="In phiếu trả" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition">
+                  <i class="fa-solid fa-print mr-0.5"></i>In
+                </button>
+              `}
             </div>
           </td>
         `;
@@ -34568,6 +34731,7 @@ function loadSoQuy(filter) {
       const kw = (document.getElementById('search-danhsach-tranhap')?.value || '').trim().toLowerCase();
       const cnFilter = document.getElementById('filter-tranhap-chinhanh')?.value || 'CURRENT';
       const targetCN = cnFilter === 'CURRENT' ? layMaChiNhanh(currentChiNhanh) : cnFilter;
+      const statusFilter = document.getElementById('filter-tranhap-trangthai')?.value || 'ALL';
 
       const tuNgayTN = document.getElementById('filter-tranhap-tungay')?.value || '';
       const denNgayTN = document.getElementById('filter-tranhap-denngay')?.value || '';
@@ -34577,9 +34741,16 @@ function loadSoQuy(filter) {
           const itemCN = item.chiNhanh || item.chi_nhanh || 'CN01';
           if (!laCungChiNhanh(itemCN, targetCN)) return false;
         }
+
+        const isItemDraft = Boolean(item.isDraft || item.trangThai === 'Lưu tạm');
+        if (statusFilter === 'DRAFT' && !isItemDraft) return false;
+        if (statusFilter === 'HOAN_THANH' && (isItemDraft || item.trangThai === 'Đã hủy')) return false;
+        if (statusFilter === 'HUY' && item.trangThai !== 'Đã hủy') return false;
+
         const matchKw = !kw || String(item.maPhieu || item.maTraHang || '').toLowerCase().includes(kw) ||
                String(item.tenNCC || '').toLowerCase().includes(kw) ||
                String(item.maNCC || '').toLowerCase().includes(kw) ||
+               String(item.nhanVien || item.nguoiTra || '').toLowerCase().includes(kw) ||
                String(item.ghiChu || '').toLowerCase().includes(kw);
         const dateVal = item.ngayTra || item.thoiGian || item.ngayTao || item.created_at;
         const matchDate = kiemTraNgayTrongKhoang(dateVal, tuNgayTN, denNgayTN);
@@ -34606,11 +34777,14 @@ function loadSoQuy(filter) {
         "STT": i + 1,
         "Mã Phiếu Trả": d.maPhieu,
         "Ngày Trả": d.ngayTra || d.thoiGian || '',
+        "Nhân Viên Trả": d.nguoiTra || d.nhanVien || '',
         "Mã NCC": d.maNCC || '',
         "Tên Nhà Cung Cấp": d.tenNCC || '',
         "Chi Nhánh": d.chiNhanh || '',
+        "Tổng Tiền Hàng (VNĐ)": d.tongTienHang || (Number(d.tongTien || 0) + Number(d.phiTra || 0)),
+        "Phí Trả Hàng (VNĐ)": d.phiTra || 0,
         "Tổng Tiền Hoàn (VNĐ)": d.tongTien || 0,
-        "Hình Thức Nhận": d.hinhThuc === 'TIEN_MAT' ? 'Tiền mặt' : (d.hinhThuc === 'TAI_KHOAN' ? 'Chuyển khoản' : 'Cấn trừ nợ'),
+        "Hình Thức Nhận": d.hinhThuc === 'TIEN_MAT' ? 'Tiền mặt' : (d.hinhThuc === 'TAI_KHOAN' ? 'Chuyển khoản' : (d.hinhThuc === 'HON_HOP' ? 'Hỗn hợp' : 'Cấn trừ nợ')),
         "Trạng Thái": d.trangThai || 'Đã trả hàng',
         "Ghi Chú": d.ghiChu || ''
       }));
@@ -34812,23 +34986,34 @@ function loadSoQuy(filter) {
       themHangVaoPhieuTraNCC(maHang);
     }
 
+    function tinhTongTienTraNCC() {
+      const tongTienHang = traNCCCart.reduce((a, b) => a + ((Number(b.soLuong) || 1) * (Number(b.giaTra) || 0)), 0);
+      const phiTra = (typeof parseMoneyValue === 'function') ? parseMoneyValue(document.getElementById('tranhap-phitra')?.value) : 0;
+      const tongTienHoan = Math.max(0, tongTienHang - phiTra);
+
+      const elTTHang = document.getElementById('tranhap-tongtienhang');
+      if (elTTHang) elTTHang.innerText = tongTienHang.toLocaleString('vi-VN') + ' đ';
+
+      const elTongTien = document.getElementById('tranhap-tongtien');
+      if (elTongTien) elTongTien.innerText = tongTienHoan.toLocaleString('vi-VN') + ' đ';
+
+      tinhTienHonHopTraNCC();
+      return { tongTienHang, phiTra, tongTienHoan };
+    }
+
     function renderCartTraNCC() {
       const tbody = document.getElementById('tranhap-cart-body');
-      const elTongTien = document.getElementById('tranhap-tongtien');
       if (!tbody) return;
 
       if (!traNCCCart.length) {
         tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400 italic">Chưa có sản phẩm nào được chọn để trả hàng NCC</td></tr>';
-        if (elTongTien) elTongTien.innerText = '0 đ';
-        tinhTienHonHopTraNCC();
+        tinhTongTienTraNCC();
         return;
       }
 
       const curCN = layMaChiNhanh(typeof currentChiNhanh !== 'undefined' ? currentChiNhanh : 'CN01');
-      let total = 0;
       tbody.innerHTML = traNCCCart.map((item, idx) => {
         const tt = (Number(item.soLuong) || 1) * (Number(item.giaTra) || 0);
-        total += tt;
         const tonKho = (typeof layTonKhoSanPhamTaiChiNhanh === 'function') ? layTonKhoSanPhamTaiChiNhanh(item.maHang, curCN) : 0;
         return `
           <tr class="hover:bg-slate-50 border-b border-slate-100 text-xs transition">
@@ -34865,8 +35050,7 @@ function loadSoQuy(filter) {
         `;
       }).join('');
 
-      if (elTongTien) elTongTien.innerText = total.toLocaleString('vi-VN') + ' đ';
-      tinhTienHonHopTraNCC();
+      tinhTongTienTraNCC();
     }
 
     function capNhatSLTraNCC(idx, val) {
@@ -34912,18 +35096,232 @@ function loadSoQuy(filter) {
     }
 
     function tinhTienHonHopTraNCC(changed) {
-      const tongTien = traNCCCart.reduce((a, b) => a + (b.soLuong * b.giaTra), 0);
+      const tongTienHang = traNCCCart.reduce((a, b) => a + ((Number(b.soLuong) || 1) * (Number(b.giaTra) || 0)), 0);
+      const phiTra = (typeof parseMoneyValue === 'function') ? parseMoneyValue(document.getElementById('tranhap-phitra')?.value) : 0;
+      const tongTienHoan = Math.max(0, tongTienHang - phiTra);
+
       const tmInp = document.getElementById('tranhap-tienmat-val');
       const ckInp = document.getElementById('tranhap-chuyenkhoan-val');
+      if (!tmInp || !ckInp) return;
+
       if (changed === 'TM') {
-        const tm = Number(tmInp?.value) || 0;
-        if (ckInp) ckInp.value = Math.max(0, tongTien - tm);
+        const tm = (typeof parseMoneyValue === 'function') ? parseMoneyValue(tmInp.value) : (Number(tmInp.value) || 0);
+        ckInp.value = (typeof formatMoneyDisplay === 'function') ? formatMoneyDisplay(Math.max(0, tongTienHoan - tm)) : Math.max(0, tongTienHoan - tm);
+      } else if (changed === 'CK') {
+        const ck = (typeof parseMoneyValue === 'function') ? parseMoneyValue(ckInp.value) : (Number(ckInp.value) || 0);
+        tmInp.value = (typeof formatMoneyDisplay === 'function') ? formatMoneyDisplay(Math.max(0, tongTienHoan - ck)) : Math.max(0, tongTienHoan - ck);
       } else {
-        const ck = Number(ckInp?.value) || 0;
-        if (tmInp) tmInp.value = Math.max(0, tongTien - ck);
+        const hinhThucVal = document.getElementById('tranhap-hinhthuc')?.value;
+        if (hinhThucVal === 'HON_HOP') {
+          const curTM = (typeof parseMoneyValue === 'function') ? parseMoneyValue(tmInp.value) : 0;
+          if (curTM > tongTienHoan || curTM === 0) {
+            tmInp.value = (typeof formatMoneyDisplay === 'function') ? formatMoneyDisplay(tongTienHoan) : tongTienHoan;
+            ckInp.value = '0';
+          } else {
+            ckInp.value = (typeof formatMoneyDisplay === 'function') ? formatMoneyDisplay(Math.max(0, tongTienHoan - curTM)) : Math.max(0, tongTienHoan - curTM);
+          }
+        }
       }
     }
 
+    function luuTamPhieuTraNCC() {
+      if (!traNCCCart || !traNCCCart.length) {
+        return showNotification("Vui lòng thêm ít nhất một mặt hàng vào đơn trước khi lưu tạm!", true);
+      }
+
+      const maNCC = document.getElementById('tranhap-mancc')?.value?.trim() || '';
+      const searchNCC = document.getElementById('tranhap-ncc-search')?.value?.trim() || '';
+      const ncc = (typeof rawNCCList !== 'undefined' && Array.isArray(rawNCCList)) ? 
+        rawNCCList.find(n => (n.maDoiTac || n.maNCC) === maNCC || (n.tenDoiTac || n.tenNCC) === searchNCC) : null;
+      let tenNCC = ncc ? (ncc.tenDoiTac || ncc.tenNCC) : (searchNCC || 'Nhà cung cấp');
+      if (tenNCC && tenNCC.includes('(')) {
+        tenNCC = tenNCC.replace(/\s*\([^)]*\)$/, '').trim();
+      }
+
+      const { tongTienHang, phiTra, tongTienHoan } = tinhTongTienTraNCC();
+      const isEditing = Boolean(window.dangSuaDonTraNCCMaPhieu);
+      const maPhieu = isEditing ? window.dangSuaDonTraNCCMaPhieu : ("PTN" + Date.now().toString().slice(-6));
+
+      // Lấy thời gian trả hàng
+      const valNgayTraInp = document.getElementById('tranhap-ngaytra')?.value;
+      let ngayTraFormatted = (typeof formatNgayGioLocal === 'function') ? formatNgayGioLocal(new Date()) : new Date().toLocaleString('vi-VN');
+      if (valNgayTraInp) {
+        const d = new Date(valNgayTraInp);
+        if (!isNaN(d.getTime())) {
+          const pad = n => String(n).padStart(2, '0');
+          ngayTraFormatted = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        }
+      }
+
+      const valNguoiTra = document.getElementById('tranhap-nguoitra')?.value?.trim() || 
+        ((typeof currentUser !== 'undefined' && currentUser) ? (currentUser.hoTen || currentUser.username) : 'Quản trị viên');
+
+      const hinhThucVal = document.getElementById('tranhap-hinhthuc')?.value || 'CONG_NO';
+      const nganHangChon = (hinhThucVal === 'TAI_KHOAN' || hinhThucVal === 'HON_HOP') ? (document.getElementById('tranhap-nganhang-select')?.value || '') : '';
+      let tienMat = (hinhThucVal === 'TIEN_MAT') ? tongTienHoan : (hinhThucVal === 'HON_HOP' ? ((typeof parseMoneyValue === 'function') ? parseMoneyValue(document.getElementById('tranhap-tienmat-val')?.value) : (Number(document.getElementById('tranhap-tienmat-val')?.value) || 0)) : 0);
+      let chuyenKhoan = (hinhThucVal === 'TAI_KHOAN') ? tongTienHoan : (hinhThucVal === 'HON_HOP' ? ((typeof parseMoneyValue === 'function') ? parseMoneyValue(document.getElementById('tranhap-chuyenkhoan-val')?.value) : (Number(document.getElementById('tranhap-chuyenkhoan-val')?.value) || 0)) : 0);
+
+      const cartCopy = JSON.parse(JSON.stringify(traNCCCart));
+
+      const draftObj = {
+        maPhieu: maPhieu,
+        maTraHang: maPhieu,
+        isDraft: true,
+        ngayTra: ngayTraFormatted,
+        thoiGian: ngayTraFormatted,
+        nguoiTra: valNguoiTra,
+        nhanVien: valNguoiTra,
+        maNCC: maNCC || (ncc ? (ncc.maDoiTac || ncc.maNCC) : 'NCC_LE'),
+        tenNCC: tenNCC,
+        tongTienHang: tongTienHang,
+        phiTra: phiTra,
+        tongTien: tongTienHoan,
+        soTien: tongTienHoan,
+        tienMat: tienMat,
+        chuyenKhoan: chuyenKhoan,
+        nganHang: nganHangChon,
+        trangThai: 'Lưu tạm',
+        hinhThuc: hinhThucVal,
+        chiNhanh: (typeof currentChiNhanh !== 'undefined' && currentChiNhanh) ? (typeof layTenChiNhanhDayDu === 'function' ? layTenChiNhanhDayDu(currentChiNhanh) : currentChiNhanh) : 'CN01: Trụ sở chính Thanh Miện',
+        ghiChu: document.getElementById('tranhap-ghichu')?.value || 'Phiếu trả hàng lưu tạm',
+        chiTietSanPham: cartCopy,
+        sanPham: cartCopy,
+        isLocalCreated: true
+      };
+
+      // 1. Lưu vào localStorage
+      try {
+        localStorage.setItem('SMART_ERP_DRAFT_TRA_NCC_' + maPhieu, JSON.stringify(draftObj));
+        let allDraftKeys = JSON.parse(localStorage.getItem('SMART_ERP_DRAFT_TRA_NCC_KEYS') || '[]');
+        if (!allDraftKeys.includes(maPhieu)) allDraftKeys.push(maPhieu);
+        localStorage.setItem('SMART_ERP_DRAFT_TRA_NCC_KEYS', JSON.stringify(allDraftKeys));
+      } catch(e) {
+        console.warn("Lỗi lưu localStorage draft trả hàng NCC:", e);
+      }
+
+      // 2. Cập nhật bộ nhớ rawTraHangNCCList
+      if (!Array.isArray(rawTraHangNCCList)) rawTraHangNCCList = [];
+      const exIdx = rawTraHangNCCList.findIndex(d => (d.maPhieu === maPhieu || d.maTraHang === maPhieu));
+      if (exIdx >= 0) rawTraHangNCCList[exIdx] = draftObj;
+      else rawTraHangNCCList.unshift(draftObj);
+      window.rawTraHangNCCList = rawTraHangNCCList;
+
+      // Reset state & chuyển sang danh sách
+      window.dangSuaDonTraNCCMaPhieu = null;
+      traNCCCart = [];
+      renderCartTraNCC();
+      const sInp = document.getElementById('tranhap-ncc-search'); if (sInp) sInp.value = '';
+      const mInp = document.getElementById('tranhap-mancc'); if (mInp) mInp.value = '';
+      const gInp = document.getElementById('tranhap-ghichu'); if (gInp) gInp.value = '';
+      const pInp = document.getElementById('tranhap-phitra'); if (pInp) pInp.value = '0';
+      const badgeEdit = document.getElementById('tranhap-badge-editing'); if (badgeEdit) badgeEdit.classList.add('hidden');
+
+      const filterTT = document.getElementById('filter-tranhap-trangthai');
+      if (filterTT) filterTT.value = 'DRAFT';
+      locDanhSachTraHangNCCTable();
+      chuyenViewTraHangNCC('danhsach');
+
+      showNotification(`Đã lưu tạm phiếu trả hàng [${maPhieu}] thành công! Bạn có thể tiếp tục bất cứ lúc nào.`, false);
+    }
+
+    function tiepTucNhapDonLuuTamTraNCC(maPhieu) {
+      let don = (rawTraHangNCCList || []).find(d => (d.maPhieu === maPhieu || d.maTraHang === maPhieu));
+      if (!don) {
+        try {
+          const stored = localStorage.getItem('SMART_ERP_DRAFT_TRA_NCC_' + maPhieu);
+          if (stored) don = JSON.parse(stored);
+        } catch(e) {}
+      }
+      if (!don) return showNotification("Không tìm thấy dữ liệu phiếu trả hàng lưu tạm!", true);
+
+      window.dangSuaDonTraNCCMaPhieu = maPhieu;
+      chuyenViewTraHangNCC('taodon');
+
+      // Điền thông tin NCC
+      const sInp = document.getElementById('tranhap-ncc-search');
+      if (sInp) sInp.value = don.tenNCC ? `${don.tenNCC}${don.maNCC ? ' (' + don.maNCC + ')' : ''}` : '';
+      const mInp = document.getElementById('tranhap-mancc');
+      if (mInp) mInp.value = don.maNCC || '';
+
+      // Điền ngày giờ trả hàng
+      const inpNgay = document.getElementById('tranhap-ngaytra');
+      if (inpNgay && (don.ngayTra || don.thoiGian)) {
+        try {
+          const d = new Date(don.ngayTra || don.thoiGian);
+          if (!isNaN(d.getTime())) {
+            const pad = n => String(n).padStart(2, '0');
+            inpNgay.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+          }
+        } catch(e) {}
+      }
+
+      // Điền nhân viên trả hàng
+      if (typeof napDanhSachNhanVienVaoSelect === 'function') {
+        napDanhSachNhanVienVaoSelect('tranhap-nguoitra', don.nguoiTra || don.nhanVien || '');
+      }
+
+      // Điền phí trả hàng
+      const pInp = document.getElementById('tranhap-phitra');
+      if (pInp) pInp.value = (typeof formatMoneyDisplay === 'function') ? formatMoneyDisplay(don.phiTra || 0) : (don.phiTra || 0);
+
+      // Điền hình thức thanh toán
+      const htSelect = document.getElementById('tranhap-hinhthuc');
+      if (htSelect) {
+        htSelect.value = don.hinhThuc || 'CONG_NO';
+        thayDoiHinhThucTraNCC(don.hinhThuc || 'CONG_NO');
+      }
+      if (don.hinhThuc === 'TAI_KHOAN' || don.hinhThuc === 'HON_HOP') {
+        const nhSelect = document.getElementById('tranhap-nganhang-select');
+        if (nhSelect && don.nganHang) nhSelect.value = don.nganHang;
+      }
+      if (don.hinhThuc === 'HON_HOP') {
+        const tmInp = document.getElementById('tranhap-tienmat-val');
+        if (tmInp) tmInp.value = (typeof formatMoneyDisplay === 'function') ? formatMoneyDisplay(don.tienMat || 0) : (don.tienMat || 0);
+        const ckInp = document.getElementById('tranhap-chuyenkhoan-val');
+        if (ckInp) ckInp.value = (typeof formatMoneyDisplay === 'function') ? formatMoneyDisplay(don.chuyenKhoan || 0) : (don.chuyenKhoan || 0);
+      }
+
+      // Điền ghi chú
+      const gInp = document.getElementById('tranhap-ghichu');
+      if (gInp) gInp.value = don.ghiChu || '';
+
+      // Hiển thị badge đang sửa phiếu tạm
+      const badgeEdit = document.getElementById('tranhap-badge-editing');
+      if (badgeEdit) badgeEdit.classList.remove('hidden');
+
+      // Nạp hàng vào giỏ
+      const items = (Array.isArray(don.sanPham) && don.sanPham.length > 0) ? don.sanPham : (Array.isArray(don.chiTietSanPham) ? don.chiTietSanPham : []);
+      traNCCCart = JSON.parse(JSON.stringify(items));
+      renderCartTraNCC();
+
+      showNotification(`Đang mở lại phiếu trả hàng lưu tạm [${maPhieu}]. Bạn có thể tiếp tục chỉnh sửa và Hoàn tất!`, false);
+    }
+
+    function xacNhanXoaDonLuuTamTraNCC(maPhieu) {
+      if (typeof showConfirm === 'function') {
+        showConfirm("Xóa phiếu lưu tạm", `Bạn có chắc chắn muốn xóa phiếu trả hàng lưu tạm [${maPhieu}] không?`, function() {
+          thucHienXoaDraftTraNCC(maPhieu);
+        });
+      } else {
+        if (confirm(`Bạn có chắc chắn muốn xóa phiếu trả hàng lưu tạm [${maPhieu}] không?`)) {
+          thucHienXoaDraftTraNCC(maPhieu);
+        }
+      }
+    }
+
+    function thucHienXoaDraftTraNCC(maPhieu) {
+      try {
+        localStorage.removeItem('SMART_ERP_DRAFT_TRA_NCC_' + maPhieu);
+        let allDraftKeys = JSON.parse(localStorage.getItem('SMART_ERP_DRAFT_TRA_NCC_KEYS') || '[]');
+        allDraftKeys = allDraftKeys.filter(k => k !== maPhieu);
+        localStorage.setItem('SMART_ERP_DRAFT_TRA_NCC_KEYS', JSON.stringify(allDraftKeys));
+      } catch(e) {}
+
+      rawTraHangNCCList = (rawTraHangNCCList || []).filter(d => (d.maPhieu !== maPhieu && d.maTraHang !== maPhieu));
+      window.rawTraHangNCCList = rawTraHangNCCList;
+      locDanhSachTraHangNCCTable();
+      showNotification(`Đã xóa phiếu trả hàng lưu tạm [${maPhieu}] thành công!`, false);
+    }
 
     function xacNhanLuuPhieuTraNCC() {
       if (typeof hasPermission === 'function' && !hasPermission('TRA_NHAP_THEM')) {
@@ -34938,24 +35336,44 @@ function loadSoQuy(filter) {
       let tenNCC = ncc ? (ncc.tenDoiTac || ncc.tenNCC) : searchNCC;
       if (tenNCC.includes('(')) tenNCC = tenNCC.replace(/\s*\([^)]*\)$/, '').trim();
 
-      const tongTien = traNCCCart.reduce((a, b) => a + (b.soLuong * b.giaTra), 0);
+      const { tongTienHang, phiTra, tongTienHoan } = tinhTongTienTraNCC();
       const hinhThucVal = document.getElementById('tranhap-hinhthuc')?.value || 'CONG_NO';
       const nganHangChon = (hinhThucVal === 'TAI_KHOAN' || hinhThucVal === 'HON_HOP') ? (document.getElementById('tranhap-nganhang-select')?.value || '') : '';
       
-      let tienMat = (hinhThucVal === 'TIEN_MAT') ? tongTien : (hinhThucVal === 'HON_HOP' ? (Number(document.getElementById('tranhap-tienmat-val')?.value) || 0) : 0);
-      let chuyenKhoan = (hinhThucVal === 'TAI_KHOAN') ? tongTien : (hinhThucVal === 'HON_HOP' ? (Number(document.getElementById('tranhap-chuyenkhoan-val')?.value) || 0) : 0);
+      let tienMat = (hinhThucVal === 'TIEN_MAT') ? tongTienHoan : (hinhThucVal === 'HON_HOP' ? ((typeof parseMoneyValue === 'function') ? parseMoneyValue(document.getElementById('tranhap-tienmat-val')?.value) : (Number(document.getElementById('tranhap-tienmat-val')?.value) || 0)) : 0);
+      let chuyenKhoan = (hinhThucVal === 'TAI_KHOAN') ? tongTienHoan : (hinhThucVal === 'HON_HOP' ? ((typeof parseMoneyValue === 'function') ? parseMoneyValue(document.getElementById('tranhap-chuyenkhoan-val')?.value) : (Number(document.getElementById('tranhap-chuyenkhoan-val')?.value) || 0)) : 0);
 
-      const maPhieu = "PTN" + Date.now().toString().slice(-6);
-      const nowStr = (typeof formatNgayGioLocal === 'function') ? formatNgayGioLocal(new Date()) : new Date().toLocaleString('vi-VN');
+      const isEditingDraft = Boolean(window.dangSuaDonTraNCCMaPhieu);
+      const maPhieu = isEditingDraft ? window.dangSuaDonTraNCCMaPhieu : ("PTN" + Date.now().toString().slice(-6));
+
+      // Lấy thời gian trả hàng
+      const valNgayTraInp = document.getElementById('tranhap-ngaytra')?.value;
+      let ngayTraFormatted = (typeof formatNgayGioLocal === 'function') ? formatNgayGioLocal(new Date()) : new Date().toLocaleString('vi-VN');
+      if (valNgayTraInp) {
+        const d = new Date(valNgayTraInp);
+        if (!isNaN(d.getTime())) {
+          const pad = n => String(n).padStart(2, '0');
+          ngayTraFormatted = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        }
+      }
+
+      // Lấy nhân viên trả hàng
+      const valNguoiTra = document.getElementById('tranhap-nguoitra')?.value?.trim() || 
+        ((typeof currentUser !== 'undefined' && currentUser) ? (currentUser.hoTen || currentUser.username) : 'Quản trị viên');
+
       const payload = {
         maPhieu: maPhieu,
         maTraHang: maPhieu,
-        ngayTra: nowStr,
-        thoiGian: nowStr,
+        ngayTra: ngayTraFormatted,
+        thoiGian: ngayTraFormatted,
         maNCC: maNCC || 'NCC_LE',
         tenNCC: tenNCC,
-        tongTien: tongTien,
-        soTien: tongTien,
+        nguoiTra: valNguoiTra,
+        nhanVien: valNguoiTra,
+        tongTienHang: tongTienHang,
+        phiTra: phiTra,
+        tongTien: tongTienHoan,
+        soTien: tongTienHoan,
         hinhThuc: hinhThucVal,
         nganHang: nganHangChon,
         tienMat: tienMat,
@@ -34965,17 +35383,31 @@ function loadSoQuy(filter) {
         chiTietSanPham: JSON.parse(JSON.stringify(traNCCCart)),
         sanPham: JSON.parse(JSON.stringify(traNCCCart)),
         trangThai: 'Đã hoàn trả',
+        isDraft: false,
         isLocalCreated: true
       };
 
+      // Xóa draft cũ nếu trước đó đang lưu tạm
+      if (isEditingDraft) {
+        try {
+          localStorage.removeItem('SMART_ERP_DRAFT_TRA_NCC_' + maPhieu);
+          let allDraftKeys = JSON.parse(localStorage.getItem('SMART_ERP_DRAFT_TRA_NCC_KEYS') || '[]');
+          allDraftKeys = allDraftKeys.filter(k => k !== maPhieu);
+          localStorage.setItem('SMART_ERP_DRAFT_TRA_NCC_KEYS', JSON.stringify(allDraftKeys));
+        } catch(e) {}
+      }
+
       // 1. Lưu ngay vào bộ nhớ RAM và LocalStorage (Optimistic UI)
       if (!Array.isArray(rawTraHangNCCList)) rawTraHangNCCList = [];
-      rawTraHangNCCList.unshift(payload);
+      const exIdx = rawTraHangNCCList.findIndex(d => (d.maPhieu === maPhieu || d.maTraHang === maPhieu));
+      if (exIdx >= 0) rawTraHangNCCList[exIdx] = payload;
+      else rawTraHangNCCList.unshift(payload);
       window.rawTraHangNCCList = rawTraHangNCCList;
 
       try {
         let localTH = JSON.parse(localStorage.getItem('TT_POS_LOCAL_TRA_HANG_NCC') || '[]');
         if (!Array.isArray(localTH)) localTH = [];
+        localTH = localTH.filter(d => (d.maPhieu !== maPhieu && d.maTraHang !== maPhieu));
         localTH.unshift(payload);
         localStorage.setItem('TT_POS_LOCAL_TRA_HANG_NCC', JSON.stringify(localTH.slice(0, 500)));
         localStorage.setItem('tt_pos_danh_sach_tra_hang_ncc', JSON.stringify(localTH.slice(0, 500)));
@@ -34994,6 +35426,7 @@ function loadSoQuy(filter) {
       try {
         const cleanPhieuNum = maPhieu.replace(/^[^\d]+/, '') || maPhieu;
         const branchFullName = payload.chiNhanh || 'CN01: Trụ sở chính Thanh Miện';
+        const feeNote = phiTra > 0 ? ` (Đã trừ phí trả: ${phiTra.toLocaleString('vi-VN')} đ)` : '';
         if (tienMat > 0) {
           const ptTienMat = {
             chiNhanh: branchFullName,
@@ -35020,7 +35453,7 @@ function loadSoQuy(filter) {
             trang_thai: "DaThanhToan",
             hangMuc: "Thu tiền trả hàng nhà cung cấp",
             lyDoThuChi: "Thu tiền trả hàng nhà cung cấp",
-            ghiChu: `Thu tiền hoàn trả hàng ${maPhieu} từ NCC: ${tenNCC || 'Nhà cung cấp'}`
+            ghiChu: `Thu tiền hoàn trả hàng ${maPhieu} từ NCC: ${tenNCC || 'Nhà cung cấp'}${feeNote}`
           };
           if (typeof luuPhieuSoQuyLocal === 'function') luuPhieuSoQuyLocal(ptTienMat);
         }
@@ -35051,7 +35484,7 @@ function loadSoQuy(filter) {
             trang_thai: "DaThanhToan",
             hangMuc: "Thu tiền trả hàng nhà cung cấp",
             lyDoThuChi: "Thu tiền trả hàng nhà cung cấp qua ngân hàng",
-            ghiChu: `Thu tiền hoàn trả hàng qua NH ${maPhieu} từ NCC: ${tenNCC || 'Nhà cung cấp'}${nganHangChon ? ' (' + nganHangChon + ')' : ''}`
+            ghiChu: `Thu tiền hoàn trả hàng qua NH ${maPhieu} từ NCC: ${tenNCC || 'Nhà cung cấp'}${nganHangChon ? ' (' + nganHangChon + ')' : ''}${feeNote}`
           };
           if (typeof luuPhieuSoQuyLocal === 'function') luuPhieuSoQuyLocal(ptCK);
         }
@@ -35063,10 +35496,11 @@ function loadSoQuy(filter) {
       }
 
       function resetFormTraNCC() {
+        window.dangSuaDonTraNCCMaPhieu = null;
         const btn = document.getElementById('btn-xacnhan-tranhap');
         if (btn) {
           btn.disabled = false;
-          btn.innerHTML = '<i class="fa-solid fa-check mr-1.5"></i><span>HOÀN TẤT TRẢ HÀNG NCC</span>';
+          btn.innerHTML = '<i class="fa-solid fa-check mr-1.5"></i><span>HOÀN TẤT TRẢ</span>';
         }
         traNCCCart = [];
         renderCartTraNCC();
@@ -35076,6 +35510,10 @@ function loadSoQuy(filter) {
         if (mInp) mInp.value = '';
         const gInp = document.getElementById('tranhap-ghichu');
         if (gInp) gInp.value = '';
+        const pInp = document.getElementById('tranhap-phitra');
+        if (pInp) pInp.value = '0';
+        const badgeEdit = document.getElementById('tranhap-badge-editing');
+        if (badgeEdit) badgeEdit.classList.add('hidden');
         chuyenViewTraHangNCC('danhsach');
       }
 
@@ -35113,16 +35551,39 @@ function loadSoQuy(filter) {
       const cnEl = document.getElementById('cttn-chinhanh');
       if (cnEl) cnEl.innerText = don.chiNhanh || 'CN01: Trụ sở chính';
       
+      const nvEl = document.getElementById('cttn-nhanvien');
+      if (nvEl) nvEl.innerText = don.nhanVien || don.nguoiTra || '-';
+
       let hinhThucText = 'Cấn trừ nợ';
       if (don.hinhThuc === 'TIEN_MAT') hinhThucText = 'Tiền mặt';
       else if (don.hinhThuc === 'TAI_KHOAN') hinhThucText = 'Chuyển khoản';
       else if (don.hinhThuc === 'HON_HOP') hinhThucText = 'Hỗn hợp';
       const htEl = document.getElementById('cttn-hinhthuc');
       if (htEl) htEl.innerText = hinhThucText;
+
+      const phiTra = Number(don.phiTra) || 0;
+      const tongTien = Number(don.tongTien) || 0;
+      const tongTienHang = Number(don.tongTienHang) || (tongTien + phiTra);
+
+      const phiEl = document.getElementById('cttn-phitra');
+      if (phiEl) phiEl.innerText = phiTra.toLocaleString('vi-VN') + ' đ';
+
+      const ttHangEl = document.getElementById('cttn-tongtienhang');
+      if (ttHangEl) ttHangEl.innerText = tongTienHang.toLocaleString('vi-VN') + ' đ';
+
+      const phiRowEl = document.getElementById('cttn-phitra-row');
+      if (phiRowEl) phiRowEl.innerText = phiTra.toLocaleString('vi-VN') + ' đ';
+
+      const rowPhiBox = document.getElementById('cttn-row-phitra');
+      if (rowPhiBox) {
+        if (phiTra > 0) rowPhiBox.classList.remove('hidden');
+        else rowPhiBox.classList.add('hidden');
+      }
+
       const gcEl = document.getElementById('cttn-ghichu');
       if (gcEl) gcEl.innerText = don.ghiChu || '(Không có)';
       const ttEl = document.getElementById('cttn-tongtien');
-      if (ttEl) ttEl.innerText = (Number(don.tongTien) || 0).toLocaleString('vi-VN') + ' đ';
+      if (ttEl) ttEl.innerText = tongTien.toLocaleString('vi-VN') + ' đ';
 
       const tbody = document.getElementById('cttn-bang-hanghoa');
       const items = (Array.isArray(don.sanPham) && don.sanPham.length > 0) ? don.sanPham : (Array.isArray(don.chiTietSanPham) ? don.chiTietSanPham : []);
@@ -35163,7 +35624,9 @@ function loadSoQuy(filter) {
       if (!don) return showNotification("Không tìm thấy phiếu trả để in!", true);
 
       const items = (Array.isArray(don.sanPham) && don.sanPham.length > 0) ? don.sanPham : (Array.isArray(don.chiTietSanPham) ? don.chiTietSanPham : []);
+      const phiTra = Number(don.phiTra) || 0;
       const tongTien = Number(don.tongTien) || 0;
+      const tongTienHang = Number(don.tongTienHang) || (tongTien + phiTra);
 
       let hinhThucText = 'Cấn trừ nợ';
       if (don.hinhThuc === 'TIEN_MAT') hinhThucText = 'Tiền mặt';
@@ -35198,17 +35661,20 @@ function loadSoQuy(filter) {
             h2 { text-align: center; margin-bottom: 5px; text-transform: uppercase; color: #d97706; }
             .sub { text-align: center; font-size: 11px; color: #666; margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            th { border: 1px solid #ddd; padding: 8px; background: #fdf6b2; text-align: left; }
-            .grid { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; }
+            th { background: #f8f9fa; border: 1px solid #ddd; padding: 8px; font-size: 12px; }
+            .info-grid { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 12px; }
+            .info-grid div { width: 48%; }
+            p { margin: 3px 0; }
           </style>
         </head>
         <body>
-          <h2>PHIẾU TRẢ HÀNG NHÀ CUNG CẤP</h2>
-          <div class="sub">Mã phiếu: <b>${don.maPhieu || don.maTraHang}</b> | Ngày: ${don.ngayTra || don.thoiGian || '-'}</div>
-          <div class="grid">
+          <h2>PHIẾU TRẢ HÀNG CHO NHÀ CUNG CẤP</h2>
+          <div class="sub">Mã phiếu: <b>${don.maPhieu || don.maTraHang}</b> | Ngày lập: ${don.ngayTra || don.thoiGian || '-'}</div>
+          <div class="info-grid">
             <div>
               <p><b>Nhà cung cấp:</b> ${don.tenNCC} ${don.maNCC ? '(' + don.maNCC + ')' : ''}</p>
               <p><b>Chi nhánh:</b> ${don.chiNhanh || 'CN01: Trụ sở chính'}</p>
+              <p><b>Nhân viên trả hàng:</b> ${don.nguoiTra || don.nhanVien || 'Quản trị viên'}</p>
             </div>
             <div style="text-align: right;">
               <p><b>Hình thức nhận:</b> ${hinhThucText}</p>
@@ -35227,8 +35693,18 @@ function loadSoQuy(filter) {
             </thead>
             <tbody>
               ${rowsHtml}
+              ${phiTra > 0 ? `
+                <tr>
+                  <td colspan="4" style="text-align: right; font-weight: bold; padding: 6px; border: 1px solid #ddd;">Tổng tiền hàng trả:</td>
+                  <td style="text-align: right; font-weight: bold; padding: 6px; border: 1px solid #ddd;">${tongTienHang.toLocaleString('vi-VN')} đ</td>
+                </tr>
+                <tr>
+                  <td colspan="4" style="text-align: right; font-weight: bold; color: #dc2626; padding: 6px; border: 1px solid #ddd;">Phí trả hàng khấu trừ:</td>
+                  <td style="text-align: right; font-weight: bold; color: #dc2626; padding: 6px; border: 1px solid #ddd;">-${phiTra.toLocaleString('vi-VN')} đ</td>
+                </tr>
+              ` : ''}
               <tr>
-                <td colspan="4" style="text-align: right; font-weight: bold; padding: 8px; border: 1px solid #ddd;">TỔNG TIỀN HOÀN TRẢ:</td>
+                <td colspan="4" style="text-align: right; font-weight: bold; padding: 8px; border: 1px solid #ddd;">TỔNG TIỀN HOÀN TRẢ THỰC TẾ:</td>
                 <td style="text-align: right; font-weight: bold; color: #d97706; font-size: 14px; padding: 8px; border: 1px solid #ddd;">${tongTien.toLocaleString('vi-VN')} đ</td>
               </tr>
             </tbody>
@@ -35250,7 +35726,6 @@ function loadSoQuy(filter) {
       }
     }
 
-    // -------------------------------------------------------------------------
     // 4. MODULE 4.1: ĐẶT HÀNG (2 Views, Lập đơn như POS, Chuyển sang POS, Sửa, Hủy, In)
     // -------------------------------------------------------------------------
     window.rawDonDatHangList = window.rawDonDatHangList || [];
@@ -37418,6 +37893,12 @@ function loadSoQuy(filter) {
     window.xemChiTietDonTraNCC = xemChiTietDonTraNCC;
     window.inPhieuTraNCCTuModal = inPhieuTraNCCTuModal;
     window.inPhieuTraNCC = inPhieuTraNCC;
+    window.tinhTongTienTraNCC = tinhTongTienTraNCC;
+    window.luuTamPhieuTraNCC = luuTamPhieuTraNCC;
+    window.tiepTucNhapDonLuuTamTraNCC = tiepTucNhapDonLuuTamTraNCC;
+    window.xacNhanXoaDonLuuTamTraNCC = xacNhanXoaDonLuuTamTraNCC;
+    window.thucHienXoaDraftTraNCC = thucHienXoaDraftTraNCC;
+    window.dongBoDonLuuTamTraNCCVaoDanhSach = dongBoDonLuuTamTraNCCVaoDanhSach;
 
     // Gắn các hàm của Đặt Hàng (4.1) vào window
     window.chuyenViewDatHang = chuyenViewDatHang;

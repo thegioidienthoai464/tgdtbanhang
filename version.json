@@ -1,18 +1,19 @@
 {
-  "version": "1.6.3",
-  "build_number": 66,
+  "version": "1.6.4",
+  "build_number": 67,
   "force_update": false,
-  "release_notes": "• Khắc phục triệt để hiển thị tồn kho hàng hóa sau khi nhập hàng: đảm bảo thẻ chi tiết \"TỔNG TỒN KHO\" và bảng danh mục hàng hóa luôn cập nhật chính xác, đồng bộ 100% với phân bổ tồn kho chi nhánh khi phát sinh đơn nhập hàng.\n• Khắc phục và tối ưu hóa ô tìm kiếm sản phẩm tại màn hình Lập phiếu trả hàng NCC (mục 4.3): tự động gợi ý tức thì theo mã hàng, tên hàng, barcode và Serial/IMEI; hỗ trợ chọn trực tiếp hoặc nhấn Enter / bấm nút \"+ Đưa vào đơn trả\" để thêm vào bảng trả hàng.\n• Chuẩn hóa bảng sản phẩm trả hàng NCC: căn chỉnh chính xác 6 cột theo mẫu (Sản phẩm trả, Số lượng, Đơn giá trả, Serial/IMEI trả, Thành tiền, Xóa) và tự động tính tổng tiền hoàn lại / cấn trừ nợ.\n• Tự động chọn chi nhánh mặc định là CN01 (Trụ sở chính Thanh Miện) hoặc chi nhánh đang làm việc đã lưu, không bị lệch tồn kho khi mở ứng dụng.",
+  "release_notes": "• Bổ sung tính năng điều chỉnh ngày giờ trả hàng và chọn nhân viên thực hiện trên phiếu trả hàng NCC (mục 4.3).\n• Hỗ trợ tính phí trả hàng NCC: tự động tính và hiển thị chi tiết tổng tiền hàng trả, phí khấu trừ và số tiền hoàn trả thực tế.\n• Bổ sung đa dạng hình thức hoàn tiền / cấn trừ nợ: Cấn trừ công nợ NCC, Nhận tiền mặt ngay, Chuyển khoản ngân hàng (chọn tài khoản nhận), Hỗn hợp (Tiền mặt + Chuyển khoản).\n• Thêm tính năng Lưu tạm phiếu trả hàng NCC: cho phép lưu nháp, quản lý danh sách phiếu tạm với nút \"Tiếp tục\" hoàn thiện và nút \"Xóa\" phiếu tạm tiện lợi.\n• Bổ sung bộ lọc trạng thái (Đã trả hàng / Lưu tạm / Đã hủy) tại danh sách đơn trả hàng NCC và đồng bộ đầy đủ lên báo cáo, chi tiết và bản in phiếu.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.3/TT_POS_v1.6.3.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.3/TT_POS_v1.6.3.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.3",
-  "build": 66,
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.4/TT_POS_v1.6.4.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.4/TT_POS_v1.6.4.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.4",
+  "build": 67,
   "releaseDate": "2026-11-13",
   "features": [
-    "Đồng bộ chuẩn xác tồn kho hàng hóa sau khi nhập hàng giữa bảng danh mục và thẻ chi tiết",
-    "Tìm kiếm & gợi ý sản phẩm mượt mà tại mục 4.3 Trả hàng NCC (theo mã, tên, barcode, IMEI)",
-    "Hỗ trợ phím Enter và nút '+ Đưa vào đơn trả' đưa nhanh sản phẩm vào đơn trả NCC",
-    "Căn chỉnh chuẩn hóa giao diện bảng trả hàng và tính tổng tiền cấn trừ nợ chính xác"
+    "Điều chỉnh ngày giờ trả hàng và nhân viên lập phiếu trả hàng NCC",
+    "Khấu trừ phí trả hàng NCC và tính tổng hoàn tiền thực tế",
+    "Đa dạng hình thức hoàn tiền: Cấn trừ nợ, Tiền mặt, Ngân hàng, Hỗn hợp",
+    "Lưu tạm phiếu trả hàng NCC và tiếp tục chỉnh sửa bất kỳ lúc nào",
+    "Bộ lọc trạng thái đơn trả hàng NCC (Đã trả / Lưu tạm / Đã hủy)"
   ]
 }
