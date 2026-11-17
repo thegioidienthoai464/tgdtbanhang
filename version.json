@@ -1,19 +1,17 @@
 {
-  "version": "1.6.5",
-  "build_number": 68,
+  "version": "1.6.6",
+  "build_number": 69,
   "force_update": false,
-  "release_notes": "• Cho phép tạo và quản lý nhóm hàng cháu (Cấp 3) sau nhóm con (Cấp 2).\n• Cây danh mục nhóm hàng trực quan: hỗ trợ đầy đủ 3 cấp (📁 Cấp 1 -> 📂 Cấp 2 -> 🏷️ Cấp 3) với nút \"+ Cháu\" thao tác nhanh trên từng nhóm con.\n• Hỗ trợ chống tạo vòng lặp quan hệ cha-con khi chỉnh sửa nhóm hàng.\n• Hiển thị đường dẫn phân cấp breadcrumb đầy đủ (VD: Điện thoại > iPhone > iPhone 15 Series) tự động theo thời gian thực.\n• Đồng bộ bộ lọc hàng hóa đa cấp: chọn nhóm cha tự động bao gồm toàn bộ sản phẩm của nhóm con và nhóm cháu trực thuộc.\n• Tối ưu chuyển nhóm hàng loạt và xuất Excel với cấu trúc phân cấp danh mục 3 cấp hoàn chỉnh.",
+  "release_notes": "• Chuẩn hóa danh sách chi nhánh sang Mẫu A (ngắn gọn, đồng nhất trên toàn bộ máy tính truy cập):\n  - CN01: Thanh Miện\n  - CN02: Thanh Giang\n  - CN03: Bình Giang\n  - CN04: Bán Online\n• Tự động chuẩn hóa bộ nhớ đệm (localStorage) trên tất cả trình duyệt và đồng bộ hai chiều với đám mây Supabase (dm_chinhanh).\n• Khắc phục hoàn toàn tình trạng hiển thị lệch tên chi nhánh hoặc tràn chữ giữa các máy tính khác nhau.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.5/TT_POS_v1.6.5.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.5/TT_POS_v1.6.5.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.5",
-  "build": 68,
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.6/TT_POS_v1.6.6.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.6/TT_POS_v1.6.6.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.6",
+  "build": 69,
   "releaseDate": "2026-11-17",
   "features": [
-    "Hỗ trợ tạo nhóm hàng cháu (Cấp 3) sau nhóm con (Cấp 2)",
-    "Nút thao tác nhanh + Cháu trên cây danh mục nhóm hàng",
-    "Đường dẫn breadcrumb Cha > Con > Cháu tự động",
-    "Lọc hàng hóa đa cấp bao gồm cả nhóm con và nhóm cháu",
-    "Chuyển nhóm hàng loạt và xuất Excel phân cấp 3 tầng"
+    "Chuẩn hóa tên chi nhánh Mẫu A (ngắn gọn) trên toàn hệ thống",
+    "Tự động làm mới và đồng bộ bộ nhớ đệm giữa các máy tính",
+    "Khắc phục tràn chữ ô chọn chi nhánh trên menu chính"
   ]
 }

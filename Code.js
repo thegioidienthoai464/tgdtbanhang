@@ -2027,9 +2027,9 @@ function apiGetLichSuGiaoDichNCC(maNCC) {
 // 1. Lấy danh sách chi nhánh từ Google Sheets
 function apiGetDanhSachChiNhanh() {
   const defaultBranches = [
-    { ma: "CN01", ten: "Trụ sở chính Thanh Miện" },
-    { ma: "CN02", ten: "Chi nhánh Thanh Giang" },
-    { ma: "CN03", ten: "Chi nhánh Bình Giang" },
+    { ma: "CN01", ten: "Thanh Miện" },
+    { ma: "CN02", ten: "Thanh Giang" },
+    { ma: "CN03", ten: "Bình Giang" },
     { ma: "CN04", ten: "Bán Online" }
   ];
 

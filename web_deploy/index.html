@@ -168,11 +168,11 @@
         const found = window.rawChiNhanhList.find(x => x.ma.toUpperCase() === c.toUpperCase());
         if (found) return found.ma + ': ' + found.ten;
       }
-      if (c === 'CN01') return 'CN01: Trụ sở chính Thanh Miện';
-      if (c === 'CN02') return 'CN02: Chi nhánh Thanh Giang';
-      if (c === 'CN03') return 'CN03: Chi nhánh Bình Giang';
+      if (c === 'CN01') return 'CN01: Thanh Miện';
+      if (c === 'CN02') return 'CN02: Thanh Giang';
+      if (c === 'CN03') return 'CN03: Bình Giang';
       if (c === 'CN04') return 'CN04: Bán Online';
-      return c + ': Chi nhánh ' + c;
+      return c + ': ' + c;
     }
     window.layTenChiNhanhDayDu = layTenChiNhanhDayDu;
 
@@ -295,9 +295,9 @@
     <!-- Dropdown Chọn Chi Nhánh & Nút Bánh Răng Cài Đặt -->
 <div class="px-3 py-2 bg-slate-950/40 border-b border-slate-800/80 flex items-center space-x-1.5">
   <select id="global-branch-select" onchange="thayDoiChiNhanhLamViec(this.value)" class="w-full bg-slate-950 border border-slate-700 text-amber-300 text-xs font-semibold rounded-xl px-2.5 py-2 focus:outline-none focus:border-amber-500">
-    <option value="CN01" selected>CN01: Trụ sở chính Thanh Miện</option>
-    <option value="CN02">CN02: Chi nhánh Thanh Giang</option>
-    <option value="CN03">CN03: Chi nhánh Bình Giang</option>
+    <option value="CN01" selected>CN01: Thanh Miện</option>
+    <option value="CN02">CN02: Thanh Giang</option>
+    <option value="CN03">CN03: Bình Giang</option>
     <option value="CN04">CN04: Bán Online</option>
   </select>
   <button type="button" id="btn-header-ql-chinhanh" onclick="moModalQuanLyChiNhanh()" title="Quản lý chi nhánh" class="p-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl transition flex-shrink-0 shadow-md">
@@ -440,7 +440,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.6.5</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.6.6</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -4094,9 +4094,9 @@
               <select id="bc-tc-filter-chinhanh" onchange="tinhToanVaRenderBaoCaoTaiChinh()" class="border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs bg-slate-50 font-semibold text-slate-800 focus:outline-none focus:border-blue-500 shadow-2xs cursor-pointer">
                 <option value="ALL" selected>🌐 Toàn chuỗi (Tất cả chi nhánh)</option>
                 <option value="CURRENT">📍 Chi nhánh đang chọn</option>
-                <option value="CN01">🏢 CN01: Trụ sở chính Thanh Miện</option>
-                <option value="CN02">🏢 CN02: Chi nhánh Thanh Giang</option>
-                <option value="CN03">🏢 CN03: Chi nhánh Bình Giang</option>
+                <option value="CN01">🏢 CN01: Thanh Miện</option>
+                <option value="CN02">🏢 CN02: Thanh Giang</option>
+                <option value="CN03">🏢 CN03: Bình Giang</option>
                 <option value="CN04">📱 CN04: Kênh Bán Hàng Online</option>
               </select>
             </div>
@@ -6214,9 +6214,9 @@
         <div>
           <label class="font-semibold text-slate-700">Chi nhánh chi tiền:</label>
           <select id="ttno-ncc-chinhanh" onchange="xuLyDoiChiNhanhThanhToanNCC(this.value)" class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 mt-1 font-medium">
-            <option value="CN01" selected>CN01: Trụ sở chính Thanh Miện</option>
-            <option value="CN02">CN02: Chi nhánh Thanh Giang</option>
-            <option value="CN03">CN03: Chi nhánh Bình Giang</option>
+            <option value="CN01" selected>CN01: Thanh Miện</option>
+            <option value="CN02">CN02: Thanh Giang</option>
+            <option value="CN03">CN03: Bình Giang</option>
             <option value="CN04">CN04: Bán Online</option>
           </select>
         </div>
@@ -6450,9 +6450,9 @@
         <div>
           <label class="font-semibold text-slate-700">Chi nhánh thu tiền:</label>
           <select id="thuno-kh-chinhanh" onchange="xuLyDoiChiNhanhThuNoKH(this.value)" class="w-full border border-slate-300 rounded-xl p-2 bg-slate-50 mt-1 font-medium">
-            <option value="CN01" selected>CN01: Trụ sở chính Thanh Miện</option>
-            <option value="CN02">CN02: Chi nhánh Thanh Giang</option>
-            <option value="CN03">CN03: Chi nhánh Bình Giang</option>
+            <option value="CN01" selected>CN01: Thanh Miện</option>
+            <option value="CN02">CN02: Thanh Giang</option>
+            <option value="CN03">CN03: Bình Giang</option>
             <option value="CN04">CN04: Bán Online</option>
           </select>
         </div>
@@ -7073,17 +7073,49 @@
     var currentUser = null;
     window.currentUser = null;
 
+    // Hàm chuẩn hóa danh sách chi nhánh sang Mẫu A (ngắn gọn, đồng nhất trên toàn bộ máy tính)
+    function chuanHoaDanhSachChiNhanh(list) {
+      const MAP_TEN_CHUAN = {
+        "CN01": "Thanh Miện",
+        "CN02": "Thanh Giang",
+        "CN03": "Bình Giang",
+        "CN04": "Bán Online"
+      };
+      const def = [
+        { ma: "CN01", ten: "Thanh Miện" },
+        { ma: "CN02", ten: "Thanh Giang" },
+        { ma: "CN03", ten: "Bình Giang" },
+        { ma: "CN04", ten: "Bán Online" }
+      ];
+      if (!Array.isArray(list) || list.length === 0) return def;
+      return list.map(item => {
+        const ma = String(item.ma || item.ma_cn || item.MaChiNhanh || '').trim().toUpperCase();
+        let ten = String(item.ten || item.ten_cn || item.TenChiNhanh || '').trim();
+        if (MAP_TEN_CHUAN[ma]) {
+          // Chuẩn hóa tự động nếu đang là tên dài cũ (Trụ sở chính, Chi nhánh...)
+          if (!ten || ten === "Trụ sở chính" || ten.includes("Trụ sở chính") || ten.includes("Chi nhánh")) {
+            ten = MAP_TEN_CHUAN[ma];
+          }
+        }
+        return { ma, ten: ten || (MAP_TEN_CHUAN[ma] || ma) };
+      });
+    }
+    window.chuanHoaDanhSachChiNhanh = chuanHoaDanhSachChiNhanh;
+
     var rawChiNhanhList = [
-      { ma: "CN01", ten: "Trụ sở chính Thanh Miện" },
-      { ma: "CN02", ten: "Chi nhánh Thanh Giang" },
-      { ma: "CN03", ten: "Chi nhánh Bình Giang" },
+      { ma: "CN01", ten: "Thanh Miện" },
+      { ma: "CN02", ten: "Thanh Giang" },
+      { ma: "CN03", ten: "Bình Giang" },
       { ma: "CN04", ten: "Bán Online" }
     ];
     try {
       var _savedB = localStorage.getItem('tt_pos_danhsach_chinhanh');
       if (_savedB) {
         var _parsedB = JSON.parse(_savedB);
-        if (Array.isArray(_parsedB) && _parsedB.length > 0) rawChiNhanhList = _parsedB;
+        if (Array.isArray(_parsedB) && _parsedB.length > 0) {
+          rawChiNhanhList = chuanHoaDanhSachChiNhanh(_parsedB);
+          localStorage.setItem('tt_pos_danhsach_chinhanh', JSON.stringify(rawChiNhanhList));
+        }
       }
     } catch(e) {}
     window.rawChiNhanhList = rawChiNhanhList;
@@ -9676,19 +9708,20 @@ function formatVND(amount) {
       } catch(e) {}
       return "CN01";
     })(); // Mặc định luôn là chi nhánh chính CN01
-    rawChiNhanhList = rawChiNhanhList || [
-      { ma: "CN01", ten: "Trụ sở chính Thanh Miện" },
-      { ma: "CN02", ten: "Chi nhánh Thanh Giang" },
-      { ma: "CN03", ten: "Chi nhánh Bình Giang" },
+    rawChiNhanhList = (typeof chuanHoaDanhSachChiNhanh === 'function') ? chuanHoaDanhSachChiNhanh(rawChiNhanhList) : [
+      { ma: "CN01", ten: "Thanh Miện" },
+      { ma: "CN02", ten: "Thanh Giang" },
+      { ma: "CN03", ten: "Bình Giang" },
       { ma: "CN04", ten: "Bán Online" }
     ];
-    // Tự động khôi phục danh sách chi nhánh đã tùy chỉnh từ bộ nhớ cục bộ
+    // Tự động khôi phục và chuẩn hóa danh sách chi nhánh sang Mẫu A
     try {
       const savedBranches = localStorage.getItem('tt_pos_danhsach_chinhanh');
       if (savedBranches) {
         const parsed = JSON.parse(savedBranches);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          rawChiNhanhList = parsed;
+          rawChiNhanhList = (typeof chuanHoaDanhSachChiNhanh === 'function') ? chuanHoaDanhSachChiNhanh(parsed) : parsed;
+          localStorage.setItem('tt_pos_danhsach_chinhanh', JSON.stringify(rawChiNhanhList));
         }
       }
     } catch(eBranchesInit) {}
@@ -9735,7 +9768,7 @@ function formatVND(amount) {
 
     // 2. Lấy tên chi nhánh đầy đủ hiển thị
     function layTenChiNhanhDayDu(maHoacTen) {
-      if (!maHoacTen) return rawChiNhanhList[0] ? `${rawChiNhanhList[0].ma}: ${rawChiNhanhList[0].ten}` : 'CN01: Trụ sở chính Thanh Miện';
+      if (!maHoacTen) return rawChiNhanhList[0] ? `${rawChiNhanhList[0].ma}: ${rawChiNhanhList[0].ten}` : 'CN01: Thanh Miện';
       const str = String(maHoacTen).trim();
       const cleanMa = layMaChiNhanh(str);
       const found = (rawChiNhanhList || []).find(x => x.ma === str || x.ma === cleanMa || `${x.ma}: ${x.ten}` === str || x.ten === str || (str.includes(x.ma) && str.length > 2));
@@ -9757,8 +9790,8 @@ function formatVND(amount) {
       }
       return {
         ma: cleanMa || 'CN01',
-        ten: ten || 'Trụ sở chính Thanh Miện',
-        dayDu: `${cleanMa || 'CN01'}: ${ten || 'Trụ sở chính Thanh Miện'}`
+        ten: ten || 'Thanh Miện',
+        dayDu: `${cleanMa || 'CN01'}: ${ten || 'Thanh Miện'}`
       };
     }
 
@@ -10734,14 +10767,18 @@ function formatVND(amount) {
     window.taiLaiDanhSachChiNhanhTuServer = taiLaiDanhSachChiNhanhTuServer;
 
     async function taiDanhSachChiNhanhBanDau(giuChiNhanhHienTai = false) {
-      // 1. Luôn ưu tiên nạp từ localStorage để phản hồi tức thì (< 1ms)
+      // 1. Luôn ưu tiên nạp từ localStorage và tự động chuẩn hóa Mẫu A ngắn gọn
       try {
         const savedBranches = localStorage.getItem('tt_pos_danhsach_chinhanh');
         if (savedBranches) {
           const parsed = JSON.parse(savedBranches);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            rawChiNhanhList = parsed;
+            rawChiNhanhList = (typeof chuanHoaDanhSachChiNhanh === 'function') ? chuanHoaDanhSachChiNhanh(parsed) : parsed;
+            localStorage.setItem('tt_pos_danhsach_chinhanh', JSON.stringify(rawChiNhanhList));
           }
+        } else {
+          rawChiNhanhList = (typeof chuanHoaDanhSachChiNhanh === 'function') ? chuanHoaDanhSachChiNhanh([]) : rawChiNhanhList;
+          localStorage.setItem('tt_pos_danhsach_chinhanh', JSON.stringify(rawChiNhanhList));
         }
       } catch (eStorage) {}
 
@@ -10749,7 +10786,7 @@ function formatVND(amount) {
       if (typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run.apiGetDanhSachChiNhanh === 'function') {
         google.script.run.withSuccessHandler(function(list) {
           if (Array.isArray(list) && list.length > 0) {
-            rawChiNhanhList = list;
+            rawChiNhanhList = (typeof chuanHoaDanhSachChiNhanh === 'function') ? chuanHoaDanhSachChiNhanh(list) : list;
             localStorage.setItem('tt_pos_danhsach_chinhanh', JSON.stringify(rawChiNhanhList));
             capNhatDropdownChiNhanhToanHeThong();
             renderDanhSachChiNhanhModal();
@@ -10766,14 +10803,23 @@ function formatVND(amount) {
             .order('ma_cn', { ascending: true });
 
           if (!error && data && data.length > 0) {
-            rawChiNhanhList = data.map(item => ({
+            const mapped = data.map(item => ({
               ma: item.ma_cn,
               ten: item.ten_cn
             }));
+            rawChiNhanhList = (typeof chuanHoaDanhSachChiNhanh === 'function') ? chuanHoaDanhSachChiNhanh(mapped) : mapped;
             localStorage.setItem('tt_pos_danhsach_chinhanh', JSON.stringify(rawChiNhanhList));
             capNhatDropdownChiNhanhToanHeThong();
             renderDanhSachChiNhanhModal();
           }
+
+          // Tự động đồng bộ chuẩn hóa Mẫu A lên Supabase dm_chinhanh để mọi máy tính khác đều nhận được
+          supabaseClient.from('dm_chinhanh').upsert([
+            { ma_cn: 'CN01', ten_cn: 'Thanh Miện' },
+            { ma_cn: 'CN02', ten_cn: 'Thanh Giang' },
+            { ma_cn: 'CN03', ten_cn: 'Bình Giang' },
+            { ma_cn: 'CN04', ten_cn: 'Bán Online' }
+          ]).then(() => {}, () => {});
         } catch (err) {
           console.warn("Lỗi đọc danh sách chi nhánh từ Supabase:", err);
         }
@@ -11122,8 +11168,8 @@ function formatVND(amount) {
       });
 
       const cnObj = rawChiNhanhList.find(x => x.ma === currentChiNhanh) || rawChiNhanhList[0];
-      const tenHienThi = cnObj ? `${cnObj.ma}: ${cnObj.ten}` : "CN01: Trụ sở chính Thanh Miện";
-      const tenHienThiNgan = cnObj ? cnObj.ten : "Trụ sở chính";
+      const tenHienThi = cnObj ? `${cnObj.ma}: ${cnObj.ten}` : "CN01: Thanh Miện";
+      const tenHienThiNgan = cnObj ? cnObj.ten : "Thanh Miện";
 
       // Cập nhật bộ lọc chi nhánh ở tab 2.3 Khách trả hàng
       const filterTraHang = document.getElementById('filter-trahang-chinhanh');
@@ -29003,8 +29049,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.6.5";
-    const APP_CLIENT_BUILD = 68;
+    const APP_CLIENT_VERSION = "1.6.6";
+    const APP_CLIENT_BUILD = 69;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
@@ -39395,10 +39441,11 @@ function loadSoQuy(filter) {
     }
 
     function capNhatDropdownChiNhanhChuyenKho() {
-      const branches = [
-        { ma: 'CN01', ten: 'Trụ sở chính Thanh Miện' },
-        { ma: 'CN02', ten: 'Chi nhánh Thanh Giang' },
-        { ma: 'CN03', ten: 'Chi nhánh Bình Giang' }
+      const branches = (rawChiNhanhList && rawChiNhanhList.length > 0) ? rawChiNhanhList : [
+        { ma: 'CN01', ten: 'Thanh Miện' },
+        { ma: 'CN02', ten: 'Thanh Giang' },
+        { ma: 'CN03', ten: 'Bình Giang' },
+        { ma: 'CN04', ten: 'Bán Online' }
       ];
 
       // Dropdown bộ lọc
@@ -41175,7 +41222,7 @@ function loadSoQuy(filter) {
         <div class="flex flex-wrap items-center gap-2">
           <select id="tk-filter-chinhanh" onchange="locTheKhoTable()" class="border border-slate-300 rounded-xl px-2.5 py-1 text-xs bg-white font-medium">
             <option value="ALL">-- Tất cả chi nhánh --</option>
-            <option value="CN01">CN01: Trụ sở chính Thanh Miện</option>
+            <option value="CN01">CN01: Thanh Miện</option>
             <option value="CN02">CN02: Chi nhánh 2</option>
             <option value="CN03">CN03: Chi nhánh 3</option>
           </select>
@@ -41884,7 +41931,7 @@ function loadSoQuy(filter) {
         </div>
         <div>
           <h3 class="font-extrabold text-slate-800 text-base">Quản Lý Hệ Thống Chi Nhánh</h3>
-          <p class="text-[10px] text-slate-400">Mặc định chi nhánh chính: <b class="text-amber-700">CN01: Trụ sở chính Thanh Miện</b></p>
+          <p class="text-[10px] text-slate-400">Mặc định chi nhánh chính: <b class="text-amber-700">CN01: Thanh Miện</b></p>
         </div>
       </div>
       <button type="button" onclick="dongModalQuanLyChiNhanh()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition">
