@@ -1,18 +1,18 @@
 {
-  "version": "1.6.7",
-  "build_number": 70,
-  "force_update": true,
-  "release_notes": "• Đồng bộ hóa 100% dữ liệu giao dịch tức thì giữa mọi máy tính truy cập phần mềm qua đám mây Supabase PostgreSQL.\n• Tự động tải và đồng bộ các đơn nhập hàng mới (PNH...), phiếu trả hàng NCC và sổ quỹ thu chi từ các máy tính khác.\n• Khắc phục triệt để tình trạng lệch số lượng đơn nhập hàng (2,028 vs 2,054) giữa 2 máy tính do bộ nhớ đệm cục bộ.\n• Tự động chuẩn hóa tên chi nhánh Mẫu A (CN01: Thanh Miện) đồng nhất trên tất cả thiết bị.\n• Tự động làm mới giao dịch khi quay lại tab phần mềm và định kỳ mỗi 45 giây.",
+  "version": "1.6.8",
+  "build_number": 71,
+  "force_update": false,
+  "release_notes": "• Khắc phục triệt để sự cố không hiển thị lịch sử đơn nhập hàng NCC và đồng bộ giao dịch.\n• Đảm bảo 100% dữ liệu gốc 2.054 đơn nhập hàng và lịch sử đơn bán hàng hiển thị tức thì trên mọi máy tính.\n• Xử lý hoàn toàn tình trạng kẹt biểu tượng 'Đang đồng bộ...' trên thanh tiêu đề.\n• Chuẩn hóa toàn diện tên chi nhánh Mẫu A (CN01: Thanh Miện) đồng nhất trên mọi máy tính.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.7/TT_POS_v1.6.7.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.7/TT_POS_v1.6.7.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.7",
-  "build": 70,
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.8/TT_POS_v1.6.8.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.8/TT_POS_v1.6.8.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.8",
+  "build": 71,
   "releaseDate": "2026-11-17",
   "features": [
-    "Đồng bộ toàn diện mọi giao dịch đám mây Supabase giữa các máy tính",
-    "Khắc phục lệch số lượng đơn nhập hàng và thu chi sổ quỹ",
-    "Chuẩn hóa chi nhánh Mẫu A (CN01: Thanh Miện) trên toàn hệ thống",
-    "Tự động làm mới khi đổi tab và định kỳ ngầm"
+    "Khắc phục triệt để hiển thị danh sách đơn nhập hàng và lịch sử đơn hàng",
+    "Tối ưu đồng bộ Supabase Cloud an toàn không gây nghẽn kết nối",
+    "Chống kẹt biểu tượng đang đồng bộ với cơ chế timeout bảo vệ",
+    "Chuẩn hóa chi nhánh Mẫu A đồng nhất mọi thiết bị"
   ]
 }

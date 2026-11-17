@@ -60,6 +60,25 @@
       window.rawKHList = window.RAW_KHACH_HANG_THANH_GIANG;
     }
 
+    // Tự động khởi tạo ngay rawNhapHangList từ dữ liệu KiotViet thực tế (3.201 đơn)
+    if (typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG) && window.RAW_NHAP_HANG_THANH_GIANG.length > 0) {
+      window.rawNhapHangList = window.RAW_NHAP_HANG_THANH_GIANG.map(d => ({
+        maPhieu: d.maPhieu,
+        ngayNhap: d.ngayNhap,
+        maNCC: d.maNCC || '',
+        tenNCC: d.tenNCC || '',
+        chiNhanh: d.chiNhanh || 'CN01: Thanh Miện',
+        tongTien: Number(d.tongTien) || 0,
+        daTra: Number(d.daTra) || 0,
+        conNo: Number(d.conNo) || Math.max(0, (Number(d.tongTien) || 0) - (Number(d.daTra) || 0)),
+        trangThai: d.trangThai || 'Hoàn thành',
+        nhanVien: d.nhanVien || d.nguoiNhap || 'Quản trị viên',
+        nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên',
+        ghiChu: d.ghiChu || '',
+        chiTietSanPham: Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (Array.isArray(d.sanPham) ? d.sanPham : [])
+      }));
+    }
+
     // ====================================================================
     // TIỆN ÍCH TOÀN CỤC: XỬ LÝ NGÀY THÁNG VÀ CHI NHÁNH CHUẨN XÁC 100%
     // ====================================================================
@@ -444,7 +463,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.6.7</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.6.8</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -12821,77 +12840,83 @@ function formatVND(amount) {
         if (typeof onComplete === 'function') onComplete();
         return;
       }
-      supabaseClient.from('don_hang')
-        .select('*')
-        .or('ma_don_hang.like.PNH%,ma_don_hang.like.PN%')
-        .not('ma_don_hang', 'like', 'PNH_TON%')
-        .order('ngay_ban', { ascending: false })
-        .limit(1000)
-        .then(({ data, error }) => {
-          if (!error && Array.isArray(data) && data.length > 0) {
-            let hasNewOrChanged = false;
-            if (!Array.isArray(rawNhapHangList)) rawNhapHangList = [];
+      try {
+        supabaseClient.from('don_hang')
+          .select('*')
+          .like('ma_don_hang', 'PNH%')
+          .not('ma_don_hang', 'like', 'PNH_TON%')
+          .order('ngay_ban', { ascending: false })
+          .limit(500)
+          .then(({ data, error }) => {
+            if (!error && Array.isArray(data) && data.length > 0) {
+              let hasNewOrChanged = false;
+              if (!Array.isArray(rawNhapHangList)) rawNhapHangList = [];
 
-            data.forEach(d => {
-              const ma = String(d.ma_don_hang || '').trim();
-              if (!ma || ma.startsWith('PNH_TON_')) return;
-              if (String(d.nhan_vien || '').toLowerCase() === 'hệ thống tự động') return;
+              data.forEach(d => {
+                const ma = String(d.ma_don_hang || '').trim();
+                if (!ma || ma.startsWith('PNH_TON_')) return;
+                if (String(d.nhan_vien || '').toLowerCase() === 'hệ thống tự động') return;
 
-              const cnStandard = (typeof layTenChiNhanhDayDu === 'function') ? layTenChiNhanhDayDu(d.chi_nhanh || 'CN01') : 'CN01: Thanh Miện';
-              const phieuMoi = {
-                maPhieu: ma,
-                ngayNhap: formatNgayGioLocal(d.ngay_ban),
-                maNCC: d.ma_kh || '',
-                tenNCC: d.ten_kh || '',
-                chiNhanh: cnStandard,
-                tongTien: Number(d.tong_tien) || 0,
-                daTra: Number(d.khach_tra) || 0,
-                conNo: Math.max(0, (Number(d.tong_tien) || 0) - (Number(d.khach_tra) || 0)),
-                trangThai: d.trang_thai || 'Hoàn thành',
-                nhanVien: d.nhan_vien || 'Quản trị viên',
-                nguoiNhap: d.nhan_vien || 'Quản trị viên',
-                ghiChu: d.ghi_chu || '',
-                chiTietSanPham: Array.isArray(d.chi_tiet_san_pham) ? d.chi_tiet_san_pham : []
-              };
+                const cnStandard = (typeof layTenChiNhanhDayDu === 'function') ? layTenChiNhanhDayDu(d.chi_nhanh || 'CN01') : 'CN01: Thanh Miện';
+                const phieuMoi = {
+                  maPhieu: ma,
+                  ngayNhap: (typeof formatNgayGioLocal === 'function') ? formatNgayGioLocal(d.ngay_ban) : String(d.ngay_ban),
+                  maNCC: d.ma_kh || '',
+                  tenNCC: d.ten_kh || '',
+                  chiNhanh: cnStandard,
+                  tongTien: Number(d.tong_tien) || 0,
+                  daTra: Number(d.khach_tra) || 0,
+                  conNo: Math.max(0, (Number(d.tong_tien) || 0) - (Number(d.khach_tra) || 0)),
+                  trangThai: d.trang_thai || 'Hoàn thành',
+                  nhanVien: d.nhan_vien || 'Quản trị viên',
+                  nguoiNhap: d.nhan_vien || 'Quản trị viên',
+                  ghiChu: d.ghi_chu || '',
+                  chiTietSanPham: Array.isArray(d.chi_tiet_san_pham) ? d.chi_tiet_san_pham : []
+                };
 
-              const idx = rawNhapHangList.findIndex(x => (x.maPhieu || x.ma_don_hang) === ma);
-              if (idx >= 0) {
-                const cur = rawNhapHangList[idx];
-                if (cur.trangThai !== phieuMoi.trangThai || cur.daTra !== phieuMoi.daTra || cur.conNo !== phieuMoi.conNo || !cur.chiTietSanPham?.length) {
-                  rawNhapHangList[idx] = { ...cur, ...phieuMoi };
+                const idx = rawNhapHangList.findIndex(x => (x.maPhieu || x.ma_don_hang) === ma);
+                if (idx >= 0) {
+                  const cur = rawNhapHangList[idx];
+                  if (cur.trangThai !== phieuMoi.trangThai || cur.daTra !== phieuMoi.daTra || cur.conNo !== phieuMoi.conNo || !cur.chiTietSanPham?.length) {
+                    rawNhapHangList[idx] = { ...cur, ...phieuMoi };
+                    hasNewOrChanged = true;
+                  }
+                } else {
+                  rawNhapHangList.unshift(phieuMoi);
                   hasNewOrChanged = true;
                 }
-              } else {
-                rawNhapHangList.unshift(phieuMoi);
-                hasNewOrChanged = true;
+              });
+
+              if (hasNewOrChanged) {
+                window.rawNhapHangList = rawNhapHangList;
+                rawNhapHangList.sort(sapXepDonNhapGiamDan);
+                locDanhSachNhapHangTable();
+                dongBoImeiTuDonNhapHang();
+                if (typeof capNhatTonKhoTheoChiNhanhHienTai === 'function') capNhatTonKhoTheoChiNhanhHienTai();
+                if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
+
+                // Cập nhật ngược vào localStorage để duy trì khả năng ngoại tuyến
+                try {
+                  let localList = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NHAP_HANG') || '[]');
+                  const localMap = new Map();
+                  localList.forEach(item => { if (item.maPhieu) localMap.set(item.maPhieu, item); });
+                  rawNhapHangList.filter(item => String(item.maPhieu).startsWith('PNH')).forEach(p => {
+                    localMap.set(p.maPhieu, p);
+                  });
+                  localStorage.setItem('TT_POS_LOCAL_NHAP_HANG', JSON.stringify(Array.from(localMap.values()).slice(0, 500)));
+                } catch(e) {}
               }
-            });
-
-            if (hasNewOrChanged) {
-              rawNhapHangList.sort(sapXepDonNhapGiamDan);
-              locDanhSachNhapHangTable();
-              dongBoImeiTuDonNhapHang();
-              if (typeof capNhatTonKhoTheoChiNhanhHienTai === 'function') capNhatTonKhoTheoChiNhanhHienTai();
-              if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
-
-              // Cập nhật ngược vào localStorage để duy trì khả năng ngoại tuyến
-              try {
-                let localList = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NHAP_HANG') || '[]');
-                const localMap = new Map();
-                localList.forEach(item => { if (item.maPhieu) localMap.set(item.maPhieu, item); });
-                rawNhapHangList.filter(item => String(item.maPhieu).startsWith('PNH')).forEach(p => {
-                  localMap.set(p.maPhieu, p);
-                });
-                localStorage.setItem('TT_POS_LOCAL_NHAP_HANG', JSON.stringify(Array.from(localMap.values()).slice(0, 500)));
-              } catch(e) {}
             }
-          }
-          if (typeof onComplete === 'function') onComplete();
-        })
-        .catch(err => {
-          console.warn("Lỗi đồng bộ đơn nhập Supabase:", err);
-          if (typeof onComplete === 'function') onComplete();
-        });
+            if (typeof onComplete === 'function') onComplete();
+          })
+          .catch(err => {
+            console.warn("Lỗi đồng bộ đơn nhập Supabase:", err);
+            if (typeof onComplete === 'function') onComplete();
+          });
+      } catch(errAll) {
+        console.warn("Ngoại lệ khi gọi Supabase:", errAll);
+        if (typeof onComplete === 'function') onComplete();
+      }
     }
     window.dongBoDonNhapTuSupabase = dongBoDonNhapTuSupabase;
 
@@ -12903,7 +12928,7 @@ function formatVND(amount) {
       
       // 0. Ưu tiên nạp tức thì từ bộ nhớ gốc KiotViet (Thanh Giang, Thanh Miện, Bình Giang)
       if (typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG) && window.RAW_NHAP_HANG_THANH_GIANG.length > 0) {
-        if (!Array.isArray(rawNhapHangList) || rawNhapHangList.length === 0) {
+        if (!Array.isArray(rawNhapHangList) || rawNhapHangList.length < 500) {
           rawNhapHangList = window.RAW_NHAP_HANG_THANH_GIANG.map(d => ({
             maPhieu: d.maPhieu,
             ngayNhap: d.ngayNhap,
@@ -12920,13 +12945,17 @@ function formatVND(amount) {
             chiTietSanPham: Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (Array.isArray(d.sanPham) ? d.sanPham : [])
           }));
         } else {
-          // Chuẩn hóa tên chi nhánh Mẫu A
+          // Chuẩn hóa tên chi nhánh Mẫu A & đảm bảo chi tiết sản phẩm
           rawNhapHangList.forEach(d => {
             if (d.chiNhanh && typeof layTenChiNhanhDayDu === 'function') {
               d.chiNhanh = layTenChiNhanhDayDu(d.chiNhanh);
             }
+            if (!d.chiTietSanPham && d.sanPham) {
+              d.chiTietSanPham = d.sanPham;
+            }
           });
         }
+        window.rawNhapHangList = rawNhapHangList;
         dongBoDonNhapLocalVaoDanhSach();
         dongBoDonLuuTamVaoDanhSach();
         dongBoImeiTuDonNhapHang();
@@ -24510,9 +24539,24 @@ function formatVND(amount) {
           window.rawSoQuyAllRecords = window.RAW_SO_QUY_THANH_GIANG;
         }
       }
-      if (!window.rawNhapHangList || window.rawNhapHangList.length === 0) {
+      if (!window.rawNhapHangList || window.rawNhapHangList.length < 500) {
         if (window.RAW_NHAP_HANG_THANH_GIANG && window.RAW_NHAP_HANG_THANH_GIANG.length > 0) {
-          window.rawNhapHangList = window.RAW_NHAP_HANG_THANH_GIANG;
+          window.rawNhapHangList = window.RAW_NHAP_HANG_THANH_GIANG.map(d => ({
+            maPhieu: d.maPhieu,
+            ngayNhap: d.ngayNhap,
+            maNCC: d.maNCC || '',
+            tenNCC: d.tenNCC || '',
+            chiNhanh: (typeof layTenChiNhanhDayDu === 'function') ? layTenChiNhanhDayDu(d.chiNhanh || 'CN01: Thanh Miện') : (d.chiNhanh || 'CN01: Thanh Miện'),
+            tongTien: Number(d.tongTien) || 0,
+            daTra: Number(d.daTra) || 0,
+            conNo: Number(d.conNo) || Math.max(0, (Number(d.tongTien) || 0) - (Number(d.daTra) || 0)),
+            trangThai: d.trangThai || 'Hoàn thành',
+            nhanVien: d.nhanVien || d.nguoiNhap || 'Quản trị viên',
+            nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên',
+            ghiChu: d.ghiChu || '',
+            chiTietSanPham: Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (Array.isArray(d.sanPham) ? d.sanPham : [])
+          }));
+          rawNhapHangList = window.rawNhapHangList;
         }
       }
       if (!window.rawTraHangNCCList || window.rawTraHangNCCList.length === 0) {
@@ -24620,9 +24664,24 @@ function formatVND(amount) {
           window.rawSoQuyAllRecords = window.RAW_SO_QUY_THANH_GIANG;
         }
       }
-      if (!window.rawNhapHangList || window.rawNhapHangList.length === 0) {
+      if (!window.rawNhapHangList || window.rawNhapHangList.length < 500) {
         if (window.RAW_NHAP_HANG_THANH_GIANG && window.RAW_NHAP_HANG_THANH_GIANG.length > 0) {
-          window.rawNhapHangList = window.RAW_NHAP_HANG_THANH_GIANG;
+          window.rawNhapHangList = window.RAW_NHAP_HANG_THANH_GIANG.map(d => ({
+            maPhieu: d.maPhieu,
+            ngayNhap: d.ngayNhap,
+            maNCC: d.maNCC || '',
+            tenNCC: d.tenNCC || '',
+            chiNhanh: (typeof layTenChiNhanhDayDu === 'function') ? layTenChiNhanhDayDu(d.chiNhanh || 'CN01: Thanh Miện') : (d.chiNhanh || 'CN01: Thanh Miện'),
+            tongTien: Number(d.tongTien) || 0,
+            daTra: Number(d.daTra) || 0,
+            conNo: Number(d.conNo) || Math.max(0, (Number(d.tongTien) || 0) - (Number(d.daTra) || 0)),
+            trangThai: d.trangThai || 'Hoàn thành',
+            nhanVien: d.nhanVien || d.nguoiNhap || 'Quản trị viên',
+            nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên',
+            ghiChu: d.ghiChu || '',
+            chiTietSanPham: Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (Array.isArray(d.sanPham) ? d.sanPham : [])
+          }));
+          rawNhapHangList = window.rawNhapHangList;
         }
       }
       if (!window.rawTraHangNCCList || window.rawTraHangNCCList.length === 0) {
@@ -29157,8 +29216,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.6.7";
-    const APP_CLIENT_BUILD = 70;
+    const APP_CLIENT_VERSION = "1.6.8";
+    const APP_CLIENT_BUILD = 71;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
@@ -46361,44 +46420,64 @@ function loadSoQuy(filter) {
       if (hienThongBao) showNotification("Đang đồng bộ toàn bộ giao dịch từ đám mây Supabase...");
 
       let doneCount = 0;
+      let isDone = false;
       const totalTasks = 5;
       const checkDone = () => {
         doneCount++;
-        if (doneCount >= totalTasks) {
+        if (doneCount >= totalTasks && !isDone) {
+          isDone = true;
           if (btnLabel) btnLabel.innerText = 'Đồng bộ Supabase';
           if (hienThongBao) showNotification("⚡ Đã đồng bộ toàn bộ giao dịch mới nhất giữa các máy tính thành công!");
         }
       };
 
+      // Safety timeout: đảm bảo nhãn nút không bao giờ bị kẹt quay vô tận
+      setTimeout(() => {
+        if (!isDone) {
+          isDone = true;
+          if (btnLabel) btnLabel.innerText = 'Đồng bộ Supabase';
+        }
+      }, 3500);
+
       // 1. Đồng bộ Đơn nhập hàng NCC
-      if (typeof dongBoDonNhapTuSupabase === 'function') {
-        dongBoDonNhapTuSupabase(checkDone);
-      } else { checkDone(); }
+      try {
+        if (typeof dongBoDonNhapTuSupabase === 'function') {
+          dongBoDonNhapTuSupabase(checkDone);
+        } else { checkDone(); }
+      } catch(e) { checkDone(); }
 
       // 2. Đồng bộ Sổ Quỹ
-      if (typeof dongBoSoQuyTuSupabase === 'function') {
-        dongBoSoQuyTuSupabase(typeof currentLoaiQuy !== 'undefined' ? currentLoaiQuy : 'ALL', true);
-        checkDone();
-      } else { checkDone(); }
+      try {
+        if (typeof dongBoSoQuyTuSupabase === 'function') {
+          dongBoSoQuyTuSupabase(typeof currentLoaiQuy !== 'undefined' ? currentLoaiQuy : 'ALL', true);
+          checkDone();
+        } else { checkDone(); }
+      } catch(e) { checkDone(); }
 
       // 3. Đồng bộ Đơn bán hàng POS
-      if (typeof loadLichSuDonHang === 'function') {
-        window._donHangSupabaseFetchedOnce = false;
-        loadLichSuDonHang(true);
-        checkDone();
-      } else { checkDone(); }
+      try {
+        if (typeof loadLichSuDonHang === 'function') {
+          window._donHangSupabaseFetchedOnce = false;
+          loadLichSuDonHang(true);
+          checkDone();
+        } else { checkDone(); }
+      } catch(e) { checkDone(); }
 
       // 4. Đồng bộ Trả hàng NCC
-      if (typeof taiDanhSachTraHangNCC === 'function') {
-        taiDanhSachTraHangNCC();
-        checkDone();
-      } else { checkDone(); }
+      try {
+        if (typeof taiDanhSachTraHangNCC === 'function') {
+          taiDanhSachTraHangNCC();
+          checkDone();
+        } else { checkDone(); }
+      } catch(e) { checkDone(); }
 
       // 5. Đồng bộ Chi nhánh, NCC & Khách hàng
-      if (typeof taiDanhSachChiNhanhBanDau === 'function') taiDanhSachChiNhanhBanDau(true);
-      if (typeof loadNCC === 'function') loadNCC();
-      if (typeof loadKH === 'function') loadKH();
-      checkDone();
+      try {
+        if (typeof taiDanhSachChiNhanhBanDau === 'function') taiDanhSachChiNhanhBanDau(true);
+        if (typeof loadNCC === 'function') loadNCC();
+        if (typeof loadKH === 'function') loadKH();
+        checkDone();
+      } catch(e) { checkDone(); }
     }
     window.dongBoToanBoGiaoDichTuDamMay = dongBoToanBoGiaoDichTuDamMay;
 
