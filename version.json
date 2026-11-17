@@ -1,17 +1,18 @@
 {
-  "version": "1.6.6",
-  "build_number": 69,
-  "force_update": false,
-  "release_notes": "• Chuẩn hóa danh sách chi nhánh sang Mẫu A (ngắn gọn, đồng nhất trên toàn bộ máy tính truy cập):\n  - CN01: Thanh Miện\n  - CN02: Thanh Giang\n  - CN03: Bình Giang\n  - CN04: Bán Online\n• Tự động chuẩn hóa bộ nhớ đệm (localStorage) trên tất cả trình duyệt và đồng bộ hai chiều với đám mây Supabase (dm_chinhanh).\n• Khắc phục hoàn toàn tình trạng hiển thị lệch tên chi nhánh hoặc tràn chữ giữa các máy tính khác nhau.",
+  "version": "1.6.7",
+  "build_number": 70,
+  "force_update": true,
+  "release_notes": "• Đồng bộ hóa 100% dữ liệu giao dịch tức thì giữa mọi máy tính truy cập phần mềm qua đám mây Supabase PostgreSQL.\n• Tự động tải và đồng bộ các đơn nhập hàng mới (PNH...), phiếu trả hàng NCC và sổ quỹ thu chi từ các máy tính khác.\n• Khắc phục triệt để tình trạng lệch số lượng đơn nhập hàng (2,028 vs 2,054) giữa 2 máy tính do bộ nhớ đệm cục bộ.\n• Tự động chuẩn hóa tên chi nhánh Mẫu A (CN01: Thanh Miện) đồng nhất trên tất cả thiết bị.\n• Tự động làm mới giao dịch khi quay lại tab phần mềm và định kỳ mỗi 45 giây.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.6/TT_POS_v1.6.6.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.6/TT_POS_v1.6.6.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.6",
-  "build": 69,
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.7/TT_POS_v1.6.7.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.7/TT_POS_v1.6.7.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.7",
+  "build": 70,
   "releaseDate": "2026-11-17",
   "features": [
-    "Chuẩn hóa tên chi nhánh Mẫu A (ngắn gọn) trên toàn hệ thống",
-    "Tự động làm mới và đồng bộ bộ nhớ đệm giữa các máy tính",
-    "Khắc phục tràn chữ ô chọn chi nhánh trên menu chính"
+    "Đồng bộ toàn diện mọi giao dịch đám mây Supabase giữa các máy tính",
+    "Khắc phục lệch số lượng đơn nhập hàng và thu chi sổ quỹ",
+    "Chuẩn hóa chi nhánh Mẫu A (CN01: Thanh Miện) trên toàn hệ thống",
+    "Tự động làm mới khi đổi tab và định kỳ ngầm"
   ]
 }

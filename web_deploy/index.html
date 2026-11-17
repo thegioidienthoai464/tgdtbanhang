@@ -8,6 +8,10 @@
   <meta name="apple-mobile-web-app-title" content="T&T POS">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="format-detection" content="telephone=no">
+  <!-- Chống lưu bộ nhớ đệm cũ trên các máy tính truy cập -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>T&T POS - Hệ Thống Quản Lý Bán Hàng & Phân Quyền</title>
   <!-- Cấu hình PWA & App iOS (Thêm vào Màn hình chính iPhone/iPad) -->
   <link rel="manifest" href="manifest.json">
@@ -440,7 +444,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.6.6</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.6.7</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -503,7 +507,7 @@
       </div>
       <div class="flex items-center space-x-3">
         <span id="current-date-badge" class="px-3 py-1 bg-slate-100 rounded-full text-[11px] text-slate-600 font-medium border border-slate-200"></span>
-        <button type="button" onclick="chayDongBoSangSupabase()" title="Đồng bộ toàn bộ dữ liệu từ Google Sheets sang Supabase PostgreSQL" class="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-full text-[11px] font-bold flex items-center space-x-1.5 transition shadow-xs">
+        <button type="button" onclick="dongBoToanBoGiaoDichTuDamMay(true)" title="Đồng bộ toàn bộ dữ liệu & giao dịch từ đám mây Supabase tức thì trên mọi máy tính" class="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-full text-[11px] font-bold flex items-center space-x-1.5 transition shadow-xs">
           <i class="fa-solid fa-bolt text-amber-500"></i>
           <span id="btn-sync-supabase-label">Đồng bộ Supabase</span>
         </button>
@@ -8076,6 +8080,51 @@ function _buildSoQuyMasterCache() {
   return combined;
 }
 
+function dongBoSoQuyTuSupabase(loaiQuy, force = false) {
+  if (typeof supabaseClient === 'undefined' || !supabaseClient) return;
+  supabaseClient.from('so_quy')
+    .select('*')
+    .order('ngay_gd', { ascending: false })
+    .limit(500)
+    .then(({ data, error }) => {
+      if (!error && Array.isArray(data) && data.length > 0) {
+        if (!Array.isArray(window.rawSoQuyAllRecords)) window.rawSoQuyAllRecords = [];
+        const seenMap = new Map();
+        window.rawSoQuyAllRecords.forEach(r => {
+          const ma = r.ma_phieu || r.maPhieu;
+          if (ma) seenMap.set(ma, r);
+        });
+
+        let hasNewOrChanged = false;
+        data.forEach(item => {
+          const ma = item.ma_phieu || item.maPhieu;
+          if (!ma) return;
+          if (!seenMap.has(ma)) {
+            window.rawSoQuyAllRecords.unshift(item);
+            seenMap.set(ma, item);
+            hasNewOrChanged = true;
+          } else {
+            const existing = seenMap.get(ma);
+            if (existing.trang_thai !== item.trang_thai || Number(existing.so_tien) !== Number(item.so_tien)) {
+              Object.assign(existing, item);
+              hasNewOrChanged = true;
+            }
+          }
+        });
+
+        if (hasNewOrChanged || force) {
+          window.soQuyMasterDirty = true;
+          window._localSoQuyMemCache = null;
+          if (typeof loadDuLieuSoQuy === 'function') {
+            loadDuLieuSoQuy(loaiQuy, true);
+          }
+        }
+      }
+    })
+    .catch(err => console.warn("Lỗi đồng bộ Sổ Quỹ Supabase:", err));
+}
+window.dongBoSoQuyTuSupabase = dongBoSoQuyTuSupabase;
+
 function loadDuLieuSoQuy(loaiQuy, forceRefresh = false) {
   const qFilter = String(loaiQuy || currentLoaiQuy || "ALL").toUpperCase().trim();
   const locCN = document.getElementById('sq-loc-chinhanh')?.value || 'CURRENT';
@@ -8156,7 +8205,10 @@ function loadDuLieuSoQuy(loaiQuy, forceRefresh = false) {
     window.soQuyDomDirty = false;
     window.rawSoQuyData = res;
     hienThiBangSoQuy(res);
-    console.log(`⚡ Đã nạp và đồng bộ ${allRows.length} phiếu sổ quỹ thực tế của Thanh Giang!`);
+    console.log(`⚡ Đã nạp và đồng bộ ${allRows.length} phiếu sổ quỹ thực tế!`);
+    
+    // Đồng bộ hai chiều tức thì từ Supabase Cloud để cập nhật thu chi từ mọi máy tính
+    dongBoSoQuyTuSupabase(qFilter);
     return;
   }
 
@@ -12764,27 +12816,117 @@ function formatVND(amount) {
       } catch(e) {}
     }
 
-    function taiDanhSachNhapHang() {
+    function dongBoDonNhapTuSupabase(onComplete) {
+      if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+        if (typeof onComplete === 'function') onComplete();
+        return;
+      }
+      supabaseClient.from('don_hang')
+        .select('*')
+        .or('ma_don_hang.like.PNH%,ma_don_hang.like.PN%')
+        .not('ma_don_hang', 'like', 'PNH_TON%')
+        .order('ngay_ban', { ascending: false })
+        .limit(1000)
+        .then(({ data, error }) => {
+          if (!error && Array.isArray(data) && data.length > 0) {
+            let hasNewOrChanged = false;
+            if (!Array.isArray(rawNhapHangList)) rawNhapHangList = [];
+
+            data.forEach(d => {
+              const ma = String(d.ma_don_hang || '').trim();
+              if (!ma || ma.startsWith('PNH_TON_')) return;
+              if (String(d.nhan_vien || '').toLowerCase() === 'hệ thống tự động') return;
+
+              const cnStandard = (typeof layTenChiNhanhDayDu === 'function') ? layTenChiNhanhDayDu(d.chi_nhanh || 'CN01') : 'CN01: Thanh Miện';
+              const phieuMoi = {
+                maPhieu: ma,
+                ngayNhap: formatNgayGioLocal(d.ngay_ban),
+                maNCC: d.ma_kh || '',
+                tenNCC: d.ten_kh || '',
+                chiNhanh: cnStandard,
+                tongTien: Number(d.tong_tien) || 0,
+                daTra: Number(d.khach_tra) || 0,
+                conNo: Math.max(0, (Number(d.tong_tien) || 0) - (Number(d.khach_tra) || 0)),
+                trangThai: d.trang_thai || 'Hoàn thành',
+                nhanVien: d.nhan_vien || 'Quản trị viên',
+                nguoiNhap: d.nhan_vien || 'Quản trị viên',
+                ghiChu: d.ghi_chu || '',
+                chiTietSanPham: Array.isArray(d.chi_tiet_san_pham) ? d.chi_tiet_san_pham : []
+              };
+
+              const idx = rawNhapHangList.findIndex(x => (x.maPhieu || x.ma_don_hang) === ma);
+              if (idx >= 0) {
+                const cur = rawNhapHangList[idx];
+                if (cur.trangThai !== phieuMoi.trangThai || cur.daTra !== phieuMoi.daTra || cur.conNo !== phieuMoi.conNo || !cur.chiTietSanPham?.length) {
+                  rawNhapHangList[idx] = { ...cur, ...phieuMoi };
+                  hasNewOrChanged = true;
+                }
+              } else {
+                rawNhapHangList.unshift(phieuMoi);
+                hasNewOrChanged = true;
+              }
+            });
+
+            if (hasNewOrChanged) {
+              rawNhapHangList.sort(sapXepDonNhapGiamDan);
+              locDanhSachNhapHangTable();
+              dongBoImeiTuDonNhapHang();
+              if (typeof capNhatTonKhoTheoChiNhanhHienTai === 'function') capNhatTonKhoTheoChiNhanhHienTai();
+              if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
+
+              // Cập nhật ngược vào localStorage để duy trì khả năng ngoại tuyến
+              try {
+                let localList = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NHAP_HANG') || '[]');
+                const localMap = new Map();
+                localList.forEach(item => { if (item.maPhieu) localMap.set(item.maPhieu, item); });
+                rawNhapHangList.filter(item => String(item.maPhieu).startsWith('PNH')).forEach(p => {
+                  localMap.set(p.maPhieu, p);
+                });
+                localStorage.setItem('TT_POS_LOCAL_NHAP_HANG', JSON.stringify(Array.from(localMap.values()).slice(0, 500)));
+              } catch(e) {}
+            }
+          }
+          if (typeof onComplete === 'function') onComplete();
+        })
+        .catch(err => {
+          console.warn("Lỗi đồng bộ đơn nhập Supabase:", err);
+          if (typeof onComplete === 'function') onComplete();
+        });
+    }
+    window.dongBoDonNhapTuSupabase = dongBoDonNhapTuSupabase;
+
+    function taiDanhSachNhapHang(isManual = false) {
       const tbody = document.getElementById('tbl-nhaphang-danhsach-body');
-      if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải danh sách đơn nhập hàng...</td></tr>';
+      if (tbody && (!rawNhapHangList || rawNhapHangList.length === 0)) {
+        tbody.innerHTML = '<tr><td colspan="10" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải danh sách đơn nhập hàng...</td></tr>';
+      }
       
-      // 0. Ưu tiên nạp 100% dữ liệu Đơn nhập hàng thực tế KiotViet Thanh Giang
+      // 0. Ưu tiên nạp tức thì từ bộ nhớ gốc KiotViet (Thanh Giang, Thanh Miện, Bình Giang)
       if (typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG) && window.RAW_NHAP_HANG_THANH_GIANG.length > 0) {
-        rawNhapHangList = window.RAW_NHAP_HANG_THANH_GIANG.map(d => ({
-          maPhieu: d.maPhieu,
-          ngayNhap: d.ngayNhap,
-          maNCC: d.maNCC || '',
-          tenNCC: d.tenNCC || '',
-          chiNhanh: d.chiNhanh || 'CN02: Chi nhánh Thanh Giang',
-          tongTien: Number(d.tongTien) || 0,
-          daTra: Number(d.daTra) || 0,
-          conNo: Number(d.conNo) || Math.max(0, (Number(d.tongTien) || 0) - (Number(d.daTra) || 0)),
-          trangThai: d.trangThai || 'Hoàn thành',
-          nhanVien: d.nhanVien || d.nguoiNhap || 'Quản trị viên',
-          nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên',
-          ghiChu: d.ghiChu || '',
-          chiTietSanPham: Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (Array.isArray(d.sanPham) ? d.sanPham : [])
-        }));
+        if (!Array.isArray(rawNhapHangList) || rawNhapHangList.length === 0) {
+          rawNhapHangList = window.RAW_NHAP_HANG_THANH_GIANG.map(d => ({
+            maPhieu: d.maPhieu,
+            ngayNhap: d.ngayNhap,
+            maNCC: d.maNCC || '',
+            tenNCC: d.tenNCC || '',
+            chiNhanh: (typeof layTenChiNhanhDayDu === 'function') ? layTenChiNhanhDayDu(d.chiNhanh || 'CN01: Thanh Miện') : (d.chiNhanh || 'CN01: Thanh Miện'),
+            tongTien: Number(d.tongTien) || 0,
+            daTra: Number(d.daTra) || 0,
+            conNo: Number(d.conNo) || Math.max(0, (Number(d.tongTien) || 0) - (Number(d.daTra) || 0)),
+            trangThai: d.trangThai || 'Hoàn thành',
+            nhanVien: d.nhanVien || d.nguoiNhap || 'Quản trị viên',
+            nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên',
+            ghiChu: d.ghiChu || '',
+            chiTietSanPham: Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (Array.isArray(d.sanPham) ? d.sanPham : [])
+          }));
+        } else {
+          // Chuẩn hóa tên chi nhánh Mẫu A
+          rawNhapHangList.forEach(d => {
+            if (d.chiNhanh && typeof layTenChiNhanhDayDu === 'function') {
+              d.chiNhanh = layTenChiNhanhDayDu(d.chiNhanh);
+            }
+          });
+        }
         dongBoDonNhapLocalVaoDanhSach();
         dongBoDonLuuTamVaoDanhSach();
         dongBoImeiTuDonNhapHang();
@@ -12792,52 +12934,18 @@ function formatVND(amount) {
         locDanhSachNhapHangTable();
         if (typeof capNhatTonKhoTheoChiNhanhHienTai === 'function') capNhatTonKhoTheoChiNhanhHienTai();
         if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
-        console.log(`⚡ Đã nạp ${rawNhapHangList.length} phiếu nhập hàng thực tế của Thanh Giang từ KiotViet!`);
-        return;
       }
 
-      // 1. Ưu tiên tải tức thì từ Supabase Cloud (hỗ trợ Netlify & standalone)
-      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-        supabaseClient.from('don_hang')
-          .select('*')
-          .like('ma_don_hang', 'PNH%')
-          .not('ma_don_hang', 'like', 'PNH_TON%')
-          .order('ngay_ban', { ascending: false })
-          .then(({ data, error }) => {
-            if (!error && Array.isArray(data)) {
-              const validOrders = data.filter(d => 
-                !String(d.ma_don_hang || '').startsWith('PNH_TON_') && 
-                String(d.nhan_vien || '').toLowerCase() !== 'hệ thống tự động'
-              );
-              rawNhapHangList = validOrders.map(d => ({
-                maPhieu: d.ma_don_hang,
-                ngayNhap: formatNgayGioLocal(d.ngay_ban),
-                maNCC: d.ma_kh || '',
-                tenNCC: d.ten_kh || '',
-                chiNhanh: d.chi_nhanh || 'CN01: Trụ sở chính Thanh Miện',
-                tongTien: Number(d.tong_tien) || 0,
-                daTra: Number(d.khach_tra) || 0,
-                conNo: Math.max(0, (Number(d.tong_tien) || 0) - (Number(d.khach_tra) || 0)),
-                trangThai: d.trang_thai || 'Hoàn thành',
-                nhanVien: d.nhan_vien || 'Quản trị viên',
-                nguoiNhap: d.nhan_vien || 'Quản trị viên',
-                ghiChu: '',
-                chiTietSanPham: Array.isArray(d.chi_tiet_san_pham) ? d.chi_tiet_san_pham : []
-              }));
-              dongBoDonNhapLocalVaoDanhSach();
-              dongBoDonLuuTamVaoDanhSach();
-              dongBoImeiTuDonNhapHang();
-              rawNhapHangList.sort(sapXepDonNhapGiamDan);
-              locDanhSachNhapHangTable();
-              if (typeof capNhatTonKhoTheoChiNhanhHienTai === 'function') capNhatTonKhoTheoChiNhanhHienTai();
-              if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
-              return;
-            }
-            napNhapHangTuSheets();
-          }).catch(() => napNhapHangTuSheets());
-        return;
+      // 1. Tự động đồng bộ hai chiều từ Supabase Cloud trên mọi máy tính (KHÔNG RETURN NGẮT QUY TRÌNH)
+      if (isManual) showNotification("Đang đồng bộ đơn nhập hàng từ đám mây Supabase...");
+      dongBoDonNhapTuSupabase(() => {
+        if (isManual) showNotification("Đã đồng bộ đơn nhập hàng mới nhất từ đám mây!");
+      });
+
+      // 2. Dự phòng Google Sheets nếu chạy trong môi trường GAS
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        napNhapHangTuSheets();
       }
-      napNhapHangTuSheets();
     }
 
     function napNhapHangTuSheets() {
@@ -29049,8 +29157,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.6.6";
-    const APP_CLIENT_BUILD = 69;
+    const APP_CLIENT_VERSION = "1.6.7";
+    const APP_CLIENT_BUILD = 70;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
@@ -29073,6 +29181,13 @@ function formatVND(amount) {
 
         // Nếu bản trên server mới hơn bản đang chạy trên trình duyệt
         if (data.build_number > APP_CLIENT_BUILD) {
+          if (data.force_update) {
+            // Cập nhật bắt buộc tự động: xóa cache và reload ngay lập tức
+            thongTinPhienBanMoi = data;
+            showNotification(`Phát hiện bản cập nhật chuẩn hóa v${data.version} (Build ${data.build_number}). Đang tự động làm mới để đồng bộ dữ liệu...`);
+            setTimeout(() => { thucHienCapNhatNgay(); }, 600);
+            return;
+          }
           if (!isManual && dismissedBuild >= data.build_number) {
             // Đã cập nhật/bỏ qua trong phiên này, không lặp lại popup tự động để tránh kẹt người dùng
             return;
@@ -35019,7 +35134,54 @@ function loadSoQuy(filter) {
 
       locDanhSachTraHangNCCTable();
 
-      // 4. Tải từ Google Sheets (chạy ngầm)
+      // 4. Tải và đồng bộ hai chiều từ Supabase Cloud trên mọi máy tính
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        supabaseClient.from('don_hang')
+          .select('*')
+          .eq('hinh_thuc_tt', 'TRA_HANG_NCC')
+          .order('ngay_ban', { ascending: false })
+          .limit(500)
+          .then(({ data, error }) => {
+            if (!error && Array.isArray(data) && data.length > 0) {
+              let hasNew = false;
+              data.forEach(d => {
+                const ma = String(d.ma_don_hang || '').trim();
+                if (!ma) return;
+                const norm = {
+                  maPhieu: ma,
+                  maTraHang: ma,
+                  ngayTra: formatNgayGioLocal(d.ngay_ban),
+                  maNCC: d.ma_kh,
+                  tenNCC: d.ten_kh,
+                  chiNhanh: (typeof layTenChiNhanhDayDu === 'function') ? layTenChiNhanhDayDu(d.chi_nhanh) : (d.chi_nhanh || 'CN01: Thanh Miện'),
+                  tongTien: Number(d.tong_tien) || 0,
+                  tienNCCThanhToan: Number(d.khach_tra) || 0,
+                  phiTra: 0,
+                  hinhThuc: 'TIEN_MAT',
+                  trangThai: d.trang_thai || 'Hoàn thành',
+                  nhanVien: d.nhan_vien || 'Quản trị viên',
+                  ghiChu: d.ghi_chu || '',
+                  chiTietSanPham: Array.isArray(d.chi_tiet_san_pham) ? d.chi_tiet_san_pham : []
+                };
+                if (!mapTH.has(ma)) {
+                  mapTH.set(ma, norm);
+                  hasNew = true;
+                }
+              });
+              if (hasNew) {
+                rawTraHangNCCList = Array.from(mapTH.values()).sort((a, b) => {
+                  const tA = (typeof layTimestampDonNhap === 'function') ? layTimestampDonNhap(a) : ((typeof parseNgayGioSort === 'function') ? parseNgayGioSort(a.ngayTra || a.thoiGian) : (new Date(a.ngayTra || a.thoiGian || 0).getTime() || 0));
+                  const tB = (typeof layTimestampDonNhap === 'function') ? layTimestampDonNhap(b) : ((typeof parseNgayGioSort === 'function') ? parseNgayGioSort(b.ngayTra || b.thoiGian) : (new Date(b.ngayTra || b.thoiGian || 0).getTime() || 0));
+                  return tB - tA;
+                });
+                window.rawTraHangNCCList = rawTraHangNCCList;
+                locDanhSachTraHangNCCTable();
+              }
+            }
+          }).catch(err => console.warn("Lỗi sync trả hàng NCC từ Supabase:", err));
+      }
+
+      // 5. Tải từ Google Sheets (chạy ngầm)
       if (typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run.apiGetDanhSachTraHangNCC === 'function') {
         try {
           google.script.run
@@ -35928,6 +36090,29 @@ function loadSoQuy(filter) {
         const badgeEdit = document.getElementById('tranhap-badge-editing');
         if (badgeEdit) badgeEdit.classList.add('hidden');
         chuyenViewTraHangNCC('danhsach');
+      }
+
+      // Đồng bộ phiếu trả hàng NCC lên Supabase Cloud để mọi máy tính khác cùng nhận được
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        supabaseClient.from('don_hang').upsert([{
+          ma_don_hang: payload.maPhieu,
+          ngay_ban: payload.ngayTraISO || new Date().toISOString(),
+          ma_kh: payload.maNCC,
+          ten_kh: payload.tenNCC,
+          chi_nhanh: (typeof layMaChiNhanh === 'function') ? layMaChiNhanh(payload.chiNhanh) : 'CN01',
+          tong_tien: payload.tongTien,
+          khach_tra: payload.tienNCCThanhToan || payload.tienThanhToan || 0,
+          khach_phai_tra: payload.tienNCCThanhToan || payload.tienThanhToan || 0,
+          hinh_thuc_tt: 'TRA_HANG_NCC',
+          chi_tiet_san_pham: payload.chiTietSanPham,
+          trang_thai: payload.trangThai || 'Hoàn thành',
+          nhan_vien: payload.nhanVien || 'Quản trị viên',
+          ghi_chu: payload.ghiChu || ''
+        }]).then(() => {
+          console.log("Đã đồng bộ phiếu trả hàng NCC lên Supabase Cloud:", payload.maPhieu);
+        }).catch(err => {
+          console.warn("Lỗi đồng bộ phiếu trả hàng NCC Supabase:", err);
+        });
       }
 
       // Hoàn tất lập tức (< 50ms)
@@ -46165,6 +46350,74 @@ function loadSoQuy(filter) {
     window.nhapExcelNhapHang = nhapExcelNhapHang;
     window.taiFileMauTraHangNCC = taiFileMauTraHangNCC;
     window.nhapExcelTraHangNCC = nhapExcelTraHangNCC;
+
+  
+    /* ====================================================================
+     * ĐỒNG BỘ TOÀN DIỆN MỌI GIAO DỊCH TỪ ĐÁM MÂY SUPABASE GIỮA CÁC MÁY TÍNH
+     * ==================================================================== */
+    function dongBoToanBoGiaoDichTuDamMay(hienThongBao = true) {
+      const btnLabel = document.getElementById('btn-sync-supabase-label');
+      if (btnLabel) btnLabel.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1 text-emerald-600"></i>Đang đồng bộ...';
+      if (hienThongBao) showNotification("Đang đồng bộ toàn bộ giao dịch từ đám mây Supabase...");
+
+      let doneCount = 0;
+      const totalTasks = 5;
+      const checkDone = () => {
+        doneCount++;
+        if (doneCount >= totalTasks) {
+          if (btnLabel) btnLabel.innerText = 'Đồng bộ Supabase';
+          if (hienThongBao) showNotification("⚡ Đã đồng bộ toàn bộ giao dịch mới nhất giữa các máy tính thành công!");
+        }
+      };
+
+      // 1. Đồng bộ Đơn nhập hàng NCC
+      if (typeof dongBoDonNhapTuSupabase === 'function') {
+        dongBoDonNhapTuSupabase(checkDone);
+      } else { checkDone(); }
+
+      // 2. Đồng bộ Sổ Quỹ
+      if (typeof dongBoSoQuyTuSupabase === 'function') {
+        dongBoSoQuyTuSupabase(typeof currentLoaiQuy !== 'undefined' ? currentLoaiQuy : 'ALL', true);
+        checkDone();
+      } else { checkDone(); }
+
+      // 3. Đồng bộ Đơn bán hàng POS
+      if (typeof loadLichSuDonHang === 'function') {
+        window._donHangSupabaseFetchedOnce = false;
+        loadLichSuDonHang(true);
+        checkDone();
+      } else { checkDone(); }
+
+      // 4. Đồng bộ Trả hàng NCC
+      if (typeof taiDanhSachTraHangNCC === 'function') {
+        taiDanhSachTraHangNCC();
+        checkDone();
+      } else { checkDone(); }
+
+      // 5. Đồng bộ Chi nhánh, NCC & Khách hàng
+      if (typeof taiDanhSachChiNhanhBanDau === 'function') taiDanhSachChiNhanhBanDau(true);
+      if (typeof loadNCC === 'function') loadNCC();
+      if (typeof loadKH === 'function') loadKH();
+      checkDone();
+    }
+    window.dongBoToanBoGiaoDichTuDamMay = dongBoToanBoGiaoDichTuDamMay;
+
+    // Tự động kiểm tra và đồng bộ giao dịch khi người dùng chuyển sang tab ứng dụng
+    window.addEventListener('focus', () => {
+      const now = Date.now();
+      if (!window._lastAutoSyncFocus || (now - window._lastAutoSyncFocus > 20000)) {
+        window._lastAutoSyncFocus = now;
+        dongBoToanBoGiaoDichTuDamMay(false);
+        if (typeof kiemTraCapNhatPhienBan === 'function') kiemTraCapNhatPhienBan(false);
+      }
+    });
+
+    // Đồng bộ định kỳ ngầm mỗi 45 giây nếu tab đang mở
+    setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        dongBoToanBoGiaoDichTuDamMay(false);
+      }
+    }, 45000);
 
   </script>
 
