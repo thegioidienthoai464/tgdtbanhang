@@ -440,7 +440,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.6.4</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.6.5</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -5399,7 +5399,7 @@
           <div>
             <label class="font-semibold text-slate-700 block mb-1">Thuộc nhóm cha:</label>
             <select id="input-nhom-cha" class="w-full border border-slate-300 rounded-xl p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs transition text-slate-700"></select>
-            <p class="text-[10px] text-slate-400 mt-1">Để trống nếu đây là nhóm chính (cấp 1).</p>
+            <p class="text-[10px] text-slate-400 mt-1">Để trống nếu là Nhóm chính (Cấp 1). Chọn Nhóm Cha để tạo Nhóm Con (Cấp 2). Chọn Nhóm Con để tạo Nhóm Cháu (Cấp 3).</p>
           </div>
 
           <div>
@@ -15847,7 +15847,32 @@ function formatVND(amount) {
       return result;
     }
 
-    // Hiển thị tên đầy đủ của nhóm hàng (gồm cả nhóm cha và nhóm con: "Điện thoại > iPhone")
+    // Trả về Set chứa chính mã nhóm rootMa và tất cả các mã nhóm con, cháu, chắt... trực thuộc
+    function layTatCaMaNhomConChau(rootMa, nhomList) {
+      const result = new Set();
+      if (!rootMa) return result;
+      const target = String(rootMa).trim().toUpperCase();
+      result.add(target);
+      const list = (nhomList && nhomList.length) ? nhomList : (rawNhomHang || []);
+      const queue = [target];
+      while (queue.length > 0) {
+        const parentCode = queue.shift();
+        for (let i = 0; i < list.length; i++) {
+          const n = list[i];
+          if (!n || !n.MaNhom) continue;
+          const curCode = String(n.MaNhom).trim().toUpperCase();
+          const parentOfCur = String(n.MaNhomCha || '').trim().toUpperCase();
+          if (parentOfCur === parentCode && !result.has(curCode)) {
+            result.add(curCode);
+            queue.push(curCode);
+          }
+        }
+      }
+      return result;
+    }
+    window.layTatCaMaNhomConChau = layTatCaMaNhomConChau;
+
+    // Hiển thị tên đầy đủ của nhóm hàng đa cấp (gồm Cha > Con > Cháu: "Điện thoại > iPhone > iPhone 15")
     function layTenDayDuNhomHang(maNhomHoacTen) {
       if (!maNhomHoacTen) return '-';
       const rawKey = String(maNhomHoacTen).trim();
@@ -15857,22 +15882,51 @@ function formatVND(amount) {
       const cached = window._tenNhomDayDuMemo.get(rawKey);
       if (cached !== undefined) return cached;
 
-      let result = rawKey;
+      const list = (typeof rawNhomHang !== 'undefined' && Array.isArray(rawNhomHang) && rawNhomHang.length)
+        ? rawNhomHang
+        : (typeof DANH_SACH_NHOM_HANG_CHUAN !== 'undefined' ? DANH_SACH_NHOM_HANG_CHUAN : []);
+
       // 1. Trích xuất mã nhóm NHxxx nếu có dạng "NH002", "Nhóm NH002", "Nhóm NH002 (NH002)"
       const matchNH = rawKey.match(/\b(NH\d+)\b/i);
       let maCode = matchNH ? matchNH[1].toUpperCase() : '';
 
-      // 2. Nếu không tìm thấy mã NH, kiểm tra xem có khớp tên nhóm trực tiếp không
-      if (!maCode) {
+      // 2. Tìm đối tượng nhóm trong danh sách (theo mã hoặc theo tên)
+      let node = null;
+      if (maCode) {
+        node = list.find(n => n && String(n.MaNhom || '').toUpperCase() === maCode);
+      }
+      if (!node) {
         const lowerClean = rawKey.toLowerCase();
-        const found = DANH_SACH_NHOM_HANG_CHUAN.find(n => n.TenNhom.toLowerCase() === lowerClean);
-        if (found) maCode = found.MaNhom;
+        node = list.find(n => n && (
+          String(n.TenNhom || '').toLowerCase() === lowerClean ||
+          String(n.MaNhom || '').toLowerCase() === lowerClean
+        ));
       }
 
-      // 3. Nếu tìm thấy mã nhóm chuẩn trong 42 nhóm
-      if (maCode && MAP_TEN_NHOM_CHUAN[maCode]) {
+      let result = rawKey;
+      if (node) {
+        const names = [node.TenNhom];
+        const visited = new Set([String(node.MaNhom).toUpperCase()]);
+        let curr = node;
+        while (curr && curr.MaNhomCha && visited.size < 10) {
+          const pCode = String(curr.MaNhomCha).trim().toUpperCase();
+          if (!pCode || visited.has(pCode)) break;
+          visited.add(pCode);
+          const pNode = list.find(n => n && String(n.MaNhom || '').toUpperCase() === pCode);
+          if (pNode) {
+            names.unshift(pNode.TenNhom);
+            curr = pNode;
+          } else {
+            if (typeof MAP_TEN_NHOM_CHUAN !== 'undefined' && MAP_TEN_NHOM_CHUAN[pCode]) {
+              names.unshift(MAP_TEN_NHOM_CHUAN[pCode]);
+            }
+            break;
+          }
+        }
+        result = names.join(' > ');
+      } else if (maCode && typeof MAP_TEN_NHOM_CHUAN !== 'undefined' && MAP_TEN_NHOM_CHUAN[maCode]) {
         const tenCon = MAP_TEN_NHOM_CHUAN[maCode];
-        const maCha = MAP_NHOM_CHA[maCode];
+        const maCha = (typeof MAP_NHOM_CHA !== 'undefined') ? MAP_NHOM_CHA[maCode] : '';
         if (maCha && MAP_TEN_NHOM_CHUAN[maCha]) {
           result = `${MAP_TEN_NHOM_CHUAN[maCha]} > ${tenCon}`;
         } else {
@@ -15883,6 +15937,60 @@ function formatVND(amount) {
       window._tenNhomDayDuMemo.set(rawKey, result);
       return result;
     }
+    window.layTenDayDuNhomHang = layTenDayDuNhomHang;
+
+    // Nạp danh sách nhóm cha / nhóm con hợp lệ vào select 'input-nhom-cha' trong modal quản lý nhóm
+    function napOptionsSelectNhomCha(selectedVal = '', excludeMaNhom = null) {
+      const elCha = document.getElementById('input-nhom-cha');
+      if (!elCha) return;
+
+      const nhomList = (typeof rawNhomHang !== 'undefined' && Array.isArray(rawNhomHang) && rawNhomHang.length)
+        ? rawNhomHang : layDanhSachNhomHangChuan();
+
+      // Tập các mã nhóm cần loại trừ (chính nó và tất cả con cháu để chống tạo vòng tròn lặp)
+      const excludeSet = excludeMaNhom ? layTatCaMaNhomConChau(excludeMaNhom, nhomList) : new Set();
+
+      const nhomMap = {};
+      nhomList.forEach(n => { if (n && n.MaNhom) nhomMap[String(n.MaNhom).toUpperCase()] = n; });
+
+      // Nhóm Cấp 1 (Nhóm Cha)
+      const nhomCha = nhomList.filter(n => {
+        if (!n || !n.MaNhom) return false;
+        const p = n.MaNhomCha ? String(n.MaNhomCha).trim().toUpperCase() : '';
+        return !p || p === 'NULL' || p === 'NONE' || p === '0' || p === String(n.MaNhom).toUpperCase() || !nhomMap[p];
+      });
+      nhomCha.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
+
+      let chaHtml = '<option value="">(Không chọn nhóm cha - Là nhóm chính Cấp 1)</option>';
+
+      nhomCha.forEach(cha => {
+        const maCha = String(cha.MaNhom).toUpperCase();
+        if (excludeSet.has(maCha)) return;
+
+        const isChaSelected = (selectedVal && String(selectedVal).toUpperCase() === maCha);
+        chaHtml += `<option value="${cha.MaNhom}" ${isChaSelected ? 'selected' : ''}>📁 [Cấp 1 - Nhóm Cha] ${cha.TenNhom} (${cha.MaNhom})</option>`;
+
+        // Các nhóm con (Cấp 2) trực thuộc nhóm cha này
+        const nhomCon = nhomList.filter(n => {
+          if (!n || !n.MaNhom) return false;
+          const p = n.MaNhomCha ? String(n.MaNhomCha).trim().toUpperCase() : '';
+          return p === maCha && String(n.MaNhom).toUpperCase() !== maCha;
+        });
+        nhomCon.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
+
+        nhomCon.forEach(c => {
+          const maCon = String(c.MaNhom).toUpperCase();
+          if (excludeSet.has(maCon)) return;
+
+          const isConSelected = (selectedVal && String(selectedVal).toUpperCase() === maCon);
+          chaHtml += `<option value="${c.MaNhom}" ${isConSelected ? 'selected' : ''}>&nbsp;&nbsp;&nbsp;&nbsp;📂 [Cấp 2 - Chọn để tạo Nhóm Cháu] ${cha.TenNhom} > ${c.TenNhom} (${c.MaNhom})</option>`;
+        });
+      });
+
+      elCha.innerHTML = chaHtml;
+      if (selectedVal) elCha.value = selectedVal;
+    }
+    window.napOptionsSelectNhomCha = napOptionsSelectNhomCha;
 
     function hienThiSelectNhomHang(list, selectedMaNhom = null) {
       const nhomList = (list && list.length >= 42) ? list : layDanhSachNhomHangChuan();
@@ -15895,11 +16003,12 @@ function formatVND(amount) {
       });
 
       const nhomMap = {};
-      nhomList.forEach(n => { nhomMap[n.MaNhom] = n; });
+      nhomList.forEach(n => { if (n && n.MaNhom) nhomMap[String(n.MaNhom).toUpperCase()] = n; });
 
       const nhomCha = nhomList.filter(n => {
-        const p = n.MaNhomCha;
-        return !p || p === '' || p === 'null' || p === 'NONE' || p === '0' || p === n.MaNhom || !nhomMap[p];
+        if (!n || !n.MaNhom) return false;
+        const p = n.MaNhomCha ? String(n.MaNhomCha).trim().toUpperCase() : '';
+        return !p || p === '' || p === 'NULL' || p === 'NONE' || p === '0' || p === String(n.MaNhom).toUpperCase() || !nhomMap[p];
       });
 
       nhomCha.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
@@ -15908,27 +16017,50 @@ function formatVND(amount) {
       let formHtml = '<option value="">(Chọn nhóm hàng)</option>';
 
       nhomCha.forEach(cha => {
-        const con = nhomList.filter(n => n.MaNhomCha === cha.MaNhom && n.MaNhom !== cha.MaNhom);
-        con.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
+        const maCha = String(cha.MaNhom).toUpperCase();
+        const nhomCon = nhomList.filter(n => n && String(n.MaNhomCha || '').toUpperCase() === maCha && n.MaNhom !== cha.MaNhom);
+        nhomCon.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
 
-        let countTongCha = spCountMap[cha.MaNhom] || 0;
-        con.forEach(c => { countTongCha += (spCountMap[c.MaNhom] || 0); });
+        // Tính tổng sản phẩm nhóm Cha (bao gồm cả con và cháu)
+        const allChaSub = layTatCaMaNhomConChau(cha.MaNhom, nhomList);
+        let countTongCha = 0;
+        allChaSub.forEach(m => { countTongCha += (spCountMap[m] || 0); });
         const countLabelCha = countTongCha > 0 ? ` (${countTongCha} SP)` : '';
 
-        filterHtml += `<option value="CHA_${cha.MaNhom}">📁 [Nhóm Cha] ${cha.TenNhom} (${cha.MaNhom})${countLabelCha}</option>`;
-        formHtml += `<option value="${cha.MaNhom}">📁 [Nhóm Cha] ${cha.TenNhom}</option>`;
+        filterHtml += `<option value="CHA_${cha.MaNhom}">📁 [Cấp 1] ${cha.TenNhom} (${cha.MaNhom})${countLabelCha}</option>`;
+        formHtml += `<option value="${cha.MaNhom}">📁 [Cấp 1] ${cha.TenNhom}</option>`;
 
-        con.forEach(c => {
-          const countCon = spCountMap[c.MaNhom] || 0;
-          const countLabelCon = countCon > 0 ? ` (${countCon} SP)` : '';
-          filterHtml += `<option value="${c.MaNhom}">&nbsp;&nbsp;&nbsp;&nbsp;└── 📂 ${c.TenNhom} (${c.MaNhom})${countLabelCon}</option>`;
-          formHtml += `<option value="${c.MaNhom}">&nbsp;&nbsp;&nbsp;&nbsp;└── 📂 ${c.TenNhom}</option>`;
+        nhomCon.forEach(c => {
+          const maCon = String(c.MaNhom).toUpperCase();
+          const nhomChau = nhomList.filter(n => n && String(n.MaNhomCha || '').toUpperCase() === maCon && n.MaNhom !== c.MaNhom);
+          nhomChau.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
+
+          // Tính tổng sản phẩm nhóm Con (bao gồm cả các nhóm cháu)
+          const allConSub = layTatCaMaNhomConChau(c.MaNhom, nhomList);
+          let countTongCon = 0;
+          allConSub.forEach(m => { countTongCon += (spCountMap[m] || 0); });
+          const countLabelCon = countTongCon > 0 ? ` (${countTongCon} SP)` : '';
+
+          filterHtml += `<option value="${c.MaNhom}">&nbsp;&nbsp;&nbsp;&nbsp;├── 📂 [Cấp 2] ${c.TenNhom} (${c.MaNhom})${countLabelCon}</option>`;
+          formHtml += `<option value="${c.MaNhom}">&nbsp;&nbsp;&nbsp;&nbsp;├── 📂 [Cấp 2] ${c.TenNhom}</option>`;
+
+          nhomChau.forEach(ch => {
+            const countChau = spCountMap[String(ch.MaNhom).toUpperCase()] || 0;
+            const countLabelChau = countChau > 0 ? ` (${countChau} SP)` : '';
+            filterHtml += `<option value="${ch.MaNhom}">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 🏷️ [Cấp 3] ${ch.TenNhom} (${ch.MaNhom})${countLabelChau}</option>`;
+            formHtml += `<option value="${ch.MaNhom}">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 🏷️ [Cấp 3] ${ch.TenNhom}</option>`;
+          });
         });
       });
 
-      // Nhóm mồ côi (nếu có nhóm con phát sinh mà không thuộc nhóm cha nào)
-      nhomList.filter(n => n.MaNhomCha && !nhomCha.some(p => p.MaNhom === n.MaNhomCha)).forEach(orphan => {
-        const countOrphan = spCountMap[orphan.MaNhom] || 0;
+      // Nhóm mồ côi (nếu có nhóm con/cháu phát sinh mà nhóm cha không tồn tại)
+      const orphanList = nhomList.filter(n => {
+        if (!n || !n.MaNhom) return false;
+        const p = n.MaNhomCha ? String(n.MaNhomCha).trim().toUpperCase() : '';
+        return p && !nhomMap[p];
+      });
+      orphanList.forEach(orphan => {
+        const countOrphan = spCountMap[String(orphan.MaNhom).toUpperCase()] || 0;
         const countLabel = countOrphan > 0 ? ` (${countOrphan} SP)` : '';
         filterHtml += `<option value="${orphan.MaNhom}">📁 ${orphan.TenNhom} (${orphan.MaNhom})${countLabel}</option>`;
         formHtml += `<option value="${orphan.MaNhom}">📁 ${orphan.TenNhom}</option>`;
@@ -15960,14 +16092,7 @@ function formatVND(amount) {
       }
 
       // 3. Cập nhật thẻ select nhóm cha trong modal quản lý nhóm
-      const elCha = document.getElementById('input-nhom-cha');
-      if (elCha) {
-        let chaHtml = '<option value="">(Không chọn nhóm cha - Là nhóm chính)</option>';
-        nhomCha.forEach(cha => {
-          chaHtml += `<option value="${cha.MaNhom}">📁 ${cha.TenNhom} (${cha.MaNhom})</option>`;
-        });
-        elCha.innerHTML = chaHtml;
-      }
+      napOptionsSelectNhomCha("", null);
 
       try {
         if (typeof napDanhSachNhomHangVaoCongThuc === 'function') napDanhSachNhomHangVaoCongThuc();
@@ -16087,16 +16212,11 @@ function formatVND(amount) {
         return src;
       }
 
-      // Tính trước tập mã nhóm hợp lệ 1 lần duy nhất thay vì quét rawNhomHang 21k lần
+      // Tính trước tập mã nhóm hợp lệ (hỗ trợ đa cấp Cha -> Con -> Cháu)
       let nhomFilterSet = null;
       if (nhom) {
         const maTarget = nhom.startsWith('CHA_') ? nhom.slice(4) : nhom;
-        nhomFilterSet = new Set([maTarget]);
-        const nhomList = rawNhomHang || [];
-        for (let i = 0; i < nhomList.length; i++) {
-          const n = nhomList[i];
-          if (n && n.MaNhomCha === maTarget) nhomFilterSet.add(n.MaNhom);
-        }
+        nhomFilterSet = layTatCaMaNhomConChau(maTarget, rawNhomHang);
       }
 
       const hasTrangThaiFn = (typeof kiemTraSanPhamNgungKinhDoanh === 'function');
@@ -16107,7 +16227,7 @@ function formatVND(amount) {
         const h = src[i];
         if (!h) continue;
 
-        if (nhomFilterSet && !nhomFilterSet.has(h.maNhom)) continue;
+        if (nhomFilterSet && !nhomFilterSet.has(String(h.maNhom || '').trim().toUpperCase())) continue;
 
         if (ton === 'CON_HANG' && !(h.tonKho > 0)) continue;
         if (ton === 'HET_HANG' && !(h.tonKho <= 0)) continue;
@@ -16359,12 +16479,30 @@ function formatVND(amount) {
       if (sel) {
         let html = '<option value="">(Chọn nhóm hàng đích)</option>';
         if (typeof rawNhomHang !== 'undefined' && rawNhomHang.length) {
-          const nhomCha = rawNhomHang.filter(n => !n.MaNhomCha);
+          const nhomMap = {};
+          rawNhomHang.forEach(n => { if (n && n.MaNhom) nhomMap[String(n.MaNhom).toUpperCase()] = n; });
+          const nhomCha = rawNhomHang.filter(n => {
+            if (!n || !n.MaNhom) return false;
+            const p = n.MaNhomCha ? String(n.MaNhomCha).trim().toUpperCase() : '';
+            return !p || p === 'NULL' || p === 'NONE' || p === '0' || p === String(n.MaNhom).toUpperCase() || !nhomMap[p];
+          });
+          nhomCha.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
+
           nhomCha.forEach(cha => {
-            html += `<option value="${cha.MaNhom}">📁 [Nhóm Cha] ${cha.TenNhom}</option>`;
-            const con = rawNhomHang.filter(n => n.MaNhomCha === cha.MaNhom);
-            con.forEach(c => {
-              html += `<option value="${c.MaNhom}">&nbsp;&nbsp;└── ${c.TenNhom}</option>`;
+            const maCha = String(cha.MaNhom).toUpperCase();
+            html += `<option value="${cha.MaNhom}">📁 [Cấp 1] ${cha.TenNhom}</option>`;
+            const nhomCon = rawNhomHang.filter(n => n && String(n.MaNhomCha || '').toUpperCase() === maCha && n.MaNhom !== cha.MaNhom);
+            nhomCon.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
+
+            nhomCon.forEach(c => {
+              const maCon = String(c.MaNhom).toUpperCase();
+              html += `<option value="${c.MaNhom}">&nbsp;&nbsp;├── 📂 [Cấp 2] ${c.TenNhom}</option>`;
+              const nhomChau = rawNhomHang.filter(n => n && String(n.MaNhomCha || '').toUpperCase() === maCon && n.MaNhom !== c.MaNhom);
+              nhomChau.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
+
+              nhomChau.forEach(ch => {
+                html += `<option value="${ch.MaNhom}">&nbsp;&nbsp;&nbsp;&nbsp;└── 🏷️ [Cấp 3] ${ch.TenNhom}</option>`;
+              });
             });
           });
         }
@@ -16978,34 +17116,61 @@ function formatVND(amount) {
       // Đếm số sản phẩm thuộc từng nhóm
       const spCountMap = {};
       (rawHangHoa || []).forEach(h => {
-        const m = String(h.maNhom || '').trim();
+        const m = String(h.maNhom || '').trim().toUpperCase();
         if (m) {
           spCountMap[m] = (spCountMap[m] || 0) + 1;
         }
       });
 
       const elMaInput = document.getElementById('input-nhom-ma');
-      const maDangSua = elMaInput ? elMaInput.value.trim() : '';
+      const maDangSua = elMaInput ? elMaInput.value.trim().toUpperCase() : '';
       const kw = tuKhoaLocNhomTree;
 
-      const nhomCha = list.filter(n => !n.MaNhomCha);
+      const nhomMap = {};
+      list.forEach(n => { if (n && n.MaNhom) nhomMap[String(n.MaNhom).toUpperCase()] = n; });
+
+      // Nhóm Cha (Cấp 1)
+      const nhomCha = list.filter(n => {
+        if (!n || !n.MaNhom) return false;
+        const p = n.MaNhomCha ? String(n.MaNhomCha).trim().toUpperCase() : '';
+        return !p || p === 'NULL' || p === 'NONE' || p === '0' || p === String(n.MaNhom).toUpperCase() || !nhomMap[p];
+      });
+      nhomCha.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
+
       let html = '';
 
       nhomCha.forEach(cha => {
-        const con = list.filter(n => n.MaNhomCha === cha.MaNhom);
-        
-        // Kiểm tra lọc tìm kiếm
-        const mCha = !kw || cha.TenNhom.toLowerCase().includes(kw) || cha.MaNhom.toLowerCase().includes(kw);
-        const conFiltered = con.filter(c => !kw || c.TenNhom.toLowerCase().includes(kw) || c.MaNhom.toLowerCase().includes(kw));
-        
-        if (!mCha && !conFiltered.length) return;
+        const maCha = String(cha.MaNhom).toUpperCase();
+        const con = list.filter(n => n && String(n.MaNhomCha || '').toUpperCase() === maCha && n.MaNhom !== cha.MaNhom);
+        con.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
 
-        const isDangSuaCha = maDangSua && maDangSua === cha.MaNhom;
-        const countCha = spCountMap[cha.MaNhom] || 0;
+        // Kiểm tra lọc tìm kiếm kw
+        const mCha = !kw || cha.TenNhom.toLowerCase().includes(kw) || cha.MaNhom.toLowerCase().includes(kw);
+
+        // Xem con và cháu có khớp từ khóa không
+        const conMatching = [];
+        con.forEach(c => {
+          const maCon = String(c.MaNhom).toUpperCase();
+          const chau = list.filter(n => n && String(n.MaNhomCha || '').toUpperCase() === maCon && n.MaNhom !== c.MaNhom);
+          chau.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
+          const mCon = !kw || c.TenNhom.toLowerCase().includes(kw) || c.MaNhom.toLowerCase().includes(kw);
+          const chauFiltered = chau.filter(ch => !kw || ch.TenNhom.toLowerCase().includes(kw) || ch.MaNhom.toLowerCase().includes(kw));
+          if (mCha || mCon || chauFiltered.length) {
+            conMatching.push({ con: c, chau, chauFiltered, mCon });
+          }
+        });
+
+        if (!mCha && !conMatching.length) return;
+
+        const isDangSuaCha = maDangSua && maDangSua === maCha;
+        // Tổng sản phẩm của nhóm cha gồm cả chính nó + con + cháu
+        const allChaSub = layTatCaMaNhomConChau(cha.MaNhom, list);
+        let countChaTong = 0;
+        allChaSub.forEach(m => { countChaTong += (spCountMap[m] || 0); });
 
         html += `
           <div class="border ${isDangSuaCha ? 'border-amber-400 ring-2 ring-amber-100 bg-amber-50/20' : 'border-slate-200 bg-white'} rounded-xl overflow-hidden shadow-2xs transition hover:border-indigo-300">
-            <!-- Nhóm cha -->
+            <!-- Nhóm cha (Cấp 1) -->
             <div class="flex items-center justify-between p-2.5 ${isDangSuaCha ? 'bg-amber-50/60' : 'bg-slate-50/70'} hover:bg-indigo-50/40 transition">
               <div class="flex items-center space-x-2 min-w-0 flex-1 cursor-pointer" onclick="chonSuaNhomHang('${cha.MaNhom}')" title="Bấm để sửa tên nhóm này">
                 <span class="w-6 h-6 rounded-lg ${isDangSuaCha ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'} flex items-center justify-center shrink-0 text-xs font-bold">
@@ -17015,9 +17180,10 @@ function formatVND(amount) {
                   <div class="flex items-center space-x-1.5">
                     <span class="font-bold text-slate-800 truncate ${isDangSuaCha ? 'text-amber-900' : ''}">${cha.TenNhom}</span>
                     <span class="text-[10px] text-slate-400 font-mono">(${cha.MaNhom})</span>
+                    <span class="text-[9px] bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.2 rounded-full font-semibold shrink-0">Cấp 1</span>
                     ${isDangSuaCha ? '<span class="text-[9px] bg-amber-500 text-white px-1.5 py-0.2 rounded-full font-semibold shrink-0">Đang sửa</span>' : ''}
                   </div>
-                  <span class="text-[10px] text-slate-500">${countCha} sản phẩm</span>
+                  <span class="text-[10px] text-slate-500">${countChaTong} sản phẩm ${con.length > 0 ? `(gồm ${con.length} nhóm con)` : ''}</span>
                 </div>
               </div>
               <div class="flex items-center space-x-1 shrink-0 ml-2">
@@ -17025,8 +17191,9 @@ function formatVND(amount) {
                   <i class="fa-solid fa-pen-to-square"></i>
                   <span>Sửa</span>
                 </button>
-                <button type="button" onclick="themNhomCon('${cha.MaNhom}')" title="Thêm nhóm con" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 text-slate-600 flex items-center justify-center transition shadow-2xs">
+                <button type="button" onclick="themNhomCon('${cha.MaNhom}')" title="Thêm nhóm con (Cấp 2)" class="px-2 py-1 rounded-lg bg-white border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 text-slate-600 flex items-center space-x-1 text-[11px] font-medium transition shadow-2xs">
                   <i class="fa-solid fa-plus text-xs"></i>
+                  <span>+ Con</span>
                 </button>
                 <button type="button" onclick="xacNhanXoaNhomHang('${cha.MaNhom}')" title="Xóa nhóm" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 text-slate-400 flex items-center justify-center transition shadow-2xs">
                   <i class="fa-solid fa-trash-can text-xs"></i>
@@ -17034,36 +17201,85 @@ function formatVND(amount) {
               </div>
             </div>
 
-            <!-- Các nhóm con -->
-            ${con.map(c => {
-              if (kw && !mCha && !conFiltered.some(fc => fc.MaNhom === c.MaNhom)) return '';
-              const isDangSuaCon = maDangSua && maDangSua === c.MaNhom;
-              const countCon = spCountMap[c.MaNhom] || 0;
+            <!-- Các nhóm con (Cấp 2) và nhóm cháu (Cấp 3) -->
+            ${conMatching.map(({ con: c, chau, chauFiltered, mCon }) => {
+              const maCon = String(c.MaNhom).toUpperCase();
+              const isDangSuaCon = maDangSua && maDangSua === maCon;
+              const allConSub = layTatCaMaNhomConChau(c.MaNhom, list);
+              let countConTong = 0;
+              allConSub.forEach(m => { countConTong += (spCountMap[m] || 0); });
+
+              // Hiển thị danh sách cháu
+              const chauListToRender = (!kw || mCha || mCon) ? chau : chauFiltered;
+
               return `
-                <div class="flex items-center justify-between py-1.5 px-3 pl-7 border-t border-slate-100 ${isDangSuaCon ? 'bg-amber-50/40 ring-1 ring-inset ring-amber-200' : 'hover:bg-slate-50/80'} transition">
-                  <div class="flex items-center space-x-2 min-w-0 flex-1 cursor-pointer" onclick="chonSuaNhomHang('${c.MaNhom}')" title="Bấm để sửa tên nhóm này">
-                    <i class="fa-solid fa-turn-up rotate-90 text-slate-300 text-xs shrink-0"></i>
-                    <span class="w-5 h-5 rounded-md ${isDangSuaCon ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'} flex items-center justify-center shrink-0 text-[10px]">
-                      <i class="fa-solid fa-tag"></i>
-                    </span>
-                    <div class="min-w-0 flex-1">
-                      <div class="flex items-center space-x-1.5">
-                        <span class="font-medium text-slate-700 truncate ${isDangSuaCon ? 'font-bold text-amber-900' : ''}">${c.TenNhom}</span>
-                        <span class="text-[10px] text-slate-400 font-mono">(${c.MaNhom})</span>
-                        ${isDangSuaCon ? '<span class="text-[9px] bg-amber-500 text-white px-1.5 py-0.2 rounded-full font-semibold shrink-0">Đang sửa</span>' : ''}
+                <div class="border-t border-slate-100">
+                  <!-- Hàng nhóm con (Cấp 2) -->
+                  <div class="flex items-center justify-between py-1.5 px-3 pl-6 ${isDangSuaCon ? 'bg-amber-50/40 ring-1 ring-inset ring-amber-200' : 'hover:bg-slate-50/80 bg-slate-50/30'} transition">
+                    <div class="flex items-center space-x-2 min-w-0 flex-1 cursor-pointer" onclick="chonSuaNhomHang('${c.MaNhom}')" title="Bấm để sửa tên nhóm con này">
+                      <span class="text-slate-300 text-[11px] select-none font-mono">├──</span>
+                      <span class="w-5 h-5 rounded-md ${isDangSuaCon ? 'bg-amber-100 text-amber-700' : 'bg-blue-50 text-blue-600'} flex items-center justify-center shrink-0 text-[10px]">
+                        <i class="fa-solid fa-folder-open"></i>
+                      </span>
+                      <div class="min-w-0 flex-1">
+                        <div class="flex items-center space-x-1.5">
+                          <span class="font-medium text-slate-700 truncate ${isDangSuaCon ? 'font-bold text-amber-900' : ''}">${c.TenNhom}</span>
+                          <span class="text-[10px] text-slate-400 font-mono">(${c.MaNhom})</span>
+                          <span class="text-[9px] bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.2 rounded-full font-semibold shrink-0">Cấp 2</span>
+                          ${isDangSuaCon ? '<span class="text-[9px] bg-amber-500 text-white px-1.5 py-0.2 rounded-full font-semibold shrink-0">Đang sửa</span>' : ''}
+                        </div>
+                        <span class="text-[10px] text-slate-400">${countConTong} sản phẩm ${chau.length > 0 ? `(gồm ${chau.length} nhóm cháu)` : ''}</span>
                       </div>
-                      <span class="text-[10px] text-slate-400">${countCon} sản phẩm</span>
+                    </div>
+                    <div class="flex items-center space-x-1 shrink-0 ml-2">
+                      <button type="button" onclick="chonSuaNhomHang('${c.MaNhom}')" title="Sửa tên nhóm" class="px-2 py-0.5 rounded-md bg-white border border-slate-200 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-300 text-slate-600 flex items-center space-x-1 text-[10px] font-medium transition">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <span>Sửa</span>
+                      </button>
+                      <button type="button" onclick="themNhomChau('${c.MaNhom}')" title="Thêm nhóm cháu (Cấp 3)" class="px-2 py-0.5 rounded-md bg-white border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 text-slate-600 flex items-center space-x-1 text-[10px] font-medium transition shadow-2xs">
+                        <i class="fa-solid fa-plus text-[9px] text-emerald-600"></i>
+                        <span>+ Cháu</span>
+                      </button>
+                      <button type="button" onclick="xacNhanXoaNhomHang('${c.MaNhom}')" title="Xóa nhóm" class="w-6 h-6 rounded-md bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 text-slate-400 flex items-center justify-center transition">
+                        <i class="fa-solid fa-trash-can text-[10px]"></i>
+                      </button>
                     </div>
                   </div>
-                  <div class="flex items-center space-x-1 shrink-0 ml-2">
-                    <button type="button" onclick="chonSuaNhomHang('${c.MaNhom}')" title="Sửa tên nhóm" class="px-2 py-0.5 rounded-md bg-white border border-slate-200 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-300 text-slate-600 flex items-center space-x-1 text-[10px] font-medium transition">
-                      <i class="fa-solid fa-pen-to-square"></i>
-                      <span>Sửa</span>
-                    </button>
-                    <button type="button" onclick="xacNhanXoaNhomHang('${c.MaNhom}')" title="Xóa nhóm" class="w-6 h-6 rounded-md bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 text-slate-400 flex items-center justify-center transition">
-                      <i class="fa-solid fa-trash-can text-[10px]"></i>
-                    </button>
-                  </div>
+
+                  <!-- Các hàng nhóm cháu (Cấp 3) trực thuộc nhóm con này -->
+                  ${chauListToRender.map(ch => {
+                    const maChau = String(ch.MaNhom).toUpperCase();
+                    const isDangSuaChau = maDangSua && maDangSua === maChau;
+                    const countChau = spCountMap[maChau] || 0;
+                    return `
+                      <div class="flex items-center justify-between py-1 px-3 pl-12 border-t border-slate-100/80 ${isDangSuaChau ? 'bg-amber-50/50 ring-1 ring-inset ring-amber-200' : 'hover:bg-slate-50/80 bg-white'} transition">
+                        <div class="flex items-center space-x-2 min-w-0 flex-1 cursor-pointer" onclick="chonSuaNhomHang('${ch.MaNhom}')" title="Bấm để sửa tên nhóm cháu này">
+                          <span class="text-slate-300 text-[10px] select-none font-mono">└──</span>
+                          <span class="w-4.5 h-4.5 rounded-md ${isDangSuaChau ? 'bg-amber-100 text-amber-700' : 'bg-emerald-50 text-emerald-600'} flex items-center justify-center shrink-0 text-[9px]">
+                            <i class="fa-solid fa-tag"></i>
+                          </span>
+                          <div class="min-w-0 flex-1">
+                            <div class="flex items-center space-x-1.5">
+                              <span class="text-slate-700 text-xs truncate ${isDangSuaChau ? 'font-bold text-amber-900' : ''}">${ch.TenNhom}</span>
+                              <span class="text-[9.5px] text-slate-400 font-mono">(${ch.MaNhom})</span>
+                              <span class="text-[8.5px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.2 rounded-full font-semibold shrink-0">Nhóm cháu (Cấp 3)</span>
+                              ${isDangSuaChau ? '<span class="text-[8.5px] bg-amber-500 text-white px-1.5 py-0.2 rounded-full font-semibold shrink-0">Đang sửa</span>' : ''}
+                            </div>
+                            <span class="text-[9.5px] text-slate-400">${countChau} sản phẩm</span>
+                          </div>
+                        </div>
+                        <div class="flex items-center space-x-1 shrink-0 ml-2">
+                          <button type="button" onclick="chonSuaNhomHang('${ch.MaNhom}')" title="Sửa tên nhóm" class="px-2 py-0.5 rounded-md bg-white border border-slate-200 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-300 text-slate-600 flex items-center space-x-1 text-[9.5px] font-medium transition">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <span>Sửa</span>
+                          </button>
+                          <button type="button" onclick="xacNhanXoaNhomHang('${ch.MaNhom}')" title="Xóa nhóm" class="w-5 h-5 rounded-md bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 text-slate-400 flex items-center justify-center transition">
+                            <i class="fa-solid fa-trash-can text-[9px]"></i>
+                          </button>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
                 </div>
               `;
             }).join('')}
@@ -17072,12 +17288,16 @@ function formatVND(amount) {
       });
 
       // Nhóm mồ côi (nếu có MaNhomCha nhưng cha không tồn tại trong danh sách)
-      const orphanList = list.filter(n => n.MaNhomCha && !nhomCha.some(p => p.MaNhom === n.MaNhomCha));
+      const orphanList = list.filter(n => {
+        if (!n || !n.MaNhom) return false;
+        const p = n.MaNhomCha ? String(n.MaNhomCha).trim().toUpperCase() : '';
+        return p && !nhomMap[p];
+      });
       if (orphanList.length) {
         orphanList.forEach(orp => {
           if (kw && !orp.TenNhom.toLowerCase().includes(kw) && !orp.MaNhom.toLowerCase().includes(kw)) return;
-          const isDangSua = maDangSua && maDangSua === orp.MaNhom;
-          const count = spCountMap[orp.MaNhom] || 0;
+          const isDangSua = maDangSua && maDangSua === String(orp.MaNhom).toUpperCase();
+          const count = spCountMap[String(orp.MaNhom).toUpperCase()] || 0;
           html += `
             <div class="border ${isDangSua ? 'border-amber-400 ring-2 ring-amber-100 bg-amber-50/20' : 'border-slate-200 bg-white'} rounded-xl p-2.5 flex items-center justify-between shadow-2xs">
               <div class="flex items-center space-x-2 min-w-0 flex-1 cursor-pointer" onclick="chonSuaNhomHang('${orp.MaNhom}')" title="Bấm để sửa tên nhóm này">
@@ -17085,8 +17305,11 @@ function formatVND(amount) {
                   <i class="fa-solid fa-tag"></i>
                 </span>
                 <div class="min-w-0 flex-1">
-                  <span class="font-bold text-slate-800 truncate">${orp.TenNhom}</span>
-                  <span class="text-[10px] text-slate-400 font-mono">(${orp.MaNhom})</span>
+                  <div class="flex items-center space-x-1.5">
+                    <span class="font-bold text-slate-800 truncate">${orp.TenNhom}</span>
+                    <span class="text-[10px] text-slate-400 font-mono">(${orp.MaNhom})</span>
+                    <span class="text-[8.5px] bg-slate-100 text-slate-600 px-1 py-0.2 rounded font-semibold shrink-0">Khác</span>
+                  </div>
                   <span class="text-[10px] text-slate-500 block">${count} sản phẩm</span>
                 </div>
               </div>
@@ -17113,12 +17336,11 @@ function formatVND(amount) {
     }
 
     function chonSuaNhomHang(maNhom) {
-      const target = (rawNhomHang || []).find(n => n.MaNhom === maNhom);
+      const target = (rawNhomHang || []).find(n => n && n.MaNhom === maNhom);
       if (!target) return;
 
       const elMa = document.getElementById('input-nhom-ma');
       const elTen = document.getElementById('input-nhom-ten');
-      const elCha = document.getElementById('input-nhom-cha');
       const elGhiChu = document.getElementById('input-nhom-ghichu');
       const elTitle = document.getElementById('form-nhom-title');
       const elTxtBtn = document.getElementById('txt-btn-luu-nhom');
@@ -17141,15 +17363,8 @@ function formatVND(amount) {
       }
       if (elTxtBtn) elTxtBtn.innerText = "Lưu thay đổi";
 
-      // Nạp danh sách nhóm cha loại trừ chính nhóm đang sửa
-      if (elCha) {
-        const nhomChaHopLe = (rawNhomHang || []).filter(n => !n.MaNhomCha && n.MaNhom !== target.MaNhom);
-        let opts = '<option value="">(Không chọn nhóm cha - Là nhóm chính)</option>';
-        nhomChaHopLe.forEach(p => {
-          opts += `<option value="${p.MaNhom}" ${p.MaNhom === target.MaNhomCha ? 'selected' : ''}>📁 ${p.TenNhom}</option>`;
-        });
-        elCha.innerHTML = opts;
-      }
+      // Nạp danh sách nhóm cha hợp lệ (loại trừ chính nhóm này và các con cháu của nó để chống tạo vòng lặp)
+      napOptionsSelectNhomCha(target.MaNhomCha, target.MaNhom);
 
       renderTreeNhomHang();
 
@@ -17162,7 +17377,6 @@ function formatVND(amount) {
     function datLaiFormNhomHang() {
       const elMa = document.getElementById('input-nhom-ma');
       const elTen = document.getElementById('input-nhom-ten');
-      const elCha = document.getElementById('input-nhom-cha');
       const elGhiChu = document.getElementById('input-nhom-ghichu');
       const elTitle = document.getElementById('form-nhom-title');
       const elTxtBtn = document.getElementById('txt-btn-luu-nhom');
@@ -17183,14 +17397,7 @@ function formatVND(amount) {
       }
       if (elTxtBtn) elTxtBtn.innerText = "Lưu nhóm hàng";
 
-      if (elCha) {
-        const nhomCha = (rawNhomHang || []).filter(n => !n.MaNhomCha);
-        let opts = '<option value="">(Không chọn nhóm cha - Là nhóm chính)</option>';
-        nhomCha.forEach(p => {
-          opts += `<option value="${p.MaNhom}">📁 ${p.TenNhom}</option>`;
-        });
-        elCha.innerHTML = opts;
-      }
+      napOptionsSelectNhomCha("", null);
 
       renderTreeNhomHang();
     }
@@ -17202,9 +17409,31 @@ function formatVND(amount) {
       const elTitle = document.getElementById('form-nhom-title');
 
       if (elCha) elCha.value = maNhomCha;
-      const chaObj = (rawNhomHang || []).find(n => n.MaNhom === maNhomCha);
+      const chaObj = (rawNhomHang || []).find(n => n && n.MaNhom === maNhomCha);
       if (elTitle && chaObj) {
-        elTitle.innerHTML = `<i class="fa-solid fa-tag text-indigo-600"></i><span>Thêm nhóm con cho: <strong class="text-indigo-800">${chaObj.TenNhom}</strong></span>`;
+        elTitle.innerHTML = `<i class="fa-solid fa-folder-plus text-indigo-600"></i><span>Thêm nhóm con cho: <strong class="text-indigo-800">${chaObj.TenNhom}</strong></span>`;
+      }
+      if (elTen) {
+        elTen.focus();
+      }
+    }
+
+    function themNhomChau(maNhomCon) {
+      datLaiFormNhomHang();
+      const elCha = document.getElementById('input-nhom-cha');
+      const elTen = document.getElementById('input-nhom-ten');
+      const elTitle = document.getElementById('form-nhom-title');
+
+      if (elCha) elCha.value = maNhomCon;
+      const conObj = (rawNhomHang || []).find(n => n && n.MaNhom === maNhomCon);
+      let tenCha = '';
+      if (conObj && conObj.MaNhomCha) {
+        const chaObj = (rawNhomHang || []).find(n => n && n.MaNhom === conObj.MaNhomCha);
+        if (chaObj) tenCha = chaObj.TenNhom;
+      }
+      if (elTitle && conObj) {
+        const breadcrumbText = tenCha ? `${tenCha} > ${conObj.TenNhom}` : conObj.TenNhom;
+        elTitle.innerHTML = `<i class="fa-solid fa-tags text-emerald-600"></i><span>Thêm nhóm cháu cho: <strong class="text-emerald-800">${breadcrumbText}</strong></span>`;
       }
       if (elTen) {
         elTen.focus();
@@ -17224,12 +17453,16 @@ function formatVND(amount) {
 
       if (!ten) return showNotification("Vui lòng nhập tên nhóm hàng!", true);
 
+      // Xóa bộ nhớ đệm cache tên nhóm
+      window._tenNhomDayDuMemo = new Map();
+      window._tenNhomLowerMemo = new Map();
+
       const runner = (typeof google !== 'undefined' && google.script && google.script.run)
         ? google.script.run : window._mockGAS;
 
       if (maNhom) {
         // === CHẾ ĐỘ SỬA TÊN / THÔNG TIN NHÓM HÀNG ===
-        const target = (rawNhomHang || []).find(n => n.MaNhom === maNhom);
+        const target = (rawNhomHang || []).find(n => n && n.MaNhom === maNhom);
         if (!target) return showNotification("Không tìm thấy nhóm hàng cần sửa!", true);
 
         const oldTen = target.TenNhom;
@@ -17264,7 +17497,7 @@ function formatVND(amount) {
 
         showNotification("Đã cập nhật tên nhóm hàng thành công: " + ten);
       } else {
-        // === CHẾ ĐỘ TẠO MỚI NHÓM HÀNG ===
+        // === CHẾ ĐỘ TẠO MỚI NHÓM HÀNG (CẤP 1, CẤP 2 HOẶC CẤP 3) ===
         const maxNum = (rawNhomHang || []).reduce((max, n) => {
           const m = String(n.MaNhom || '').match(/NH(\d+)/i);
           return m ? Math.max(max, parseInt(m[1], 10)) : max;
@@ -17272,6 +17505,7 @@ function formatVND(amount) {
         const code = "NH" + ("000" + (maxNum + 1)).slice(-3);
 
         const newObj = { MaNhom: code, TenNhom: ten, MaNhomCha: maCha, GhiChu: ghiChu };
+        if (!Array.isArray(rawNhomHang)) rawNhomHang = [];
         rawNhomHang.push(newObj);
 
         // Lưu lên Supabase
@@ -17307,26 +17541,30 @@ function formatVND(amount) {
     }
 
     function xacNhanXoaNhomHang(maNhom) {
-      const target = (rawNhomHang || []).find(n => n.MaNhom === maNhom);
+      const target = (rawNhomHang || []).find(n => n && n.MaNhom === maNhom);
       if (!target) return;
 
-      // Kiểm tra nếu có nhóm con
-      const hasCon = (rawNhomHang || []).some(n => n.MaNhomCha === maNhom);
+      // Kiểm tra nếu có nhóm con hoặc nhóm cháu trực thuộc
+      const hasCon = (rawNhomHang || []).some(n => n && String(n.MaNhomCha || '').toUpperCase() === String(maNhom).toUpperCase());
       if (hasCon) {
-        return showNotification("Không thể xóa nhóm này vì đang chứa nhóm con trực thuộc!", true);
+        return showNotification("Không thể xóa nhóm này vì đang chứa nhóm con hoặc nhóm cháu trực thuộc! Vui lòng xóa các nhóm trực thuộc trước.", true);
       }
 
-      // Đếm số hàng hóa thuộc nhóm này
+      // Đếm số hàng hóa thuộc nhóm này (hoặc các nhóm trực thuộc)
+      const allSub = layTatCaMaNhomConChau(maNhom, rawNhomHang);
       const spCount = (rawHangHoa || []).filter(h => 
-        String(h.maNhom || '').toUpperCase() === String(maNhom).toUpperCase() ||
-        String(h.maNhom || '').toLowerCase() === String(target.TenNhom).toLowerCase()
+        h && allSub.has(String(h.maNhom || '').trim().toUpperCase())
       ).length;
 
       const msg = spCount > 0 
-        ? `Nhóm [${target.TenNhom}] hiện đang có ${spCount} sản phẩm. Bạn có chắc chắn muốn xóa nhóm này không?`
+        ? `Nhóm [${target.TenNhom}] hiện đang có ${spCount} sản phẩm liên kết. Bạn có chắc chắn muốn xóa nhóm này không?`
         : `Bạn có chắc chắn muốn xóa nhóm [${target.TenNhom}] không?`;
 
       if (!confirm(msg)) return;
+
+      // Xóa bộ nhớ đệm cache tên nhóm
+      window._tenNhomDayDuMemo = new Map();
+      window._tenNhomLowerMemo = new Map();
 
       // Xóa khỏi rawNhomHang
       rawNhomHang = rawNhomHang.filter(n => n.MaNhom !== maNhom);
@@ -17398,6 +17636,11 @@ function formatVND(amount) {
 
     window.doiTenNhanhNhomHang = doiTenNhanhNhomHang;
     window.chonSuaNhomHang = chonSuaNhomHang;
+    window.themNhomCon = themNhomCon;
+    window.themNhomChau = themNhomChau;
+    window.datLaiFormNhomHang = datLaiFormNhomHang;
+    window.xacNhanLuuNhomHang = xacNhanLuuNhomHang;
+    window.xacNhanXoaNhomHang = xacNhanXoaNhomHang;
     window.datLaiFormNhomHang = datLaiFormNhomHang;
     window.themNhomCon = themNhomCon;
     window.xacNhanLuuNhomHang = xacNhanLuuNhomHang;
@@ -18062,26 +18305,30 @@ function formatVND(amount) {
 
       function demSanPhamTheoNhom(targetMa, includeChildren = false) {
         const targetClean = String(targetMa || '').trim().toUpperCase();
-        let total = spCountByMaNhom[targetClean] || 0;
-        if (includeChildren) {
-          cleanNhomList.filter(n => n.cha.toUpperCase() === targetClean).forEach(c => {
-            total += (spCountByMaNhom[c.ma.toUpperCase()] || 0);
-          });
-        }
+        if (!includeChildren) return spCountByMaNhom[targetClean] || 0;
+        const allSub = layTatCaMaNhomConChau(targetClean, cleanNhomList.map(n => ({ MaNhom: n.ma, MaNhomCha: n.cha })));
+        let total = 0;
+        allSub.forEach(m => { total += (spCountByMaNhom[m] || 0); });
         return total;
       }
 
       let optionsHtml = '';
 
-      // Đổ danh sách theo cây phân cấp trực quan: Nhóm Cha -> Nhóm Con
+      // Đổ danh sách theo cây phân cấp trực quan: Nhóm Cha (Cấp 1) -> Nhóm Con (Cấp 2) -> Nhóm Cháu (Cấp 3)
       nhomCha.forEach(cha => {
         const countCha = demSanPhamTheoNhom(cha.ma, true);
-        optionsHtml += `<option value="${cha.ma}">📁 [Nhóm chính] ${cha.ten} (${countCha} sản phẩm)</option>`;
+        optionsHtml += `<option value="${cha.ma}">📁 [Cấp 1] ${cha.ten} (${countCha} sản phẩm)</option>`;
 
         const cacNhomCon = cleanNhomList.filter(n => n.cha.toUpperCase() === cha.ma.toUpperCase());
         cacNhomCon.forEach(con => {
-          const countCon = demSanPhamTheoNhom(con.ma, false);
-          optionsHtml += `<option value="${con.ma}">&nbsp;&nbsp;&nbsp;&nbsp;└── ${con.ten} (${countCon} sản phẩm)</option>`;
+          const countCon = demSanPhamTheoNhom(con.ma, true);
+          optionsHtml += `<option value="${con.ma}">&nbsp;&nbsp;&nbsp;&nbsp;├── 📂 [Cấp 2] ${con.ten} (${countCon} sản phẩm)</option>`;
+
+          const cacNhomChau = cleanNhomList.filter(n => n.cha.toUpperCase() === con.ma.toUpperCase());
+          cacNhomChau.forEach(chau => {
+            const countChau = demSanPhamTheoNhom(chau.ma, false);
+            optionsHtml += `<option value="${chau.ma}">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 🏷️ [Cấp 3] ${chau.ten} (${countChau} sản phẩm)</option>`;
+          });
         });
       });
 
@@ -18225,13 +18472,10 @@ function formatVND(amount) {
         // 1. Khớp trực tiếp mã nhóm
         if (spMaNhom === targetNhom) return true;
 
-        // 2. Nếu targetNhom là nhóm cha, kiểm tra xem sp có thuộc nhóm con nào của targetNhom không
+        // 2. Nếu targetNhom là nhóm cha hoặc nhóm con, kiểm tra xem sp có thuộc nhóm con/cháu nào không
         const nhomList = (typeof rawNhomHang !== 'undefined' && Array.isArray(rawNhomHang)) ? rawNhomHang : [];
-        const childGroupCodes = nhomList
-          .filter(n => String(n.MaNhomCha || n.maNhomCha || n.ma_nhom_cha || '').trim().toUpperCase() === targetNhom)
-          .map(n => String(n.MaNhom || n.maNhom || n.ma_nhom || '').trim().toUpperCase());
-
-        if (childGroupCodes.includes(spMaNhom)) return true;
+        const allDescendantCodes = layTatCaMaNhomConChau(targetNhom, nhomList);
+        if (allDescendantCodes.has(spMaNhom)) return true;
 
         // 3. Khớp theo tên nhóm hàng
         const targetGroupObj = nhomList.find(n => String(n.MaNhom || n.maNhom || n.ma_nhom || '').trim().toUpperCase() === targetNhom);
@@ -28759,8 +29003,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.6.4";
-    const APP_CLIENT_BUILD = 67;
+    const APP_CLIENT_VERSION = "1.6.5";
+    const APP_CLIENT_BUILD = 68;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
@@ -29719,6 +29963,7 @@ function formatVND(amount) {
     };
 
     // 3. Render cây danh mục nhóm hàng Cha - Con
+    // 3. Render cây danh mục nhóm hàng Cha - Con - Cháu
     window.renderCayNhomHangExcel = function(tuKhoa) {
       const container = document.getElementById('excel-tree-nhom-container');
       if (!container) return;
@@ -29732,42 +29977,59 @@ function formatVND(amount) {
       // Đếm số sản phẩm trực tiếp thuộc từng nhóm
       const spCountMap = {};
       (rawHangHoa || []).forEach(h => {
-        const m = String(h.maNhom || '').trim();
+        const m = String(h.maNhom || '').trim().toUpperCase();
         if (m) spCountMap[m] = (spCountMap[m] || 0) + 1;
       });
 
       // Tạo map tra cứu
       const nhomMap = {};
-      nhomList.forEach(n => { nhomMap[n.MaNhom] = n; });
+      nhomList.forEach(n => { if (n && n.MaNhom) nhomMap[String(n.MaNhom).toUpperCase()] = n; });
 
-      // Phân tách Nhóm Cha và Nhóm Con
+      // Phân tách Nhóm Cha (Cấp 1)
       const nhomCha = nhomList.filter(n => {
-        const p = n.MaNhomCha;
-        return !p || p === '' || p === 'null' || p === 'NONE' || p === '0' || p === n.MaNhom || !nhomMap[p];
+        if (!n || !n.MaNhom) return false;
+        const p = n.MaNhomCha ? String(n.MaNhomCha).trim().toUpperCase() : '';
+        return !p || p === '' || p === 'NULL' || p === 'NONE' || p === '0' || p === String(n.MaNhom).toUpperCase() || !nhomMap[p];
       });
+      nhomCha.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
 
       const kw = (tuKhoa || '').toLowerCase().trim();
       let htmlTree = '';
       let tongNhomHienThi = 0;
 
       nhomCha.forEach((cha, chaIdx) => {
-        const nhomCon = nhomList.filter(n => n.MaNhomCha === cha.MaNhom && n.MaNhom !== cha.MaNhom);
+        const maCha = String(cha.MaNhom).toUpperCase();
+        const nhomCon = nhomList.filter(n => n && String(n.MaNhomCha || '').toUpperCase() === maCha && n.MaNhom !== cha.MaNhom);
+        nhomCon.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
 
-        let tongSpCha = spCountMap[cha.MaNhom] || 0;
-        nhomCon.forEach(c => {
-          tongSpCha += (spCountMap[c.MaNhom] || 0);
-        });
+        // Tính tổng sản phẩm nhóm Cha (gồm cả con và cháu)
+        const allChaSub = layTatCaMaNhomConChau(cha.MaNhom, nhomList);
+        let tongSpCha = 0;
+        allChaSub.forEach(m => { tongSpCha += (spCountMap[m] || 0); });
 
         const khopCha = !kw || cha.TenNhom.toLowerCase().includes(kw) || cha.MaNhom.toLowerCase().includes(kw);
-        const conFiltered = nhomCon.filter(c => !kw || c.TenNhom.toLowerCase().includes(kw) || c.MaNhom.toLowerCase().includes(kw));
 
-        if (!khopCha && !conFiltered.length) return;
+        // Lọc các nhánh con và cháu khớp từ khóa
+        const conMatching = [];
+        nhomCon.forEach(c => {
+          const maCon = String(c.MaNhom).toUpperCase();
+          const nhomChau = nhomList.filter(n => n && String(n.MaNhomCha || '').toUpperCase() === maCon && n.MaNhom !== c.MaNhom);
+          nhomChau.sort((a, b) => a.MaNhom.localeCompare(b.MaNhom));
 
-        tongNhomHienThi += 1 + conFiltered.length;
+          const khopCon = !kw || c.TenNhom.toLowerCase().includes(kw) || c.MaNhom.toLowerCase().includes(kw);
+          const chauFiltered = nhomChau.filter(ch => !kw || ch.TenNhom.toLowerCase().includes(kw) || ch.MaNhom.toLowerCase().includes(kw));
+
+          if (khopCha || khopCon || chauFiltered.length) {
+            conMatching.push({ con: c, nhomChau, chauFiltered, khopCon });
+          }
+        });
+
+        if (!khopCha && !conMatching.length) return;
+
+        tongNhomHienThi += 1 + conMatching.length;
 
         const isChaChecked = window.danhSachNhomExcelDuocChon.has(cha.MaNhom);
         const allConChecked = nhomCon.length > 0 && nhomCon.every(c => window.danhSachNhomExcelDuocChon.has(c.MaNhom));
-        const someConChecked = nhomCon.some(c => window.danhSachNhomExcelDuocChon.has(c.MaNhom));
 
         const collapseId = `nhom-con-box-${chaIdx}`;
 
@@ -29796,23 +30058,59 @@ function formatVND(amount) {
               </div>
             </div>
 
-            ${nhomCon.length > 0 ? `
+            ${conMatching.length > 0 ? `
               <div id="${collapseId}" class="${window.isCayNhomExcelExpanded ? '' : 'hidden'} pl-6 space-y-1 border-l-2 border-indigo-100 ml-4 py-0.5">
-                ${nhomCon.map(con => {
-                  if (kw && !khopCha && !con.TenNhom.toLowerCase().includes(kw) && !con.MaNhom.toLowerCase().includes(kw)) return '';
+                ${conMatching.map(({ con, nhomChau, chauFiltered, khopCon }, conIdx) => {
                   const isConChecked = window.danhSachNhomExcelDuocChon.has(con.MaNhom);
-                  const countCon = spCountMap[con.MaNhom] || 0;
+                  const allConSub = layTatCaMaNhomConChau(con.MaNhom, nhomList);
+                  let tongSpCon = 0;
+                  allConSub.forEach(m => { tongSpCon += (spCountMap[m] || 0); });
+
+                  const chauListToRender = (!kw || khopCha || khopCon) ? nhomChau : chauFiltered;
+                  const collapseChauId = `nhom-chau-box-${chaIdx}-${conIdx}`;
+
                   return `
-                    <div class="flex items-center justify-between p-1 rounded-lg hover:bg-indigo-50/50 transition">
-                      <div class="flex items-center space-x-2 min-w-0 flex-1">
-                        <span class="text-slate-300 text-[11px] select-none font-mono">└──</span>
-                        <input type="checkbox" id="chk-nhom-con-${con.MaNhom}" ${isConChecked ? 'checked' : ''} onchange="toggleNhomConExcel('${con.MaNhom}', '${cha.MaNhom}', this.checked)" class="rounded text-indigo-600 w-3.5 h-3.5 shrink-0 cursor-pointer">
-                        <label for="chk-nhom-con-${con.MaNhom}" class="font-medium text-slate-700 hover:text-indigo-600 cursor-pointer flex items-center space-x-1 min-w-0 truncate text-[11px]">
-                          <span class="truncate">${con.TenNhom}</span>
-                          <span class="text-[9.5px] font-mono text-slate-400 font-normal">(${con.MaNhom})</span>
-                        </label>
+                    <div class="space-y-0.5">
+                      <div class="flex items-center justify-between p-1 rounded-lg hover:bg-indigo-50/50 transition">
+                        <div class="flex items-center space-x-1.5 min-w-0 flex-1">
+                          ${nhomChau.length > 0 ? `
+                            <button type="button" onclick="toggleNhanhConCayExcel('${collapseChauId}', this)" class="w-4 h-4 flex items-center justify-center text-slate-400 hover:text-slate-700 transition shrink-0" title="Thu gọn / Mở rộng nhóm cháu">
+                              <i class="fa-solid ${window.isCayNhomExcelExpanded ? 'fa-chevron-down' : 'fa-chevron-right'} text-[9px]"></i>
+                            </button>
+                          ` : `<span class="text-slate-300 text-[11px] select-none font-mono">├──</span>`}
+                          <input type="checkbox" id="chk-nhom-con-${con.MaNhom}" ${isConChecked ? 'checked' : ''} onchange="toggleNhomConExcel('${con.MaNhom}', '${cha.MaNhom}', this.checked)" class="rounded text-indigo-600 w-3.5 h-3.5 shrink-0 cursor-pointer">
+                          <label for="chk-nhom-con-${con.MaNhom}" class="font-medium text-slate-700 hover:text-indigo-600 cursor-pointer flex items-center space-x-1 min-w-0 truncate text-[11px]">
+                            <span class="truncate">${con.TenNhom}</span>
+                            <span class="text-[9.5px] font-mono text-slate-400 font-normal">(${con.MaNhom})</span>
+                          </label>
+                        </div>
+                        <div class="flex items-center space-x-1 shrink-0">
+                          ${nhomChau.length > 0 ? `<span class="text-[9px] text-slate-400 bg-slate-100 px-1 py-0.2 rounded-full">${nhomChau.length} cháu</span>` : ''}
+                          <span class="text-[9.5px] font-mono ${tongSpCon > 0 ? 'text-indigo-600 font-bold' : 'text-slate-400'} px-1.5 py-0.2 rounded">${tongSpCon}</span>
+                        </div>
                       </div>
-                      <span class="text-[9.5px] font-mono ${countCon > 0 ? 'text-indigo-600 font-bold' : 'text-slate-400'} px-1.5 py-0.2 rounded">${countCon}</span>
+
+                      ${nhomChau.length > 0 ? `
+                        <div id="${collapseChauId}" class="${window.isCayNhomExcelExpanded ? '' : 'hidden'} pl-5 space-y-0.5 border-l-2 border-emerald-100 ml-4 py-0.5">
+                          ${chauListToRender.map(chau => {
+                            const isChauChecked = window.danhSachNhomExcelDuocChon.has(chau.MaNhom);
+                            const countChau = spCountMap[String(chau.MaNhom).toUpperCase()] || 0;
+                            return `
+                              <div class="flex items-center justify-between p-0.5 rounded hover:bg-emerald-50/50 transition">
+                                <div class="flex items-center space-x-1.5 min-w-0 flex-1">
+                                  <span class="text-slate-300 text-[10px] select-none font-mono">└──</span>
+                                  <input type="checkbox" id="chk-nhom-chau-${chau.MaNhom}" ${isChauChecked ? 'checked' : ''} onchange="toggleNhomChauExcel('${chau.MaNhom}', '${con.MaNhom}', '${cha.MaNhom}', this.checked)" class="rounded text-emerald-600 w-3 h-3 shrink-0 cursor-pointer">
+                                  <label for="chk-nhom-chau-${chau.MaNhom}" class="text-slate-600 hover:text-emerald-700 cursor-pointer flex items-center space-x-1 min-w-0 truncate text-[10.5px]">
+                                    <span class="truncate">${chau.TenNhom}</span>
+                                    <span class="text-[9px] font-mono text-slate-400 font-normal">(${chau.MaNhom})</span>
+                                  </label>
+                                </div>
+                                <span class="text-[9px] font-mono ${countChau > 0 ? 'text-emerald-700 font-semibold' : 'text-slate-400'} px-1 py-0.2 rounded">${countChau}</span>
+                              </div>
+                            `;
+                          }).join('')}
+                        </div>
+                      ` : ''}
                     </div>
                   `;
                 }).join('')}
@@ -29828,9 +30126,7 @@ function formatVND(amount) {
 
     // 4. Toggle nhóm cha (tối ưu O(1) Set)
     window.toggleNhomChaExcel = function(maCha, isChecked) {
-      const nhomList = layDanhSachNhomHangChuan();
-      const nhomCon = nhomList.filter(n => n.MaNhomCha === maCha && n.MaNhom !== maCha);
-      const allRelatedGroups = new Set([maCha, ...nhomCon.map(c => c.MaNhom)]);
+      const allRelatedGroups = layTatCaMaNhomConChau(maCha, layDanhSachNhomHangChuan());
 
       allRelatedGroups.forEach(m => {
         if (isChecked) window.danhSachNhomExcelDuocChon.add(m);
@@ -29838,12 +30134,69 @@ function formatVND(amount) {
       });
 
       (rawHangHoa || []).forEach(h => {
-        if (allRelatedGroups.has(h.maNhom)) {
+        if (h && allRelatedGroups.has(String(h.maNhom || '').trim().toUpperCase())) {
           if (isChecked) window.danhSachTamXuatExcelSet.add(h.maHang);
           else window.danhSachTamXuatExcelSet.delete(h.maHang);
         }
       });
       danhSachTamXuatExcel = Array.from(window.danhSachTamXuatExcelSet);
+
+      renderCayNhomHangExcel(document.getElementById('excel-search-nhom')?.value || '');
+      window.pageExcelModal = 1;
+      renderModalBangXuatExcel(true);
+    };
+
+    // 5. Toggle nhóm con riêng lẻ (tối ưu O(1) Set)
+    window.toggleNhomConExcel = function(maCon, maCha, isChecked) {
+      const allRelatedSub = layTatCaMaNhomConChau(maCon, layDanhSachNhomHangChuan());
+
+      allRelatedSub.forEach(m => {
+        if (isChecked) window.danhSachNhomExcelDuocChon.add(m);
+        else window.danhSachNhomExcelDuocChon.delete(m);
+      });
+
+      (rawHangHoa || []).forEach(h => {
+        if (h && allRelatedSub.has(String(h.maNhom || '').trim().toUpperCase())) {
+          if (isChecked) window.danhSachTamXuatExcelSet.add(h.maHang);
+          else window.danhSachTamXuatExcelSet.delete(h.maHang);
+        }
+      });
+      danhSachTamXuatExcel = Array.from(window.danhSachTamXuatExcelSet);
+
+      const nhomList = layDanhSachNhomHangChuan();
+      const tatCaCon = nhomList.filter(n => n && String(n.MaNhomCha || '').toUpperCase() === String(maCha).toUpperCase() && n.MaNhom !== maCha);
+      const allConChecked = tatCaCon.length > 0 && tatCaCon.every(c => window.danhSachNhomExcelDuocChon.has(c.MaNhom));
+      if (allConChecked) window.danhSachNhomExcelDuocChon.add(maCha);
+      else if (!isChecked) window.danhSachNhomExcelDuocChon.delete(maCha);
+
+      renderCayNhomHangExcel(document.getElementById('excel-search-nhom')?.value || '');
+      window.pageExcelModal = 1;
+      renderModalBangXuatExcel(true);
+    };
+
+    // 5b. Toggle nhóm cháu riêng lẻ (tối ưu O(1) Set)
+    window.toggleNhomChauExcel = function(maChau, maCon, maCha, isChecked) {
+      if (isChecked) window.danhSachNhomExcelDuocChon.add(maChau);
+      else window.danhSachNhomExcelDuocChon.delete(maChau);
+
+      (rawHangHoa || []).forEach(h => {
+        if (h && String(h.maNhom || '').trim().toUpperCase() === String(maChau).toUpperCase()) {
+          if (isChecked) window.danhSachTamXuatExcelSet.add(h.maHang);
+          else window.danhSachTamXuatExcelSet.delete(h.maHang);
+        }
+      });
+      danhSachTamXuatExcel = Array.from(window.danhSachTamXuatExcelSet);
+
+      const nhomList = layDanhSachNhomHangChuan();
+      const tatCaChau = nhomList.filter(n => n && String(n.MaNhomCha || '').toUpperCase() === String(maCon).toUpperCase() && n.MaNhom !== maCon);
+      const allChauChecked = tatCaChau.length > 0 && tatCaChau.every(ch => window.danhSachNhomExcelDuocChon.has(ch.MaNhom));
+      if (allChauChecked) window.danhSachNhomExcelDuocChon.add(maCon);
+      else if (!isChecked) window.danhSachNhomExcelDuocChon.delete(maCon);
+
+      const tatCaCon = nhomList.filter(n => n && String(n.MaNhomCha || '').toUpperCase() === String(maCha).toUpperCase() && n.MaNhom !== maCha);
+      const allConChecked = tatCaCon.length > 0 && tatCaCon.every(c => window.danhSachNhomExcelDuocChon.has(c.MaNhom));
+      if (allConChecked) window.danhSachNhomExcelDuocChon.add(maCha);
+      else if (!isChecked) window.danhSachNhomExcelDuocChon.delete(maCha);
 
       renderCayNhomHangExcel(document.getElementById('excel-search-nhom')?.value || '');
       window.pageExcelModal = 1;
@@ -30125,13 +30478,26 @@ function formatVND(amount) {
             let tenCon = '';
             let tenDayDu = layTenDayDuNhomHang(h.maNhom);
 
+            let tenChau = '';
             if (nhom) {
-              if (nhom.MaNhomCha && nhomMap[nhom.MaNhomCha]) {
-                tenCha = nhomMap[nhom.MaNhomCha].TenNhom;
-                tenCon = nhom.TenNhom;
-              } else {
-                tenCha = nhom.TenNhom;
-                tenCon = '';
+              const chain = [nhom.TenNhom];
+              let cur = nhom;
+              const visited = new Set([cur.MaNhom]);
+              while (cur && cur.MaNhomCha && nhomMap[cur.MaNhomCha] && visited.size < 10) {
+                const p = nhomMap[cur.MaNhomCha];
+                visited.add(p.MaNhom);
+                chain.unshift(p.TenNhom);
+                cur = p;
+              }
+              if (chain.length === 1) {
+                tenCha = chain[0];
+              } else if (chain.length === 2) {
+                tenCha = chain[0];
+                tenCon = chain[1];
+              } else if (chain.length >= 3) {
+                tenCha = chain[0];
+                tenCon = chain[1];
+                tenChau = chain.slice(2).join(' > ');
               }
             }
 
@@ -30141,6 +30507,7 @@ function formatVND(amount) {
               "Tên Sản Phẩm": h.tenHang,
               "Nhóm Hàng Cha": tenCha || h.maNhom || '',
               "Nhóm Hàng Con": tenCon || '',
+              "Nhóm Hàng Cháu": tenChau || '',
               "Nhóm Hàng Đầy Đủ": tenDayDu,
               "Mã Nhóm": h.maNhom || '',
               "Đơn Vị Tính": h.donViTinh || "Cái",

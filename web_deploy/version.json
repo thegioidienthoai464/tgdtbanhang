@@ -1,19 +1,19 @@
 {
-  "version": "1.6.4",
-  "build_number": 67,
+  "version": "1.6.5",
+  "build_number": 68,
   "force_update": false,
-  "release_notes": "• Bổ sung tính năng điều chỉnh ngày giờ trả hàng và chọn nhân viên thực hiện trên phiếu trả hàng NCC (mục 4.3).\n• Hỗ trợ tính phí trả hàng NCC: tự động tính và hiển thị chi tiết tổng tiền hàng trả, phí khấu trừ và số tiền hoàn trả thực tế.\n• Bổ sung đa dạng hình thức hoàn tiền / cấn trừ nợ: Cấn trừ công nợ NCC, Nhận tiền mặt ngay, Chuyển khoản ngân hàng (chọn tài khoản nhận), Hỗn hợp (Tiền mặt + Chuyển khoản).\n• Thêm tính năng Lưu tạm phiếu trả hàng NCC: cho phép lưu nháp, quản lý danh sách phiếu tạm với nút \"Tiếp tục\" hoàn thiện và nút \"Xóa\" phiếu tạm tiện lợi.\n• Bổ sung bộ lọc trạng thái (Đã trả hàng / Lưu tạm / Đã hủy) tại danh sách đơn trả hàng NCC và đồng bộ đầy đủ lên báo cáo, chi tiết và bản in phiếu.",
+  "release_notes": "• Cho phép tạo và quản lý nhóm hàng cháu (Cấp 3) sau nhóm con (Cấp 2).\n• Cây danh mục nhóm hàng trực quan: hỗ trợ đầy đủ 3 cấp (📁 Cấp 1 -> 📂 Cấp 2 -> 🏷️ Cấp 3) với nút \"+ Cháu\" thao tác nhanh trên từng nhóm con.\n• Hỗ trợ chống tạo vòng lặp quan hệ cha-con khi chỉnh sửa nhóm hàng.\n• Hiển thị đường dẫn phân cấp breadcrumb đầy đủ (VD: Điện thoại > iPhone > iPhone 15 Series) tự động theo thời gian thực.\n• Đồng bộ bộ lọc hàng hóa đa cấp: chọn nhóm cha tự động bao gồm toàn bộ sản phẩm của nhóm con và nhóm cháu trực thuộc.\n• Tối ưu chuyển nhóm hàng loạt và xuất Excel với cấu trúc phân cấp danh mục 3 cấp hoàn chỉnh.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.4/TT_POS_v1.6.4.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.4/TT_POS_v1.6.4.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.4",
-  "build": 67,
-  "releaseDate": "2026-11-13",
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.5/TT_POS_v1.6.5.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.5/TT_POS_v1.6.5.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.5",
+  "build": 68,
+  "releaseDate": "2026-11-17",
   "features": [
-    "Điều chỉnh ngày giờ trả hàng và nhân viên lập phiếu trả hàng NCC",
-    "Khấu trừ phí trả hàng NCC và tính tổng hoàn tiền thực tế",
-    "Đa dạng hình thức hoàn tiền: Cấn trừ nợ, Tiền mặt, Ngân hàng, Hỗn hợp",
-    "Lưu tạm phiếu trả hàng NCC và tiếp tục chỉnh sửa bất kỳ lúc nào",
-    "Bộ lọc trạng thái đơn trả hàng NCC (Đã trả / Lưu tạm / Đã hủy)"
+    "Hỗ trợ tạo nhóm hàng cháu (Cấp 3) sau nhóm con (Cấp 2)",
+    "Nút thao tác nhanh + Cháu trên cây danh mục nhóm hàng",
+    "Đường dẫn breadcrumb Cha > Con > Cháu tự động",
+    "Lọc hàng hóa đa cấp bao gồm cả nhóm con và nhóm cháu",
+    "Chuyển nhóm hàng loạt và xuất Excel phân cấp 3 tầng"
   ]
 }
