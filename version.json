@@ -1,20 +1,18 @@
 {
-  "version": "1.6.9",
-  "build_number": 72,
-  "build": 72,
-  "force_update": false,
+  "version": "1.7.0",
+  "build_number": 73,
+  "build": 73,
+  "force_update": true,
   "releaseDate": "2026-11-17",
-  "release_notes": "• Tách dữ liệu đơn nhập hàng NCC độc lập du_lieu_nhap_hang.js (6.6MB) nạp tức thì trong 1 giây.\n• Tự động tự phục hồi danh sách 2.054 đơn nhập hàng và lịch sử đơn hàng trên mọi máy tính.\n• Chuẩn hóa so khớp chi nhánh đa tầng đảm bảo luôn hiển thị đầy đủ đơn hàng theo chi nhánh.\n• Bổ sung nút nạp lại trực tiếp trong bảng nếu bộ lọc chưa khớp hoặc đang trong quá trình tải.",
+  "release_notes": "• Tính năng Đồng bộ 2 chiều (Push & Pull) tự động đồng nhất đơn nhập hàng giữa các máy tính qua Đám mây Supabase.\n• Tự động quét và đẩy các đơn nhập hàng PNH tạo trên máy cũ lên Đám mây Supabase.\n• Bổ sung tính năng Xuất/Nhập gói dữ liệu trực tiếp giữa 2 máy tính (không phụ thuộc mạng).\n• Đã bổ sung các đơn nhập hàng mới nhất vào kho dữ liệu chuẩn hóa.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.9/TT_POS_v1.6.9.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.6.9/TT_POS_v1.6.9.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.6.9",
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.0/TT_POS_v1.7.0.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.0/TT_POS_v1.7.0.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.7.0",
   "features": [
-    "Tách file dữ liệu du_lieu_nhap_hang.js (6.6MB) nạp độc lập trong < 1 giây thay vì phụ thuộc tệp 80MB",
-    "Tự động tự phục hồi dữ liệu qua fetch danh_sach_nhap_hang_full.json và lưu trữ RAM vững chắc",
-    "Chuẩn hóa so khớp chi nhánh đa tầng cho mục 4.2 Đơn nhập hàng NCC đảm bảo luôn hiển thị đầy đủ 2.054 đơn",
-    "Bổ sung nút nạp lại trực tiếp trong bảng nếu bộ lọc chưa khớp hoặc đang trong quá trình tải",
-    "Tối ưu hóa mục 2.5 Lịch sử đơn hàng với du_lieu_don_hang.js và cơ chế tự phục hồi tương tự",
-    "Loại bỏ điều kiện lọc .not gây lỗi URL trong truy vấn Supabase để đồng bộ phiếu nhập hàng PNH ổn định 100%"
+    "Đồng bộ hai chiều Thông minh (Push & Pull) qua Đám mây Supabase",
+    "Tự động quét và đẩy toàn bộ đơn nhập hàng PNH nội bộ lên Supabase Cloud",
+    "Tính năng Chuyển dữ liệu giữa 2 máy (Xuất gói .json và Nạp gói .json trực tiếp)",
+    "Đồng bộ danh sách đơn nhập hàng 2.054 đơn hoàn toàn khớp trên mọi máy tính"
   ]
 }
