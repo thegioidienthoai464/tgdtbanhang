@@ -467,7 +467,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.7.1</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.7.2</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -29514,8 +29514,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.7.1";
-    const APP_CLIENT_BUILD = 74;
+    const APP_CLIENT_VERSION = "1.7.2";
+    const APP_CLIENT_BUILD = 75;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
@@ -42207,7 +42207,7 @@ function loadSoQuy(filter) {
 </div>
 
 
-id="modal-huongdan-ios" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 hidden">
+<div id="modal-huongdan-ios" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 hidden">
   <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-amber-200/50 text-xs">
     <div class="flex items-center justify-between pb-3 border-b border-slate-100">
       <div class="flex items-center space-x-2.5">

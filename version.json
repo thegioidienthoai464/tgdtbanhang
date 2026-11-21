@@ -1,19 +1,17 @@
 {
-  "version": "1.7.1",
-  "build_number": 74,
-  "build": 74,
+  "version": "1.7.2",
+  "build_number": 75,
+  "build": 75,
   "force_update": true,
-  "releaseDate": "2026-11-17",
-  "release_notes": "• Chẩn đoán thông minh kết nối Supabase Cloud, tự động phát hiện và hướng dẫn khôi phục dự án Tạm Dừng (Paused).\n• Cơ chế đồng bộ 2 chiều (Push & Pull) tự động quét và đẩy các đơn nhập hàng PNH nội bộ lên Đám mây Supabase.\n• Banner thông minh 1 chạm phát hiện đơn nhập nội bộ để đẩy lên CSDL Cloud hoặc chuyển sang máy khác.\n• Tính năng Chuyển giữa 2 máy: Xuất/Nạp gói dữ liệu .json tức thì trong 2 giây (hoạt động ngoại tuyến 100%).\n• Đã đồng bộ toàn bộ đơn nhập hàng chuẩn hóa vào hệ thống.",
+  "releaseDate": "2026-11-21",
+  "release_notes": "• Khắc phục triệt để lỗi giao diện: sửa thẻ đóng/mở modal hướng dẫn iOS bị vỡ trên màn hình chính.\n• Tối ưu hiển thị giao diện tổng quan, đảm bảo không bị kẹt hay đè lớp popup trên mọi trình duyệt.\n• Đã cập nhật phiên bản T&T POS v1.7.2 Build 75.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.1/TT_POS_v1.7.1.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.1/TT_POS_v1.7.1.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.7.1",
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.2/TT_POS_v1.7.2.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.2/TT_POS_v1.7.2.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.7.2",
   "features": [
-    "Chẩn đoán và cảnh báo tự động khi CSDL Cloud Supabase bị Tạm Dừng (Paused)",
-    "Đồng bộ hai chiều tự động: Đẩy đơn máy này lên CSDL và Kéo đơn máy khác về",
-    "Banner 1 chạm phát hiện và đồng bộ đơn nhập hàng nội bộ PNH",
-    "Chuyển dữ liệu trực tiếp 2 máy qua file gói .json (hoạt động ngoại tuyến 100%)",
-    "Khớp danh sách 2.054 đơn nhập hàng trên mọi máy tính"
+    "Sửa lỗi giao diện hiển thị chuỗi text modal trên góc phải màn hình",
+    "Đồng bộ hai chiều và chẩn đoán kết nối Supabase Cloud",
+    "Banner 1 chạm phát hiện và đồng bộ đơn nhập hàng nội bộ PNH"
   ]
 }
