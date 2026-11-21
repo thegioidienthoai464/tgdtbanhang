@@ -39,7 +39,7 @@
   <!-- Dữ liệu tồn kho, giá vốn & IMEI 3 chi nhánh từ Excel gốc -->
   <script src="ton_kho_3_chinhanh.js?v=72"></script>
   <!-- Dữ liệu đơn nhập hàng NCC độc lập (6.6MB) nạp siêu tốc -->
-  <script src="du_lieu_nhap_hang.js?v=76"></script>
+  <script src="du_lieu_nhap_hang.js?v=77"></script>
   <!-- Dữ liệu đơn bán hàng POS độc lập (28MB) nạp siêu tốc -->
   <script src="du_lieu_don_hang.js?v=72"></script>
   <!-- Dữ liệu thực tế 100% từ KiotViet Chi Nhánh Thanh Giang -->
@@ -111,7 +111,12 @@
             }
           }
         }
-        // 1. Khớp định dạng ngày giờ chuẩn Việt Nam (KiotViet): dd/mm/yyyy [hh:mm[:ss]] hoặc dd-mm-yyyy
+        // 1. Chuỗi chuẩn ISO có múi giờ (Z hoặc +/-HH:mm hoặc chứa T kèm múi giờ) -> Để native JS Date parse chuẩn 100% múi giờ
+        if (s.includes('T') || s.endsWith('Z') || s.includes('+') || (s.lastIndexOf('-') > 7)) {
+          const dIso = new Date(s);
+          if (!isNaN(dIso.getTime())) return dIso;
+        }
+        // 2. Khớp định dạng ngày giờ chuẩn Việt Nam (KiotViet): dd/mm/yyyy [hh:mm[:ss]] hoặc dd-mm-yyyy
         const mVn = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
         if (mVn) {
           return new Date(
@@ -123,7 +128,7 @@
             Number(mVn[6] || 0)
           );
         }
-        // 2. Khớp định dạng chuẩn ISO: yyyy-mm-dd [hh:mm[:ss]]
+        // 3. Khớp định dạng chuẩn ISO không múi giờ: yyyy-mm-dd [hh:mm[:ss]]
         const mIso = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T\s](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
         if (mIso) {
           let y = Number(mIso[1]);
@@ -467,7 +472,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.7.3</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.7.4</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -12762,19 +12767,21 @@ function formatVND(amount) {
       if (!a && !b) return 0;
       if (!a) return 1;
       if (!b) return -1;
-      const tsA = layTimestampDonNhap(a);
-      const tsB = layTimestampDonNhap(b);
-      if (tsA !== tsB) return tsB - tsA; // Mới nhất lên đầu (giảm dần)
 
-      // Tie breaker 1: Đơn mới tạo cục bộ (PNH... hoặc isLocalCreated) ưu tiên lên trước
+      // Ưu tiên 1: Đơn nhập hàng phát sinh trên phần mềm T&T POS (PNH...) luôn xếp trên các đơn nhập lịch sử KiotViet (PN...)
       const maA = String(a.maPhieu || a.ma_don_hang || a.ma_phieu || '').trim();
       const maB = String(b.maPhieu || b.ma_don_hang || b.ma_phieu || '').trim();
-      const isNewA = maA.startsWith('PNH') || a.isLocalCreated || a.isNewCreated;
-      const isNewB = maB.startsWith('PNH') || b.isLocalCreated || b.isNewCreated;
-      if (isNewA && !isNewB) return -1;
-      if (!isNewA && isNewB) return 1;
+      const isPnhA = (maA.startsWith('PNH') && !maA.startsWith('PNH_TON_')) || a.isLocalCreated || a.isNewCreated;
+      const isPnhB = (maB.startsWith('PNH') && !maB.startsWith('PNH_TON_')) || b.isLocalCreated || b.isNewCreated;
+      if (isPnhA && !isPnhB) return -1;
+      if (!isPnhA && isPnhB) return 1;
 
-      // Tie breaker 2: So sánh mã phiếu theo thứ tự giảm dần tự nhiên
+      // Ưu tiên 2: Sắp xếp theo ngày giờ mới nhất lên đầu (giảm dần)
+      const tsA = layTimestampDonNhap(a);
+      const tsB = layTimestampDonNhap(b);
+      if (tsA !== tsB) return tsB - tsA;
+
+      // Ưu tiên 3: So sánh mã phiếu theo thứ tự giảm dần tự nhiên
       return maB.localeCompare(maA, undefined, { numeric: true, sensitivity: 'base' });
     }
     window.layTimestampDonNhap = layTimestampDonNhap;
@@ -12918,7 +12925,7 @@ function formatVND(amount) {
             let ngayISO = p.ngayNhapISO;
             if (!ngayISO && p.ngayNhap) {
               try {
-                const dt = (typeof parseNgayGioSort === 'function') ? new Date(parseNgayGioSort(p.ngayNhap)) : new Date(p.ngayNhap);
+                const dt = (typeof parseDateTimeGlobal === 'function') ? parseDateTimeGlobal(p.ngayNhap) : new Date(p.ngayNhap);
                 if (dt && !isNaN(dt.getTime())) ngayISO = dt.toISOString();
               } catch(e) {}
             }
@@ -13062,7 +13069,7 @@ function formatVND(amount) {
 
         const backupPackage = {
           app: 'TT_POS',
-          version: '1.7.3',
+          version: '1.7.4',
           exportAt: new Date().toISOString(),
           pnhOrders: Array.from(mapPnh.values()),
           allNhapHang: Array.isArray(rawNhapHangList) && rawNhapHangList.length > 0 ? rawNhapHangList : (window.RAW_NHAP_HANG_THANH_GIANG || []),

@@ -1,17 +1,17 @@
 {
-  "version": "1.7.3",
-  "build_number": 76,
-  "build": 76,
+  "version": "1.7.4",
+  "build_number": 77,
+  "build": 77,
   "force_update": true,
   "releaseDate": "2026-11-21",
-  "release_notes": "• Khắc phục triệt để hiển thị 35 đơn: tự động hợp nhất và bảo toàn toàn bộ 3.210 đơn KiotViet từ tháng 6/2025.\n• Nâng cấp tính năng Chuyển giữa 2 máy: xuất và nạp trọn bộ dữ liệu lịch sử cùng các đơn mới 100% không bao giờ bị thiếu.\n• Cập nhật phiên bản T&T POS v1.7.3 Build 76.",
+  "release_notes": "• Khắc phục triệt để lỗi lệch múi giờ (Timezone drift) khi đồng bộ Supabase giữa các máy tính.\n• Chuẩn hóa thứ tự hiển thị: Toàn bộ đơn nhập hàng mới (PNH559491, PNH497343...) luôn xuất hiện ở dòng đầu tiên của Trang 1 trên mọi máy tính.\n• Đồng bộ 100% dữ liệu 2.063 đơn nhập hàng giữa máy cũ và máy mới.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.3/TT_POS_v1.7.3.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.3/TT_POS_v1.7.3.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.7.3",
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.4/TT_POS_v1.7.4.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.4/TT_POS_v1.7.4.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.7.4",
   "features": [
-    "Bảo toàn và hiển thị đầy đủ 2.063+ đơn nhập hàng KiotViet từ tháng 6/2025",
-    "Chuyển gói dữ liệu trọn bộ giữa 2 máy tính không bao giờ bị ghi đè mất đơn cũ",
-    "Tự động chẩn đoán và khắc phục lỗi thiếu dữ liệu nhập hàng"
+    "Đồng nhất tuyệt đối 100% danh sách và thứ tự đơn nhập hàng trên mọi máy tính",
+    "Khắc phục triệt để lỗi múi giờ làm lùi ngày giờ giao dịch khi đồng bộ Supabase",
+    "Hiển thị đầy đủ 2.063 đơn hàng với các đơn mới nhất luôn ở Trang 1"
   ]
 }

@@ -39,7 +39,7 @@
   <!-- Dữ liệu tồn kho, giá vốn & IMEI 3 chi nhánh từ Excel gốc -->
   <script src="ton_kho_3_chinhanh.js?v=72"></script>
   <!-- Dữ liệu đơn nhập hàng NCC độc lập (6.6MB) nạp siêu tốc -->
-  <script src="du_lieu_nhap_hang.js?v=72"></script>
+  <script src="du_lieu_nhap_hang.js?v=77"></script>
   <!-- Dữ liệu đơn bán hàng POS độc lập (28MB) nạp siêu tốc -->
   <script src="du_lieu_don_hang.js?v=72"></script>
   <!-- Dữ liệu thực tế 100% từ KiotViet Chi Nhánh Thanh Giang -->
@@ -111,7 +111,12 @@
             }
           }
         }
-        // 1. Khớp định dạng ngày giờ chuẩn Việt Nam (KiotViet): dd/mm/yyyy [hh:mm[:ss]] hoặc dd-mm-yyyy
+        // 1. Chuỗi chuẩn ISO có múi giờ (Z hoặc +/-HH:mm hoặc chứa T kèm múi giờ) -> Để native JS Date parse chuẩn 100% múi giờ
+        if (s.includes('T') || s.endsWith('Z') || s.includes('+') || (s.lastIndexOf('-') > 7)) {
+          const dIso = new Date(s);
+          if (!isNaN(dIso.getTime())) return dIso;
+        }
+        // 2. Khớp định dạng ngày giờ chuẩn Việt Nam (KiotViet): dd/mm/yyyy [hh:mm[:ss]] hoặc dd-mm-yyyy
         const mVn = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
         if (mVn) {
           return new Date(
@@ -123,7 +128,7 @@
             Number(mVn[6] || 0)
           );
         }
-        // 2. Khớp định dạng chuẩn ISO: yyyy-mm-dd [hh:mm[:ss]]
+        // 3. Khớp định dạng chuẩn ISO không múi giờ: yyyy-mm-dd [hh:mm[:ss]]
         const mIso = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T\s](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
         if (mIso) {
           let y = Number(mIso[1]);
@@ -467,7 +472,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.7.0</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.7.4</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -2774,7 +2779,31 @@
           </div>
           
           <div class="flex flex-wrap items-center space-x-2">
-            <!-- BỘ LỌC TRẠNG THÁI KHÁCH HÀNG -->
+            
+          <!-- BANNER PHÁT HIỆN ĐƠN NHẬP NỘI BỘ TRÊN MÁY TÍNH -->
+          <div id="banner-pnh-local-status" class="hidden p-3.5 bg-amber-50/90 border border-amber-300 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs shadow-xs">
+            <div class="flex items-center space-x-3 text-amber-900">
+              <div class="w-9 h-9 rounded-xl bg-amber-200/80 text-amber-800 flex items-center justify-center font-bold text-sm shrink-0">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+              </div>
+              <div>
+                <div class="font-bold text-amber-950 text-xs">Phát hiện đơn nhập hàng nội bộ trên máy này</div>
+                <div class="text-[11px] text-amber-800" id="txt-banner-pnh-count">Máy này đang lưu trữ các đơn nhập hàng mới (PNH...) cần đồng bộ sang các máy khác.</div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button type="button" onclick="dongBoToanBoGiaoDichTuDamMay(true)" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-xs transition flex items-center space-x-1.5 cursor-pointer">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Đẩy Lên CSDL Cloud</span>
+              </button>
+              <button type="button" onclick="moModalChuyenDuLieuMayTinh()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-xs transition flex items-center space-x-1.5 cursor-pointer">
+                <i class="fa-solid fa-right-left"></i>
+                <span>Chuyển 2 Máy</span>
+              </button>
+            </div>
+          </div>
+
+<!-- BỘ LỌC TRẠNG THÁI KHÁCH HÀNG -->
             <select id="filter-kh-trangthai" onchange="locDanhSachKH(true)" class="border border-slate-300 rounded-xl px-2.5 py-1 text-xs bg-slate-50 font-semibold text-slate-700">
               <option value="HoatDong" selected>✅ Đang hoạt động</option>
               <option value="NgungHoatDong">⛔ Ngừng hoạt động</option>
@@ -12738,19 +12767,21 @@ function formatVND(amount) {
       if (!a && !b) return 0;
       if (!a) return 1;
       if (!b) return -1;
-      const tsA = layTimestampDonNhap(a);
-      const tsB = layTimestampDonNhap(b);
-      if (tsA !== tsB) return tsB - tsA; // Mới nhất lên đầu (giảm dần)
 
-      // Tie breaker 1: Đơn mới tạo cục bộ (PNH... hoặc isLocalCreated) ưu tiên lên trước
+      // Ưu tiên 1: Đơn nhập hàng phát sinh trên phần mềm T&T POS (PNH...) luôn xếp trên các đơn nhập lịch sử KiotViet (PN...)
       const maA = String(a.maPhieu || a.ma_don_hang || a.ma_phieu || '').trim();
       const maB = String(b.maPhieu || b.ma_don_hang || b.ma_phieu || '').trim();
-      const isNewA = maA.startsWith('PNH') || a.isLocalCreated || a.isNewCreated;
-      const isNewB = maB.startsWith('PNH') || b.isLocalCreated || b.isNewCreated;
-      if (isNewA && !isNewB) return -1;
-      if (!isNewA && isNewB) return 1;
+      const isPnhA = (maA.startsWith('PNH') && !maA.startsWith('PNH_TON_')) || a.isLocalCreated || a.isNewCreated;
+      const isPnhB = (maB.startsWith('PNH') && !maB.startsWith('PNH_TON_')) || b.isLocalCreated || b.isNewCreated;
+      if (isPnhA && !isPnhB) return -1;
+      if (!isPnhA && isPnhB) return 1;
 
-      // Tie breaker 2: So sánh mã phiếu theo thứ tự giảm dần tự nhiên
+      // Ưu tiên 2: Sắp xếp theo ngày giờ mới nhất lên đầu (giảm dần)
+      const tsA = layTimestampDonNhap(a);
+      const tsB = layTimestampDonNhap(b);
+      if (tsA !== tsB) return tsB - tsA;
+
+      // Ưu tiên 3: So sánh mã phiếu theo thứ tự giảm dần tự nhiên
       return maB.localeCompare(maA, undefined, { numeric: true, sensitivity: 'base' });
     }
     window.layTimestampDonNhap = layTimestampDonNhap;
@@ -12856,11 +12887,17 @@ function formatVND(amount) {
 
     async function dongBoDonNhapTuSupabase(onComplete) {
       if (typeof supabaseClient === 'undefined' || !supabaseClient) {
-        if (typeof onComplete === 'function') onComplete();
+        if (typeof onComplete === 'function') onComplete({ success: false, reason: 'Chưa khởi tạo Supabase Client' });
         return;
       }
+
+      let countPushed = 0;
+      let countPulled = 0;
+      let errPush = null;
+      let errPull = null;
+
       try {
-        // 1. TỰ ĐỘNG ĐẨY (PUSH): Quét các đơn PNH nội bộ trên máy này để đẩy lên Supabase Cloud
+        // 1. TỰ ĐỘNG ĐẨY (PUSH): Quét toàn bộ đơn PNH cục bộ trên máy này để đẩy lên Supabase Cloud
         const localPnhMap = new Map();
         if (Array.isArray(rawNhapHangList)) {
           rawNhapHangList.forEach(p => {
@@ -12888,7 +12925,7 @@ function formatVND(amount) {
             let ngayISO = p.ngayNhapISO;
             if (!ngayISO && p.ngayNhap) {
               try {
-                const dt = (typeof parseNgayGioSort === 'function') ? new Date(parseNgayGioSort(p.ngayNhap)) : new Date(p.ngayNhap);
+                const dt = (typeof parseDateTimeGlobal === 'function') ? parseDateTimeGlobal(p.ngayNhap) : new Date(p.ngayNhap);
                 if (dt && !isNaN(dt.getTime())) ngayISO = dt.toISOString();
               } catch(e) {}
             }
@@ -12912,26 +12949,40 @@ function formatVND(amount) {
             };
           });
 
-          // Đẩy theo lô 50 bản ghi lên Supabase
+          // Đẩy từng lô 50 bản ghi với fallback an toàn
           for (let i = 0; i < upsertRows.length; i += 50) {
             const batch = upsertRows.slice(i, i + 50);
             try {
-              await supabaseClient.from('don_hang').upsert(batch, { onConflict: 'ma_don_hang' });
+              let res = await supabaseClient.from('don_hang').upsert(batch, { onConflict: 'ma_don_hang' });
+              if (res && res.error) {
+                // Thử upsert mặc định không truyền onConflict nếu constraint tên khác
+                res = await supabaseClient.from('don_hang').upsert(batch);
+              }
+              if (res && res.error) {
+                errPush = res.error;
+                console.warn("Lỗi batch upsert Supabase don_hang:", res.error);
+              } else {
+                countPushed += batch.length;
+              }
             } catch(e) {
-              console.warn("Lỗi batch upsert PNH lên Supabase:", e);
+              errPush = e;
+              console.warn("Ngoại lệ batch upsert Supabase:", e);
             }
           }
         }
 
-        // 2. KÉO (PULL) toàn bộ đơn PNH từ Supabase Cloud về máy
+        // 2. KÉO (PULL): Lấy toàn bộ đơn PNH từ Supabase Cloud về máy
         const { data, error } = await supabaseClient.from('don_hang')
           .select('*')
           .like('ma_don_hang', 'PNH%')
           .order('ngay_ban', { ascending: false })
-          .limit(1000);
+          .limit(2000);
 
-        if (!error && Array.isArray(data) && data.length > 0) {
-          let hasNewOrChanged = false;
+        if (error) {
+          errPull = error;
+          console.warn("Lỗi pull đơn nhập từ Supabase:", error);
+        } else if (Array.isArray(data) && data.length > 0) {
+          countPulled = data.length;
           if (!Array.isArray(rawNhapHangList)) rawNhapHangList = [];
 
           data.forEach(d => {
@@ -12958,41 +13009,47 @@ function formatVND(amount) {
 
             const idx = rawNhapHangList.findIndex(x => (x.maPhieu || x.ma_don_hang) === ma);
             if (idx >= 0) {
-              const cur = rawNhapHangList[idx];
-              if (cur.trangThai !== phieuMoi.trangThai || cur.daTra !== phieuMoi.daTra || cur.conNo !== phieuMoi.conNo || !cur.chiTietSanPham?.length) {
-                rawNhapHangList[idx] = { ...cur, ...phieuMoi };
-                hasNewOrChanged = true;
-              }
+              rawNhapHangList[idx] = { ...rawNhapHangList[idx], ...phieuMoi };
             } else {
               rawNhapHangList.unshift(phieuMoi);
-              hasNewOrChanged = true;
             }
           });
 
-          if (hasNewOrChanged) {
-            window.rawNhapHangList = rawNhapHangList;
-            rawNhapHangList.sort(sapXepDonNhapGiamDan);
-            locDanhSachNhapHangTable();
-            dongBoImeiTuDonNhapHang();
-            if (typeof capNhatTonKhoTheoChiNhanhHienTai === 'function') capNhatTonKhoTheoChiNhanhHienTai();
-            if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
+          window.rawNhapHangList = rawNhapHangList;
+          rawNhapHangList.sort(sapXepDonNhapGiamDan);
+          locDanhSachNhapHangTable();
+          dongBoImeiTuDonNhapHang();
+          if (typeof capNhatTonKhoTheoChiNhanhHienTai === 'function') capNhatTonKhoTheoChiNhanhHienTai();
+          if (typeof locDanhSachHangHoa === 'function') locDanhSachHangHoa(false);
 
-            // Cập nhật ngược vào localStorage để duy trì khả năng ngoại tuyến
-            try {
-              let localList = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NHAP_HANG') || '[]');
-              const localMap = new Map();
-              localList.forEach(item => { if (item.maPhieu) localMap.set(item.maPhieu, item); });
-              rawNhapHangList.filter(item => String(item.maPhieu).startsWith('PNH')).forEach(p => {
-                localMap.set(p.maPhieu, p);
-              });
-              localStorage.setItem('TT_POS_LOCAL_NHAP_HANG', JSON.stringify(Array.from(localMap.values()).slice(0, 500)));
-            } catch(e) {}
-          }
+          // Cập nhật ngược vào localStorage
+          try {
+            let localList = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NHAP_HANG') || '[]');
+            const localMap = new Map();
+            localList.forEach(item => { if (item.maPhieu) localMap.set(item.maPhieu, item); });
+            rawNhapHangList.filter(item => String(item.maPhieu).startsWith('PNH')).forEach(p => {
+              localMap.set(p.maPhieu, p);
+            });
+            localStorage.setItem('TT_POS_LOCAL_NHAP_HANG', JSON.stringify(Array.from(localMap.values()).slice(0, 1000)));
+          } catch(e) {}
         }
-        if (typeof onComplete === 'function') onComplete();
+
+        // Luôn render lại bảng danh sách
+        locDanhSachNhapHangTable();
+
+        if (typeof onComplete === 'function') {
+          onComplete({
+            success: !errPull,
+            countPushed: countPushed,
+            countPulled: countPulled,
+            totalCurrent: rawNhapHangList.length,
+            errPush: errPush,
+            errPull: errPull
+          });
+        }
       } catch(errAll) {
         console.warn("Ngoại lệ khi gọi Supabase:", errAll);
-        if (typeof onComplete === 'function') onComplete();
+        if (typeof onComplete === 'function') onComplete({ success: false, error: errAll });
       }
     }
     window.dongBoDonNhapTuSupabase = dongBoDonNhapTuSupabase;
@@ -13012,9 +13069,10 @@ function formatVND(amount) {
 
         const backupPackage = {
           app: 'TT_POS',
-          version: '1.7.0',
+          version: '1.7.4',
           exportAt: new Date().toISOString(),
           pnhOrders: Array.from(mapPnh.values()),
+          allNhapHang: Array.isArray(rawNhapHangList) && rawNhapHangList.length > 0 ? rawNhapHangList : (window.RAW_NHAP_HANG_THANH_GIANG || []),
           orders: localOrders,
           soQuy: localSoQuy,
           ncc: localNcc
@@ -13031,7 +13089,7 @@ function formatVND(amount) {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        showNotification("Đã xuất gói dữ liệu thành công! Hãy gửi file này sang máy tính khác.");
+        showNotification(`Đã xuất gói dữ liệu thành công (${backupPackage.allNhapHang.length} đơn nhập từ tháng 6/2025)! Hãy gửi file này sang máy tính khác.`);
       } catch(e) {
         showNotification("Lỗi khi xuất dữ liệu: " + e.message, true);
       }
@@ -13043,30 +13101,58 @@ function formatVND(amount) {
       try {
         const text = await file.text();
         const data = JSON.parse(text);
-        if (!data || (!data.pnhOrders && !data.orders && !data.soQuy)) {
+        if (!data || (!data.pnhOrders && !data.allNhapHang && !data.orders && !data.soQuy)) {
           return showNotification("File không đúng định dạng sao lưu của T&T POS!", true);
         }
 
         let pnhCount = 0;
+        const mapAll = new Map();
+
+        // 1. Luôn nạp toàn bộ 3.210 đơn KiotViet gốc từ tháng 6/2025
+        const baseKiotViet = (typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG)) 
+          ? window.RAW_NHAP_HANG_THANH_GIANG 
+          : [];
+        baseKiotViet.forEach(d => {
+          const m = d.maPhieu || d.ma_don_hang;
+          if (m) mapAll.set(m, d);
+        });
+
+        // 2. Thêm đơn từ allNhapHang trong file sao lưu nếu có
+        if (Array.isArray(data.allNhapHang) && data.allNhapHang.length > 0) {
+          data.allNhapHang.forEach(p => {
+            const m = p.maPhieu || p.ma_don_hang;
+            if (m) mapAll.set(m, p);
+          });
+        }
+
+        // 3. Giữ các đơn đang có trong rawNhapHangList của máy này
+        if (Array.isArray(rawNhapHangList)) {
+          rawNhapHangList.forEach(p => {
+            const m = p.maPhieu || p.ma_don_hang;
+            if (m) mapAll.set(m, p);
+          });
+        }
+
+        // 4. Nạp các đơn PNH nội bộ từ file
         if (Array.isArray(data.pnhOrders) && data.pnhOrders.length > 0) {
-          if (!Array.isArray(rawNhapHangList)) rawNhapHangList = [];
-          const mapAll = new Map();
-          rawNhapHangList.forEach(p => { if (p && p.maPhieu) mapAll.set(p.maPhieu, p); });
           data.pnhOrders.forEach(p => {
-            if (p && p.maPhieu) {
-              mapAll.set(p.maPhieu, p);
+            const m = p.maPhieu || p.ma_don_hang;
+            if (m) {
+              mapAll.set(m, p);
               pnhCount++;
             }
           });
-          rawNhapHangList = Array.from(mapAll.values());
-          window.rawNhapHangList = rawNhapHangList;
-          rawNhapHangList.sort(sapXepDonNhapGiamDan);
-          locDanhSachNhapHangTable();
-
-          try {
-            localStorage.setItem('TT_POS_LOCAL_NHAP_HANG', JSON.stringify(data.pnhOrders));
-          } catch(e) {}
         }
+
+        rawNhapHangList = Array.from(mapAll.values());
+        window.rawNhapHangList = rawNhapHangList;
+        rawNhapHangList.sort(sapXepDonNhapGiamDan);
+        locDanhSachNhapHangTable();
+
+        try {
+          const pnhOnly = rawNhapHangList.filter(d => String(d.maPhieu || '').startsWith('PNH'));
+          localStorage.setItem('TT_POS_LOCAL_NHAP_HANG', JSON.stringify(pnhOnly));
+        } catch(e) {}
 
         if (Array.isArray(data.orders) && data.orders.length > 0) {
           try {
@@ -13079,12 +13165,23 @@ function formatVND(amount) {
           } catch(e) {}
         }
 
+        if (Array.isArray(data.soQuy) && data.soQuy.length > 0) {
+          try {
+            let curSq = JSON.parse(localStorage.getItem('TT_POS_LOCAL_SO_QUY') || '[]');
+            const mapSq = new Map();
+            curSq.forEach(s => { const m = s.maPhieu || s.ma_phieu; if (m) mapSq.set(m, s); });
+            data.soQuy.forEach(s => { const m = s.maPhieu || s.ma_phieu; if (m) mapSq.set(m, s); });
+            localStorage.setItem('TT_POS_LOCAL_SO_QUY', JSON.stringify(Array.from(mapSq.values())));
+            if (typeof loadSoQuy === 'function') loadSoQuy();
+          } catch(e) {}
+        }
+
         if (typeof dongBoDonNhapTuSupabase === 'function') {
           dongBoDonNhapTuSupabase();
         }
 
         dongModal('modal-chuyen-dulieu-maytinh');
-        showNotification(`🎉 Đã nạp thành công ${pnhCount} đơn nhập hàng và đồng bộ lên Đám mây Supabase!`);
+        showNotification(`🎉 Nạp thành công! Toàn bộ ${rawNhapHangList.length} đơn nhập hàng từ tháng 6/2025 đã hiển thị đầy đủ!`);
       } catch(e) {
         showNotification("Lỗi đọc file: " + e.message, true);
       } finally {
@@ -13367,27 +13464,50 @@ function formatVND(amount) {
     }
 
     function locDanhSachNhapHangTable() {
-      // Tự động khôi phục nếu rawNhapHangList bị rỗng mà window.RAW_NHAP_HANG_THANH_GIANG có dữ liệu
-      if ((!Array.isArray(rawNhapHangList) || rawNhapHangList.length === 0) && typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG) && window.RAW_NHAP_HANG_THANH_GIANG.length > 0) {
-        rawNhapHangList = window.RAW_NHAP_HANG_THANH_GIANG.map(d => ({
-          maPhieu: d.maPhieu || d.ma_don_hang,
-          ngayNhap: d.ngayNhap || d.ngay_nhap || d.thoiGian,
-          maNCC: d.maNCC || d.ma_ncc || '',
-          tenNCC: d.tenNCC || d.ten_ncc || '',
-          chiNhanh: (typeof layTenChiNhanhDayDu === 'function') ? layTenChiNhanhDayDu(d.chiNhanh || 'CN01: Thanh Miện') : (d.chiNhanh || 'CN01: Thanh Miện'),
-          tongTien: Number(d.tongTien || d.tong_tien) || 0,
-          daTra: Number(d.daTra || d.da_tra) || 0,
-          conNo: Number(d.conNo || d.con_no) || Math.max(0, (Number(d.tongTien || d.tong_tien) || 0) - (Number(d.daTra || d.da_tra) || 0)),
-          trangThai: d.trangThai || d.trang_thai || 'Hoàn thành',
-          nhanVien: d.nhanVien || d.nguoiNhap || 'Quản trị viên',
-          nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên',
-          ghiChu: d.ghiChu || d.ghi_chu || '',
-          chiTietSanPham: Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (Array.isArray(d.sanPham) ? d.sanPham : [])
-        }));
-        window.rawNhapHangList = rawNhapHangList;
-        dongBoDonNhapLocalVaoDanhSach();
-        dongBoDonLuuTamVaoDanhSach();
-        dongBoImeiTuDonNhapHang();
+      // Luôn đảm bảo nạp đủ toàn bộ dữ liệu KiotViet từ tháng 6/2025 từ window.RAW_NHAP_HANG_THANH_GIANG
+      if (!Array.isArray(rawNhapHangList) || rawNhapHangList.length < 500) {
+        const baseKiotViet = (typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG)) 
+          ? window.RAW_NHAP_HANG_THANH_GIANG 
+          : [];
+        if (baseKiotViet.length > 0) {
+          const mapAll = new Map();
+          // 1. Nạp toàn bộ đơn KiotViet từ tháng 6/2025
+          baseKiotViet.forEach(d => {
+            const m = d.maPhieu || d.ma_don_hang;
+            if (m) {
+              mapAll.set(m, {
+                maPhieu: m,
+                ngayNhap: d.ngayNhap || d.ngay_nhap || d.thoiGian,
+                maNCC: d.maNCC || d.ma_ncc || '',
+                tenNCC: d.tenNCC || d.ten_ncc || '',
+                chiNhanh: (typeof layTenChiNhanhDayDu === 'function') ? layTenChiNhanhDayDu(d.chiNhanh || 'CN01: Thanh Miện') : (d.chiNhanh || 'CN01: Thanh Miện'),
+                tongTien: Number(d.tongTien || d.tong_tien) || 0,
+                daTra: Number(d.daTra || d.da_tra) || 0,
+                conNo: Number(d.conNo || d.con_no) || Math.max(0, (Number(d.tongTien || d.tong_tien) || 0) - (Number(d.daTra || d.da_tra) || 0)),
+                trangThai: d.trangThai || d.trang_thai || 'Hoàn thành',
+                nhanVien: d.nhanVien || d.nguoiNhap || 'Quản trị viên',
+                nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên',
+                ghiChu: d.ghiChu || d.ghi_chu || '',
+                chiTietSanPham: Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (Array.isArray(d.sanPham) ? d.sanPham : [])
+              });
+            }
+          });
+          // 2. Hợp nhất các đơn PNH nội bộ hiện có trong rawNhapHangList hoặc localStorage
+          if (Array.isArray(rawNhapHangList)) {
+            rawNhapHangList.forEach(p => { if (p && p.maPhieu) mapAll.set(p.maPhieu, p); });
+          }
+          try {
+            const locPnhs = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NHAP_HANG') || '[]');
+            if (Array.isArray(locPnhs)) {
+              locPnhs.forEach(p => { if (p && p.maPhieu) mapAll.set(p.maPhieu, p); });
+            }
+          } catch(e) {}
+          rawNhapHangList = Array.from(mapAll.values());
+          window.rawNhapHangList = rawNhapHangList;
+          dongBoDonNhapLocalVaoDanhSach();
+          dongBoDonLuuTamVaoDanhSach();
+          dongBoImeiTuDonNhapHang();
+        }
       }
 
       const kw = (document.getElementById('search-danhsach-nhaphang')?.value || '').trim().toLowerCase();
@@ -13442,6 +13562,21 @@ function formatVND(amount) {
       // Luôn sắp xếp các đơn hàng nhập sao cho đơn nhập mới nhất luôn ở trên đầu
       filtered.sort(sapXepDonNhapGiamDan);
       renderBangDanhSachNhapHang(filtered);
+
+      // Cập nhật banner PNH local nếu có
+      try {
+        const bannerPnh = document.getElementById('banner-pnh-local-status');
+        const txtBanner = document.getElementById('txt-banner-pnh-count');
+        if (bannerPnh && txtBanner) {
+          const localPnhs = (rawNhapHangList || []).filter(item => String(item.maPhieu || item.ma_don_hang).startsWith('PNH'));
+          if (localPnhs.length > 0) {
+            bannerPnh.classList.remove('hidden');
+            txtBanner.innerHTML = `Máy tính này đang lưu trữ <b>${localPnhs.length} đơn nhập hàng mới (PNH...)</b>. Hãy bấm <b>Đẩy Lên CSDL Cloud</b> hoặc <b>Chuyển 2 Máy</b> để đồng bộ sang các máy khác!`;
+          } else {
+            bannerPnh.classList.add('hidden');
+          }
+        }
+      } catch(e) {}
     }
 
     function xuatExcelDanhSachNhapHang() {
@@ -29449,8 +29584,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.7.0";
-    const APP_CLIENT_BUILD = 73;
+    const APP_CLIENT_VERSION = "1.7.3";
+    const APP_CLIENT_BUILD = 76;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
@@ -35177,7 +35312,7 @@ function loadSoQuy(filter) {
 
       // Đồng bộ đơn nhập hàng lên Supabase Cloud (cho Netlify & Standalone)
       if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-        supabaseClient.from('don_hang').upsert([{
+        const sbRow = {
           ma_don_hang: payload.maPhieu,
           ngay_ban: ngayNhapISO,
           ma_kh: payload.maNCC || 'NCC_LE',
@@ -35192,9 +35327,24 @@ function loadSoQuy(filter) {
           chi_tiet_san_pham: payload.chiTietSanPham || [],
           trang_thai: payload.trangThai || 'Hoàn thành',
           nhan_vien: valNguoiNhap
-        }]).then(() => {
-          console.log("Đã đồng bộ phiếu nhập hàng lên Supabase:", payload.maPhieu);
-        });
+        };
+        (async () => {
+          try {
+            let res = await supabaseClient.from('don_hang').upsert([sbRow], { onConflict: 'ma_don_hang' });
+            if (res && res.error) {
+              res = await supabaseClient.from('don_hang').upsert([sbRow]);
+            }
+            if (res && res.error) {
+              console.error("Lỗi đồng bộ Supabase don_hang:", res.error);
+              showNotification("⚠️ Đã lưu tại máy nhưng lỗi lưu Cloud: " + (res.error.message || "Kiểm tra quyền"), true);
+            } else {
+              console.log("✅ Đã lưu trực tiếp đơn nhập hàng vào CSDL Cloud Supabase:", payload.maPhieu);
+              showNotification("✅ Đã lưu và đồng bộ trực tiếp vào Cơ sở dữ liệu Cloud!");
+            }
+          } catch(e) {
+            console.warn("Ngoại lệ đồng bộ Supabase:", e);
+          }
+        })();
 
         // Cập nhật tồn kho & kho IMEI Supabase theo chi nhánh
         if (Array.isArray(payload.chiTietSanPham)) {
@@ -42049,6 +42199,84 @@ function loadSoQuy(filter) {
   </div>
 </div>
 
+<div 
+<!-- ==================================================================== -->
+<!-- MODAL CẢNH BÁO MÁY CHỦ SUPABASE ĐANG TẠM DỪNG (PAUSED) HOẶC MẤT MẠNG -->
+<!-- ==================================================================== -->
+<div id="modal-canhbao-supabase-paused" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 hidden">
+  <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 border border-rose-300 text-xs">
+    <div class="flex items-center justify-between pb-3 border-b border-rose-100">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-lg shadow-xs">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-black text-slate-800">Cơ Sở Dữ Liệu Cloud Chưa Kết Nối</h3>
+          <p class="text-[11px] text-rose-600 font-semibold" id="txt-canhbao-supabase-reason">Máy chủ Supabase đang ở trạng thái Tạm Dừng (Paused)</p>
+        </div>
+      </div>
+      <button type="button" onclick="dongModal('modal-canhbao-supabase-paused')" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition cursor-pointer">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="space-y-3 text-slate-600 leading-relaxed text-[11px]">
+      <div class="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 space-y-1.5">
+        <div class="font-bold text-amber-950 flex items-center space-x-1.5 text-xs">
+          <i class="fa-solid fa-circle-info text-amber-600"></i>
+          <span>Nguyên nhân máy cũ và máy mới chưa đồng bộ:</span>
+        </div>
+        <p class="text-amber-900 leading-normal">
+          Dự án Supabase (<strong>gzcpwwcoaycxqbgrjvzn</strong>) tự động rơi vào trạng thái <strong>Tạm Dừng (Paused)</strong> trên Đám mây do chính sách 7 ngày của gói Free. Khi bị Tạm Dừng, tên miền kết nối bị ngắt nên các máy tính tạm thời không thể gửi/nhận dữ liệu trực tiếp qua CSDL.
+        </p>
+      </div>
+
+      <div class="space-y-2.5">
+        <div class="font-bold text-slate-800 text-xs flex items-center space-x-1.5">
+          <i class="fa-solid fa-wrench text-blue-600"></i>
+          <span>Chọn 1 trong 2 cách khắc phục:</span>
+        </div>
+        
+        <!-- CÁCH 1 -->
+        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="font-bold text-slate-800 text-xs">👉 Cách 1: Khôi phục máy chủ Cloud Supabase</div>
+            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded text-[10px]">Khuyên dùng</span>
+          </div>
+          <p class="text-[11px] text-slate-500 leading-normal">Đăng nhập tài khoản Supabase và bấm nút <strong>Restore project</strong>. Sau 1 phút CSDL sẽ hoạt động lại và tự động đồng bộ mọi máy.</p>
+          <a href="https://supabase.com/dashboard/project/gzcpwwcoaycxqbgrjvzn" target="_blank" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center justify-center space-x-2 shadow-xs transition">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            <span>Mở Supabase Dashboard Bấm Restore</span>
+          </a>
+        </div>
+
+        <!-- CÁCH 2 -->
+        <div class="p-3.5 bg-blue-50/70 rounded-2xl border border-blue-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="font-bold text-blue-900 text-xs">👉 Cách 2: Chuyển dữ liệu ngay lập tức giữa 2 máy</div>
+            <span class="px-2 py-0.5 bg-blue-100 text-blue-800 font-bold rounded text-[10px]">Tức thì 5 giây</span>
+          </div>
+          <p class="text-[11px] text-slate-600 leading-normal">
+            Trên máy có dữ liệu: Bấm <strong>Chuyển 2 máy</strong> &gt; <strong>Xuất gói dữ liệu</strong>.<br>
+            Trên máy này: Bấm <strong>Chuyển 2 máy</strong> &gt; <strong>Nạp gói dữ liệu</strong>. Khớp 100% không cần mạng!
+          </p>
+          <button type="button" onclick="dongModal('modal-canhbao-supabase-paused'); moModalChuyenDuLieuMayTinh();" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs flex items-center justify-center space-x-2 shadow-xs transition cursor-pointer">
+            <i class="fa-solid fa-right-left"></i>
+            <span>Mở Bảng Chuyển Dữ Liệu 2 Máy</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-2 flex justify-end">
+      <button type="button" onclick="dongModal('modal-canhbao-supabase-paused')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition cursor-pointer">
+        Đóng thông báo
+      </button>
+    </div>
+  </div>
+</div>
+
+
 <div id="modal-huongdan-ios" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 hidden">
   <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-amber-200/50 text-xs">
     <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -46727,20 +46955,76 @@ function loadSoQuy(filter) {
     /* ====================================================================
      * ĐỒNG BỘ TOÀN DIỆN MỌI GIAO DỊCH TỪ ĐÁM MÂY SUPABASE GIỮA CÁC MÁY TÍNH
      * ==================================================================== */
-    function dongBoToanBoGiaoDichTuDamMay(hienThongBao = true) {
+    function moModalCanhBaoSupabasePaused(reason) {
+      const reasonEl = document.getElementById('txt-canhbao-supabase-reason');
+      if (reasonEl && reason) {
+        reasonEl.innerText = String(reason);
+      }
+      moModal('modal-canhbao-supabase-paused');
+    }
+    window.moModalCanhBaoSupabasePaused = moModalCanhBaoSupabasePaused;
+
+    async function kiemTraKetNoiSupabase() {
+      if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+        return { ok: false, reason: 'Chưa cấu hình Supabase Client' };
+      }
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/don_hang?select=ma_don_hang&limit=1`, {
+          method: 'GET',
+          headers: {
+            "apikey": SUPABASE_CONFIG.key,
+            "Authorization": "Bearer " + SUPABASE_CONFIG.key
+          },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) return { ok: true };
+        return { ok: false, reason: `Máy chủ CSDL phản hồi HTTP ${res.status}: ${res.statusText}` };
+      } catch(err) {
+        return { ok: false, reason: 'Không thể kết nối đến máy chủ CSDL Supabase (Dự án đang Tạm Dừng hoặc mất kết nối mạng)' };
+      }
+    }
+    window.kiemTraKetNoiSupabase = kiemTraKetNoiSupabase;
+
+    async function dongBoToanBoGiaoDichTuDamMay(hienThongBao = true) {
       const btnLabel = document.getElementById('btn-sync-supabase-label');
+      if (btnLabel) btnLabel.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1 text-emerald-600"></i>Đang kiểm tra kết nối...';
+      if (hienThongBao) showNotification("Đang kết nối tới Cơ sở dữ liệu Cloud Supabase...");
+
+      // Kiểm tra kết nối trước khi đồng bộ
+      const checkConn = await kiemTraKetNoiSupabase();
+      if (!checkConn.ok) {
+        if (btnLabel) btnLabel.innerText = 'Đồng bộ Supabase';
+        if (hienThongBao) {
+          moModalCanhBaoSupabasePaused(checkConn.reason);
+          showNotification("⚠️ CSDL Cloud Supabase đang tạm dừng. Hãy bấm Restore hoặc dùng Chuyển 2 máy!", true);
+        }
+        return;
+      }
+
       if (btnLabel) btnLabel.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1 text-emerald-600"></i>Đang đồng bộ...';
-      if (hienThongBao) showNotification("Đang đồng bộ toàn bộ giao dịch từ đám mây Supabase...");
+      if (hienThongBao) showNotification("⚡ Đang đồng bộ dữ liệu hai chiều (Đẩy & Kéo) với CSDL Cloud...");
 
       let doneCount = 0;
       let isDone = false;
       const totalTasks = 5;
+      let totalPushed = 0;
+      let totalPulled = 0;
+
       const checkDone = () => {
         doneCount++;
         if (doneCount >= totalTasks && !isDone) {
           isDone = true;
           if (btnLabel) btnLabel.innerText = 'Đồng bộ Supabase';
-          if (hienThongBao) showNotification("⚡ Đã đồng bộ toàn bộ giao dịch mới nhất giữa các máy tính thành công!");
+          if (hienThongBao) {
+            let msg = "⚡ Đã đồng bộ toàn bộ giao dịch mới nhất giữa các máy tính thành công!";
+            if (totalPushed > 0 || totalPulled > 0) {
+              msg = `⚡ Đồng bộ thành công: Đã tải lên ${totalPushed} đơn từ máy này, đã kéo về ${totalPulled} đơn mới từ Đám mây!`;
+            }
+            showNotification(msg);
+          }
         }
       };
 
@@ -46750,12 +47034,18 @@ function loadSoQuy(filter) {
           isDone = true;
           if (btnLabel) btnLabel.innerText = 'Đồng bộ Supabase';
         }
-      }, 3500);
+      }, 8000);
 
       // 1. Đồng bộ Đơn nhập hàng NCC
       try {
         if (typeof dongBoDonNhapTuSupabase === 'function') {
-          dongBoDonNhapTuSupabase(checkDone);
+          dongBoDonNhapTuSupabase((res) => {
+            if (res) {
+              if (res.countPushed > 0) totalPushed += res.countPushed;
+              if (res.countPulled > 0) totalPulled += res.countPulled;
+            }
+            checkDone();
+          });
         } else { checkDone(); }
       } catch(e) { checkDone(); }
 
