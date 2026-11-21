@@ -6,7 +6,6 @@ exclude:
   - danh_sach_don_hang_full.json
   - danh_sach_khach_hang_full.json
   - danh_sach_hang_hoa_full.json
-  - danh_sach_nhap_hang_full.json
   - danh_sach_chuyen_kho_full.json
   - danh_sach_ycsc_full.json
   - danh_sach_kiem_kho_full.json

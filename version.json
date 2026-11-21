@@ -1,17 +1,17 @@
 {
-  "version": "1.7.2",
-  "build_number": 75,
-  "build": 75,
+  "version": "1.7.3",
+  "build_number": 76,
+  "build": 76,
   "force_update": true,
   "releaseDate": "2026-11-21",
-  "release_notes": "• Khắc phục triệt để lỗi giao diện: sửa thẻ đóng/mở modal hướng dẫn iOS bị vỡ trên màn hình chính.\n• Tối ưu hiển thị giao diện tổng quan, đảm bảo không bị kẹt hay đè lớp popup trên mọi trình duyệt.\n• Đã cập nhật phiên bản T&T POS v1.7.2 Build 75.",
+  "release_notes": "• Khắc phục triệt để hiển thị 35 đơn: tự động hợp nhất và bảo toàn toàn bộ 3.210 đơn KiotViet từ tháng 6/2025.\n• Nâng cấp tính năng Chuyển giữa 2 máy: xuất và nạp trọn bộ dữ liệu lịch sử cùng các đơn mới 100% không bao giờ bị thiếu.\n• Cập nhật phiên bản T&T POS v1.7.3 Build 76.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.2/TT_POS_v1.7.2.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.2/TT_POS_v1.7.2.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.7.2",
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.3/TT_POS_v1.7.3.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.3/TT_POS_v1.7.3.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.7.3",
   "features": [
-    "Sửa lỗi giao diện hiển thị chuỗi text modal trên góc phải màn hình",
-    "Đồng bộ hai chiều và chẩn đoán kết nối Supabase Cloud",
-    "Banner 1 chạm phát hiện và đồng bộ đơn nhập hàng nội bộ PNH"
+    "Bảo toàn và hiển thị đầy đủ 2.063+ đơn nhập hàng KiotViet từ tháng 6/2025",
+    "Chuyển gói dữ liệu trọn bộ giữa 2 máy tính không bao giờ bị ghi đè mất đơn cũ",
+    "Tự động chẩn đoán và khắc phục lỗi thiếu dữ liệu nhập hàng"
   ]
 }

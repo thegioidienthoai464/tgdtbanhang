@@ -39,7 +39,7 @@
   <!-- Dữ liệu tồn kho, giá vốn & IMEI 3 chi nhánh từ Excel gốc -->
   <script src="ton_kho_3_chinhanh.js?v=72"></script>
   <!-- Dữ liệu đơn nhập hàng NCC độc lập (6.6MB) nạp siêu tốc -->
-  <script src="du_lieu_nhap_hang.js?v=72"></script>
+  <script src="du_lieu_nhap_hang.js?v=76"></script>
   <!-- Dữ liệu đơn bán hàng POS độc lập (28MB) nạp siêu tốc -->
   <script src="du_lieu_don_hang.js?v=72"></script>
   <!-- Dữ liệu thực tế 100% từ KiotViet Chi Nhánh Thanh Giang -->
@@ -467,7 +467,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.7.2</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.7.3</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -13062,9 +13062,10 @@ function formatVND(amount) {
 
         const backupPackage = {
           app: 'TT_POS',
-          version: '1.7.0',
+          version: '1.7.3',
           exportAt: new Date().toISOString(),
           pnhOrders: Array.from(mapPnh.values()),
+          allNhapHang: Array.isArray(rawNhapHangList) && rawNhapHangList.length > 0 ? rawNhapHangList : (window.RAW_NHAP_HANG_THANH_GIANG || []),
           orders: localOrders,
           soQuy: localSoQuy,
           ncc: localNcc
@@ -13081,7 +13082,7 @@ function formatVND(amount) {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        showNotification("Đã xuất gói dữ liệu thành công! Hãy gửi file này sang máy tính khác.");
+        showNotification(`Đã xuất gói dữ liệu thành công (${backupPackage.allNhapHang.length} đơn nhập từ tháng 6/2025)! Hãy gửi file này sang máy tính khác.`);
       } catch(e) {
         showNotification("Lỗi khi xuất dữ liệu: " + e.message, true);
       }
@@ -13093,30 +13094,58 @@ function formatVND(amount) {
       try {
         const text = await file.text();
         const data = JSON.parse(text);
-        if (!data || (!data.pnhOrders && !data.orders && !data.soQuy)) {
+        if (!data || (!data.pnhOrders && !data.allNhapHang && !data.orders && !data.soQuy)) {
           return showNotification("File không đúng định dạng sao lưu của T&T POS!", true);
         }
 
         let pnhCount = 0;
+        const mapAll = new Map();
+
+        // 1. Luôn nạp toàn bộ 3.210 đơn KiotViet gốc từ tháng 6/2025
+        const baseKiotViet = (typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG)) 
+          ? window.RAW_NHAP_HANG_THANH_GIANG 
+          : [];
+        baseKiotViet.forEach(d => {
+          const m = d.maPhieu || d.ma_don_hang;
+          if (m) mapAll.set(m, d);
+        });
+
+        // 2. Thêm đơn từ allNhapHang trong file sao lưu nếu có
+        if (Array.isArray(data.allNhapHang) && data.allNhapHang.length > 0) {
+          data.allNhapHang.forEach(p => {
+            const m = p.maPhieu || p.ma_don_hang;
+            if (m) mapAll.set(m, p);
+          });
+        }
+
+        // 3. Giữ các đơn đang có trong rawNhapHangList của máy này
+        if (Array.isArray(rawNhapHangList)) {
+          rawNhapHangList.forEach(p => {
+            const m = p.maPhieu || p.ma_don_hang;
+            if (m) mapAll.set(m, p);
+          });
+        }
+
+        // 4. Nạp các đơn PNH nội bộ từ file
         if (Array.isArray(data.pnhOrders) && data.pnhOrders.length > 0) {
-          if (!Array.isArray(rawNhapHangList)) rawNhapHangList = [];
-          const mapAll = new Map();
-          rawNhapHangList.forEach(p => { if (p && p.maPhieu) mapAll.set(p.maPhieu, p); });
           data.pnhOrders.forEach(p => {
-            if (p && p.maPhieu) {
-              mapAll.set(p.maPhieu, p);
+            const m = p.maPhieu || p.ma_don_hang;
+            if (m) {
+              mapAll.set(m, p);
               pnhCount++;
             }
           });
-          rawNhapHangList = Array.from(mapAll.values());
-          window.rawNhapHangList = rawNhapHangList;
-          rawNhapHangList.sort(sapXepDonNhapGiamDan);
-          locDanhSachNhapHangTable();
-
-          try {
-            localStorage.setItem('TT_POS_LOCAL_NHAP_HANG', JSON.stringify(data.pnhOrders));
-          } catch(e) {}
         }
+
+        rawNhapHangList = Array.from(mapAll.values());
+        window.rawNhapHangList = rawNhapHangList;
+        rawNhapHangList.sort(sapXepDonNhapGiamDan);
+        locDanhSachNhapHangTable();
+
+        try {
+          const pnhOnly = rawNhapHangList.filter(d => String(d.maPhieu || '').startsWith('PNH'));
+          localStorage.setItem('TT_POS_LOCAL_NHAP_HANG', JSON.stringify(pnhOnly));
+        } catch(e) {}
 
         if (Array.isArray(data.orders) && data.orders.length > 0) {
           try {
@@ -13129,12 +13158,23 @@ function formatVND(amount) {
           } catch(e) {}
         }
 
+        if (Array.isArray(data.soQuy) && data.soQuy.length > 0) {
+          try {
+            let curSq = JSON.parse(localStorage.getItem('TT_POS_LOCAL_SO_QUY') || '[]');
+            const mapSq = new Map();
+            curSq.forEach(s => { const m = s.maPhieu || s.ma_phieu; if (m) mapSq.set(m, s); });
+            data.soQuy.forEach(s => { const m = s.maPhieu || s.ma_phieu; if (m) mapSq.set(m, s); });
+            localStorage.setItem('TT_POS_LOCAL_SO_QUY', JSON.stringify(Array.from(mapSq.values())));
+            if (typeof loadSoQuy === 'function') loadSoQuy();
+          } catch(e) {}
+        }
+
         if (typeof dongBoDonNhapTuSupabase === 'function') {
           dongBoDonNhapTuSupabase();
         }
 
         dongModal('modal-chuyen-dulieu-maytinh');
-        showNotification(`🎉 Đã nạp thành công ${pnhCount} đơn nhập hàng và đồng bộ lên Đám mây Supabase!`);
+        showNotification(`🎉 Nạp thành công! Toàn bộ ${rawNhapHangList.length} đơn nhập hàng từ tháng 6/2025 đã hiển thị đầy đủ!`);
       } catch(e) {
         showNotification("Lỗi đọc file: " + e.message, true);
       } finally {
@@ -13417,27 +13457,50 @@ function formatVND(amount) {
     }
 
     function locDanhSachNhapHangTable() {
-      // Tự động khôi phục nếu rawNhapHangList bị rỗng mà window.RAW_NHAP_HANG_THANH_GIANG có dữ liệu
-      if ((!Array.isArray(rawNhapHangList) || rawNhapHangList.length === 0) && typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG) && window.RAW_NHAP_HANG_THANH_GIANG.length > 0) {
-        rawNhapHangList = window.RAW_NHAP_HANG_THANH_GIANG.map(d => ({
-          maPhieu: d.maPhieu || d.ma_don_hang,
-          ngayNhap: d.ngayNhap || d.ngay_nhap || d.thoiGian,
-          maNCC: d.maNCC || d.ma_ncc || '',
-          tenNCC: d.tenNCC || d.ten_ncc || '',
-          chiNhanh: (typeof layTenChiNhanhDayDu === 'function') ? layTenChiNhanhDayDu(d.chiNhanh || 'CN01: Thanh Miện') : (d.chiNhanh || 'CN01: Thanh Miện'),
-          tongTien: Number(d.tongTien || d.tong_tien) || 0,
-          daTra: Number(d.daTra || d.da_tra) || 0,
-          conNo: Number(d.conNo || d.con_no) || Math.max(0, (Number(d.tongTien || d.tong_tien) || 0) - (Number(d.daTra || d.da_tra) || 0)),
-          trangThai: d.trangThai || d.trang_thai || 'Hoàn thành',
-          nhanVien: d.nhanVien || d.nguoiNhap || 'Quản trị viên',
-          nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên',
-          ghiChu: d.ghiChu || d.ghi_chu || '',
-          chiTietSanPham: Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (Array.isArray(d.sanPham) ? d.sanPham : [])
-        }));
-        window.rawNhapHangList = rawNhapHangList;
-        dongBoDonNhapLocalVaoDanhSach();
-        dongBoDonLuuTamVaoDanhSach();
-        dongBoImeiTuDonNhapHang();
+      // Luôn đảm bảo nạp đủ toàn bộ dữ liệu KiotViet từ tháng 6/2025 từ window.RAW_NHAP_HANG_THANH_GIANG
+      if (!Array.isArray(rawNhapHangList) || rawNhapHangList.length < 500) {
+        const baseKiotViet = (typeof window.RAW_NHAP_HANG_THANH_GIANG !== 'undefined' && Array.isArray(window.RAW_NHAP_HANG_THANH_GIANG)) 
+          ? window.RAW_NHAP_HANG_THANH_GIANG 
+          : [];
+        if (baseKiotViet.length > 0) {
+          const mapAll = new Map();
+          // 1. Nạp toàn bộ đơn KiotViet từ tháng 6/2025
+          baseKiotViet.forEach(d => {
+            const m = d.maPhieu || d.ma_don_hang;
+            if (m) {
+              mapAll.set(m, {
+                maPhieu: m,
+                ngayNhap: d.ngayNhap || d.ngay_nhap || d.thoiGian,
+                maNCC: d.maNCC || d.ma_ncc || '',
+                tenNCC: d.tenNCC || d.ten_ncc || '',
+                chiNhanh: (typeof layTenChiNhanhDayDu === 'function') ? layTenChiNhanhDayDu(d.chiNhanh || 'CN01: Thanh Miện') : (d.chiNhanh || 'CN01: Thanh Miện'),
+                tongTien: Number(d.tongTien || d.tong_tien) || 0,
+                daTra: Number(d.daTra || d.da_tra) || 0,
+                conNo: Number(d.conNo || d.con_no) || Math.max(0, (Number(d.tongTien || d.tong_tien) || 0) - (Number(d.daTra || d.da_tra) || 0)),
+                trangThai: d.trangThai || d.trang_thai || 'Hoàn thành',
+                nhanVien: d.nhanVien || d.nguoiNhap || 'Quản trị viên',
+                nguoiNhap: d.nguoiNhap || d.nhanVien || 'Quản trị viên',
+                ghiChu: d.ghiChu || d.ghi_chu || '',
+                chiTietSanPham: Array.isArray(d.chiTietSanPham) ? d.chiTietSanPham : (Array.isArray(d.sanPham) ? d.sanPham : [])
+              });
+            }
+          });
+          // 2. Hợp nhất các đơn PNH nội bộ hiện có trong rawNhapHangList hoặc localStorage
+          if (Array.isArray(rawNhapHangList)) {
+            rawNhapHangList.forEach(p => { if (p && p.maPhieu) mapAll.set(p.maPhieu, p); });
+          }
+          try {
+            const locPnhs = JSON.parse(localStorage.getItem('TT_POS_LOCAL_NHAP_HANG') || '[]');
+            if (Array.isArray(locPnhs)) {
+              locPnhs.forEach(p => { if (p && p.maPhieu) mapAll.set(p.maPhieu, p); });
+            }
+          } catch(e) {}
+          rawNhapHangList = Array.from(mapAll.values());
+          window.rawNhapHangList = rawNhapHangList;
+          dongBoDonNhapLocalVaoDanhSach();
+          dongBoDonLuuTamVaoDanhSach();
+          dongBoImeiTuDonNhapHang();
+        }
       }
 
       const kw = (document.getElementById('search-danhsach-nhaphang')?.value || '').trim().toLowerCase();
@@ -29514,8 +29577,8 @@ function formatVND(amount) {
     /* ====================================================================
      * HỆ THỐNG TỰ ĐỘNG KIỂM TRA & YÊU CẦU CẬP NHẬT PHIÊN BẢN MỚI
      * ==================================================================== */
-    const APP_CLIENT_VERSION = "1.7.2";
-    const APP_CLIENT_BUILD = 75;
+    const APP_CLIENT_VERSION = "1.7.3";
+    const APP_CLIENT_BUILD = 76;
     let dangHienThiModalCapNhat = false;
     let thongTinPhienBanMoi = null;
 
