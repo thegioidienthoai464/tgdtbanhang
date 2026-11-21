@@ -1,17 +1,16 @@
 {
-  "version": "1.7.4",
-  "build_number": 77,
-  "build": 77,
+  "version": "1.7.5",
+  "build_number": 78,
+  "build": 78,
   "force_update": true,
   "releaseDate": "2026-11-21",
-  "release_notes": "• Khắc phục triệt để lỗi lệch múi giờ (Timezone drift) khi đồng bộ Supabase giữa các máy tính.\n• Chuẩn hóa thứ tự hiển thị: Toàn bộ đơn nhập hàng mới (PNH559491, PNH497343...) luôn xuất hiện ở dòng đầu tiên của Trang 1 trên mọi máy tính.\n• Đồng bộ 100% dữ liệu 2.063 đơn nhập hàng giữa máy cũ và máy mới.",
+  "release_notes": "• Điều chỉnh thời gian nhập hàng của 10 đơn nhập bổ sung (PNH559491, PNH497343...) khớp 100% từng giây với máy cũ (11/11 - 13/11/2026).\n• Cập nhật bản v1.7.5 Build 78.",
   "download_url": "https://thegioidienthoai464.github.io/tgdtbanhang/download.html",
-  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.4/TT_POS_v1.7.4.apk",
-  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.4/TT_POS_v1.7.4.ipa",
-  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.7.4",
+  "apk_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.5/TT_POS_v1.7.5.apk",
+  "ipa_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/download/v1.7.5/TT_POS_v1.7.5.ipa",
+  "github_download_url": "https://github.com/thegioidienthoai464/tgdtbanhang/releases/tag/v1.7.5",
   "features": [
-    "Đồng nhất tuyệt đối 100% danh sách và thứ tự đơn nhập hàng trên mọi máy tính",
-    "Khắc phục triệt để lỗi múi giờ làm lùi ngày giờ giao dịch khi đồng bộ Supabase",
-    "Hiển thị đầy đủ 2.063 đơn hàng với các đơn mới nhất luôn ở Trang 1"
+    "Thời gian đơn nhập hàng bổ sung khớp 100% với máy cũ",
+    "Đồng nhất toàn bộ lịch sử giao dịch và thứ tự hiển thị trên mọi máy tính"
   ]
 }

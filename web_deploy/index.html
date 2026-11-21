@@ -39,7 +39,7 @@
   <!-- Dữ liệu tồn kho, giá vốn & IMEI 3 chi nhánh từ Excel gốc -->
   <script src="ton_kho_3_chinhanh.js?v=72"></script>
   <!-- Dữ liệu đơn nhập hàng NCC độc lập (6.6MB) nạp siêu tốc -->
-  <script src="du_lieu_nhap_hang.js?v=77"></script>
+  <script src="du_lieu_nhap_hang.js?v=78"></script>
   <!-- Dữ liệu đơn bán hàng POS độc lập (28MB) nạp siêu tốc -->
   <script src="du_lieu_don_hang.js?v=72"></script>
   <!-- Dữ liệu thực tế 100% từ KiotViet Chi Nhánh Thanh Giang -->
@@ -472,7 +472,7 @@
       </div>
     </div>
     <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-500">
-      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.7.4</span>
+      <span class="font-mono text-slate-400 font-medium">T&amp;T POS v1.7.5</span>
       <button type="button" onclick="kiemTraCapNhatPhienBan(true)" title="Kiểm tra bản cập nhật mới nhất" class="hover:text-amber-400 text-slate-400 transition flex items-center space-x-1 cursor-pointer">
         <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
         <span>Cập nhật</span>
@@ -13069,7 +13069,7 @@ function formatVND(amount) {
 
         const backupPackage = {
           app: 'TT_POS',
-          version: '1.7.4',
+          version: '1.7.5',
           exportAt: new Date().toISOString(),
           pnhOrders: Array.from(mapPnh.values()),
           allNhapHang: Array.isArray(rawNhapHangList) && rawNhapHangList.length > 0 ? rawNhapHangList : (window.RAW_NHAP_HANG_THANH_GIANG || []),
